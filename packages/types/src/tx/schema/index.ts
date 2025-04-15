@@ -4,6 +4,7 @@ export * from "./bparams";
 export * from "./claimRewards";
 export * from "./ethBridgeTransfer";
 export * from "./ibcTransfer";
+export * from "./osmosisSwap";
 export * from "./redelegate";
 export * from "./revealPk";
 export * from "./signature";
@@ -22,6 +23,7 @@ import { BondMsgValue } from "./bond";
 import { ClaimRewardsMsgValue } from "./claimRewards";
 import { EthBridgeTransferMsgValue } from "./ethBridgeTransfer";
 import { IbcTransferMsgValue } from "./ibcTransfer";
+import { OsmosisSwapMsgValue } from "./osmosisSwap";
 import { RedelegateMsgValue } from "./redelegate";
 import { RevealPkMsgValue } from "./revealPk";
 import { SignatureMsgValue } from "./signature";
@@ -50,6 +52,7 @@ export type Schema =
   | BatchTxResultMsgValue
   | EthBridgeTransferMsgValue
   | IbcTransferMsgValue
+  | OsmosisSwapMsgValue
   | SignatureMsgValue
   | BondMsgValue
   | UnbondMsgValue

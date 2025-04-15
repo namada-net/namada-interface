@@ -74,6 +74,19 @@ export type IbcTransferDone = WebWorkerMessage<
   EncodedTxData<IbcTransferProps>
 >;
 
+type OsmosisSwapPayload = {
+  account: Account;
+  gasConfig: GasConfig;
+  props: OsmosisSwapMsgValue[];
+  chain: ChainSettings;
+  memo?: string;
+};
+export type OsmosisSwap = WebWorkerMessage<"osmosis-swap", OsmosisSwapPayload>;
+export type OsmosisSwapDone = WebWorkerMessage<
+  "osmosis-swap-done",
+  EncodedTxData<OsmosisSwapMsgValue>
+>;
+
 type GenerateIbcShieldingMemoPayload = {
   target: string;
   token: string;

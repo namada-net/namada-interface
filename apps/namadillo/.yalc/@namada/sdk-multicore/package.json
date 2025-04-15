@@ -1,0 +1,56 @@
+{
+  "name": "@namada/sdk-multicore",
+  "version": "0.20.8",
+  "description": "Namada Web Multicore SDK",
+  "main": "dist/sdk-multicore/src/index.js",
+  "types": "dist/sdk-multicore/src/index.d.ts",
+  "repository": "https://github.com/anoma/namada-sdkjs/",
+  "author": "Heliax Dev <info@heliax.dev>",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "import": "./dist/sdk-multicore/src/index.js",
+      "types": "./dist/sdk-multicore/src/index.d.ts"
+    },
+    "./init": {
+      "import": "./dist/sdk-multicore/src/init.js",
+      "types": "./dist/sdk-multicore/src/init.d.ts"
+    },
+    "./inline": {
+      "import": "./dist/sdk-multicore/src/initInline.js",
+      "types": "./dist/sdk-multicore/src/initInline.d.ts"
+    },
+    "./wasm/src/sdk": {
+      "import": "./dist/wasm/src/sdk/sdk.js",
+      "types": "./dist/wasm/src/sdk/sdk.d.ts"
+    }
+  },
+  "files": [
+    "dist/lib/**/*.{js,ts}",
+    "dist/sdk-multicore/**/*.{js,ts}",
+    "dist/wasm/**/*.{js,ts,wasm}",
+    "dist/sdk.namada.wasm"
+  ],
+  "scripts": {
+    "build": "tspc -p ./tsconfig.json"
+  },
+  "dependencies": {
+    "@cosmjs/encoding": "^0.29.0",
+    "@dao-xyz/borsh": "^5.1.5",
+    "@ledgerhq/hw-transport": "^6.31.4",
+    "@ledgerhq/hw-transport-webusb": "^6.29.4",
+    "@zondax/ledger-namada": "^2.0.0",
+    "bignumber.js": "^9.1.1",
+    "buffer": "^6.0.3",
+    "semver": "^7.7.2",
+    "slip44": "^3.0.18"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "sideEffects": [
+    "./wasm/src/sdk/snippets/*"
+  ],
+  "yalcSig": "d4321a7a0a8ca18c9c96ee58a0ac3ad9"
+}

@@ -21,6 +21,7 @@ import { SubmitVote } from "./Governance/SubmitVote";
 import { ViewJson } from "./Governance/ViewJson";
 import { IbcLayout } from "./Ibc/IbcLayout";
 import { IbcShieldAll } from "./Ibc/IbcShieldAll";
+import { OsmosisSwap } from "./Ibc/OsmosisSwap";
 import { routes } from "./routes";
 import { Advanced } from "./Settings/Advanced";
 import { EnableFeatures } from "./Settings/EnableFeatures";
@@ -98,6 +99,13 @@ export const MainRoutes = (): JSX.Element => {
             <Route path={routes.shield} element={<div />} />
             <Route path={routes.unshield} element={<div />} />
           </Route>
+
+          {/* Swapping */}
+          {true && (
+            <>
+              <Route path={routes.swap} element={<OsmosisSwap />} />
+            </>
+          )}
 
           {/* Transaction History */}
           {(features.namTransfersEnabled || features.ibcTransfersEnabled) && (
