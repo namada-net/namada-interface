@@ -34,6 +34,9 @@ export const routes = {
   transaction: "/transaction/:hash",
   receive: "/receive",
 
+  // Swap
+  swap: "/swap",
+
   // Settings
   settings: "/settings",
   settingsAdvanced: "/settings/advanced",

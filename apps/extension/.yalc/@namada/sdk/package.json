@@ -1,0 +1,46 @@
+{
+  "name": "@namada/sdk",
+  "version": "0.20.8",
+  "description": "Namada Web SDK",
+  "main": "dist/sdk/src/index.js",
+  "types": "dist/sdk/src/index.d.ts",
+  "repository": "https://github.com/anoma/namada-sdkjs/",
+  "author": "Heliax Dev <info@heliax.dev>",
+  "license": "MIT",
+  "exports": {
+    ".": {
+      "import": "./dist/sdk/src/index.js",
+      "types": "./dist/sdk/src/index.d.ts"
+    },
+    "./init": {
+      "import": "./dist/sdk/src/init.js",
+      "types": "./dist/sdk/src/init.d.ts"
+    },
+    "./inline": {
+      "import": "./dist/sdk/src/initInline.js",
+      "types": "./dist/sdk/src/initInline.d.ts"
+    }
+  },
+  "files": [
+    "dist/lib/**/*.{js,ts}",
+    "dist/sdk/**/*.{js,ts}",
+    "dist/wasm/**/*.{js,ts,wasm}",
+    "dist/sdk.namada.wasm"
+  ],
+  "dependencies": {
+    "@cosmjs/encoding": "^0.29.0",
+    "@dao-xyz/borsh": "^5.1.5",
+    "@ledgerhq/hw-transport": "^6.31.4",
+    "@ledgerhq/hw-transport-webusb": "^6.29.4",
+    "@zondax/ledger-namada": "^2.0.0",
+    "bignumber.js": "^9.1.1",
+    "buffer": "^6.0.3",
+    "semver": "^7.6.3",
+    "slip44": "^3.0.18"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org",
+    "access": "public"
+  },
+  "yalcSig": "263c7dd5e95a0bc96d101cb9dc1380d4"
+}
