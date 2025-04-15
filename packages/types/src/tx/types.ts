@@ -6,6 +6,7 @@ import {
   IbcTransferMsgValue,
   MaspTxIn,
   MaspTxOut,
+  OsmosisSwapMsgValue,
   RedelegateMsgValue,
   ShieldedTransferDataMsgValue,
   ShieldedTransferMsgValue,
@@ -55,6 +56,7 @@ export type ClaimRewardsProps = ClaimRewardsMsgValue;
 export type WithdrawProps = WithdrawMsgValue;
 export type WrapperTxProps = WrapperTxMsgValue;
 export type RevealPkProps = RevealPkMsgValue;
+export type OsmosisSwapProps = OsmosisSwapMsgValue;
 
 export type SupportedTxProps =
   | BondProps
