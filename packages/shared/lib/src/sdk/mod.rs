@@ -903,14 +903,16 @@ impl Sdk {
         wrapper_tx_msg: &[u8],
     ) -> Result<JsValue, JsError> {
         let (args, bparams) = args::osmosis_swap_tx_args(osmosis_swap_msg, wrapper_tx_msg)?;
+
+        let _ = &self.namada.shielded_mut().await.load().await?;
         let tx = args.into_ibc_transfer(&self.namada).await?;
+
         let bparams = if let Some(bparams) = bparams {
             BuildParams::StoredBuildParams(bparams)
         } else {
             generate_rng_build_params()
         };
 
-        let _ = &self.namada.shielded_mut().await.load().await?;
 
         let xfvks = match tx.source {
             TransferSource::Address(_) => vec![],
