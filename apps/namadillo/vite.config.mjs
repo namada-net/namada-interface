@@ -3,7 +3,6 @@ import { sdkMulticoreWorkerHelpers } from "@namada/vite-esbuild-plugin";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import checker from "vite-plugin-checker";
-import { nodePolyfills } from "vite-plugin-node-polyfills";
 import { VitePWA } from "vite-plugin-pwa";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -32,9 +31,6 @@ export default defineConfig(() => {
       }),
       react(),
       tsconfigPaths(),
-      nodePolyfills({
-        protocolImports: true,
-      }),
       checker({
         typescript: true,
         eslint: { lintCommand: 'eslint "./src/**/*.{ts,tsx}"' },
@@ -44,6 +40,12 @@ export default defineConfig(() => {
     worker: {
       plugins: () => [tsconfigPaths()],
       format: "es",
+    },
+    resolve: {
+      alias: {
+        buffer: "buffer",
+        process: "process/browser",
+      },
     },
     optimizeDeps: {
       esbuildOptions: {
