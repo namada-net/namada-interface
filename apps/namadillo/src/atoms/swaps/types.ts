@@ -1,4 +1,4 @@
-export type SwapResponse = {
+export type SwapResponseOk = {
   amount_in: {
     denom: string;
     amount: string;
@@ -20,3 +20,8 @@ export type SwapResponse = {
   price_impact: string;
   in_base_out_quote_spot_price: string;
 };
+export type SwapResponseError = {
+  message: string;
+};
+
+export type SwapResponse = SwapResponseOk | SwapResponseError;
