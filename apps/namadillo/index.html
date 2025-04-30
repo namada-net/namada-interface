@@ -15,13 +15,6 @@
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
-    <script type="module">
-      import { Buffer } from "buffer";
-      import process from "process";
-
-      globalThis.process = process;
-      globalThis.Buffer = Buffer;
-    </script>
     <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

@@ -1,7 +1,15 @@
 import { AccountType, BparamsMsgValue } from "@namada/types";
 import { calcAmountWithSlippage } from "@osmonauts/math";
 import { defaultAccountAtom } from "atoms/accounts";
-import { SwapResponse } from "atoms/swaps";
+import {
+  namadaShieldedAssetsAtom,
+  namadaTransparentAssetsAtom,
+} from "atoms/balance";
+import {
+  osmosisBaseAssetMapAtom,
+  osmosisSymbolAssetMapAtom,
+} from "atoms/chain";
+import { SwapResponse, SwapResponseError, SwapResponseOk } from "atoms/swaps";
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
@@ -11,23 +19,34 @@ import { useEffect, useState } from "react";
 import { getSdkInstance } from "utils/sdk";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchPrices(coinGeckoIds: string[]): Promise<any> {
+async function _fetchPrices(coinGeckoIds: string[]): Promise<any> {
   const url = `https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoIds.join()}&vs_currencies=usd`;
   return await fetch(url).then((res) => res.json());
 }
 
+const SUPPORTED_TOKENS_SYMBOLS = ["OSMO", "ATOM", "TIA"] as const;
+const SLIPPAGE = 0.1;
+
 export const OsmosisSwap: React.FC = () => {
+  const osmosisSymbolAssetsMap = useAtomValue(osmosisSymbolAssetMapAtom);
+  const osmosisBaseAssetsMap = useAtomValue(osmosisBaseAssetMapAtom);
+  const supportedAssets = SUPPORTED_TOKENS_SYMBOLS.map(
+    (s) => osmosisSymbolAssetsMap[s]
+  );
   const { mutateAsync: performOsmosisSwap } = useAtomValue(
     createOsmosisSwapTxAtom
   );
-
-  const [from, setFrom] = useState<string | null>(
-    "ibc/27394FB092D2ECCD56123C74F36E4C1F926001CEADA9CA97EA622B25F41E5EB2"
+  const [shielded, _setShielded] = useState<boolean>(true);
+  const { data: availableAssets, isLoading: _isLoadingAssets } = useAtomValue(
+    shielded ? namadaShieldedAssetsAtom : namadaTransparentAssetsAtom
   );
-  const [to, setTo] = useState<string>("uosmo");
-  const [amount, setAmount] = useState<string>("10000");
+
+  // const www = Object.values(availableAssets || {})?.[0]?.asset.base || null;
+  const [from, setFrom] = useState<string>("");
+  const [to, setTo] = useState<string>("");
+  const [amount, setAmount] = useState<string>("");
   const [quote, setQuote] = useState<
-    (SwapResponse & { minAmount: string }) | null
+    (SwapResponseOk & { minAmount: string }) | null
   >(null);
 
   useEffect(() => {
@@ -42,11 +61,20 @@ export const OsmosisSwap: React.FC = () => {
       );
       const response: SwapResponse = await quote.json();
 
-      const minAmount = calcAmountWithSlippage(response.amount_out, 0.1);
-      setQuote({ ...response, minAmount });
+      if (!(response as SwapResponseError).message) {
+        const minAmount = calcAmountWithSlippage(
+          (response as SwapResponseOk).amount_out,
+          SLIPPAGE
+        );
+        setQuote({ ...(response as SwapResponseOk), minAmount });
+      } else {
+        setQuote(null);
+      }
     };
-    call();
-  }, []);
+    if (from && to && amount) {
+      call();
+    }
+  }, [from, to, amount]);
 
   const account = useAtomValue(defaultAccountAtom);
 
@@ -165,27 +193,79 @@ export const OsmosisSwap: React.FC = () => {
 
   return (
     <div className="text-white">
-      <div>From: {from}</div>
-      <div>To: {to}</div>
-      <div>Amount: {amount}</div>
+      <div>From:</div>
+      <select className="text-black" onChange={(e) => setFrom(e.target.value)}>
+        <option value=""></option>
+        {Object.values(availableAssets || {}).map((al) => (
+          <option key={al.asset.base} value={al.asset.base}>
+            {al.asset.symbol}
+          </option>
+        ))}
+      </select>
+      <div>To:</div>
+      <select className="text-black" onChange={(e) => setTo(e.target.value)}>
+        <option value=""></option>
+        {supportedAssets.map((asset) => (
+          <option key={asset.base} value={asset.base}>
+            {asset.symbol}
+          </option>
+        ))}
+      </select>
+      <div>Amount in base denom:</div>
+      <input
+        className="text-black"
+        type="text"
+        onChange={(e) => setAmount(e.target.value)}
+      />
       <p>---</p>
       <div> Receive: </div>
       {quote && (
         <div>
           <div>
-            Amount in: {quote.amount_in.denom}: {quote.amount_in.amount}
+            Amount in: {quote.amount_in.amount}
+            {osmosisBaseAssetsMap[from].denom_units[0].aliases?.[0] || from}
           </div>
-          <div>Amount out: {quote.amount_out}</div>
-          <div>Route: </div>
-          {quote.route[0].pools.map((p, i) => (
-            <div key={i}>
-              {p.id}: {p.token_out_denom}(Fee: {p.taker_fee})
-            </div>
-          ))}
-          <div>Effective fee: {quote.effective_fee}</div>
-          <div>Spot price: {quote.in_base_out_quote_spot_price}</div>
-          <div>Price impact: {quote.price_impact}</div>
-          <div> Min amount out: {quote.minAmount}</div>
+          <div>
+            Amount out: {quote.amount_out}
+            {osmosisBaseAssetsMap[to].denom_units[0].aliases?.[0] || to}
+          </div>
+          <div>
+            Min amount out: {quote.minAmount}
+            {osmosisBaseAssetsMap[to].denom_units[0].aliases?.[0] || to}
+          </div>
+          <div>Slippage: {SLIPPAGE}%</div>
+          <div>Routes: </div>
+          <ul className="list-disc list-inside">
+            {quote.route.map((r, i) => (
+              <li key={i}>
+                Route{i + 1}
+                <ul className="list-disc list-inside pl-4">
+                  {r.pools.map((p, i) => (
+                    <li key={i}>
+                      {p.id}: {osmosisBaseAssetsMap[p.token_out_denom].symbol}
+                      (Fee: {BigNumber(p.taker_fee).toString()})
+                    </li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+          <div>Effective fee: {BigNumber(quote.effective_fee).toString()}</div>
+          <div>
+            Price: 1 {osmosisBaseAssetsMap[from].symbol} ≈{" "}
+            {BigNumber(quote.in_base_out_quote_spot_price)
+              .times(
+                BigNumber(1)
+                  .minus(BigNumber(quote.effective_fee))
+                  .plus(BigNumber(quote.price_impact))
+              )
+              .dp(3)
+              .toString()}{" "}
+            {osmosisBaseAssetsMap[to].symbol}
+          </div>
+          <div>
+            Price impact: {BigNumber(quote.price_impact).dp(3).toString()}
+          </div>
         </div>
       )}
     </div>
