@@ -1,5 +1,4 @@
 import { AccountType, BparamsMsgValue } from "@namada/types";
-import { calcAmountWithSlippage } from "@osmonauts/math";
 import { defaultAccountAtom } from "atoms/accounts";
 import {
   namadaShieldedAssetsAtom,
@@ -25,7 +24,7 @@ async function _fetchPrices(coinGeckoIds: string[]): Promise<any> {
 }
 
 const SUPPORTED_TOKENS_SYMBOLS = ["OSMO", "ATOM", "TIA"] as const;
-const SLIPPAGE = 0.1;
+const SLIPPAGE = 0.005;
 
 export const OsmosisSwap: React.FC = () => {
   const osmosisSymbolAssetsMap = useAtomValue(osmosisSymbolAssetMapAtom);
@@ -62,10 +61,10 @@ export const OsmosisSwap: React.FC = () => {
       const response: SwapResponse = await quote.json();
 
       if (!(response as SwapResponseError).message) {
-        const minAmount = calcAmountWithSlippage(
-          (response as SwapResponseOk).amount_out,
-          SLIPPAGE
-        );
+        const r = response as SwapResponseOk;
+        const minAmount = BigNumber(r.amount_out)
+          .times(BigNumber(1).minus(SLIPPAGE))
+          .toString();
         setQuote({ ...(response as SwapResponseOk), minAmount });
       } else {
         setQuote(null);
@@ -233,8 +232,17 @@ export const OsmosisSwap: React.FC = () => {
             Min amount out: {quote.minAmount}
             {osmosisBaseAssetsMap[to].denom_units[0].aliases?.[0] || to}
           </div>
-          <div>Slippage: {SLIPPAGE}%</div>
+          <div>Slippage: {SLIPPAGE * 100}%</div>
           <div>Routes: </div>
+          <div>Effective fee: {BigNumber(quote.effective_fee).toString()}</div>
+          <div>
+            Price: 1 {osmosisBaseAssetsMap[from].symbol} ≈{" "}
+            {BigNumber(quote.amount_out).div(BigNumber(amount)).toString()}{" "}
+            {osmosisBaseAssetsMap[to].symbol}
+          </div>
+          <div>
+            Price impact: {BigNumber(quote.price_impact).dp(3).toString()}
+          </div>
           <ul className="list-disc list-inside">
             {quote.route.map((r, i) => (
               <li key={i}>
@@ -250,22 +258,6 @@ export const OsmosisSwap: React.FC = () => {
               </li>
             ))}
           </ul>
-          <div>Effective fee: {BigNumber(quote.effective_fee).toString()}</div>
-          <div>
-            Price: 1 {osmosisBaseAssetsMap[from].symbol} ≈{" "}
-            {BigNumber(quote.in_base_out_quote_spot_price)
-              .times(
-                BigNumber(1)
-                  .minus(BigNumber(quote.effective_fee))
-                  .plus(BigNumber(quote.price_impact))
-              )
-              .dp(3)
-              .toString()}{" "}
-            {osmosisBaseAssetsMap[to].symbol}
-          </div>
-          <div>
-            Price impact: {BigNumber(quote.price_impact).dp(3).toString()}
-          </div>
         </div>
       )}
     </div>
