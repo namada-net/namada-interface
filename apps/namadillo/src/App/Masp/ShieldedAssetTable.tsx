@@ -1,6 +1,7 @@
 import { ActionButton, SkeletonLoading } from "@namada/components";
 import { AtomErrorBoundary } from "App/Common/AtomErrorBoundary";
 import { routes } from "App/routes";
+import { SelectTokenExample } from "App/Transfer/SelectTokenExample";
 import {
   shieldedRewardsPerTokenAtom,
   shieldedTokensAtom,
@@ -60,6 +61,7 @@ export const ShieldedAssetTable = (): JSX.Element => {
       niceError="Unable to load your shielded balance"
       containerProps={{ className: "pb-16 flex-1 flex flex-col" }}
     >
+      <SelectTokenExample />;
       {isNftEnabled && (
         <div className="flex mb-6">
           {tabs.map((name) => {
