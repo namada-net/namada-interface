@@ -6,6 +6,7 @@ import { PageWithSidebar } from "App/Common/PageWithSidebar";
 import { Sidebar } from "App/Layout/Sidebar";
 import { ValidatorDiversification } from "App/Sidebars/ValidatorDiversification";
 import { YourStakingDistribution } from "App/Sidebars/YourStakingDistribution";
+import { SelectTokenExample } from "App/Transfer/SelectTokenExample";
 import { myValidatorsAtom } from "atoms/validators";
 import { useUserHasAccount } from "hooks/useIsAuthenticated";
 import { useAtomValue } from "jotai";
@@ -34,6 +35,8 @@ export const StakingOverview = (): JSX.Element => {
             <MyValidatorsTable />
           </Panel>
         )}
+        <SelectTokenExample />
+
         {hasWithdrawableAmounts && (
           <Panel title="Unbonded">
             <div className="flex justify-end -mt-15">
