@@ -1,17 +1,18 @@
-import { Asset } from "@chain-registry/types";
-import { Modal, Panel, Stack } from "@namada/components";
+import { Modal, Stack } from "@namada/components";
+import { AccountType } from "@namada/types";
+import { shortenAddress } from "@namada/utils";
 import { ModalTransition } from "App/Common/ModalTransition";
 import { Search } from "App/Common/Search";
-import { TokenCard } from "App/Common/TokenCard";
-import { namadaTransparentAssetsAtom, shieldedTokensAtom } from "atoms/balance";
+import { routes } from "App/routes";
+import { allDefaultAccountsAtom } from "atoms/accounts";
+import { namadaTransparentAssetsAtom } from "atoms/balance";
 import { chainAssetsMapAtom } from "atoms/chain";
-import BigNumber from "bignumber.js";
-import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
-import { twMerge } from "tailwind-merge";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Address, AddressWithAssetAndAmount } from "types";
+import namadaTransparentSvg from "./assets/namada-transparent.svg";
 
 type Token = {
   address: Address;
@@ -20,9 +21,15 @@ type Token = {
   amount: string;
   value: string;
   icon?: string;
+  network?: string;
 };
 
-type SelectTokenProps = {
+type Network = {
+  name: string | undefined;
+  icon?: string;
+};
+
+type SelectNetworkTokenProps = {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (token: Token) => void;
@@ -32,13 +39,26 @@ export const SelectToken = ({
   isOpen,
   onClose,
   onSelect,
-}: SelectTokenProps): JSX.Element | null => {
+}: SelectNetworkTokenProps): JSX.Element | null => {
   const [filter, setFilter] = useState("");
-  const chainAssetsMap = useAtomValue(chainAssetsMapAtom);
   const transparentAssets = useAtomValue(namadaTransparentAssetsAtom);
-  const shieldedTokens = useAtomValue(shieldedTokensAtom);
+  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const chainAssetsMap = Object.values(useAtomValue(chainAssetsMapAtom));
 
-  // Convert assets map to tokens array
+  const allNetworks: Network[] = useMemo(() => {
+    return chainAssetsMap
+      .map((chainAsset) => {
+        return {
+          name: chainAsset?.name ?? "",
+          icon: chainAsset?.logo_URIs?.png || chainAsset?.logo_URIs?.svg,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [chainAssetsMap]);
+
+  // Your tokens
   const tokens = useMemo(() => {
     const result: Token[] = [];
 
@@ -63,63 +83,8 @@ export const SelectToken = ({
       );
     }
 
-    // Process shielded tokens
-    if (shieldedTokens.data) {
-      shieldedTokens.data.forEach((item) => {
-        // Check if this token is already in the result (from transparent assets)
-        const existingTokenIndex = result.findIndex(
-          (t) => t.address === item.originalAddress
-        );
-
-        if (existingTokenIndex >= 0) {
-          // Add the shielded amount to the existing token
-          const existingAmount = new BigNumber(
-            result[existingTokenIndex].amount
-          );
-          result[existingTokenIndex].amount = existingAmount
-            .plus(item.amount || 0)
-            .toString();
-
-          // Update the value if dollar amount is available
-          if (item.dollar) {
-            const existingValue = new BigNumber(
-              result[existingTokenIndex].value.replace("$", "")
-            );
-            result[existingTokenIndex].value =
-              `$${existingValue.plus(item.dollar).toFixed(2)}`;
-          }
-        } else if (item.asset && item.originalAddress) {
-          // Add new token
-          result.push({
-            address: item.originalAddress,
-            symbol: item.asset.symbol,
-            name: item.asset.name,
-            amount: item.amount?.toString() || "0",
-            value: item.dollar ? `$${item.dollar.toFixed(2)}` : "$0.00",
-            icon: item.asset.logo_URIs?.png || item.asset.logo_URIs?.svg,
-          });
-        }
-      });
-    }
-
-    // If there are no tokens from the assets, create tokens from the chain assets map
-    if (result.length === 0 && Object.keys(chainAssetsMap).length > 0) {
-      Object.entries(chainAssetsMap).forEach(([address, asset]) => {
-        if (asset) {
-          result.push({
-            address,
-            symbol: asset.symbol,
-            name: asset.name,
-            amount: "0",
-            value: "$0.00",
-            icon: asset.logo_URIs?.png || asset.logo_URIs?.svg,
-          });
-        }
-      });
-    }
-
     return result;
-  }, [chainAssetsMap, transparentAssets.data, shieldedTokens.data]);
+  }, [transparentAssets.data]);
 
   const filteredTokens = useMemo(() => {
     return tokens.filter(
@@ -129,146 +94,139 @@ export const SelectToken = ({
     );
   }, [tokens, filter]);
 
-  const createTokenAsset = (token: Token): Asset => {
-    return {
-      symbol: token.symbol,
-      name: token.name,
-      logo_URIs: token.icon ? { png: token.icon } : {},
-      // Required fields from Asset type
-      denom_units: [
-        {
-          denom: token.symbol.toLowerCase(),
-          exponent: 0,
-        },
-        {
-          denom: token.symbol.toLowerCase(),
-          exponent: 6,
-        },
-      ],
-      base: token.symbol.toLowerCase(),
-      display: token.symbol.toLowerCase(),
-    };
-  };
+  const hasDefaultAccount = !!accounts?.length;
+  const transparentAccount = accounts?.find(
+    (account) => account.type !== AccountType.ShieldedKeys
+  );
+  const accountAddress = transparentAccount?.address;
 
-  // Get top tokens by value for "Most traded" section
-  const topTokens = useMemo(() => {
-    return [...tokens]
-      .sort((a, b) => {
-        const aValue = parseFloat(a.value.replace("$", "")) || 0;
-        const bValue = parseFloat(b.value.replace("$", "")) || 0;
-        return bValue - aValue;
-      })
-      .slice(0, 3);
-  }, [tokens]);
+  const handleConnectWallet = (): void => {
+    navigate(routes.switchAccount, {
+      state: { backgroundLocation: location },
+    });
+  };
 
   if (!isOpen) return null;
 
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onClose} className="py-20">
       <ModalTransition>
-        <div
-          className={twMerge(
-            clsx(
-              "px-8 pt-3 pb-6 bg-black max-w-[480px] min-h-[120px]",
-              "w-screen rounded-xl border border-neutral-700"
-            )
-          )}
-        >
-          <header className="flex w-full justify-center items-center relative mb-6 text-light leading-8">
-            Select Token
-            <i
-              className="cursor-pointer text-white absolute -right-2.5 text-xl p-1.5 hover:text-yellow z-50"
-              onClick={onClose}
-            >
-              <IoClose />
-            </i>
-          </header>
+        <div className="flex h-[600px] rounded-xl border border-neutral-700 overflow-hidden">
+          {/* Left panel */}
+          <div className="w-[300px] bg-neutral-800 p-6 flex flex-col overflow-auto">
+            <h2 className="text-white text-xl font-medium mb-6">
+              Your account
+            </h2>
 
-          <div className="my-4">
-            <Search
-              placeholder="Paste token address or search by name"
-              onChange={setFilter}
-            />
-          </div>
+            {hasDefaultAccount ?
+              <div className="flex items-center gap-3 mb-8 p-3">
+                <div className="rounded-full bg-neutral-800">
+                  <img
+                    src={namadaTransparentSvg}
+                    alt="namada"
+                    className="w-6 h-6"
+                  />
+                </div>
+                <div className="font-mono text-white">
+                  {shortenAddress(accountAddress || "", 10)}
+                </div>
+              </div>
+            : <button
+                onClick={handleConnectWallet}
+                className="mb-8 p-3 border border-yellow text-yellow rounded-lg hover:bg-neutral-800 transition-colors"
+              >
+                Connect
+              </button>
+            }
 
-          <Panel className="p-4">
-            <h4 className="text-white text-base mb-3">Your tokens</h4>
-            <Stack
-              as="ul"
-              gap={0}
-              className="max-h-[400px] overflow-auto dark-scrollbar pb-4 mr-[-0.5rem]"
-            >
-              {filteredTokens.map((token) => (
-                <li key={token.address} className="text-sm">
-                  <button
-                    onClick={() => {
-                      onSelect(token);
-                      onClose();
-                    }}
-                    className={twMerge(
-                      clsx(
-                        "text-left px-4 py-2.5",
-                        "w-full rounded-sm border border-transparent",
-                        "hover:border-neutral-400 transition-colors duration-150"
-                      )
-                    )}
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <TokenCard
-                        asset={createTokenAsset(token)}
-                        address={token.address}
-                      />
-                      <div className="text-right">
-                        <div className="text-white">{token.amount}</div>
-                        <div className="text-neutral-400 text-xs">
-                          {token.value}
-                        </div>
-                      </div>
+            <h2 className="text-white text-xl font-medium mb-4">Networks</h2>
+            <Stack as="ul" gap={2} className="flex-1 overflow-auto">
+              {allNetworks.map((network) => (
+                <li key={network.name}>
+                  <button className="flex items-center gap-3 p-2 w-full hover:bg-neutral-800 rounded-lg transition-colors">
+                    <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
+                      {network.icon ?
+                        <img
+                          src={network.icon}
+                          alt={network.name}
+                          className="w-6 h-6"
+                        />
+                      : <span className="text-white">
+                          {network.name?.charAt(0)}
+                        </span>
+                      }
                     </div>
+                    <span className="text-white">{network.name}</span>
                   </button>
                 </li>
               ))}
-              {filteredTokens.length === 0 && (
-                <p className="py-2 font-light">No tokens found</p>
-              )}
             </Stack>
-          </Panel>
+          </div>
 
-          {topTokens.length > 0 && (
-            <Panel className="p-4 mt-4">
-              <h4 className="text-white text-base mb-3">Most traded</h4>
-              <Stack
-                as="ul"
-                gap={0}
-                className="max-h-[200px] overflow-auto dark-scrollbar pb-4 mr-[-0.5rem]"
+          {/* Right panel */}
+          <div className="bg-black border-l border-neutral-700 w-[500px] p-6 flex flex-col">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-white text-xl font-medium">Select Token</h2>
+              <button
+                onClick={onClose}
+                className="text-white hover:text-yellow"
               >
-                {topTokens.map((token) => (
-                  <li key={token.address} className="text-sm">
-                    <button
-                      onClick={() => {
-                        onSelect(token);
-                        onClose();
-                      }}
-                      className={twMerge(
-                        clsx(
-                          "text-left px-4 py-2.5",
-                          "w-full rounded-sm border border-transparent",
-                          "hover:border-neutral-400 transition-colors duration-150"
-                        )
-                      )}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <TokenCard
-                          asset={createTokenAsset(token)}
-                          address={token.address}
-                        />
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </Stack>
-            </Panel>
-          )}
+                <IoClose size={24} />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <Search
+                placeholder="Paste token address or search by name"
+                onChange={setFilter}
+              />
+            </div>
+
+            <div className="mb-6">
+              <h3 className="text-white text-lg mb-3">Your tokens</h3>
+              <div className="h-[400px] overflow-auto dark-scrollbar">
+                <Stack as="ul" gap={2} className="pb-2">
+                  {filteredTokens.length > 0 ?
+                    filteredTokens.map((token) => (
+                      <li key={token.address}>
+                        <button
+                          onClick={() => {
+                            onSelect(token);
+                            onClose();
+                          }}
+                          className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-neutral-800 transition-colors"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center">
+                              {token.icon ?
+                                <img
+                                  src={token.icon}
+                                  alt={token.symbol}
+                                  className="w-8 h-8"
+                                />
+                              : <span className="text-white text-lg">
+                                  {token.symbol.charAt(0)}
+                                </span>
+                              }
+                            </div>
+                            <span className="text-white font-medium">
+                              {token.symbol}
+                            </span>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-white">{token.amount}</div>
+                            <div className="text-neutral-400 text-sm">
+                              {token.value}
+                            </div>
+                          </div>
+                        </button>
+                      </li>
+                    ))
+                  : <p className="text-neutral-400">No tokens found</p>}
+                </Stack>
+              </div>
+            </div>
+          </div>
         </div>
       </ModalTransition>
     </Modal>
