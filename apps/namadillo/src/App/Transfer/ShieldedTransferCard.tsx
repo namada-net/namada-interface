@@ -155,8 +155,7 @@ export const ShieldTransferCard = (): JSX.Element => {
         <div className="flex justify-between items-center">
           <span className="text-neutral-400">{dollarValue}</span>
           <span className="text-neutral-400">
-            {selectedToken?.amount?.toString()}
-            {/* {isConnected ? `Balance: ${mockBalance}` : "No Balance"} */}
+            {selectedToken?.amount?.toString() ?? "No Balance"}
           </span>
         </div>
       </div>
