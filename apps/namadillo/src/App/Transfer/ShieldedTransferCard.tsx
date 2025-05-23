@@ -61,7 +61,7 @@ export const ShieldTransferCard = (): JSX.Element => {
       </div>
 
       {/* Main card */}
-      <div className="bg-neutral-800 rounded-xl p-6 border hover:border-yellow-400">
+      <div className="bg-neutral-800 rounded-xl p-4 border hover:border-yellow-400">
         {/* Top row */}
         <div className="flex justify-between items-center mb-8">
           {/* Token selector - now clickable */}
