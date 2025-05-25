@@ -7,8 +7,9 @@ import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { AddressWithAssetAndAmount } from "types";
 import NamadaLogo from "../Assets/NamadaLogo.svg";
-import { SelectToken } from "./SelectToken";
 import { isTransparentAddress } from "./common";
+import { SelectToken } from "./SelectToken";
+import { TransferArrow } from "./TransferArrow";
 
 export const ShieldTransferCard = (): JSX.Element => {
   const transparentAssets = useAtomValue(namadaTransparentAssetsAtom);
@@ -163,23 +164,14 @@ export const ShieldTransferCard = (): JSX.Element => {
       {/* Transfer arrow */}
       <div className="flex justify-center my-4">
         <div
-          className={`w-12 h-12 rounded-full flex items-center justify-center ${
-            selectedMode === "shielded" ? "bg-yellow-400" : "bg-white"
-          }`}
+          className={`w-12 h-12 rounded-full flex items-center justify-center -mt-7 bg-yellow-400`}
         >
-          <svg
-            className="w-6 h-6 text-black"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
+          <i className="flex items-center justify-center w-11 mx-auto -my-8 relative z-10">
+            <TransferArrow
+              color="#FF0"
+              // isAnimating={isSubmitting}
             />
-          </svg>
+          </i>
         </div>
       </div>
 
