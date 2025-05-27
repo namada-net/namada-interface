@@ -1,11 +1,10 @@
 import { Asset } from "@chain-registry/types";
 import { Stack } from "@namada/components";
-import { IbcToken } from "@namada/indexer-client";
 import { AccountType, BparamsMsgValue } from "@namada/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaShieldedAssetsAtom } from "atoms/balance";
-import { chainTokensAtom, osmosisSymbolAssetMapAtom } from "atoms/chain";
-import { ibcChannelsFamily } from "atoms/integrations";
+import { chainParametersAtom } from "atoms/chain";
+import { findAssetsByChainById, ibcChannelsFamily } from "atoms/integrations";
 import { SwapResponse, SwapResponseError, SwapResponseOk } from "atoms/swaps";
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
@@ -17,16 +16,11 @@ import { useCallback, useEffect, useState } from "react";
 import { AddressWithAssetAndAmount } from "types";
 import { getSdkInstance } from "utils/sdk";
 
-const SUPPORTED_TOKENS_SYMBOLS = ["OSMO", "ATOM", "TIA"] as const;
 const SLIPPAGE = 0.005;
 const SWAP_CONTRACT_ADDRESS =
   "osmo1lrlqeq38ephw8mz0c3uzfdpt4fh3fr0s2atur5n33md90m4wx3mqmz7fq6";
 
 export const OsmosisSwap: React.FC = () => {
-  // TODO: need to figure out those maps
-  const osmosisSymbolAssetsMap = useAtomValue(osmosisSymbolAssetMapAtom);
-  const chainTokens = useAtomValue(chainTokensAtom);
-
   const { mutateAsync: performOsmosisSwap } = useAtomValue(
     createOsmosisSwapTxAtom
   );
@@ -34,19 +28,14 @@ export const OsmosisSwap: React.FC = () => {
     namadaShieldedAssetsAtom
   );
 
-  const supportedAssets: [Asset, AddressWithAssetAndAmount | undefined][] =
-    SUPPORTED_TOKENS_SYMBOLS.map(
-      // TODO: we should not use availableAssets here
-      (s) => [
-        osmosisSymbolAssetsMap[s],
-        Object.values(availableAssets || {}).find((a) => a.asset.symbol === s),
-      ]
-    );
+  const chainParameters = useAtomValue(chainParametersAtom);
+  const namadaAssets =
+    chainParameters.data ?
+      findAssetsByChainById(chainParameters.data.chainId)
+    : [];
 
   const [from, setFrom] = useState<AddressWithAssetAndAmount | undefined>();
-  const [to, setTo] = useState<
-    [Asset, AddressWithAssetAndAmount | undefined] | undefined
-  >();
+  const [to, setTo] = useState<Asset | undefined>();
   const [amount, setAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>(
     "znam17k7jw0wmvzdzmfm46m8600t9cah5mjl6se75cu9jvwxywk75k3kmxehmxk7wha62l35puzl6srd"
@@ -58,13 +47,6 @@ export const OsmosisSwap: React.FC = () => {
     (SwapResponseOk & { minAmount: string }) | null
   >(null);
 
-  // TODO:  we should get this from the namada assets
-  const toTrace = (
-    chainTokens?.data?.find(
-      (t) => t.address === to?.[1]?.originalAddress
-    ) as IbcToken
-  )?.trace;
-
   const { data: ibcChannels } = useAtomValue(ibcChannelsFamily("osmosis"));
 
   const feeProps = useTransactionFee(["IbcTransfer"], true);
@@ -75,7 +57,7 @@ export const OsmosisSwap: React.FC = () => {
         "https://sqs.osmosis.zone/router/quote?" +
           new URLSearchParams({
             tokenIn: `${amount}${from!.asset.base}`,
-            tokenOutDenom: to![0].base,
+            tokenOutDenom: to!.base,
             humanDenoms: "false",
           }).toString()
       );
@@ -94,7 +76,7 @@ export const OsmosisSwap: React.FC = () => {
     if (from && to && amount) {
       call();
     }
-  }, [from?.originalAddress, to?.[1]?.originalAddress, amount]);
+  }, [from?.originalAddress, to?.address, amount]);
 
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const shieldedAccount = defaultAccounts.data?.find(
@@ -136,7 +118,7 @@ export const OsmosisSwap: React.FC = () => {
     };
     const params = {
       transfer,
-      outputDenom: toTrace,
+      outputDenom: "TODO",
       recipient,
       // TODO: this should also be disposable address most likely
       overflow: transparentAccount.address,
@@ -173,7 +155,7 @@ export const OsmosisSwap: React.FC = () => {
       console.error("Error performing Osmosis swap:", error);
       alert("Transaction errror 🪦");
     }
-  }, [transparentAccount, shieldedAccount, toTrace, quote]);
+  }, [transparentAccount, shieldedAccount, quote]);
 
   return (
     <div className="text-white">
@@ -195,14 +177,10 @@ export const OsmosisSwap: React.FC = () => {
       <div>To:</div>
       <select
         className="text-black"
-        onChange={(e) =>
-          // TODO: this sucks because avaialbleAssets only shows tokens that we can use,
-          // we need to change registry to get all supported tokens
-          setTo(supportedAssets[Number(e.target.value)])
-        }
+        onChange={(e) => setTo(namadaAssets[Number(e.target.value)])}
       >
         <option value=""></option>
-        {supportedAssets.map(([asset], i) => (
+        {namadaAssets.map((asset, i) => (
           <option key={asset.base} value={i}>
             {asset.symbol}
           </option>
@@ -249,11 +227,11 @@ export const OsmosisSwap: React.FC = () => {
           </div>
           <div>
             Amount out: {quote.amount_out}
-            {to?.[1]?.asset.denom_units[0].aliases?.[0]}
+            {to?.denom_units[0].aliases?.[0]}
           </div>
           <div>
             Min amount out: {quote.minAmount}
-            {to?.[1]?.asset.denom_units[0].aliases?.[0]}
+            {to?.denom_units[0].aliases?.[0]}
           </div>
           <div>Slippage: {SLIPPAGE * 100}%</div>
           <div>Routes: </div>
@@ -261,7 +239,7 @@ export const OsmosisSwap: React.FC = () => {
           <div>
             Price: 1 {from?.asset.symbol} ≈{" "}
             {BigNumber(quote.amount_out).div(BigNumber(amount)).toString()}{" "}
-            {to?.[1]?.asset.symbol}
+            {to?.symbol}
           </div>
           <div>
             Price impact: {BigNumber(quote.price_impact).dp(3).toString()}
