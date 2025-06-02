@@ -105,10 +105,10 @@ impl SigningData {
             None => None,
         };
 
-        let mut public_keys = IndexSet::new();
+        let mut public_keys = vec![];
         for pk in self.public_keys.clone() {
             let pk = PublicKey::from_str(&pk)?;
-            public_keys.insert(pk);
+            public_keys.push(pk);
         }
 
         let fee_payer = PublicKey::from_str(&self.fee_payer)?;

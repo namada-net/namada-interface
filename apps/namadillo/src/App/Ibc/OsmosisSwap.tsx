@@ -1,10 +1,10 @@
-import { Asset } from "@chain-registry/types";
+import { Asset, IBCTrace } from "@chain-registry/types";
 import { Stack } from "@namada/components";
 import { AccountType, BparamsMsgValue } from "@namada/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaShieldedAssetsAtom } from "atoms/balance";
 import { chainParametersAtom } from "atoms/chain";
-import { findAssetsByChainById, ibcChannelsFamily } from "atoms/integrations";
+import { findAssetsByChainId, ibcChannelsFamily } from "atoms/integrations";
 import { SwapResponse, SwapResponseError, SwapResponseOk } from "atoms/swaps";
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
@@ -31,14 +31,16 @@ export const OsmosisSwap: React.FC = () => {
   const chainParameters = useAtomValue(chainParametersAtom);
   const namadaAssets =
     chainParameters.data ?
-      findAssetsByChainById(chainParameters.data.chainId)
+      findAssetsByChainId(chainParameters.data.chainId)
     : [];
+  const osmosisAssets =
+    chainParameters.data ? findAssetsByChainId("osmosis-1") : [];
 
   const [from, setFrom] = useState<AddressWithAssetAndAmount | undefined>();
   const [to, setTo] = useState<Asset | undefined>();
   const [amount, setAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>(
-    "znam17k7jw0wmvzdzmfm46m8600t9cah5mjl6se75cu9jvwxywk75k3kmxehmxk7wha62l35puzl6srd"
+    "znam17drxewzvge966gzcl0u6tr4j90traepujm2vd8ptwwkgrftnhs2hdtnyzgl5freyjsdnchn4ddy"
   );
   const [localRecoveryAddr, setLocalRecoveryAddress] = useState<string>(
     "osmo18st0wqx84av8y6xdlss9d6m2nepyqwj6n3q7js"
@@ -53,11 +55,24 @@ export const OsmosisSwap: React.FC = () => {
 
   useEffect(() => {
     const call = async (): Promise<void> => {
+      invariant(from, "No from asset selected");
+      invariant(to, "No to asset selected");
+      // We have to map namada assets to osmosis assets to get correct base
+      const fromOsmosis = osmosisAssets.find(
+        (assets) => assets.symbol === from.asset.symbol
+      );
+      const toOsmosis = osmosisAssets.find(
+        (assets) => assets.symbol === to.symbol
+      );
+
+      invariant(fromOsmosis, "From asset is not found in Osmosis assets");
+      invariant(toOsmosis, "To asset is not found in Osmosis assets");
+
       const quote = await fetch(
         "https://sqs.osmosis.zone/router/quote?" +
           new URLSearchParams({
-            tokenIn: `${amount}${from!.asset.base}`,
-            tokenOutDenom: to!.base,
+            tokenIn: `${amount}${fromOsmosis.base}`,
+            tokenOutDenom: toOsmosis.base,
             humanDenoms: "false",
           }).toString()
       );
@@ -90,10 +105,20 @@ export const OsmosisSwap: React.FC = () => {
     invariant(transparentAccount, "No transparent account is found");
     invariant(shieldedAccount, "No shielded account is found");
     invariant(from, "No from asset");
+    invariant(to, "No to asset");
     invariant(ibcChannels, "No ibc channels");
     invariant(quote, "No quote");
     invariant(localRecoveryAddr, "No local recovery address");
     invariant(recipient, "No recipient");
+
+    const toTrace = to.traces?.find((t): t is IBCTrace => t.type === "ibc")
+      ?.chain.path;
+    invariant(toTrace, "No IBC trace found for the to asset");
+    invariant(quote.route[0], "No route found in the quote");
+    const route = quote.route[0].pools.map((p) => ({
+      poolId: String(p.id),
+      tokenOutDenom: p.token_out_denom,
+    }));
 
     let bparams: BparamsMsgValue[] | undefined;
     if (transparentAccount.type === AccountType.Ledger) {
@@ -106,7 +131,7 @@ export const OsmosisSwap: React.FC = () => {
     const transfer = {
       amountInBaseDenom: BigNumber(amount),
       // osmosis channel
-      channelId: "channel-13",
+      channelId: "channel-7",
       portId: "transfer",
       token: from.originalAddress,
       source: shieldedAccount.pseudoExtendedKey!,
@@ -118,7 +143,7 @@ export const OsmosisSwap: React.FC = () => {
     };
     const params = {
       transfer,
-      outputDenom: "TODO",
+      outputDenom: toTrace,
       recipient,
       // TODO: this should also be disposable address most likely
       overflow: transparentAccount.address,
@@ -128,6 +153,7 @@ export const OsmosisSwap: React.FC = () => {
           .toString(),
       },
       localRecoveryAddr,
+      route,
       // TODO: not sure if hardcoding is ok, maybe we should connect keplr wallet
       osmosisRestRpc: "https://osmosis-rest.publicnode.com",
     };
@@ -149,7 +175,8 @@ export const OsmosisSwap: React.FC = () => {
         encodedTxData,
         transparentAccount.address!
       );
-      await broadcastTransaction(encodedTxData, signedTxs);
+      const wwww = await broadcastTransaction(encodedTxData, signedTxs);
+      console.log("Transaction broadcasted:", wwww);
       alert("Transaction sent 🚀");
     } catch (error) {
       console.error("Error performing Osmosis swap:", error);
@@ -166,8 +193,8 @@ export const OsmosisSwap: React.FC = () => {
           onChange={(e) => setFrom(availableAssets?.[e.target.value])}
         >
           <option value=""></option>
-          {Object.values(availableAssets || {}).map((al) => (
-            <option key={al.asset.base} value={al.originalAddress}>
+          {Object.values(availableAssets || {}).map((al, idx) => (
+            <option key={`${al.asset.base}_${idx}`} value={al.originalAddress}>
               {al.asset.symbol}
             </option>
           ))}
