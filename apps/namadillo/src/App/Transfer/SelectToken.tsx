@@ -31,6 +31,7 @@ export const SelectToken = ({
   onSelect,
 }: SelectTokenProps): JSX.Element | null => {
   const [filter, setFilter] = useState("");
+  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const transparentAssets = useAtomValue(namadaTransparentAssetsAtom);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const location = useLocation();
@@ -48,11 +49,21 @@ export const SelectToken = ({
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [chainAssetsMap]);
 
+  // Create a mapping of assets to their network names for better filtering
+  const assetToNetworkMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    chainAssetsMap.forEach((asset) => {
+      if (asset && asset.name) {
+        // Map asset address to network name
+        map[asset.address || asset.base] = asset.name;
+      }
+    });
+    return map;
+  }, [chainAssetsMap]);
+
   // Your tokens
   const tokens = useMemo(() => {
     const result: AddressWithAssetAndAmount[] = [];
-
-    // Process transparent assets
     if (transparentAssets.data) {
       Object.values(transparentAssets.data).forEach(
         (item: AddressWithAssetAndAmount) => {
@@ -68,13 +79,22 @@ export const SelectToken = ({
 
   const filteredTokens = useMemo(() => {
     return tokens
-      .filter(
-        (token) =>
+      .filter((token) => {
+        // Filter by search term
+        const matchesSearch =
           token.asset.name.toLowerCase().includes(filter.toLowerCase()) ||
-          token.asset.symbol.toLowerCase().includes(filter.toLowerCase())
-      )
+          token.asset.symbol.toLowerCase().includes(filter.toLowerCase());
+
+        // Filter by selected network (if any)
+        const tokenNetworkName =
+          assetToNetworkMap[token.originalAddress] || token.asset.name;
+        const matchesNetwork =
+          selectedNetwork === null || tokenNetworkName === selectedNetwork;
+
+        return matchesSearch && matchesNetwork;
+      })
       .sort((a, b) => Number(b.amount) - Number(a.amount));
-  }, [tokens, filter]);
+  }, [tokens, filter, selectedNetwork, assetToNetworkMap]);
 
   const hasDefaultAccount = !!accounts?.length;
   const transparentAccount = accounts?.find(
@@ -86,6 +106,10 @@ export const SelectToken = ({
     navigate(routes.switchAccount, {
       state: { backgroundLocation: location },
     });
+  };
+
+  const handleNetworkSelect = (networkName: string): void => {
+    setSelectedNetwork(selectedNetwork === networkName ? null : networkName);
   };
 
   if (!isOpen) return null;
@@ -124,9 +148,37 @@ export const SelectToken = ({
                 gap={2}
                 className="flex-1 overflow-auto dark-scrollbar"
               >
+                <li>
+                  <button
+                    onClick={() => setSelectedNetwork(null)}
+                    className={`flex items-center gap-3 p-2 w-full rounded-lg transition-colors ${
+                      selectedNetwork === null ?
+                        "bg-yellow/20 border border-yellow"
+                      : "hover:bg-neutral-800"
+                    }`}
+                  >
+                    <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
+                      <span className="text-white">All</span>
+                    </div>
+                    <span
+                      className={
+                        selectedNetwork === null ? "text-yellow" : "text-white"
+                      }
+                    >
+                      All Networks
+                    </span>
+                  </button>
+                </li>
                 {allNetworks.map((network) => (
                   <li key={network.name}>
-                    <button className="flex items-center gap-3 p-2 w-full hover:bg-neutral-800 rounded-lg transition-colors">
+                    <button
+                      onClick={() => handleNetworkSelect(network.name || "")}
+                      className={`flex items-center gap-3 p-2 w-full rounded-lg transition-colors ${
+                        selectedNetwork === network.name ?
+                          "bg-yellow/20 border border-yellow"
+                        : "hover:bg-neutral-800"
+                      }`}
+                    >
                       <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
                         {network.icon ?
                           <img
@@ -139,7 +191,15 @@ export const SelectToken = ({
                           </span>
                         }
                       </div>
-                      <span className="text-white">{network.name}</span>
+                      <span
+                        className={
+                          selectedNetwork === network.name ?
+                            "text-yellow"
+                          : "text-white"
+                        }
+                      >
+                        {network.name}
+                      </span>
                     </button>
                   </li>
                 ))}
@@ -166,7 +226,6 @@ export const SelectToken = ({
               </div>
 
               <div className="mb-6">
-                <h3 className="text-neutral-500 text-sm mb-3">Your tokens</h3>
                 <div className="h-[400px] overflow-auto dark-scrollbar">
                   <Stack as="ul" gap={2} className="pb-2">
                     {filteredTokens.length > 0 ?
