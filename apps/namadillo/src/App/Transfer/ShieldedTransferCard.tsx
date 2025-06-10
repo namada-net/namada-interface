@@ -13,7 +13,7 @@ import { TransferArrow } from "./TransferArrow";
 
 export const ShieldTransferCard = (): JSX.Element => {
   const transparentAssets = useAtomValue(namadaTransparentAssetsAtom);
-  const { data: accounts, isFetching } = useAtomValue(allDefaultAccountsAtom);
+  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const transparentAddress = accounts?.find((acc) =>
     isTransparentAddress(acc.address)
   )?.address;
@@ -23,7 +23,7 @@ export const ShieldTransferCard = (): JSX.Element => {
   );
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedMode, setSelectedMode] = useState("transparent");
+  const [selectedMode] = useState("transparent");
   const [selectedToken, setSelectedToken] = useState<
     AddressWithAssetAndAmount | undefined
   >(undefined);
@@ -35,7 +35,7 @@ export const ShieldTransferCard = (): JSX.Element => {
 
   const [amount, setAmount] = useState("0");
 
-  const mockBalance = "0.00";
+  // const mockBalance = "0.00";
   const dollarValue = "$0.00";
 
   const handleConnectWallet = (): void => {
