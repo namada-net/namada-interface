@@ -94,23 +94,19 @@ export const SelectToken = ({
     <>
       <Modal onClose={onClose} className="py-20">
         <ModalTransition>
-          <div className="flex h-[600px] rounded-xl border border-neutral-700 overflow-hidden">
+          <div className="flex h-[500px] rounded-xl border border-neutral-700 overflow-hidden">
             {/* Left panel */}
-            <div className="w-[300px] bg-neutral-800 p-6 flex flex-col overflow-auto">
-              <h2 className="text-white text-xl font-medium mb-6">
-                Your account
-              </h2>
-
+            <div className="w-[300px] bg-neutral-900 p-6 flex flex-col overflow-auto">
+              <h5 className="text-neutral-500 text-sm mb-0">Your account</h5>
               {hasDefaultAccount ?
-                <div className="flex items-center gap-3 mb-8 p-3">
-                  <div className="rounded-full bg-neutral-800">
-                    <img
-                      src={namadaTransparentSvg}
-                      alt="namada"
-                      className="w-6 h-6"
-                    />
-                  </div>
-                  <div className="font-mono text-white">
+                <div className="flex items-center gap-3 mb-2 p-3">
+                  <img
+                    src={namadaTransparentSvg}
+                    alt="namada"
+                    className="w-7 h-7"
+                  />
+
+                  <div className="text-neutral-500">
                     {shortenAddress(accountAddress || "", 10)}
                   </div>
                 </div>
@@ -122,7 +118,7 @@ export const SelectToken = ({
                 </button>
               }
 
-              <h2 className="text-white text-xl font-medium mb-4">Networks</h2>
+              <h2 className="text-neutral-500 text-sm mb-4">Networks</h2>
               <Stack
                 as="ul"
                 gap={2}
@@ -151,7 +147,7 @@ export const SelectToken = ({
             </div>
 
             {/* Right panel */}
-            <div className="bg-black border-l border-neutral-700 w-[500px] p-6 flex flex-col">
+            <div className="bg-black  w-[500px] p-6 flex flex-col">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-white text-xl font-medium">Select Token</h2>
                 <button
@@ -164,13 +160,13 @@ export const SelectToken = ({
 
               <div className="mb-6">
                 <Search
-                  placeholder="Paste token address or search by name"
+                  placeholder="Insert token name or symbol"
                   onChange={setFilter}
                 />
               </div>
 
               <div className="mb-6">
-                <h3 className="text-white text-lg mb-3">Your tokens</h3>
+                <h3 className="text-neutral-500 text-sm mb-3">Your tokens</h3>
                 <div className="h-[400px] overflow-auto dark-scrollbar">
                   <Stack as="ul" gap={2} className="pb-2">
                     {filteredTokens.length > 0 ?
@@ -184,7 +180,7 @@ export const SelectToken = ({
                             className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-neutral-800 transition-colors"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full overflow-hidden bg-neutral-800 flex items-center justify-center">
+                              <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
                                 {(
                                   token.asset.logo_URIs?.png ||
                                   token.asset.logo_URIs?.svg
@@ -195,7 +191,7 @@ export const SelectToken = ({
                                       token.asset.logo_URIs?.svg
                                     }
                                     alt={token.asset.symbol}
-                                    className="w-8 h-8"
+                                    className="w-10 h-10"
                                   />
                                 : <span className="text-white text-lg">
                                     {token.asset.symbol.charAt(0)}
