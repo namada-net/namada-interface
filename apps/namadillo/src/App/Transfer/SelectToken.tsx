@@ -227,7 +227,7 @@ export const SelectToken = ({
 
               <div className="mb-6">
                 <div className="h-[400px] overflow-auto dark-scrollbar">
-                  <Stack as="ul" gap={2} className="pb-2">
+                  <Stack as="ul" gap={2} className="pb-15">
                     {filteredTokens.length > 0 ?
                       filteredTokens.map((token) => (
                         <li key={token.originalAddress}>
