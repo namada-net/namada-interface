@@ -2,18 +2,25 @@ import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaTransparentAssetsAtom } from "atoms/balance";
-import { useAtomValue } from "jotai";
+import { connectedWalletsAtom } from "atoms/integrations";
+import { wallets } from "integrations";
+import { KeplrWalletManager } from "integrations/Keplr";
+import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
+import { IoMdCheckmark } from "react-icons/io";
 import { AddressWithAssetAndAmount } from "types";
 import NamadaLogo from "../Assets/NamadaLogo.svg";
 import { isTransparentAddress } from "./common";
 import { SelectToken } from "./SelectToken";
+import { SelectWalletModal } from "./SelectWalletModal";
 import { TransferArrow } from "./TransferArrow";
 
 export const ShieldTransferCard = (): JSX.Element => {
   const transparentAssets = useAtomValue(namadaTransparentAssetsAtom);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
+  const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
+
   const transparentAddress = accounts?.find((acc) =>
     isTransparentAddress(acc.address)
   )?.address;
@@ -28,6 +35,12 @@ export const ShieldTransferCard = (): JSX.Element => {
     AddressWithAssetAndAmount | undefined
   >(undefined);
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
+  const [isWalletModalOpen, setIsWalletModalOpen] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState<"namada" | "keplr">(
+    "namada"
+  );
+
+  const isKeplrConnected = connectedWallets.keplr || false;
 
   useEffect(() => {
     setSelectedToken(Object.values(transparentAssets.data || {})[0]);
@@ -39,8 +52,23 @@ export const ShieldTransferCard = (): JSX.Element => {
   const dollarValue = "$0.00";
 
   const handleConnectWallet = (): void => {
-    // Mock Keplr connection
+    if (!isKeplrConnected) {
+      setIsWalletModalOpen(true);
+    }
     setIsDropdownOpen(false);
+  };
+
+  const handleWalletConnect = async (wallet: { id: string }): Promise<void> => {
+    if (wallet.id === "keplr") {
+      const keplrWallet = new KeplrWalletManager();
+      try {
+        await keplrWallet.get();
+        setConnectedWallets((obj) => ({ ...obj, [keplrWallet.key]: true }));
+      } catch (error) {
+        console.error("Failed to connect to Keplr:", error);
+      }
+    }
+    setIsWalletModalOpen(false);
   };
 
   const handleSelectToken = (token: AddressWithAssetAndAmount): void => {
@@ -91,12 +119,24 @@ export const ShieldTransferCard = (): JSX.Element => {
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               className="flex items-center gap-2 py-2  transition-colors text-white"
             >
-              {/* {isConnected && ( */}
-              <span className="text-white text-sm">
-                {shortenAddress(transparentAddress ?? "", 6)}
-              </span>
-              {/* //   )} */}
-              <img src={NamadaLogo} alt="Namada Logo" className="w-7 h-7" />
+              {selectedWallet === "namada" && (
+                <>
+                  <span className="text-white text-sm">
+                    {shortenAddress(transparentAddress ?? "", 6)}
+                  </span>
+                  <img src={NamadaLogo} alt="Namada Logo" className="w-7 h-7" />
+                </>
+              )}
+              {selectedWallet === "keplr" && isKeplrConnected && (
+                <>
+                  <span className="text-white text-sm">Keplr</span>
+                  <img
+                    src={wallets.keplr.iconUrl}
+                    alt="Keplr"
+                    className="w-7 h-7"
+                  />
+                </>
+              )}
               <GoChevronDown className="text-sm text-white" />
             </button>
 
@@ -107,14 +147,20 @@ export const ShieldTransferCard = (): JSX.Element => {
 
                 {/* Wallet options */}
                 <div className="p-2">
-                  {/* {isConnected ? */}
-                  <button className="w-full flex items-center gap-3 pl-2 mb-2 rounded-sm hover:bg-neutral-700 transition-colors">
+                  {/* Namada wallet option */}
+                  <button
+                    onClick={() => {
+                      setSelectedWallet("namada");
+                      setIsDropdownOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 pl-2 mb-2 rounded-sm hover:bg-neutral-700 transition-colors"
+                  >
                     <img
                       src={NamadaLogo}
                       alt="Namada Logo"
                       className="w-8 h-8"
                     />
-                    <div className="text-left">
+                    <div className="text-left flex-1">
                       <div className="text-white font-medium">
                         {transparentAccount?.alias}
                       </div>
@@ -122,18 +168,43 @@ export const ShieldTransferCard = (): JSX.Element => {
                         {truncateAddress(transparentAddress ?? "")}
                       </div>
                     </div>
+                    {selectedWallet === "namada" && (
+                      <IoMdCheckmark className="text-green-400 text-lg" />
+                    )}
                   </button>
-                  <button
-                    onClick={handleConnectWallet}
-                    className="w-full flex items-center gap-3 p-3 rounded-sm bg-neutral-700 transition-colors"
-                  >
-                    <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center">
-                      <span className="text-black text-lg font-bold">+</span>
-                    </div>
-                    <span className="text-white font-medium pl-1">
-                      Connect new wallet
-                    </span>
-                  </button>
+                  {/* Keplr wallet connection */}
+                  {isKeplrConnected ?
+                    <button
+                      onClick={() => {
+                        setSelectedWallet("keplr");
+                        setIsDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 p-3 rounded-sm bg-neutral-700 hover:bg-neutral-600 transition-colors"
+                    >
+                      <img
+                        src={wallets.keplr.iconUrl}
+                        alt="Keplr"
+                        className="w-6 h-6"
+                      />
+                      <span className="text-white font-medium pl-1 flex-1 text-left">
+                        {wallets.keplr.name}
+                      </span>
+                      {selectedWallet === "keplr" && (
+                        <IoMdCheckmark className="text-green-400 text-lg" />
+                      )}
+                    </button>
+                  : <button
+                      onClick={handleConnectWallet}
+                      className="w-full flex items-center gap-3 p-3 rounded-sm bg-neutral-700 hover:bg-neutral-600 transition-colors"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-yellow-400 flex items-center justify-center">
+                        <span className="text-black text-lg font-bold">+</span>
+                      </div>
+                      <span className="text-white font-medium pl-1">
+                        Connect Keplr
+                      </span>
+                    </button>
+                  }
                   {/* } */}
                 </div>
               </div>
@@ -181,6 +252,15 @@ export const ShieldTransferCard = (): JSX.Element => {
         onClose={() => setIsTokenModalOpen(false)}
         onSelect={handleSelectToken}
       />
+
+      {/* Wallet connection modal */}
+      {isWalletModalOpen && (
+        <SelectWalletModal
+          availableWallets={[wallets.keplr]}
+          onClose={() => setIsWalletModalOpen(false)}
+          onConnect={handleWalletConnect}
+        />
+      )}
     </div>
   );
 };
