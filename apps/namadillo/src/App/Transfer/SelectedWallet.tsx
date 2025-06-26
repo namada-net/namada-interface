@@ -37,6 +37,11 @@ export const SelectedWallet = ({
       )}
       onClick={onClick}
     >
+      <img
+        src={wallet.iconUrl}
+        alt={wallet.name + " Logo"}
+        className="w-6 select-none"
+      />
       {address && (
         <WalletAddress
           address={address}
@@ -44,11 +49,6 @@ export const SelectedWallet = ({
           displayFullAddress={displayFullAddress}
         />
       )}
-      <img
-        src={wallet.iconUrl}
-        alt={wallet.name + " Logo"}
-        className="w-6 select-none"
-      />
     </div>
   );
 };

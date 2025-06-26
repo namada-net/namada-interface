@@ -32,12 +32,20 @@ export const Navigation = (): JSX.Element => {
       url: routes.governance,
     },
     {
-      label: "IBC Transfer",
+      label: "Shield",
       icon: <TbVectorTriangle />,
-      url: features.ibcTransfersEnabled ? routes.ibc : undefined,
+      url: routes.shield,
     },
     {
       label: "Transfer",
+      icon: <IoSwapHorizontal />,
+      url:
+        features.maspEnabled || features.namTransfersEnabled ?
+          routes.transfer
+        : undefined,
+    },
+    {
+      label: "Receive",
       icon: <IoSwapHorizontal />,
       url:
         features.maspEnabled || features.namTransfersEnabled ?
@@ -57,14 +65,27 @@ export const Navigation = (): JSX.Element => {
   return (
     <div className="min-h-full flex flex-col justify-between gap-10 p-6 pb-8">
       <ul className="flex flex-col gap-4">
-        {menuItems.map((item) => (
-          <li key={item.label}>
-            <SidebarMenuItem url={item.url}>
-              {item.icon}
-              {item.label}
-            </SidebarMenuItem>
-          </li>
-        ))}
+        {menuItems.map((item) => {
+          const shieldingRoute = item.label === "Shield";
+          return (
+            <>
+              <li key={item.label}>
+                {shieldingRoute && (
+                  <>
+                    <hr className="border-neutral-300 border-t-1 w-full mb-3" />
+                    <h5 className="text-neutral-500 text-sm mb-2">
+                      Move Assets
+                    </h5>
+                  </>
+                )}
+                <SidebarMenuItem url={item.url}>
+                  {item.icon}
+                  {item.label}
+                </SidebarMenuItem>
+              </li>
+            </>
+          );
+        })}
       </ul>
       <footer className="flex flex-col gap-10">
         <ul className="flex flex-col gap-1 text-neutral-300 text-sm">
