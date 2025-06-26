@@ -67,13 +67,14 @@ export const Navigation = (): JSX.Element => {
       <ul className="flex flex-col gap-4">
         {menuItems.map((item) => {
           const shieldingRoute = item.label === "Shield";
+          const historyRoute = item.label === "History";
           return (
             <>
               <li key={item.label}>
                 {shieldingRoute && (
                   <>
-                    <hr className="border-neutral-300 border-t-1 w-full mb-3" />
-                    <h5 className="text-neutral-500 text-sm mb-2">
+                    <hr className="border-neutral-300 border-t-1 w-full mb-2" />
+                    <h5 className="text-neutral-500 text-xs mb-2">
                       Move Assets
                     </h5>
                   </>
@@ -82,6 +83,9 @@ export const Navigation = (): JSX.Element => {
                   {item.icon}
                   {item.label}
                 </SidebarMenuItem>
+                {historyRoute && (
+                  <hr className="border-neutral-300 border-t-1 w-full mt-3" />
+                )}
               </li>
             </>
           );
