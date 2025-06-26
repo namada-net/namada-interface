@@ -2,11 +2,23 @@ import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaTransparentAssetsAtom } from "atoms/balance";
-import { connectedWalletsAtom } from "atoms/integrations";
+import { chainAssetsMapAtom, chainTokensAtom } from "atoms/chain";
+import {
+  chainRegistryAtom,
+  connectedWalletsAtom,
+  getDenomFromIbcTrace,
+  searchChainByDenom,
+} from "atoms/integrations";
+import {
+  namadaExtensionAttachStatus,
+  namadaExtensionConnectionStatus,
+} from "atoms/settings";
+import { useNamadaKeychain } from "hooks/useNamadaKeychain";
 import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
+import { findRegistryByChainId } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { IoMdCheckmark } from "react-icons/io";
 import { AddressWithAssetAndAmount } from "types";
@@ -16,10 +28,32 @@ import { SelectToken } from "./SelectToken";
 import { SelectWalletModal } from "./SelectWalletModal";
 import { TransferArrow } from "./TransferArrow";
 
+// Helper function to check if a token is an IBC token
+const isIbcToken = (
+  token: AddressWithAssetAndAmount,
+  assetToNetworkMap: Record<string, string>
+): boolean => {
+  // Check if originalAddress starts with 'ibc/'
+  if (token.originalAddress.startsWith("ibc/")) {
+    return true;
+  }
+
+  // Check if the token's network is not Namada
+  const tokenNetworkName =
+    assetToNetworkMap[token.originalAddress] || token.asset.name;
+  return tokenNetworkName !== "Namada" && tokenNetworkName !== "namada";
+};
+
 export const ShieldTransferCard = (): JSX.Element => {
   const transparentAssets = useAtomValue(namadaTransparentAssetsAtom);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
+  const extensionAttachStatus = useAtomValue(namadaExtensionAttachStatus);
+  const [connectStatus] = useAtom(namadaExtensionConnectionStatus);
+  const { connect } = useNamadaKeychain();
+  const chainAssetsMap = Object.values(useAtomValue(chainAssetsMapAtom));
+  const chainTokens = useAtomValue(chainTokensAtom);
+  const chainRegistry = useAtomValue(chainRegistryAtom);
 
   const transparentAddress = accounts?.find((acc) =>
     isTransparentAddress(acc.address)
@@ -39,14 +73,88 @@ export const ShieldTransferCard = (): JSX.Element => {
   const [selectedWallet, setSelectedWallet] = useState<"namada" | "keplr">(
     "namada"
   );
-
+  const [keplrAddress, setKeplrAddress] = useState<string>("");
   const isKeplrConnected = connectedWallets.keplr || false;
+
+  // Create a mapping of assets to their network names for IBC token detection
+  const assetToNetworkMap = React.useMemo((): Record<string, string> => {
+    const map: Record<string, string> = {};
+    chainAssetsMap.forEach((asset) => {
+      if (asset && asset.name) {
+        // Map asset address to network name
+        map[asset.address || asset.base] = asset.name;
+      }
+    });
+    return map;
+  }, [chainAssetsMap]);
+
+  // Check if selected token is IBC token
+  const isSelectedTokenIbc =
+    selectedToken ? isIbcToken(selectedToken, assetToNetworkMap) : false;
 
   useEffect(() => {
     setSelectedToken(Object.values(transparentAssets.data || {})[0]);
   }, [transparentAssets.data]);
 
-  const [amount, setAmount] = useState("0");
+  // Get Keplr address when connected or selected token changes
+  useEffect(() => {
+    const getKeplrAddress = async (): Promise<void> => {
+      if (isKeplrConnected && selectedToken && isSelectedTokenIbc) {
+        try {
+          const keplrWallet = new KeplrWalletManager();
+          const keplrInstance = await keplrWallet.get();
+          if (!keplrInstance) {
+            setKeplrAddress("");
+            return;
+          }
+
+          // Find the correct chain for this IBC token
+          let targetChainId = "cosmoshub-4"; // Default fallback
+
+          // First, try to find the chain using the token's trace if available
+          if (chainTokens.data) {
+            const chainToken = chainTokens.data.find(
+              (chainToken) =>
+                chainToken.address === selectedToken.originalAddress
+            );
+
+            if (chainToken && "trace" in chainToken) {
+              const denom = getDenomFromIbcTrace(chainToken.trace);
+              const chain = searchChainByDenom(denom);
+              if (chain) {
+                const targetChainRegistry = findRegistryByChainId(
+                  chainRegistry,
+                  chain.chain_id
+                );
+                if (targetChainRegistry) {
+                  targetChainId = chain.chain_id;
+                }
+              }
+            }
+          }
+
+          // Get address from the specific chain
+          const address = await keplrWallet.getAddress(targetChainId);
+          setKeplrAddress(address);
+        } catch (error) {
+          console.error("Failed to get Keplr address:", error);
+          setKeplrAddress("");
+        }
+      } else {
+        setKeplrAddress("");
+      }
+    };
+
+    getKeplrAddress();
+  }, [
+    isKeplrConnected,
+    selectedToken,
+    isSelectedTokenIbc,
+    chainTokens.data,
+    chainRegistry,
+  ]);
+
+  const [amount, setAmount] = useState("");
 
   // const mockBalance = "0.00";
   const dollarValue = "$0.00";
@@ -75,6 +183,18 @@ export const ShieldTransferCard = (): JSX.Element => {
     setSelectedToken(token);
   };
 
+  const handleDropdownClick = async (callback: () => void): Promise<void> => {
+    if (connectStatus !== "connected") {
+      if (extensionAttachStatus === "attached") {
+        await connect();
+      } else {
+        window.open("https://namada.net/extension", "_blank");
+      }
+      return;
+    }
+    callback();
+  };
+
   const truncateAddress = (address: string): string => {
     if (!address) return "";
     return `${address.slice(0, 10)}...${address.slice(-6)}`;
@@ -95,7 +215,7 @@ export const ShieldTransferCard = (): JSX.Element => {
         <div className="flex justify-between items-center mb-8">
           {/* Token selector - now clickable */}
           <button
-            onClick={() => setIsTokenModalOpen(true)}
+            onClick={() => handleDropdownClick(() => setIsTokenModalOpen(true))}
             className="flex items-center gap-2 py-2 hover:opacity-90 transition-colors text-white"
           >
             <div className="aspect-square h-8 w-8">
@@ -107,8 +227,8 @@ export const ShieldTransferCard = (): JSX.Element => {
                 alt={selectedToken?.asset.symbol ?? ""}
               />
             </div>
-            <span className="text-white font-medium">
-              {selectedToken?.asset.symbol ?? ""}
+            <span className="text-white text-sm">
+              {selectedToken?.asset.symbol ?? "Select Asset"}
             </span>
             <GoChevronDown className="text-sm" />
           </button>
@@ -116,20 +236,28 @@ export const ShieldTransferCard = (): JSX.Element => {
           {/* Shield/Transparent toggle and wallet */}
           <div className="relative">
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              onClick={() =>
+                handleDropdownClick(() => setIsDropdownOpen(!isDropdownOpen))
+              }
               className="flex items-center gap-2 py-2  transition-colors text-white"
             >
               {selectedWallet === "namada" && (
                 <>
                   <span className="text-white text-sm">
-                    {shortenAddress(transparentAddress ?? "", 6)}
+                    {transparentAddress ?
+                      shortenAddress(transparentAddress, 6)
+                    : "Select Network"}
                   </span>
                   <img src={NamadaLogo} alt="Namada Logo" className="w-7 h-7" />
                 </>
               )}
               {selectedWallet === "keplr" && isKeplrConnected && (
                 <>
-                  <span className="text-white text-sm">Keplr</span>
+                  <span className="text-white text-sm">
+                    {isSelectedTokenIbc && keplrAddress ?
+                      shortenAddress(keplrAddress, 6)
+                    : "Keplr"}
+                  </span>
                   <img
                     src={wallets.keplr.iconUrl}
                     alt="Keplr"
@@ -186,9 +314,16 @@ export const ShieldTransferCard = (): JSX.Element => {
                         alt="Keplr"
                         className="w-6 h-6"
                       />
-                      <span className="text-white font-medium pl-1 flex-1 text-left">
-                        {wallets.keplr.name}
-                      </span>
+                      <div className="text-left flex-1 pl-1">
+                        <div className="text-white font-medium">
+                          {wallets.keplr.name}
+                        </div>
+                        {isSelectedTokenIbc && keplrAddress && (
+                          <div className="text-neutral-400 text-sm">
+                            {shortenAddress(keplrAddress, 6)}
+                          </div>
+                        )}
+                      </div>
                       {selectedWallet === "keplr" && (
                         <IoMdCheckmark className="text-green-400 text-lg" />
                       )}
@@ -218,8 +353,8 @@ export const ShieldTransferCard = (): JSX.Element => {
             type="text"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full bg-transparent text-white text-5xl font-light text-center outline-none placeholder-gray-600"
             placeholder="0"
+            className="w-full bg-transparent text-white text-5xl font-light text-center outline-none placeholder-gray-600 focus:placeholder-transparent"
           />
         </div>
 
@@ -227,7 +362,7 @@ export const ShieldTransferCard = (): JSX.Element => {
         <div className="flex justify-between items-center">
           <span className="text-neutral-400">{dollarValue}</span>
           <span className="text-neutral-400">
-            {selectedToken?.amount?.toString() ?? "No Balance"}
+            {`${Boolean(selectedToken?.amount?.toNumber()) ? `Available: ${selectedToken?.amount?.toString()}` : "No Balance"}`}
           </span>
         </div>
       </div>
