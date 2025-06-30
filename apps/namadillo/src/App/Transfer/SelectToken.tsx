@@ -219,16 +219,6 @@ export const SelectToken = ({
             }
           }
 
-          // Fallback: if we can't determine the specific chain, try to connect to a default chain
-          // This helps establish the basic Keplr connection
-          if (!targetChainRegistry) {
-            // Use cosmoshub as a default fallback since it's commonly supported
-            targetChainRegistry = findRegistryByChainId(
-              chainRegistry,
-              "cosmoshub-4"
-            );
-          }
-
           if (targetChainRegistry) {
             // Connect to the specific chain
             await keplrWallet.connect(targetChainRegistry);
@@ -265,6 +255,7 @@ export const SelectToken = ({
       // Proceed with the pending token
       handleTokenSelect(pendingToken);
       setPendingToken(null);
+      handleCloseModal();
     }
   };
 
