@@ -9,6 +9,7 @@ import {
   getDenomFromIbcTrace,
   searchChainByDenom,
 } from "atoms/integrations";
+import { tokenPricesFamily } from "atoms/prices/atoms";
 import {
   namadaExtensionAttachStatus,
   namadaExtensionConnectionStatus,
@@ -41,7 +42,7 @@ const isIbcToken = (
   // Check if the token's network is not Namada
   const tokenNetworkName =
     assetToNetworkMap[token.originalAddress] || token.asset.name;
-  return tokenNetworkName !== "Namada" && tokenNetworkName !== "namada";
+  return tokenNetworkName !== "namada";
 };
 
 export const ShieldTransferCard = (): JSX.Element => {
@@ -54,7 +55,6 @@ export const ShieldTransferCard = (): JSX.Element => {
   const chainAssetsMap = Object.values(useAtomValue(chainAssetsMapAtom));
   const chainTokens = useAtomValue(chainTokensAtom);
   const chainRegistry = useAtomValue(chainRegistryAtom);
-
   const transparentAddress = accounts?.find((acc) =>
     isTransparentAddress(acc.address)
   )?.address;
@@ -62,7 +62,7 @@ export const ShieldTransferCard = (): JSX.Element => {
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
   );
-
+  const [amount, setAmount] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedMode] = useState("transparent");
   const [selectedToken, setSelectedToken] = useState<
@@ -75,6 +75,9 @@ export const ShieldTransferCard = (): JSX.Element => {
   );
   const [keplrAddress, setKeplrAddress] = useState<string>("");
   const isKeplrConnected = connectedWallets.keplr || false;
+  const tokenPrices = useAtomValue(
+    tokenPricesFamily(selectedToken ? [selectedToken.originalAddress] : [])
+  );
 
   // Create a mapping of assets to their network names for IBC token detection
   const assetToNetworkMap = React.useMemo((): Record<string, string> => {
@@ -154,10 +157,21 @@ export const ShieldTransferCard = (): JSX.Element => {
     chainRegistry,
   ]);
 
-  const [amount, setAmount] = useState("");
+  // Calculate dollar value for selected token's total balance
+  const dollarValue = React.useMemo(() => {
+    if (!selectedToken || !tokenPrices.data) {
+      return "$0.00";
+    }
 
-  // const mockBalance = "0.00";
-  const dollarValue = "$0.00";
+    const tokenPrice = tokenPrices.data[selectedToken.originalAddress];
+    if (!tokenPrice) {
+      return "$0.00";
+    }
+
+    const dollarAmount = selectedToken.amount.multipliedBy(tokenPrice);
+
+    return `$${dollarAmount.toFixed(2)}`;
+  }, [selectedToken, tokenPrices.data]);
 
   const handleConnectWallet = (): void => {
     if (!isKeplrConnected) {
@@ -202,18 +216,15 @@ export const ShieldTransferCard = (): JSX.Element => {
 
   return (
     <div className="w-full max-w-[500px] mx-auto pt-10">
-      {/* Header text based on mode */}
       <div className="text-center mb-4 text-yellow-400 text-sm">
         {selectedMode === "shielded" ?
           "Shield assets into Namada's Shieldpool."
         : "Transfer to Namada transparent address"}
       </div>
 
-      {/* Main card */}
       <div className="bg-neutral-800 rounded-xl p-4 border hover:border-yellow-400">
-        {/* Top row */}
         <div className="flex justify-between items-center mb-8">
-          {/* Token selector - now clickable */}
+          {/* Token selector */}
           <button
             onClick={() => handleDropdownClick(() => setIsTokenModalOpen(true))}
             className="flex items-center gap-2 py-2 hover:opacity-90 transition-colors text-white"
@@ -268,14 +279,12 @@ export const ShieldTransferCard = (): JSX.Element => {
               <GoChevronDown className="text-sm text-white" />
             </button>
 
-            {/* Dropdown menu */}
             {isDropdownOpen && (
               <div className="absolute right-0 mt-2 w-72 bg-neutral-900 rounded-lg shadow-xl border-2 border-neutral-700 overflow-hidden z-10">
                 <div className="border-t border-neutral-700" />
 
                 {/* Wallet options */}
                 <div className="p-2">
-                  {/* Namada wallet option */}
                   <button
                     onClick={() => {
                       setSelectedWallet("namada");
@@ -300,7 +309,6 @@ export const ShieldTransferCard = (): JSX.Element => {
                       <IoMdCheckmark className="text-green-400 text-lg" />
                     )}
                   </button>
-                  {/* Keplr wallet connection */}
                   {isKeplrConnected ?
                     <button
                       onClick={() => {
@@ -358,7 +366,6 @@ export const ShieldTransferCard = (): JSX.Element => {
           />
         </div>
 
-        {/* Bottom row */}
         <div className="flex justify-between items-center">
           <span className="text-neutral-400">{dollarValue}</span>
           <span className="text-neutral-400">
@@ -381,7 +388,6 @@ export const ShieldTransferCard = (): JSX.Element => {
         </div>
       </div>
 
-      {/* Token selection modal */}
       <SelectToken
         isOpen={isTokenModalOpen}
         onClose={() => setIsTokenModalOpen(false)}
