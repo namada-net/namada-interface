@@ -32,7 +32,7 @@ type Network = {
 type SelectTokenProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (token: AddressWithAssetAndAmount) => void;
+  onSelect: ((address: string | undefined) => void) | undefined;
 };
 
 // Helper function to check if a token is an IBC token
@@ -236,13 +236,13 @@ export const SelectToken = ({
       }
 
       // Proceed with token selection
-      onSelect(token);
+      onSelect?.(token.originalAddress);
       onClose();
     } catch (error) {
       console.error("Error in token selection:", error);
       setIsConnectingKeplr(false);
       // Still allow token selection to proceed
-      onSelect(token);
+      onSelect?.(token.originalAddress);
       onClose();
     }
   };

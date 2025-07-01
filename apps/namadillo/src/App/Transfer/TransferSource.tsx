@@ -8,7 +8,6 @@ import { Asset, WalletProvider } from "types";
 import { AvailableAmountFooter } from "./AvailableAmountFooter";
 import { ConnectProviderButton } from "./ConnectProviderButton";
 import { SelectedAsset } from "./SelectedAsset";
-import { SelectedChain } from "./SelectedChain";
 import { SelectedWallet } from "./SelectedWallet";
 import { TokenAmountCard } from "./TokenAmountCard";
 
@@ -50,7 +49,6 @@ export const TransferSource = ({
   wallet,
   walletAddress,
   openProviderSelector,
-  openChainSelector,
   openAssetSelector,
   availableAmount,
   availableAmountMinusFees,
@@ -115,10 +113,11 @@ export const TransferSource = ({
 
       {/** Chain selector / chain indicator */}
       <header className="relative flex justify-between">
-        <SelectedChain
-          onClick={openChainSelector}
-          chain={chain}
-          wallet={wallet}
+        <SelectedAsset
+          asset={asset}
+          isLoading={isLoadingAssets}
+          isDisabled={!chain || !walletAddress}
+          onClick={openAssetSelector}
         />
         {!walletAddress && (
           <ConnectProviderButton onClick={openProviderSelector} />
@@ -131,20 +130,13 @@ export const TransferSource = ({
           />
         )}
       </header>
-      <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
 
       {/** Asset selector */}
       {!isSubmitting && (
-        <div className="grid grid-cols-[max-content_auto] gap-5 mb-3">
-          <SelectedAsset
-            asset={asset}
-            isLoading={isLoadingAssets}
-            isDisabled={!chain || !walletAddress}
-            onClick={openAssetSelector}
-          />
+        <div className="grid grid-cols-[max-content_auto] gap-5 mb-3 p-5">
           <AmountInput
             className={clsx(
-              "text-right [&_input]:text-right [&_input]:text-3xl [&_input]:bg-transparent",
+              "text-center [&_input]:text-center [&_input]:text-3xl [&_input]:bg-transparent",
               "[&_input]:!border-0 [&_input]:px-0"
             )}
             disabled={!chain || !asset}
