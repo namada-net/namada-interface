@@ -223,6 +223,7 @@ export const TransferDestination = ({
           </div>
         )}
 
+<<<<<<< HEAD
         {isSubmitting && amount && destinationAsset && (
           <div>
             <TokenAmountCard asset={destinationAsset} displayAmount={amount} />
@@ -271,6 +272,26 @@ export const TransferDestination = ({
           onSelectAddress={handleSelectAddress}
           selectedAddress={address}
         />
+=======
+      {!isSubmitting && (
+        <footer className="flex mt-10">
+          {changeFeeEnabled ?
+            feeProps && (
+              <TransactionFeeButton
+                feeProps={feeProps}
+                isShieldedTransfer={isShieldedTx}
+              />
+            )
+          : gasDisplayAmount &&
+            gasAsset && (
+              <TransactionFee
+                displayAmount={gasDisplayAmount}
+                symbol={gasAsset.symbol}
+              />
+            )
+          }
+        </footer>
+>>>>>>> 827671d0 (fix: styling in source module)
       )}
     </>
   );

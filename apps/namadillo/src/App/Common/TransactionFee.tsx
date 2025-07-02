@@ -11,8 +11,8 @@ export const TransactionFee = ({
   symbol,
 }: TransactionFeeProps): JSX.Element => {
   return (
-    <div className="flex justify-between w-full gap-2">
-      <span className="text-sm mt-1 ml-1 underline leading-none text-neutral-300">
+    <div className="flex w-full gap-2">
+      <span className="text-sm mt-[3px] ml-1 underline leading-none text-neutral-300">
         Transaction Fee
       </span>
       <TokenCurrency

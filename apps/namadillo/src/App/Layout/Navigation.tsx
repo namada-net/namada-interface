@@ -34,7 +34,7 @@ export const Navigation = (): JSX.Element => {
     {
       label: "Shield",
       icon: <TbVectorTriangle />,
-      url: routes.shield,
+      url: routes.maspShield,
     },
     {
       label: "Transfer",
