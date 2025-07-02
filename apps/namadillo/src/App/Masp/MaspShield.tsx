@@ -1,11 +1,12 @@
+import namadaChain from "@namada/chain-registry/namada/chain.json";
 import { Panel } from "@namada/components";
-import { AccountType } from "@namada/types";
-import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
+import { AccountType, Chain } from "@namada/types";
 import { params } from "App/routes";
 import {
   OnSubmitTransferParams,
   TransferModule,
 } from "App/Transfer/TransferModule";
+
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaTransparentAssetsAtom } from "atoms/balance/atoms";
 import { chainParametersAtom } from "atoms/chain/atoms";
@@ -140,11 +141,11 @@ export const MaspShield: React.FC = () => {
 
   return (
     <Panel className="rounded-sm flex flex-col flex-1 py-9">
-      <header className="flex flex-col items-center text-center mb-8 gap-6">
-        <NamadaTransferTopHeader
-          isSourceShielded={false}
-          isDestinationShielded={true}
-        />
+      <header className="flex flex-col items-center text-center mb-4 gap-2">
+        <h2 className="text-lg text-yellow">Shield Assets</h2>
+        <h3 className="text-md text-yellow font-normal">
+          Shield assets into Namada&apos;s Shieldpool
+        </h3>
       </header>
       <TransferModule
         source={{
@@ -152,8 +153,8 @@ export const MaspShield: React.FC = () => {
           availableAssets,
           selectedAssetAddress,
           availableAmount: selectedAsset?.amount,
-          chain,
-          availableWallets: [wallets.namada],
+          chain: namadaChain as Chain,
+          availableWallets: [wallets.namada, wallets.keplr],
           wallet: wallets.namada,
           walletAddress: sourceAddress,
           onChangeSelectedAsset: setSelectedAssetAddress,
