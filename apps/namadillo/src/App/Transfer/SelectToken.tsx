@@ -1,3 +1,5 @@
+import { Chain } from "@chain-registry/types";
+import namadaChain from "@namada/chain-registry/namada/chain.json";
 import { Modal, Stack } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
@@ -8,6 +10,7 @@ import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaTransparentAssetsAtom } from "atoms/balance";
 import { chainAssetsMapAtom, chainTokensAtom } from "atoms/chain";
 import {
+  availableChainsAtom,
   chainRegistryAtom,
   connectedWalletsAtom,
   getDenomFromIbcTrace,
@@ -21,6 +24,7 @@ import { useMemo, useState } from "react";
 import { IoArrowBack, IoClose } from "react-icons/io5";
 import { useLocation, useNavigate } from "react-router-dom";
 import { AddressWithAssetAndAmount } from "types";
+import { capitalize } from "utils/etc";
 import namadaTransparentSvg from "./assets/namada-transparent.svg";
 import { WalletCard } from "./WalletCard";
 
@@ -70,13 +74,21 @@ export const SelectToken = ({
   const location = useLocation();
   const navigate = useNavigate();
   const chainAssetsMap = Object.values(useAtomValue(chainAssetsMapAtom));
+  const ibcChains = useAtomValue(availableChainsAtom);
+  const allChains = [...ibcChains, namadaChain as unknown as Chain];
 
   const allNetworks: Network[] = useMemo(() => {
-    return chainAssetsMap
+    return allChains
+      .filter((chain) => chain.network_type !== "testnet")
       .map((chainAsset) => {
         return {
-          name: chainAsset?.name ?? "",
-          icon: chainAsset?.logo_URIs?.png || chainAsset?.logo_URIs?.svg,
+          name:
+            chainAsset?.chain_name ?
+              chainAsset.chain_name.charAt(0).toUpperCase() +
+              chainAsset.chain_name.slice(1)
+            : "",
+          icon: chainAsset?.logo_URIs?.svg,
+          chainId: chainAsset?.chain_id,
         };
       })
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -437,7 +449,10 @@ export const SelectToken = ({
                                     </span>
                                     {isIbcToken(token, assetToNetworkMap) && (
                                       <span className="text-xs text-neutral-400">
-                                        IBC Token
+                                        {capitalize(
+                                          token.asset.traces?.[0]?.counterparty
+                                            .chain_name ?? ""
+                                        )}
                                       </span>
                                     )}
                                   </div>
