@@ -43,7 +43,7 @@ export const TransactionFeeButton = ({
           symbol={gasDisplayAmount?.asset.symbol || ""}
         />
         <div className="flex items-center gap-2">
-          <div className="text-neutral-500 text-xs">Fee Options:</div>
+          <div className="text-neutral-500 text-xs">Fees:</div>
           <button
             type="button"
             className={twMerge(

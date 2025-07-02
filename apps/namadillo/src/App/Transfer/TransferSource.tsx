@@ -4,7 +4,7 @@ import { TabSelector } from "App/Common/TabSelector";
 import { MaspSyncIndicator } from "App/Layout/MaspSyncIndicator";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
-import { Asset, WalletProvider } from "types";
+import { Address, Asset, WalletProvider } from "types";
 import { AvailableAmountFooter } from "./AvailableAmountFooter";
 import { ConnectProviderButton } from "./ConnectProviderButton";
 import { SelectedAsset } from "./SelectedAsset";
@@ -20,6 +20,7 @@ export type TransferSourceProps = {
   wallet?: WalletProvider;
   walletAddress?: string;
   asset?: Asset;
+  originalAddress?: Address;
   isLoadingAssets?: boolean;
   isSubmitting?: boolean;
   isSyncingMasp?: boolean;
@@ -49,6 +50,7 @@ const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
 export const TransferSource = ({
   chain,
   asset,
+  originalAddress,
   isLoadingAssets,
   wallet,
   walletAddress,
@@ -159,6 +161,7 @@ export const TransferSource = ({
             availableAmount={availableAmount}
             availableAmountMinusFees={availableAmountMinusFees}
             asset={asset}
+            originalAddress={originalAddress}
             onClickMax={() =>
               onChangeAmount && onChangeAmount(availableAmountMinusFees)
             }
