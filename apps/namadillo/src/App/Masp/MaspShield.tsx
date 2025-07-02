@@ -6,7 +6,6 @@ import {
   OnSubmitTransferParams,
   TransferModule,
 } from "App/Transfer/TransferModule";
-
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaTransparentAssetsAtom } from "atoms/balance/atoms";
 import { chainParametersAtom } from "atoms/chain/atoms";
