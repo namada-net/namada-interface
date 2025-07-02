@@ -7,7 +7,9 @@ import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
 } from "atoms/balance";
-import { chainAssetsMapAtom, chainParametersAtom } from "atoms/chain";
+
+import { chainParametersAtom } from "atoms/chain";
+import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
@@ -80,7 +82,7 @@ export const TransferModule = ({
     errorMessage: ledgerStatus.errorMessage,
   };
   const chainParameters = useAtomValue(chainParametersAtom);
-  const chainAssetsMap = useAtomValue(chainAssetsMapAtom);
+  const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const chainId = chainParameters.data?.chainId;
   const rpcUrl = useAtomValue(rpcUrlAtom);
 
@@ -168,7 +170,9 @@ export const TransferModule = ({
 
   const gasConfig = feeProps?.gasConfig;
   const displayGasFee = useMemo(() => {
-    return gasConfig ? getDisplayGasFee(gasConfig, chainAssetsMap) : undefined;
+    return gasConfig ?
+        getDisplayGasFee(gasConfig, chainAssetsMap.data ?? {})
+      : undefined;
   }, [gasConfig]);
 
   const availableAmountMinusFees = useMemo(() => {
@@ -327,6 +331,16 @@ export const TransferModule = ({
 
   return (
     <>
+      <SelectToken
+        isOpen={assetSelectorModalOpen}
+        onClose={() => setAssetSelectorModalOpen(false)}
+        onSelect={(asset) => {
+          source.onChangeAmount?.(undefined);
+          source.onChangeSelectedAsset?.(asset);
+          setAssetSelectorModalOpen(false);
+        }}
+      />
+
       <section className="max-w-[480px] mx-auto" role="widget">
         <Stack
           className={clsx({
