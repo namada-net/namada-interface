@@ -36,7 +36,7 @@ export const SelectedAsset = ({
     >
       {!asset && (
         <span className={selectorClassList}>
-          <EmptyResourceIcon className="w-12" />
+          <EmptyResourceIcon className="w-8" />
           {isLoading && (
             <SkeletonLoading
               className="bg-neutral-700"
@@ -56,13 +56,13 @@ export const SelectedAsset = ({
         <span className={selectorClassList}>
           <img
             className={clsx(
-              "w-15 aspect-square object-cover select-none",
+              "w-8 aspect-square object-cover select-none",
               "object-center bg-neutral-800 rounded-full"
             )}
             alt={`${asset.name} image`}
             src={getAssetImageUrl(asset)}
           />
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 text-md">
             {asset.symbol}
             <i className="text-sm">
               <GoChevronDown />
