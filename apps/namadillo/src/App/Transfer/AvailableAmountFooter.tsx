@@ -19,7 +19,6 @@ export const AvailableAmountFooter = ({
   availableAmount,
   availableAmountMinusFees,
   asset,
-  originalAddress,
   onClickMax,
 }: AvailableAmountFooterProps): JSX.Element => {
   const tokenPrices = useAtomValue(
@@ -31,11 +30,10 @@ export const AvailableAmountFooter = ({
   }
 
   const isInsufficientBalance = availableAmountMinusFees.eq(0);
-
   // Calculate dollar value for available amount
   const availableDollarAmount =
-    originalAddress && tokenPrices.data?.[originalAddress] ?
-      availableAmountMinusFees.multipliedBy(tokenPrices.data[originalAddress])
+    asset?.address && tokenPrices.data?.[asset.address] ?
+      availableAmountMinusFees.multipliedBy(tokenPrices.data[asset.address])
     : undefined;
 
   return (
@@ -51,30 +49,28 @@ export const AvailableAmountFooter = ({
             amount={availableAmountMinusFees}
             symbol={asset.symbol}
           />
-        </div>
-        {availableDollarAmount && (
-          <FiatCurrency amount={availableDollarAmount} className="text-sm" />
-        )}
-      </div>
-      {isInsufficientBalance && (
-        <div className="text-fail">
-          <div>Insufficient balance to cover the fee</div>
-          {availableAmount && (
-            <div className="flex flex-col">
-              <div>
-                Balance:{" "}
-                <TokenCurrency amount={availableAmount} symbol={asset.symbol} />
-              </div>
+          {isInsufficientBalance && (
+            <div className="text-fail">
+              <div>Insufficient balance to cover the fee</div>
               {availableAmount && (
-                <FiatCurrency
-                  amount={availableAmount}
-                  className="text-xs text-neutral-600"
-                />
+                <div className="flex flex-col">
+                  <div>
+                    Balance:{" "}
+                    <TokenCurrency
+                      amount={availableAmount}
+                      symbol={asset.symbol}
+                    />
+                  </div>
+                </div>
               )}
             </div>
           )}
         </div>
-      )}
+
+        {availableDollarAmount && (
+          <FiatCurrency amount={availableDollarAmount} className="text-sm" />
+        )}
+      </div>
     </div>
   );
 };
