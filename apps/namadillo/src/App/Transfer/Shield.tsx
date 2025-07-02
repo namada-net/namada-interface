@@ -190,7 +190,7 @@ export const Shield = (): JSX.Element => {
           availableChains,
           onChangeChain,
           chain: registry?.chain,
-          availableWallets: [wallets.keplr],
+          availableWallets: [wallets.keplr, wallets.namada],
           wallet: wallets.keplr,
           walletAddress: sourceAddress,
           onChangeWallet,
