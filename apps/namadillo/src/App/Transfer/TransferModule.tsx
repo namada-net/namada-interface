@@ -7,9 +7,7 @@ import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
 } from "atoms/balance";
-
-import { chainParametersAtom } from "atoms/chain";
-import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
+import { chainAssetsMapAtom, chainParametersAtom } from "atoms/chain";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
@@ -20,17 +18,19 @@ import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
 import { useUrlState } from "hooks/useUrlState";
 import invariant from "invariant";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
-import { wallets } from "integrations";
-import { useAtomValue } from "jotai";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { AddressWithAssetAndAmountMap } from "types";
+import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
-import { parseChainInfo } from "./common";
+import {
+  isShieldedAddress,
+  isTransparentAddress,
+  parseChainInfo,
+} from "./common";
 import { CurrentStatus } from "./CurrentStatus";
 import { IbcChannels } from "./IbcChannels";
 import { SelectToken } from "./SelectToken";
@@ -40,43 +40,11 @@ import { TransferDestination } from "./TransferDestination";
 import { TransferSource } from "./TransferSource";
 import {
   OnSubmitTransferParams,
-<<<<<<< HEAD
   TransferModuleProps,
   ValidationResult,
 } from "./types";
 import { getButtonText, validateTransferForm } from "./utils";
-=======
-  TransferModuleConfig,
-  TransferModuleProps,
-  ValidationResult,
-} from "./types";
-<<<<<<< HEAD
 
-// Check if the provided address is valid for the destination chain and transaction type
-const isValidDestinationAddress = ({
-  customAddress,
-  chain,
-}: {
-  customAddress: string;
-  chain: Chain | undefined;
-}): boolean => {
-  // Skip validation if no custom address or chain provided
-  if (!customAddress || !chain) return true;
-
-  // Check shielded/transparent address requirements for Namada
-  if (chain.bech32_prefix === "nam") {
-    return (
-      isTransparentAddress(customAddress) || isShieldedAddress(customAddress)
-    );
-  }
-
-  // For non-Namada chains, validate using prefix
-  return customAddress.startsWith(chain.bech32_prefix);
-};
->>>>>>> b625ba44 (fix: separate types)
-=======
-import { isValidDestinationAddress } from "./utils";
->>>>>>> 77dd33c3 (fix: cleanup)
 export const TransferModule = ({
   source,
   destination,
@@ -86,10 +54,6 @@ export const TransferModule = ({
   ibcOptions,
   requiresIbcChannels,
   buttonTextErrors = {},
-<<<<<<< HEAD
-=======
-  isShieldedTx = false,
->>>>>>> b625ba44 (fix: separate types)
 }: TransferModuleProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const { storeTransaction } = useTransactionActions();
@@ -116,7 +80,7 @@ export const TransferModule = ({
     errorMessage: ledgerStatus.errorMessage,
   };
   const chainParameters = useAtomValue(chainParametersAtom);
-  const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
+  const chainAssetsMap = useAtomValue(chainAssetsMapAtom);
   const chainId = chainParameters.data?.chainId;
   const rpcUrl = useAtomValue(rpcUrlAtom);
 
@@ -204,9 +168,7 @@ export const TransferModule = ({
 
   const gasConfig = feeProps?.gasConfig;
   const displayGasFee = useMemo(() => {
-    return gasConfig ?
-        getDisplayGasFee(gasConfig, chainAssetsMap.data ?? {})
-      : undefined;
+    return gasConfig ? getDisplayGasFee(gasConfig, chainAssetsMap) : undefined;
   }, [gasConfig]);
 
   const availableAmountMinusFees = useMemo(() => {
@@ -365,16 +327,6 @@ export const TransferModule = ({
 
   return (
     <>
-      <SelectToken
-        isOpen={assetSelectorModalOpen}
-        onClose={() => setAssetSelectorModalOpen(false)}
-        onSelect={(asset) => {
-          source.onChangeAmount?.(undefined);
-          source.onChangeSelectedAsset?.(asset);
-          setAssetSelectorModalOpen(false);
-        }}
-      />
-
       <section className="max-w-[480px] mx-auto" role="widget">
         <Stack
           className={clsx({
@@ -385,16 +337,7 @@ export const TransferModule = ({
           onSubmit={onSubmit}
         >
           <TransferSource
-<<<<<<< HEAD
-<<<<<<< HEAD
             sourceAddress={sourceAddress}
-=======
-            isConnected={Boolean(source.connected)}
-=======
->>>>>>> 77dd33c3 (fix: cleanup)
-            wallet={source.wallet}
-            walletAddress={source.walletAddress}
->>>>>>> b625ba44 (fix: separate types)
             asset={selectedAsset?.asset}
             originalAddress={selectedAsset?.originalAddress}
             isLoadingAssets={source.isLoadingAssets}
@@ -405,24 +348,15 @@ export const TransferModule = ({
             )}
             availableAmount={availableAmount}
             availableAmountMinusFees={availableAmountMinusFees}
-<<<<<<< HEAD
             amount={displayAmount}
             selectedTokenType={selectedTokenType}
-=======
-            amount={source.amount}
-            openProviderSelector={onChangeWallet(source)}
->>>>>>> 77dd33c3 (fix: cleanup)
             openAssetSelector={
               source.onChangeSelectedAsset && !isSubmitting ?
                 () => setAssetSelectorModalOpen(true)
               : undefined
             }
-<<<<<<< HEAD
             onChangeAmount={setDisplayAmount}
             onChangeWalletAddress={setSourceAddress}
-=======
-            onChangeAmount={source.onChangeAmount}
->>>>>>> b625ba44 (fix: separate types)
             isSubmitting={isSubmitting}
           />
           <i className="flex items-center justify-center w-11 mx-auto -my-8 relative z-10">
@@ -440,25 +374,8 @@ export const TransferModule = ({
             setDestinationAddress={setDestinationAddress}
             isShieldedAddress={isShieldedAddress(destinationAddress ?? "")}
             isShieldedTx={isShieldedTx}
-<<<<<<< HEAD
             address={destinationAddress}
             onChangeAddress={setDestinationAddress}
-=======
-            onChangeShielded={destination.onChangeShielded}
-            address={destination.customAddress}
-            onToggleCustomAddress={
-              destination.enableCustomAddress && destination.availableWallets ?
-                setCustomAddressActive
-              : undefined
-            }
-            customAddressActive={customAddressActive}
-            openProviderSelector={() =>
-              destination.onChangeWallet && destination.wallet ?
-                destination.onChangeWallet(destination.wallet)
-              : undefined
-            }
-            onChangeAddress={destination.onChangeCustomAddress}
->>>>>>> 77dd33c3 (fix: cleanup)
             memo={memo}
             onChangeMemo={setMemo}
             feeProps={feeProps}
