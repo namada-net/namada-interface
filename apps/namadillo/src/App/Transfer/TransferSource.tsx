@@ -9,18 +9,18 @@ import { SelectedAsset } from "./SelectedAsset";
 import { SelectedWallet } from "./SelectedWallet";
 import { TokenAmountCard } from "./TokenAmountCard";
 export type TransferSourceProps = {
-  wallet?: WalletProvider;
-  walletAddress?: string;
-  asset?: Asset;
-  originalAddress?: Address;
   isLoadingAssets?: boolean;
   isSubmitting?: boolean;
   chain?: Chain;
-  openAssetSelector?: () => void;
-  openProviderSelector?: () => void;
-  amount?: BigNumber;
+  asset?: Asset;
+  originalAddress?: Address;
+  wallet?: WalletProvider;
+  walletAddress?: string;
   availableAmount?: BigNumber;
   availableAmountMinusFees?: BigNumber;
+  amount?: BigNumber;
+  openAssetSelector?: () => void;
+  openProviderSelector?: () => void;
   onChangeAmount?: (amount: BigNumber | undefined) => void;
 };
 
