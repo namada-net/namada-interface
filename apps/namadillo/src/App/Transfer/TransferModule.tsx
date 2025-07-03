@@ -1,4 +1,3 @@
-import { Chain } from "@chain-registry/types";
 import { ActionButton, Stack } from "@namada/components";
 import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
@@ -31,11 +30,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { AddressWithAssetAndAmountMap } from "types";
 import { getDisplayGasFee } from "utils/gas";
-import {
-  isShieldedAddress,
-  isTransparentAddress,
-  parseChainInfo,
-} from "./common";
+import { parseChainInfo } from "./common";
 import { CurrentStatus } from "./CurrentStatus";
 import { IbcChannels } from "./IbcChannels";
 import { SelectToken } from "./SelectToken";
@@ -55,6 +50,7 @@ import { getButtonText, validateTransferForm } from "./utils";
   TransferModuleProps,
   ValidationResult,
 } from "./types";
+<<<<<<< HEAD
 
 // Check if the provided address is valid for the destination chain and transaction type
 const isValidDestinationAddress = ({
@@ -78,7 +74,9 @@ const isValidDestinationAddress = ({
   return customAddress.startsWith(chain.bech32_prefix);
 };
 >>>>>>> b625ba44 (fix: separate types)
-
+=======
+import { isValidDestinationAddress } from "./utils";
+>>>>>>> 77dd33c3 (fix: cleanup)
 export const TransferModule = ({
   source,
   destination,
@@ -388,9 +386,12 @@ export const TransferModule = ({
         >
           <TransferSource
 <<<<<<< HEAD
+<<<<<<< HEAD
             sourceAddress={sourceAddress}
 =======
             isConnected={Boolean(source.connected)}
+=======
+>>>>>>> 77dd33c3 (fix: cleanup)
             wallet={source.wallet}
             walletAddress={source.walletAddress}
 >>>>>>> b625ba44 (fix: separate types)
@@ -404,8 +405,13 @@ export const TransferModule = ({
             )}
             availableAmount={availableAmount}
             availableAmountMinusFees={availableAmountMinusFees}
+<<<<<<< HEAD
             amount={displayAmount}
             selectedTokenType={selectedTokenType}
+=======
+            amount={source.amount}
+            openProviderSelector={onChangeWallet(source)}
+>>>>>>> 77dd33c3 (fix: cleanup)
             openAssetSelector={
               source.onChangeSelectedAsset && !isSubmitting ?
                 () => setAssetSelectorModalOpen(true)
@@ -434,8 +440,25 @@ export const TransferModule = ({
             setDestinationAddress={setDestinationAddress}
             isShieldedAddress={isShieldedAddress(destinationAddress ?? "")}
             isShieldedTx={isShieldedTx}
+<<<<<<< HEAD
             address={destinationAddress}
             onChangeAddress={setDestinationAddress}
+=======
+            onChangeShielded={destination.onChangeShielded}
+            address={destination.customAddress}
+            onToggleCustomAddress={
+              destination.enableCustomAddress && destination.availableWallets ?
+                setCustomAddressActive
+              : undefined
+            }
+            customAddressActive={customAddressActive}
+            openProviderSelector={() =>
+              destination.onChangeWallet && destination.wallet ?
+                destination.onChangeWallet(destination.wallet)
+              : undefined
+            }
+            onChangeAddress={destination.onChangeCustomAddress}
+>>>>>>> 77dd33c3 (fix: cleanup)
             memo={memo}
             onChangeMemo={setMemo}
             feeProps={feeProps}

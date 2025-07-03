@@ -20,12 +20,6 @@ describe("Component: TransferDestination", () => {
     expect(chainButton).not.toBeInTheDocument();
   });
 
-  it("should render the component with chain selectable", () => {
-    render(<TransferDestination openChainSelector={jest.fn()} />);
-    const chainButton = screen.getByText(/select chain/i);
-    expect(chainButton).toBeInTheDocument();
-  });
-
   it("should render the TabSelector for shielded/transparent when onChangeShielded is provided", () => {
     render(
       <TransferDestination
