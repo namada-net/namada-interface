@@ -2,10 +2,8 @@ import namadaChain from "@namada/chain-registry/namada/chain.json";
 import { Panel } from "@namada/components";
 import { AccountType, Chain } from "@namada/types";
 import { params } from "App/routes";
-import {
-  OnSubmitTransferParams,
-  TransferModule,
-} from "App/Transfer/TransferModule";
+import { TransferModule } from "App/Transfer/TransferModule";
+import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaTransparentAssetsAtom } from "atoms/balance/atoms";
 import { chainParametersAtom } from "atoms/chain/atoms";
