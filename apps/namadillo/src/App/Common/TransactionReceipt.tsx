@@ -80,11 +80,6 @@ const TransferTransactionReceipt = ({
       wallets.namada
     : wallets.keplr;
 
-  const destinationWallet =
-    isNamadaAddress(transaction.destinationAddress || "") ?
-      wallets.namada
-    : wallets.keplr;
-
   return (
     <Stack className="max-w-[440px] mx-auto">
       <div className="rounded-md bg-neutral-800 px-4 pb-6">
@@ -97,7 +92,6 @@ const TransferTransactionReceipt = ({
           )}
           {sourceWallet && (
             <SelectedWallet
-              wallet={sourceWallet}
               address={
                 isExtendedKey(transaction.sourceAddress || "") ?
                   getEncodedViewingKey(transaction.sourceAddress || "")
@@ -136,12 +130,7 @@ const TransferTransactionReceipt = ({
                 iconSize="36px"
               />
             )}
-            {destinationWallet && (
-              <SelectedWallet
-                wallet={destinationWallet}
-                address={transaction.destinationAddress}
-              />
-            )}
+            <SelectedWallet address={transaction.destinationAddress} />
           </div>
         </footer>
       </div>

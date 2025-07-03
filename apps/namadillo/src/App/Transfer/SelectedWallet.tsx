@@ -1,10 +1,10 @@
 import { WalletAddress } from "App/Common/WalletAddress";
 import clsx from "clsx";
+import { wallets } from "integrations";
 import { twMerge } from "tailwind-merge";
-import { WalletProvider } from "types";
+import { isNamadaAddress } from "./common";
 
 type SelectedWalletProps = {
-  wallet: WalletProvider;
   address?: string;
   className?: string;
   onClick?: () => void;
@@ -13,7 +13,6 @@ type SelectedWalletProps = {
 };
 
 export const SelectedWallet = ({
-  wallet,
   onClick,
   address,
   className = "",
@@ -21,6 +20,9 @@ export const SelectedWallet = ({
   displayTooltip = true,
 }: SelectedWalletProps): JSX.Element => {
   if (!address) return <></>;
+
+  const wallet =
+    isNamadaAddress(address || "") ? wallets.namada : wallets.keplr;
   return (
     <div
       role="button"

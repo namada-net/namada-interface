@@ -7,12 +7,7 @@ import {
 import svgImg from "App/Assets/ShieldedParty.svg";
 import { SelectedWallet } from "App/Transfer/SelectedWallet";
 import { useEffect, useMemo, useState } from "react";
-import {
-  Asset,
-  AssetWithAmount,
-  ChainRegistryEntry,
-  WalletProvider,
-} from "types";
+import { Asset, AssetWithAmount, ChainRegistryEntry } from "types";
 import {
   SelectableAddressWithAssetAndAmount,
   ShieldAllAssetList,
@@ -22,7 +17,6 @@ import ibcTransferImageBlack from "./assets/ibc-transfer-black.png";
 
 type ShieldAllPanelProps = {
   registry: ChainRegistryEntry;
-  wallet: WalletProvider;
   walletAddress: string;
   isLoading: boolean;
   assetList: AssetWithAmount[];
@@ -30,7 +24,6 @@ type ShieldAllPanelProps = {
 };
 
 export const ShieldAllPanel = ({
-  wallet,
   walletAddress,
   isLoading,
   assetList,
@@ -95,7 +88,6 @@ export const ShieldAllPanel = ({
             <p>Review and confirm assets to shield</p>
           </header>
           <SelectedWallet
-            wallet={wallet}
             address={walletAddress}
             className="text-black px-2 py-1.5 border rounded-sm"
             displayFullAddress={true}
