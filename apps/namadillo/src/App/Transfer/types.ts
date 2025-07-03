@@ -50,6 +50,7 @@ export type TransferDestinationProps = TransferModuleConfig & {
 export type OnSubmitTransferParams = {
   displayAmount: BigNumber;
   destinationAddress: Address;
+  sourceAddress: Address;
   memo?: string;
 };
 

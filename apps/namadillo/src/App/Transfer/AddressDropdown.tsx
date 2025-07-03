@@ -1,6 +1,5 @@
 import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
-import { WalletAddress } from "App/Common/WalletAddress";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { connectedWalletsAtom } from "atoms/integrations";
 import clsx from "clsx";
@@ -10,6 +9,8 @@ import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { twMerge } from "tailwind-merge";
+import namadaShieldedIcon from "./assets/namada-shielded.svg";
+import namadaTransparentIcon from "./assets/namada-transparent.svg";
 
 type AddressOption = {
   id: string;
@@ -25,8 +26,6 @@ type AddressDropdownProps = {
   className?: string;
   onClick?: () => void;
   onSelectAddress?: (address: string) => void;
-  displayFullAddress?: boolean;
-  displayTooltip?: boolean;
 };
 
 const keplr = new KeplrWalletManager();
@@ -36,8 +35,6 @@ export const AddressDropdown = ({
   className = "",
   onClick,
   onSelectAddress,
-  displayFullAddress = false,
-  displayTooltip = true,
 }: AddressDropdownProps): JSX.Element => {
   const [isOpen, setIsOpen] = useState(false);
   const [keplrAddress, setKeplrAddress] = useState<string | null>(null);
@@ -86,7 +83,7 @@ export const AddressDropdown = ({
         address: transparentAccount.address,
         walletType: "namada",
         accountType: transparentAccount.type,
-        iconUrl: wallets.namada.iconUrl,
+        iconUrl: namadaTransparentIcon,
       });
     }
 
@@ -97,7 +94,7 @@ export const AddressDropdown = ({
         address: shieldedAccount.address,
         walletType: "namada",
         accountType: shieldedAccount.type,
-        iconUrl: wallets.namada.iconUrl,
+        iconUrl: namadaShieldedIcon,
       });
     }
   }
@@ -209,17 +206,10 @@ export const AddressDropdown = ({
         onClick={handleToggle}
       >
         <img
-          src={selectedOption?.iconUrl || wallets.namada.iconUrl}
+          src={selectedOption?.iconUrl || namadaTransparentIcon}
           alt={(selectedOption?.walletType || "Namada") + " Logo"}
-          className="w-6 select-none"
+          className="w-7 select-none"
         />
-        {selectedAddress && (
-          <WalletAddress
-            address={selectedAddress}
-            displayTooltip={displayTooltip}
-            displayFullAddress={displayFullAddress}
-          />
-        )}
         {shouldShowDropdown && (
           <GoChevronDown
             className={clsx(
@@ -232,13 +222,11 @@ export const AddressDropdown = ({
 
       {isOpen && shouldShowDropdown && (
         <>
-          {/* Backdrop */}
           <div
             className="fixed inset-0 z-10"
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Dropdown menu */}
           <div className="absolute right-0 top-full mt-1 z-20 bg-neutral-800 rounded-md border border-neutral-700 shadow-lg min-w-[240px]">
             <ul className="py-1">
               {addressOptions.map((option) => (
@@ -256,7 +244,7 @@ export const AddressDropdown = ({
                     <img
                       src={option.iconUrl}
                       alt={option.label}
-                      className="w-5 h-5 flex-shrink-0"
+                      className="w-6 h-6 flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <div className="font-medium text-white">
@@ -278,7 +266,7 @@ export const AddressDropdown = ({
                     className={clsx(
                       "w-full px-4 py-3 text-left flex items-center gap-3",
                       "hover:bg-neutral-700 transition-colors",
-                      "text-sm text-yellow font-medium",
+                      "text-sm  font-medium",
                       isConnectingKeplr && "opacity-50 cursor-not-allowed"
                     )}
                     onClick={handleConnectKeplr}
@@ -289,7 +277,7 @@ export const AddressDropdown = ({
                       alt="Keplr"
                       className="w-5 h-5 flex-shrink-0"
                     />
-                    <div className="flex-1">
+                    <div className="flex-1 ml-1">
                       {isConnectingKeplr ? "Connecting..." : "Connect Wallet"}
                     </div>
                   </button>
