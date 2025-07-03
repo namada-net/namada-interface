@@ -18,7 +18,6 @@ export type TransferModuleConfig = {
   chain?: Chain;
   isShieldedAddress?: boolean;
   onChangeWallet?: (wallet: WalletProvider) => void;
-  onChangeChain?: (chain: Chain) => void;
   onChangeShielded?: (isShielded: boolean) => void;
   isSyncingMasp?: boolean;
   // Additional information if selected account is a ledger
