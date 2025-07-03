@@ -46,7 +46,6 @@ export type TransferDestinationProps = TransferModuleConfig & {
   enableCustomAddress?: boolean;
   customAddress?: Address;
   onChangeCustomAddress?: (address: Address) => void;
-  onChangeShielded?: (shielded: boolean) => void;
 };
 
 export type OnSubmitTransferParams = {
