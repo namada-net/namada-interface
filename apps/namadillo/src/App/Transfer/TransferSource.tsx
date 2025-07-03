@@ -9,7 +9,6 @@ import { SelectedAsset } from "./SelectedAsset";
 import { SelectedWallet } from "./SelectedWallet";
 import { TokenAmountCard } from "./TokenAmountCard";
 export type TransferSourceProps = {
-  isConnected: boolean;
   wallet?: WalletProvider;
   walletAddress?: string;
   asset?: Asset;
@@ -17,7 +16,6 @@ export type TransferSourceProps = {
   isLoadingAssets?: boolean;
   isSubmitting?: boolean;
   chain?: Chain;
-  openChainSelector?: () => void;
   openAssetSelector?: () => void;
   openProviderSelector?: () => void;
   amount?: BigNumber;
@@ -38,19 +36,19 @@ const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
 };
 
 export const TransferSource = ({
+  isLoadingAssets,
+  isSubmitting,
   chain,
   asset,
   originalAddress,
-  isLoadingAssets,
   wallet,
   walletAddress,
-  openProviderSelector,
-  openAssetSelector,
   availableAmount,
   availableAmountMinusFees,
   amount,
+  openAssetSelector,
+  openProviderSelector,
   onChangeAmount,
-  isSubmitting,
 }: TransferSourceProps): JSX.Element => {
   return (
     <div className="relative bg-neutral-800 rounded-lg px-4 py-5">

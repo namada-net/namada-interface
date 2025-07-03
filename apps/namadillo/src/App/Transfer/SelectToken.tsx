@@ -503,7 +503,7 @@ export const SelectToken = ({
                 </div>
 
                 <div className="flex-1 flex">
-                  <div className="w-80">
+                  <div className="w-full">
                     <WalletCard
                       wallet={wallets.keplr}
                       installed={isKeplrInstalled()}
