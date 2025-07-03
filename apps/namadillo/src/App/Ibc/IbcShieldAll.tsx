@@ -2,7 +2,6 @@ import { Chain } from "@chain-registry/types";
 import { Panel } from "@namada/components";
 import { useAssetAmount } from "hooks/useAssetAmount";
 import { useWalletManager } from "hooks/useWalletManager";
-import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useState } from "react";
 import { Asset } from "types";
@@ -41,7 +40,6 @@ export const IbcShieldAll: React.FC = () => {
       {connected && !isSuccess && (
         <ShieldAllPanel
           registry={registry}
-          wallet={wallets.keplr}
           walletAddress={walletAddress}
           assetList={Object.values(assetsBalances || [])}
           isLoading={isLoadingBalances}

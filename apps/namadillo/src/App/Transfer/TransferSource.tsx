@@ -1,27 +1,32 @@
-import { Chain } from "@chain-registry/types";
+import { Asset, Chain } from "@chain-registry/types";
 import { AmountInput } from "@namada/components";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
-import { Address, Asset, WalletProvider } from "types";
+import { wallets } from "integrations";
+import { Address } from "types";
+import namadaShieldedIcon from "./assets/namada-shielded.svg";
+import namadaTransparentIcon from "./assets/namada-transparent.svg";
 import { AvailableAmountFooter } from "./AvailableAmountFooter";
-import { ConnectProviderButton } from "./ConnectProviderButton";
+import { isShieldedAddress, isTransparentAddress } from "./common";
 import { SelectedAsset } from "./SelectedAsset";
-import { SelectedWallet } from "./SelectedWallet";
 import { TokenAmountCard } from "./TokenAmountCard";
+
 export type TransferSourceProps = {
   isLoadingAssets?: boolean;
   isSubmitting?: boolean;
+  isShieldingTxn?: boolean;
   chain?: Chain;
   asset?: Asset;
   originalAddress?: Address;
-  wallet?: WalletProvider;
-  walletAddress?: string;
+  sourceAddress?: string;
   availableAmount?: BigNumber;
   availableAmountMinusFees?: BigNumber;
   amount?: BigNumber;
+  selectedTokenType?: "shielded" | "transparent" | "keplr";
   openAssetSelector?: () => void;
   openProviderSelector?: () => void;
   onChangeAmount?: (amount: BigNumber | undefined) => void;
+  onChangeWalletAddress?: (address: string) => void;
 };
 
 const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
@@ -35,44 +40,70 @@ const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
   return undefined;
 };
 
+const getWalletIcon = (
+  sourceAddress?: string,
+  selectedTokenType?: "shielded" | "transparent" | "keplr"
+): string => {
+  if (!sourceAddress) return "";
+
+  // Use selected token type if available, otherwise fall back to source address format
+  if (selectedTokenType) {
+    switch (selectedTokenType) {
+      case "shielded":
+        return namadaShieldedIcon;
+      case "transparent":
+        return namadaTransparentIcon;
+      case "keplr":
+        return wallets.keplr.iconUrl;
+      default:
+        break;
+    }
+  }
+
+  // Fallback to original logic if token type not specified
+  if (isShieldedAddress(sourceAddress)) {
+    return namadaShieldedIcon;
+  } else if (isTransparentAddress(sourceAddress)) {
+    return namadaTransparentIcon;
+  } else {
+    return wallets.keplr.iconUrl;
+  }
+};
+
 export const TransferSource = ({
   isLoadingAssets,
   isSubmitting,
   chain,
   asset,
   originalAddress,
-  wallet,
-  walletAddress,
   availableAmount,
   availableAmountMinusFees,
   amount,
+  sourceAddress,
+  selectedTokenType,
   openAssetSelector,
-  openProviderSelector,
   onChangeAmount,
 }: TransferSourceProps): JSX.Element => {
   return (
     <div className="relative bg-neutral-800 rounded-lg px-4 py-5">
-      {/** Chain selector / chain indicator */}
       <header className="relative flex justify-between">
         <SelectedAsset
           asset={asset}
           isLoading={isLoadingAssets}
-          isDisabled={!chain || !walletAddress}
+          isDisabled={!chain || !sourceAddress}
           onClick={openAssetSelector}
         />
-        {!walletAddress && (
-          <ConnectProviderButton onClick={openProviderSelector} />
-        )}
-        {walletAddress && wallet && (
-          <SelectedWallet
-            wallet={wallet}
-            address={walletAddress}
-            onClick={openProviderSelector}
-          />
+        {sourceAddress && (
+          <div className="flex items-center">
+            <img
+              src={getWalletIcon(sourceAddress, selectedTokenType)}
+              alt="Wallet icon"
+              className="w-6 h-6"
+            />
+          </div>
         )}
       </header>
 
-      {/** Asset selector */}
       {!isSubmitting && (
         <div className="grid grid-cols-[max-content_auto] gap-5 mb-3 p-5">
           <AmountInput
@@ -89,7 +120,6 @@ export const TransferSource = ({
         </div>
       )}
 
-      {/** Available amount footer */}
       {!isSubmitting && asset && availableAmountMinusFees && (
         <footer>
           <AvailableAmountFooter

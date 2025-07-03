@@ -44,7 +44,7 @@ export const ShieldAllIntro = ({
       {displayChainModal && (
         <SelectChainModal
           chains={chainList}
-          wallet={wallets.keplr}
+          wallet={wallets.namada}
           onSelect={onSelectChain}
           onClose={() => setDisplayChainModal(false)}
         />
