@@ -158,7 +158,7 @@ export const getButtonText = ({
   availableAmountMinusFees,
   buttonTextErrors = {},
 }: {
-  isSubmitting: boolean;
+  isSubmitting: boolean | undefined;
   submittingText?: string;
   validationResult: ValidationResult;
   availableAmountMinusFees: BigNumber | undefined;
