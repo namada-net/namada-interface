@@ -1,3 +1,4 @@
+import { Chain } from "@chain-registry/types";
 import { ActionButton, Stack } from "@namada/components";
 import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
@@ -20,13 +21,15 @@ import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
 import { useUrlState } from "hooks/useUrlState";
 import invariant from "invariant";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
-import { useEffect, useMemo, useState } from "react";
+import { wallets } from "integrations";
+import { useAtomValue } from "jotai";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AddressWithAssetAndAmountMap } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
+import { AddressWithAssetAndAmountMap } from "types";
 import { getDisplayGasFee } from "utils/gas";
 import {
   isShieldedAddress,
@@ -42,10 +45,39 @@ import { TransferDestination } from "./TransferDestination";
 import { TransferSource } from "./TransferSource";
 import {
   OnSubmitTransferParams,
+<<<<<<< HEAD
   TransferModuleProps,
   ValidationResult,
 } from "./types";
 import { getButtonText, validateTransferForm } from "./utils";
+=======
+  TransferModuleConfig,
+  TransferModuleProps,
+  ValidationResult,
+} from "./types";
+
+// Check if the provided address is valid for the destination chain and transaction type
+const isValidDestinationAddress = ({
+  customAddress,
+  chain,
+}: {
+  customAddress: string;
+  chain: Chain | undefined;
+}): boolean => {
+  // Skip validation if no custom address or chain provided
+  if (!customAddress || !chain) return true;
+
+  // Check shielded/transparent address requirements for Namada
+  if (chain.bech32_prefix === "nam") {
+    return (
+      isTransparentAddress(customAddress) || isShieldedAddress(customAddress)
+    );
+  }
+
+  // For non-Namada chains, validate using prefix
+  return customAddress.startsWith(chain.bech32_prefix);
+};
+>>>>>>> b625ba44 (fix: separate types)
 
 export const TransferModule = ({
   source,
@@ -56,6 +88,10 @@ export const TransferModule = ({
   ibcOptions,
   requiresIbcChannels,
   buttonTextErrors = {},
+<<<<<<< HEAD
+=======
+  isShieldedTx = false,
+>>>>>>> b625ba44 (fix: separate types)
 }: TransferModuleProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const { storeTransaction } = useTransactionActions();
@@ -351,7 +387,13 @@ export const TransferModule = ({
           onSubmit={onSubmit}
         >
           <TransferSource
+<<<<<<< HEAD
             sourceAddress={sourceAddress}
+=======
+            isConnected={Boolean(source.connected)}
+            wallet={source.wallet}
+            walletAddress={source.walletAddress}
+>>>>>>> b625ba44 (fix: separate types)
             asset={selectedAsset?.asset}
             originalAddress={selectedAsset?.originalAddress}
             isLoadingAssets={source.isLoadingAssets}
@@ -369,8 +411,12 @@ export const TransferModule = ({
                 () => setAssetSelectorModalOpen(true)
               : undefined
             }
+<<<<<<< HEAD
             onChangeAmount={setDisplayAmount}
             onChangeWalletAddress={setSourceAddress}
+=======
+            onChangeAmount={source.onChangeAmount}
+>>>>>>> b625ba44 (fix: separate types)
             isSubmitting={isSubmitting}
           />
           <i className="flex items-center justify-center w-11 mx-auto -my-8 relative z-10">
