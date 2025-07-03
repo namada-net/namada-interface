@@ -24,7 +24,6 @@ describe("Component: TransferDestination", () => {
     render(
       <TransferDestination
         isShieldedAddress={true}
-        onChangeShielded={jest.fn()}
         chain={parseChainInfo(namadaChainMock as Chain, true)}
       />
     );
@@ -44,7 +43,6 @@ describe("Component: TransferDestination", () => {
       <TransferDestination
         isShieldedAddress={true}
         chain={parseChainInfo(randomChainMock as Chain, true)}
-        onChangeShielded={jest.fn()}
       />
     );
     expect(screen.queryByText(/shielded/i)).not.toBeInTheDocument();
@@ -78,7 +76,6 @@ describe("Component: TransferDestination", () => {
       <TransferDestination
         isShieldedAddress={true}
         chain={parseChainInfo(namadaChainMock as Chain, true)}
-        onChangeShielded={onChangeShieldedMock}
       />
     );
     const transparentButton = screen.getByText("Transparent");
