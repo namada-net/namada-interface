@@ -151,7 +151,8 @@ export class Tx {
 
     const serializedTx = await this.sdk.build_unshielding_transfer(
       encodedTransfer,
-      encodedWrapperArgs
+      encodedWrapperArgs,
+      unshieldingTransferProps.skipFeeCheck || false
     );
     return deserialize(Buffer.from(serializedTx), TxMsgValue);
   }

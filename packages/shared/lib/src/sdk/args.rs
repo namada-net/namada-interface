@@ -728,6 +728,7 @@ pub struct UnshieldingTransferMsg {
     data: Vec<UnshieldingTransferDataMsg>,
     gas_spending_key: Option<String>,
     bparams: Option<Vec<BparamsMsg>>,
+    skip_fee_check: Option<bool>,
 }
 
 /// Maps serialized tx_msg into TxUnshieldingTransfer args.
@@ -752,6 +753,7 @@ pub fn unshielding_transfer_tx_args(
         data,
         gas_spending_key,
         bparams: bparams_msg,
+        skip_fee_check: _
     } = unshielding_transfer_msg;
     let source = PseudoExtendedKey::decode(source)?.0;
     let gas_spending_key = gas_spending_key
@@ -789,7 +791,7 @@ pub fn unshielding_transfer_tx_args(
         sources,
         targets,
         tx,
-        gas_spending_key,
+        gas_spending_key: None,
         tx_code_path: PathBuf::from("tx_transfer.wasm"),
     };
 

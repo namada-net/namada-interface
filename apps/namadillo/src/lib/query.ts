@@ -111,11 +111,10 @@ export const buildTx = async <T>(
     }
   }
 
-  const encodedTxs = await Promise.all(
-    queryProps.map((props) => txFn.apply(sdk.tx, [wrapperTxProps, props]))
-  );
-
-  txs.push(...encodedTxs);
+  for (const props of queryProps) {
+    const tx = await txFn.apply(sdk.tx, [wrapperTxProps, props]);
+    txs.push(tx);
+  }
 
   if (account.type === AccountType.Ledger) {
     txProps.push(...txs);
