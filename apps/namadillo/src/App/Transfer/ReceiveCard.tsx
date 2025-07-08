@@ -1,4 +1,4 @@
-import { Panel, SkeletonLoading } from "@namada/components";
+import { Panel, SkeletonLoading, Tooltip } from "@namada/components";
 import { copyToClipboard } from "@namada/utils";
 import { TabSelector } from "App/Common/TabSelector";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -85,12 +85,15 @@ export const ReceiveCard = (): JSX.Element => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 px-4 py-2 bg-neutral-900 rounded-sm w-full max-w-[350px]">
+          <div className="flex items-center gap-2 px-4 py-2 bg-neutral-900 rounded-sm w-full max-w-[350px] group/tooltip relative">
             <p
               className={`text-sm font-mono text-gray-400 truncate flex-grow ${isShielded ? "text-yellow" : "text-white"}`}
             >
               {address || "No address available"}
             </p>
+            <Tooltip position="top">
+              {address || "No address available"}
+            </Tooltip>
             <button
               onClick={handleCopy}
               className={`text-lg text-white p-1 hover:text-yellow transition-colors  ${isShielded ? "text-yellow" : "text-white"}`}
