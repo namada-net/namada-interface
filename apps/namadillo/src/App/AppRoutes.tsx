@@ -46,6 +46,7 @@ import { Unstake } from "./Staking/Unstake";
 import { SwitchAccountPanel } from "./SwitchAccount/SwitchAccountPanel";
 import { TransactionDetails } from "./Transactions/TransactionDetails";
 import { TransactionHistory } from "./Transactions/TransactionHistory";
+import { ReceiveCard } from "./Transfer";
 import { TransferLayout } from "./Transfer/TransferLayout";
 
 export const MainRoutes = (): JSX.Element => {
@@ -81,6 +82,9 @@ export const MainRoutes = (): JSX.Element => {
             path={routes.stakingBondingRedelegate}
             element={<ReDelegate />}
           />
+
+          {/* Receive */}
+          <Route path={routes.receive} element={<ReceiveCard />} />
 
           {/* Governance */}
           <Route path={routes.governance} element={<GovernanceOverview />} />
