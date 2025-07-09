@@ -32,6 +32,7 @@ export const transferKindOptions = [
   "withdraw",
   "bond",
   "unbond",
+  "revealPk",
   "received",
 ];
 
