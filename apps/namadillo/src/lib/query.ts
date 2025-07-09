@@ -264,6 +264,7 @@ export const broadcastTxWithEvents = async <T>(
       data!
     );
 
+    console.log("dispatching event", eventType, status);
     // Notification
     !isTransferEventType(eventType) &&
       window.dispatchEvent(
@@ -336,6 +337,7 @@ const parseTxAppliedErrors = <T>(
     });
 
     if (successData?.length) {
+      console.log("partial success");
       return {
         status: "PartialSuccess",
         successData,
@@ -345,6 +347,7 @@ const parseTxAppliedErrors = <T>(
       return { status: "Error", failedData };
     }
   }
+  console.log("success");
 
   return { status: "Success" };
 };

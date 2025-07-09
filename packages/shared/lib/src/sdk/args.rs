@@ -791,7 +791,7 @@ pub fn unshielding_transfer_tx_args(
         sources,
         targets,
         tx,
-        gas_spending_key: None,
+        gas_spending_key,
         tx_code_path: PathBuf::from("tx_transfer.wasm"),
     };
 

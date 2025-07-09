@@ -110,6 +110,7 @@ export const MaspUnshield: React.FC = () => {
       invariant(selectedAsset, "No asset is selected");
 
       const txResponse = await performTransfer({ memo });
+      console.log("txResponse", txResponse);
 
       if (txResponse) {
         const txList = createTransferDataFromNamada(
@@ -120,6 +121,7 @@ export const MaspUnshield: React.FC = () => {
           txResponse,
           memo
         );
+        console.log("txList", txList);
 
         // Currently we don't have the option of batching transfer transactions
         if (txList.length === 0) {

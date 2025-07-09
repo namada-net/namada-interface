@@ -206,6 +206,20 @@ const updateTxWithSuccess = <
   };
 };
 
+const updateTxWithPartialSuccess = <
+  T extends TransferTransactionData | IbcTransferTransactionData,
+>(
+  tx: T,
+  resultTxHash?: string
+): T => {
+  return {
+    ...tx,
+    status: "partialSuccess",
+    currentStep: TransferStep.Complete,
+    ...(resultTxHash && { resultTxHash }),
+  };
+};
+
 const updateTxWithError = <
   T extends TransferTransactionData | IbcTransferTransactionData,
 >(
@@ -297,12 +311,23 @@ export const handleStandardTransfer = async (
   try {
     const txResponse = await fetchTx(tx.hash ?? "");
     // We consider tx as rejected if every inner transaction has an exit code of Rejected
-    const hasRejectedTx = txResponse.innerTransactions.every(
+    const isRejectedTx = txResponse.innerTransactions.every(
       ({ exitCode }) => exitCode === WrapperTransactionExitCodeEnum.Rejected
     );
 
-    if (hasRejectedTx) {
+    if (isRejectedTx) {
       return updateTxWithError(tx, "Transaction rejected");
+    }
+
+    const isPartiallySuccessful =
+      txResponse.innerTransactions.some(
+        ({ exitCode }) => exitCode === WrapperTransactionExitCodeEnum.Applied
+      ) &&
+      txResponse.innerTransactions.some(
+        ({ exitCode }) => exitCode === WrapperTransactionExitCodeEnum.Rejected
+      );
+    if (isPartiallySuccessful) {
+      return updateTxWithPartialSuccess(tx);
     }
 
     return updateTxWithSuccess(tx);
@@ -362,6 +387,7 @@ export const dispatchTransferEvent = (
   eventType: string,
   tx: TransferTransactionData
 ): void => {
+  console.log("dispatching event", eventType, tx.status);
   if (tx.status === "success") {
     window.dispatchEvent(
       new CustomEvent(`${eventType}.Success`, {

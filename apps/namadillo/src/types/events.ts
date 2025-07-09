@@ -63,6 +63,7 @@ declare global {
     "ShieldingTransfer.Success": CustomEvent<TransferTransactionData>;
     "ShieldingTransfer.Error": CustomEvent<TransferTransactionData>;
     "UnshieldingTransfer.Success": CustomEvent<TransferTransactionData>;
+    "UnshieldingTransfer.PartialSuccess": EventData<TransferTransactionData>;
     "UnshieldingTransfer.Error": CustomEvent<TransferTransactionData>;
     "IbcTransfer.Success": CustomEvent<TransferTransactionData>;
     "IbcTransfer.Error": CustomEvent<TransferTransactionData>;

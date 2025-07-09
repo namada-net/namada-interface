@@ -29,6 +29,7 @@ export const useTransactionWatcher = (): void => {
             case "ShieldedToTransparent":
             case "ShieldedToShielded": {
               const newTx = await handleStandardTransfer(tx, fetchTransaction);
+              console.log("Transaction updated:", newTx);
               dispatchTransferEvent(transactionTypeToEventName(tx), newTx);
               break;
             }

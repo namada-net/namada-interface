@@ -57,6 +57,8 @@ export const useTransactionCallback = (): void => {
     refetchShieldedBalance();
   };
 
+  const onPartialTransferSuccess = (e: unknown): void => {};
+
   const onTransferError = (e: CustomEvent<TransferTransactionData>): void => {
     if (!e.detail.hash) return;
     changeTransaction(e.detail.hash, {
@@ -70,6 +72,10 @@ export const useTransactionCallback = (): void => {
   useTransactionEventListener("ShieldedTransfer.Success", onTransferSuccess);
   useTransactionEventListener("ShieldingTransfer.Success", onTransferSuccess);
   useTransactionEventListener("UnshieldingTransfer.Success", onTransferSuccess);
+  useTransactionEventListener(
+    "UnshieldingTransfer.PartialSuccess",
+    onPartialTransferSuccess
+  );
   useTransactionEventListener("IbcTransfer.Success", onTransferSuccess);
   useTransactionEventListener("IbcWithdraw.Success", onTransferSuccess);
   useTransactionEventListener("ShieldedIbcWithdraw.Success", onTransferSuccess);

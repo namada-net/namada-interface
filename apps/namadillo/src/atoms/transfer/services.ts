@@ -242,13 +242,19 @@ export const createUnshieldingTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue = new UnshieldingTransferMsgValue({
+      const feePaymentMsgValue = new UnshieldingTransferMsgValue({
         source,
-        data: [{ target: signerAddress, token, amount: BigNumber(1) }],
+        data: [
+          {
+            target: signerAddress,
+            token,
+            amount: gasConfig.gasPriceInMinDenom.times(gasConfig.gasLimit),
+          },
+        ],
         bparams,
         skipFeeCheck: true,
       });
-      const msgValue2 = new UnshieldingTransferMsgValue({
+      const msgValue = new UnshieldingTransferMsgValue({
         source,
         data: [{ target: destination, token, amount }],
         bparams,
@@ -262,7 +268,7 @@ export const createUnshieldingTransferTx = async (
             publicKey: signerPublicKey,
           },
           gasConfig,
-          props: [msgValue, msgValue2],
+          props: [feePaymentMsgValue, msgValue],
           chain,
           memo,
         },
