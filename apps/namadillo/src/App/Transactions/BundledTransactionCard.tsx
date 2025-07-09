@@ -30,14 +30,11 @@ export const BundledTransactionCard: React.FC<Props> = ({
         )
       )}
     >
-      {/* Reveal PK Row - Matching exact grid layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 items-center py-5 font-semibold gap-5 relative">
-        {/* Column 1: Icon + Title + Timestamp */}
         <div className="flex items-center gap-3 relative">
           <i className="text-success text-2xl relative z-10">
             <IoCheckmarkCircleOutline className="ml-1 mt-0.5 w-10 h-10" />
           </i>
-          {/* Vertical dashed line connecting to next transaction */}
           <div className="absolute left-6 top-12 w-0.5 h-10 border-l-2 border-dashed border-success z-0"></div>
           <div className="flex flex-col">
             <h3 className="flex items-center text-success">
@@ -99,7 +96,6 @@ export const BundledTransactionCard: React.FC<Props> = ({
         </div>
       </div>
 
-      {/* Main Transaction Row - Strip all container styling to integrate seamlessly */}
       <div className="[&>article]:bg-transparent [&>article]:border-none [&>article]:rounded-none [&>article]:hover:border-none [&>article]:px-0 [&>article]:py-5 [&>article]:my-0 [&>article>div:first-child>i]:relative [&>article>div:first-child>i]:z-10">
         <TransactionCard tx={mainTx} />
       </div>
