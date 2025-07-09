@@ -29,7 +29,7 @@ export const isValidDestinationAddress = ({
   }
 
   // For non-Namada chains, validate using prefix
-  return customAddress.startsWith(chain.bech32_prefix);
+  return customAddress.startsWith(chain.bech32_prefix ?? "");
 };
 
 // Check if there's enough balance to pay for transaction fees
@@ -83,9 +83,7 @@ export const validateTransferForm = ({
   availableAssets: AddressWithAssetAndAmountMap | undefined;
   displayGasFeeAmount: BigNumber | undefined;
 }): ValidationResult => {
-  if (!source.wallet) {
-    return "NoSourceWallet";
-  } else if (source.walletAddress === destination.customAddress) {
+  if (source.walletAddress === destination.customAddress) {
     return "TheSameAddress";
   } else if (
     !isValidDestinationAddress({
