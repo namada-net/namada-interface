@@ -217,7 +217,7 @@ export const TransactionHistory = (): JSX.Element => {
                 arrowContainerProps={{ className: "right-4" }}
                 listContainerProps={{
                   className:
-                    "w-[200px] mt-2 border border-white left-0 transform-none",
+                    "w-[200px] mt-2 border border-white left-0 transform-none max-h-[200px] overflow-y-auto dark-scrollbar",
                 }}
                 listItemProps={{
                   className: "text-sm border-0 py-0 [&_label]:py-1.5",
