@@ -41,7 +41,12 @@ export function getToken(
   txn: Tx["tx"],
   nativeToken: string
 ): string | undefined {
-  if (txn?.kind === "bond" || txn?.kind === "unbond") return nativeToken;
+  if (
+    txn?.kind === "bond" ||
+    txn?.kind === "unbond" ||
+    txn?.kind === "redelegation"
+  )
+    return nativeToken;
   let parsed;
   try {
     parsed = txn?.data ? JSON.parse(txn.data) : undefined;
@@ -81,6 +86,7 @@ const getBondOrUnbondTransactionInfo = (
     receiver: parsed.validator,
   };
 };
+
 const getTransactionInfo = (
   tx: Tx["tx"],
   transparentAddress: string
@@ -88,6 +94,20 @@ const getTransactionInfo = (
   if (!tx?.data) return undefined;
 
   const parsed = typeof tx.data === "string" ? JSON.parse(tx.data) : tx.data;
+
+  // Handle redelegation case
+  if (
+    tx.kind === "redelegation" &&
+    parsed.src_validator &&
+    parsed.dest_validator
+  ) {
+    return {
+      amount: BigNumber(parsed.amount),
+      sender: parsed.src_validator,
+      receiver: parsed.dest_validator,
+    };
+  }
+
   const sections: RawDataSection[] = Array.isArray(parsed) ? parsed : [parsed];
   const target = sections.find((s) => s.targets?.length);
   const source = sections.find((s) => s.sources?.length);
@@ -219,6 +239,9 @@ export const TransactionCard = ({
     if (isInternalUnshield) return "Unshielding Transfer";
     if (isReceived) return "Receive";
     if (kind.startsWith("ibc")) return "IBC Transfer";
+    if (kind === "redelegation") return "Redelegate";
+    if (kind === "voteProposal") return "Vote";
+    if (kind === "withdraw") return "Withdraw";
     if (kind === "bond") return "Stake";
     if (kind === "unbond") return "Unstake";
     if (kind === "claimRewards") return "Claim Rewards";
@@ -230,7 +253,6 @@ export const TransactionCard = ({
   };
 
   const displayAmount = getDisplayAmount();
-
   return (
     <article
       className={twMerge(

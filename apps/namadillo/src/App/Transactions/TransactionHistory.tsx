@@ -27,6 +27,9 @@ export const transferKindOptions = [
   "ibcShieldingTransfer",
   "ibcUnshieldingTransfer",
   "ibcShieldedTransfer",
+  "redelegation",
+  "voteProposal",
+  "withdraw",
   "bond",
   "unbond",
   "received",
@@ -61,26 +64,29 @@ export const TransactionHistory = (): JSX.Element => {
       timestamp: new Date(transaction.updatedAt).getTime() / 1000,
     }));
 
-  const handleFiltering = useCallback(
-    (transaction: TransactionHistoryType): boolean => {
-      const transactionKind = transaction.tx?.kind ?? "";
-      if (filter.toLowerCase() === "all") {
-        return transferKindOptions.includes(transactionKind);
-      } else if (filter === "received") {
-        return transaction.kind === "received";
-      } else if (filter === "transfer") {
-        return [
-          "transparentTransfer",
-          "shieldingTransfer",
-          "unshieldingTransfer",
-          "shieldedTransfer",
-        ].includes(transactionKind);
-      } else if (filter === "ibc") {
-        return transactionKind.startsWith("ibc");
-      } else return transactionKind === filter;
-    },
-    [filter]
-  );
+  const handleFiltering = (transaction: TransactionHistoryType): boolean => {
+    const transactionKind = transaction.tx?.kind ?? "";
+    if (filter.toLowerCase() === "all") {
+      return transferKindOptions.includes(transactionKind);
+    } else if (filter === "received") {
+      return transaction.kind === "received";
+    } else if (filter === "redelegation") {
+      return transactionKind === "redelegation";
+    } else if (filter === "vote") {
+      return transactionKind === "voteProposal";
+    } else if (filter === "withdraw") {
+      return transactionKind === "withdraw";
+    } else if (filter === "transfer") {
+      return [
+        "transparentTransfer",
+        "shieldingTransfer",
+        "unshieldingTransfer",
+        "shieldedTransfer",
+      ].includes(transactionKind);
+    } else if (filter === "ibc") {
+      return transactionKind.startsWith("ibc");
+    } else return transactionKind === filter;
+  };
 
   const JSONstringifyOrder = useCallback((obj: unknown): string => {
     const allKeys = new Set<string>();
@@ -245,6 +251,21 @@ export const TransactionHistory = (): JSX.Element => {
                     id: "unbond",
                     value: "Unstake",
                     ariaLabel: "Unstake",
+                  },
+                  {
+                    id: "redelegation",
+                    value: "Redelegate",
+                    ariaLabel: "Redelegate",
+                  },
+                  {
+                    id: "voteProposal",
+                    value: "Vote",
+                    ariaLabel: "Vote",
+                  },
+                  {
+                    id: "withdraw",
+                    value: "Withdraw",
+                    ariaLabel: "Withdraw",
                   },
                 ]}
               />
