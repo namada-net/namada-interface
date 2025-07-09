@@ -13,6 +13,7 @@ import { useAtomValue } from "jotai";
 import { useCallback, useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { TransferTransactionData } from "types";
+import { BundledTransactionCard } from "./BundledTransactionCard";
 import { LocalStorageTransactionCard } from "./LocalStorageTransactionCard";
 import { PendingTransactionCard } from "./PendingTransactionCard";
 import { TransactionCard } from "./TransactionCard";
@@ -35,6 +36,19 @@ export const transferKindOptions = [
   "revealPk",
   "received",
 ];
+
+type BundledTransaction =
+  | {
+      type: "bundled";
+      revealPkTx: TransactionHistoryType;
+      mainTx: TransactionHistoryType;
+      timestamp: number;
+    }
+  | {
+      type: "single";
+      tx: TransactionHistoryType;
+      timestamp: number;
+    };
 
 export const TransactionHistory = (): JSX.Element => {
   const [currentPage, setCurrentPage] = useState(0);
@@ -128,12 +142,53 @@ export const TransactionHistory = (): JSX.Element => {
     },
     []
   );
-  // Only show historical transactions that are in the transferKindOptions array
+
+  // Bundle reveal PK transactions with the previous transaction
+  const bundleTransactions = (
+    transactions: (TransactionHistoryType | TransferTransactionData)[]
+  ): BundledTransaction[] => {
+    const bundled: BundledTransaction[] = [];
+    let i = 0;
+
+    while (i < transactions.length) {
+      const currentTx = transactions[i];
+
+      // Check if next transaction is revealPk that should be bundled with current
+      const nextTx = transactions[i + 1];
+      if (
+        i + 1 < transactions.length &&
+        "tx" in nextTx &&
+        nextTx.tx?.kind === "revealPk"
+      ) {
+        bundled.push({
+          type: "bundled",
+          revealPkTx: nextTx as TransactionHistoryType,
+          mainTx: currentTx as TransactionHistoryType,
+          timestamp: currentTx.timestamp || 0,
+        });
+        i += 2; // Skip both transactions
+      } else if ("tx" in currentTx && currentTx.tx?.kind === "revealPk") {
+        // Skip standalone revealPk transactions
+        i += 1;
+      } else {
+        // Add as single transaction
+        bundled.push({
+          type: "single",
+          tx: currentTx as TransactionHistoryType,
+          timestamp: currentTx.timestamp || 0,
+        });
+        i += 1;
+      }
+    }
+
+    return bundled;
+  };
+
   const filteredTransactions =
     transactions?.results?.filter((transaction) =>
       handleFiltering(transaction)
     ) ?? [];
-  // Remove duplicates
+
   const historicalTransactions =
     filterDuplicateTransactions(filteredTransactions);
 
@@ -142,30 +197,44 @@ export const TransactionHistory = (): JSX.Element => {
     ...completedIbcShieldTransactions,
   ].sort((a, b) => (b?.timestamp ?? 0) - (a?.timestamp ?? 0));
 
-  // Calculate total pages based on the filtered transactions
+  // Bundle transactions after sorting
+  const bundledTransactions = bundleTransactions(allHistoricalTransactions);
+
+  // Calculate total pages based on bundled transactions
   const totalPages = Math.max(
     1,
-    Math.ceil(allHistoricalTransactions.length / ITEMS_PER_PAGE)
+    Math.ceil(bundledTransactions.length / ITEMS_PER_PAGE)
   );
 
   const paginatedTransactions = useMemo(() => {
     const startIndex = currentPage * ITEMS_PER_PAGE;
     const endIndex = startIndex + ITEMS_PER_PAGE;
-    return allHistoricalTransactions.slice(startIndex, endIndex);
-  }, [allHistoricalTransactions, currentPage]);
+    return bundledTransactions.slice(startIndex, endIndex);
+  }, [bundledTransactions, currentPage]);
 
   const renderRow = (
-    transaction: TransactionHistoryType,
+    transaction: BundledTransaction,
     index: number
   ): TableRow => {
+    const key =
+      transaction.type === "bundled" ?
+        `${transaction.revealPkTx.tx?.txId}-${transaction.mainTx.tx?.txId}`
+      : transaction.tx.tx?.txId || index.toString();
+
     return {
-      key: transaction.tx?.txId || index.toString(),
+      key,
       cells: [
-        transaction?.tx ?
-          <TransactionCard key="transaction" tx={transaction} />
+        transaction.type === "bundled" ?
+          <BundledTransactionCard
+            key="bundled-transaction"
+            revealPkTx={transaction.revealPkTx}
+            mainTx={transaction.mainTx}
+          />
+        : transaction.tx?.tx ?
+          <TransactionCard key="transaction" tx={transaction.tx} />
         : <LocalStorageTransactionCard
             key="transaction"
-            transaction={transaction as unknown as TransferTransactionData}
+            transaction={transaction.tx as unknown as TransferTransactionData}
           />,
       ],
     };
@@ -296,9 +365,7 @@ export const TransactionHistory = (): JSX.Element => {
                   id="transactions-table"
                   headers={[{ children: " ", className: "w-full" }]}
                   renderRow={renderRow}
-                  itemList={
-                    paginatedTransactions as unknown as TransactionHistoryType[]
-                  }
+                  itemList={paginatedTransactions}
                   page={currentPage}
                   pageCount={totalPages}
                   onPageChange={handlePageChange}
