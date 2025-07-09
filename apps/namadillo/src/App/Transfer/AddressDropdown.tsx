@@ -24,6 +24,7 @@ type AddressOption = {
 type AddressDropdownProps = {
   selectedAddress?: string;
   className?: string;
+  isShieldingTxn?: boolean;
   onClick?: () => void;
   onSelectAddress?: (address: string) => void;
 };
@@ -31,6 +32,7 @@ type AddressDropdownProps = {
 const keplr = new KeplrWalletManager();
 
 export const AddressDropdown = ({
+  isShieldingTxn,
   selectedAddress,
   className = "",
   onClick,
@@ -87,7 +89,7 @@ export const AddressDropdown = ({
       });
     }
 
-    if (shieldedAccount) {
+    if (shieldedAccount && !isShieldingTxn) {
       addressOptions.push({
         id: "namada-shielded",
         label: "Namada Shielded",
