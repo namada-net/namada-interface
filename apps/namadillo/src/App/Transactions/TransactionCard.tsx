@@ -87,6 +87,18 @@ const getBondOrUnbondTransactionInfo = (
   };
 };
 
+const getRedelegationTransactionInfo = (
+  tx: Tx["tx"]
+): { amount: BigNumber; sender?: string; receiver?: string } | undefined => {
+  if (!tx?.data) return undefined;
+  const parsed = typeof tx.data === "string" ? JSON.parse(tx.data) : tx.data;
+  return {
+    amount: BigNumber(parsed.amount),
+    sender: parsed.src_validator,
+    receiver: parsed.dest_validator,
+  };
+};
+
 const getTransactionInfo = (
   tx: Tx["tx"],
   transparentAddress: string
@@ -96,17 +108,8 @@ const getTransactionInfo = (
   const parsed = typeof tx.data === "string" ? JSON.parse(tx.data) : tx.data;
 
   // Handle redelegation case
-  if (
-    tx.kind === "redelegation" &&
-    parsed.src_validator &&
-    parsed.dest_validator
-  ) {
-    return {
-      amount: BigNumber(parsed.amount),
-      sender: parsed.src_validator,
-      receiver: parsed.dest_validator,
-    };
-  }
+  if (tx.kind === "redelegation") return getRedelegationTransactionInfo(tx);
+  // if(tx.kind === "voteProposal") return getVoteTransactionInfo(tx);
 
   const sections: RawDataSection[] = Array.isArray(parsed) ? parsed : [parsed];
   const target = sections.find((s) => s.targets?.length);
@@ -143,6 +146,8 @@ export const TransactionCard = ({
   const isBondingOrUnbondingTransaction = ["bond", "unbond"].includes(
     transactionTopLevel?.tx?.kind ?? ""
   );
+  const isRedelegationTransaction =
+    transactionTopLevel?.tx?.kind === "redelegation";
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
 
   const transparentAddress =
@@ -160,6 +165,12 @@ export const TransactionCard = ({
   const transactionFailed = transaction?.exitCode === "rejected";
   const validators = useAtomValue(allValidatorsAtom);
   const validator = validators?.data?.find((v) => v.address === receiver);
+  const redelegationSource = validators?.data?.find(
+    (v) => v.address === txnInfo?.sender
+  );
+  const redelegationTarget = validators?.data?.find(
+    (v) => v.address === txnInfo?.receiver
+  );
 
   const getDisplayAmount = (): BigNumber => {
     if (!txnInfo?.amount) {
@@ -340,6 +351,13 @@ export const TransactionCard = ({
               <span className="flex items-center gap-1">
                 <FaLock className="w-4 h-4" /> Shielded
               </span>
+            : isRedelegationTransaction ?
+              redelegationSource?.imageUrl ?
+                <img
+                  src={redelegationSource?.imageUrl}
+                  className="w-9 h-9 mt-1 rounded-full"
+                />
+              : redelegationSource?.alias
             : <div className="flex items-center gap-1">
                 {renderKeplrIcon(sender ?? "")}
                 {shortenAddress(sender ?? "", 10, 10)}
@@ -365,6 +383,13 @@ export const TransactionCard = ({
                 className="w-9 h-9 mt-1 rounded-full"
               />
             : shortenAddress(receiver ?? "", 10, 10)
+          : isRedelegationTransaction ?
+            redelegationTarget?.imageUrl ?
+              <img
+                src={redelegationTarget?.imageUrl}
+                className="w-9 h-9 mt-1 rounded-full"
+              />
+            : redelegationTarget?.alias
           : <div className="flex items-center gap-1">
               {renderKeplrIcon(receiver ?? "")}
               {shortenAddress(receiver ?? "", 10, 10)}
