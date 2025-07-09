@@ -155,7 +155,7 @@ const getTransactionInfo = (
   return amount ? { amount, sender, receiver } : undefined;
 };
 
-// Common hooks and utilities for all card types
+// Common data for all teh card types
 const useTransactionCardData = (
   tx: Tx
 ): {
