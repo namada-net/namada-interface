@@ -25,6 +25,7 @@ type AddressDropdownProps = {
   selectedAddress?: string;
   className?: string;
   isShieldingTxn?: boolean;
+  showAddress?: boolean;
   onClick?: () => void;
   onSelectAddress?: (address: string) => void;
 };
@@ -35,6 +36,7 @@ export const AddressDropdown = ({
   isShieldingTxn,
   selectedAddress,
   className = "",
+  showAddress = false,
   onClick,
   onSelectAddress,
 }: AddressDropdownProps): JSX.Element => {
@@ -106,7 +108,7 @@ export const AddressDropdown = ({
     addressOptions.push({
       id: "keplr",
       label: "Keplr",
-      address: keplrAddress,
+      address: "Keplr",
       walletType: "keplr",
       iconUrl: wallets.keplr.iconUrl,
     });
@@ -207,11 +209,18 @@ export const AddressDropdown = ({
         )}
         onClick={handleToggle}
       >
-        <img
-          src={selectedOption?.iconUrl || namadaTransparentIcon}
-          alt={(selectedOption?.walletType || "Namada") + " Logo"}
-          className="w-7 select-none"
-        />
+        <div className="flex items-center gap-2.5 mt-2">
+          <img
+            src={selectedOption?.iconUrl || namadaTransparentIcon}
+            alt={(selectedOption?.walletType || "Namada") + " Logo"}
+            className="w-7 select-none"
+          />
+          {showAddress && selectedOption && (
+            <div className="text-xs text-neutral-400">
+              {shortenAddress(selectedOption.address, 10, 10)}
+            </div>
+          )}
+        </div>
         {shouldShowDropdown && (
           <GoChevronDown
             className={clsx(
