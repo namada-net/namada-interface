@@ -28,7 +28,7 @@ describe("Component: SelectedWallet", () => {
 
   it("should render the wallet icon", async () => {
     await act(async () => {
-      render(<SelectedWallet wallet={walletMock} address={tempAddress} />);
+      render(<SelectedWallet address={tempAddress} />);
     });
     const walletIcon = screen.getByAltText(/logo/i, { exact: false });
     expect(walletIcon).toBeInTheDocument();
@@ -36,7 +36,7 @@ describe("Component: SelectedWallet", () => {
   });
 
   it("should display the shortened wallet address after loading accounts", async () => {
-    render(<SelectedWallet wallet={walletMock} address={tempAddress} />);
+    render(<SelectedWallet address={tempAddress} />);
 
     // Check if the address is correctly shortened
     const shortenedAddress = shortenAddress(tempAddress, 8, 8);
@@ -46,13 +46,7 @@ describe("Component: SelectedWallet", () => {
   it("should trigger the onClick function when clicked", async () => {
     const onClickMock = jest.fn();
     await act(async () => {
-      render(
-        <SelectedWallet
-          wallet={walletMock}
-          address={tempAddress}
-          onClick={onClickMock}
-        />
-      );
+      render(<SelectedWallet address={tempAddress} onClick={onClickMock} />);
     });
     const walletButton = screen.getByRole("button");
     fireEvent.click(walletButton);

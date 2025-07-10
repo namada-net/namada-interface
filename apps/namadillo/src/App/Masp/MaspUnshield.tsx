@@ -3,10 +3,8 @@ import { AccountType } from "@namada/types";
 import { MaspSyncCover } from "App/Common/MaspSyncCover";
 import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
 import { params } from "App/routes";
-import {
-  OnSubmitTransferParams,
-  TransferModule,
-} from "App/Transfer/TransferModule";
+import { TransferModule } from "App/Transfer/TransferModule";
+import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
   lastCompletedShieldedSyncAtom,
@@ -154,7 +152,6 @@ export const MaspUnshield: React.FC = () => {
       <TransferModule
         source={{
           isLoadingAssets: isLoadingAssets,
-          availableAssets,
           selectedAssetAddress,
           availableAmount: selectedAsset?.amount,
           chain,

@@ -1,6 +1,5 @@
-import namadaChain from "@namada/chain-registry/namada/chain.json";
 import { Panel } from "@namada/components";
-import { AccountType, Chain } from "@namada/types";
+import { AccountType } from "@namada/types";
 import { params } from "App/routes";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
@@ -148,10 +147,8 @@ export const MaspShield: React.FC = () => {
       <TransferModule
         source={{
           isLoadingAssets,
-          availableAssets,
           selectedAssetAddress,
           availableAmount: selectedAsset?.amount,
-          chain: namadaChain as Chain,
           availableWallets: [wallets.namada, wallets.keplr],
           wallet: wallets.namada,
           walletAddress: sourceAddress,

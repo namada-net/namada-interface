@@ -3,10 +3,8 @@ import { IbcTransferProps } from "@namada/sdk-multicore";
 import { AccountType } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
 import { params, routes } from "App/routes";
-import {
-  OnSubmitTransferParams,
-  TransferModule,
-} from "App/Transfer/TransferModule";
+import { TransferModule } from "App/Transfer/TransferModule";
+import { OnSubmitTransferParams } from "App/Transfer/types";
 import {
   allDefaultAccountsAtom,
   defaultAccountAtom,
@@ -382,7 +380,6 @@ export const IbcWithdraw = (): JSX.Element => {
           chain,
           isShieldedAddress: shielded,
           availableChains: chain ? [chain] : [],
-          availableAssets,
           availableAmount,
           selectedAssetAddress,
           onChangeSelectedAsset: setSelectedAssetAddress,
@@ -418,7 +415,7 @@ export const IbcWithdraw = (): JSX.Element => {
            * from the confirmation event from target chain */
           isSuccess
         }
-        ibcTransfer={"withdraw"}
+        isIbcTransfer={true}
         requiresIbcChannels={requiresIbcChannels}
         ibcOptions={{
           sourceChannel,
