@@ -1,5 +1,6 @@
 import { CopyToClipboardControl, Tooltip } from "@namada/components";
-import { shortenAddress } from "@namada/utils";
+import { formatPercentage, shortenAddress } from "@namada/utils";
+import { FiatCurrency } from "App/Common/FiatCurrency";
 import { TokenCurrency } from "App/Common/TokenCurrency";
 import { AssetImage } from "App/Transfer/AssetImage";
 import {
@@ -10,6 +11,7 @@ import {
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { nativeTokenAddressAtom } from "atoms/chain";
 import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
+import { tokenPricesFamily } from "atoms/prices/atoms";
 import { proposalFamily } from "atoms/proposals";
 import { TransactionHistory as TransactionHistoryType } from "atoms/transactions/atoms";
 import { allValidatorsAtom } from "atoms/validators";
@@ -23,7 +25,7 @@ import {
 } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
-import { NamadaAsset } from "types";
+import { NamadaAsset, Validator } from "types";
 import { isNamadaAsset, toDisplayAmount } from "utils";
 import keplrSvg from "../../integrations/assets/keplr.svg";
 
@@ -260,6 +262,74 @@ const renderKeplrIcon = (address: string): JSX.Element | null => {
   return <img src={keplrSvg} height={18} width={18} />;
 };
 
+const ValidatorTooltip: React.FC<{
+  validator: Validator;
+  children: React.ReactNode;
+}> = ({ validator, children }) => {
+  return (
+    <div className="relative group/tooltip cursor-pointer">
+      {children}
+      <Tooltip
+        position="bottom"
+        className="p-0 w-[335px] z-[9999] bg-black border-2 border-yellow rounded-md"
+      >
+        <div className="p-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-neutral-700 mb-4">
+            <div className="w-12 h-12 rounded-full overflow-hidden">
+              {validator.imageUrl ?
+                <img
+                  src={validator.imageUrl}
+                  alt={validator.alias || "Validator"}
+                  className="w-full h-full object-cover"
+                />
+              : <div className="w-full h-full bg-neutral-700 flex items-center justify-center text-neutral-400 text-sm">
+                  {validator.alias?.charAt(0) || "?"}
+                </div>
+              }
+            </div>
+            <div className="flex-1">
+              <h3 className="text-white font-semibold text-lg">
+                {validator.alias || "Unknown Validator"}
+              </h3>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <p className="text-neutral-300 font-mono text-sm">
+              {shortenAddress(validator.address, 16, 16)}
+            </p>
+          </div>
+
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-neutral-400">Commission</span>
+              <span className="text-white">
+                {formatPercentage(validator.commission)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-400">Approximate APR (%)</span>
+              <span className="text-white">
+                {formatPercentage(validator.expectedApr)}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-neutral-400">Voting Power</span>
+              <span className="text-white">
+                {validator.votingPowerPercentage ?
+                  formatPercentage(
+                    new BigNumber(validator.votingPowerPercentage)
+                  )
+                : "0%"}
+              </span>
+            </div>
+          </div>
+        </div>
+      </Tooltip>
+    </div>
+  );
+};
+
 const TransactionCardContainer: React.FC<{
   children: React.ReactNode;
   transactionFailed: boolean;
@@ -347,16 +417,31 @@ const TransactionAmount: React.FC<{
   asset: NamadaAsset | undefined;
   amount: BigNumber;
 }> = ({ asset, amount }) => {
+  const tokenPrices = useAtomValue(
+    tokenPricesFamily(asset?.address ? [asset.address] : [])
+  );
+  const tokenPrice =
+    asset?.address ? tokenPrices.data?.[asset.address] : undefined;
+  const dollarAmount = tokenPrice ? amount.multipliedBy(tokenPrice) : undefined;
+
   return (
     <div className="flex items-center">
       <div className="aspect-square w-10 h-10 mt-1">
         <AssetImage asset={asset} />
       </div>
-      <TokenCurrency
-        className="font-semibold text-white mt-1 ml-2"
-        amount={amount}
-        symbol={asset?.symbol ?? ""}
-      />
+      <div className="ml-2 flex flex-col">
+        <TokenCurrency
+          className="font-semibold text-white"
+          amount={amount}
+          symbol={asset?.symbol ?? ""}
+        />
+        {dollarAmount && (
+          <FiatCurrency
+            className="text-neutral-400 text-sm"
+            amount={dollarAmount}
+          />
+        )}
+      </div>
     </div>
   );
 };
@@ -389,16 +474,20 @@ const BondUnbondTransactionCard: React.FC<Props> = ({ tx }) => {
       />
       <TransactionAmount asset={asset} amount={displayAmount} />
       <div className="flex flex-col">
-        <h4>Validator</h4>
+        <h4 className="text-neutral-400">
+          {transaction?.kind === "bond" ? "To Validator" : "From Validator"}
+        </h4>
         <h4>
           {validator?.imageUrl ?
-            <div className="flex">
-              <img
-                src={validator?.imageUrl}
-                className="w-9 h-9 mt-1 rounded-full"
-              />{" "}
-              <span className="mt-2 ml-2">{validator?.alias}</span>
-            </div>
+            <ValidatorTooltip validator={validator}>
+              <div className="flex items-center">
+                <span className="mr-2 text-sm">{validator?.alias}</span>
+                <img
+                  src={validator?.imageUrl}
+                  className="w-6 h-6 rounded-full"
+                />
+              </div>
+            </ValidatorTooltip>
           : shortenAddress(txnInfo?.receiver ?? "", 10, 10)}
         </h4>
       </div>
@@ -435,31 +524,39 @@ const RedelegationTransactionCard: React.FC<Props> = ({ tx }) => {
       <TransactionAmount asset={asset} amount={displayAmount} />
 
       <div className="flex flex-col">
-        <h4>From</h4>
+        <h4 className="text-neutral-400">From Validator</h4>
         <h4>
           {redelegationSource?.imageUrl ?
-            <div className="flex">
-              <img
-                src={redelegationSource?.imageUrl}
-                className="w-9 h-9 mt-1 rounded-full"
-              />{" "}
-              <span className="mt-2 ml-2">{redelegationSource?.alias}</span>
-            </div>
+            <ValidatorTooltip validator={redelegationSource}>
+              <div className="flex items-center">
+                <span className="mr-2 text-sm">
+                  {redelegationSource?.alias}
+                </span>
+                <img
+                  src={redelegationSource?.imageUrl}
+                  className="w-6 h-6 rounded-full"
+                />
+              </div>
+            </ValidatorTooltip>
           : shortenAddress(txnInfo?.sender ?? "", 10, 10)}
         </h4>
       </div>
 
       <div className="flex flex-col">
-        <h4>To</h4>
+        <h4 className="text-neutral-400">To Validator</h4>
         <h4>
           {redelegationTarget?.imageUrl ?
-            <div className="flex">
-              <img
-                src={redelegationTarget?.imageUrl}
-                className="w-9 h-9 mt-1 rounded-full"
-              />{" "}
-              <span className="mt-2 ml-2">{redelegationTarget?.alias}</span>
-            </div>
+            <ValidatorTooltip validator={redelegationTarget}>
+              <div className="flex items-center">
+                <span className="mr-2 text-sm">
+                  {redelegationTarget?.alias}
+                </span>
+                <img
+                  src={redelegationTarget?.imageUrl}
+                  className="w-6 h-6 rounded-full"
+                />
+              </div>
+            </ValidatorTooltip>
           : shortenAddress(txnInfo?.receiver ?? "", 10, 10)}
         </h4>
       </div>
@@ -489,7 +586,7 @@ const VoteTransactionCard: React.FC<Props> = ({ tx }) => {
         timestamp={tx.timestamp}
       />
       <div className="flex flex-col">
-        <h4>Vote</h4>
+        <h4 className="text-neutral-400">Vote</h4>
         <h4
           className={clsx("uppercase", {
             "text-success": voteInfo?.vote.toLowerCase() === "yay",
@@ -500,7 +597,7 @@ const VoteTransactionCard: React.FC<Props> = ({ tx }) => {
         </h4>
       </div>
       <div className="flex flex-col">
-        <h4>Proposal</h4>
+        <h4 className="text-neutral-400">Proposal</h4>
         <h4>
           <div className="relative group/tooltip">
             <button
@@ -520,7 +617,7 @@ const VoteTransactionCard: React.FC<Props> = ({ tx }) => {
         </h4>
       </div>
       <div className="flex flex-col">
-        <h4>Proposer</h4>
+        <h4 className="text-neutral-400">Proposer</h4>
         <h4>{proposer ? shortenAddress(proposer, 10, 10) : "-"}</h4>
       </div>
     </TransactionCardContainer>
@@ -548,16 +645,18 @@ const WithdrawTransactionCard: React.FC<Props> = ({ tx }) => {
         timestamp={tx.timestamp}
       />
       <div className="flex flex-col">
-        <h4>From Validator</h4>
+        <h4 className="text-neutral-400">From Validator</h4>
         <h4>
           {validator?.imageUrl ?
-            <div className="flex">
-              <img
-                src={validator?.imageUrl}
-                className="w-9 h-9 mt-1 rounded-full"
-              />{" "}
-              <span className="mt-2 ml-2">{validator?.alias}</span>
-            </div>
+            <ValidatorTooltip validator={validator}>
+              <div className="flex">
+                <img
+                  src={validator?.imageUrl}
+                  className="w-9 h-9 mt-1 rounded-full"
+                />{" "}
+                <span className="mt-2 ml-2">{validator?.alias}</span>
+              </div>
+            </ValidatorTooltip>
           : shortenAddress(txnInfo?.validator ?? "", 10, 10)}
         </h4>
       </div>
@@ -603,9 +702,7 @@ const GeneralTransactionCard: React.FC<Props> = ({ tx }) => {
       <TransactionAmount asset={asset} amount={displayAmount} />
 
       <div className="flex flex-col">
-        <h4 className={isShieldedAddress(sender ?? "") ? "text-yellow" : ""}>
-          From
-        </h4>
+        <h4 className="text-neutral-400">From</h4>
         <h4 className={isShieldedAddress(sender ?? "") ? "text-yellow" : ""}>
           {isShieldedAddress(sender ?? "") ?
             <span className="flex items-center gap-1">
@@ -620,9 +717,7 @@ const GeneralTransactionCard: React.FC<Props> = ({ tx }) => {
       </div>
 
       <div className="flex flex-col">
-        <h4 className={isShieldedAddress(receiver ?? "") ? "text-yellow" : ""}>
-          To
-        </h4>
+        <h4 className="text-neutral-400">To</h4>
         <h4 className={isShieldedAddress(receiver ?? "") ? "text-yellow" : ""}>
           {isShieldedAddress(receiver ?? "") ?
             <span className="flex items-center gap-1">
