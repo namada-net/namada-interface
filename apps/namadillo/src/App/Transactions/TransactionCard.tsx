@@ -262,10 +262,13 @@ const renderKeplrIcon = (address: string): JSX.Element | null => {
   return <img src={keplrSvg} height={18} width={18} />;
 };
 
-const ValidatorTooltip: React.FC<{
+const ValidatorTooltip = ({
+  validator,
+  children,
+}: {
   validator: Validator;
   children: React.ReactNode;
-}> = ({ validator, children }) => {
+}): JSX.Element => {
   return (
     <div className="relative group/tooltip cursor-pointer">
       {children}
@@ -330,11 +333,14 @@ const ValidatorTooltip: React.FC<{
   );
 };
 
-const TransactionCardContainer: React.FC<{
+const TransactionCardContainer = ({
+  children,
+  hasValidatorImage = false,
+}: {
   children: React.ReactNode;
   transactionFailed: boolean;
   hasValidatorImage?: boolean;
-}> = ({ children, hasValidatorImage = false }) => {
+}): JSX.Element => {
   return (
     <article
       className={twMerge(
@@ -351,12 +357,17 @@ const TransactionCardContainer: React.FC<{
   );
 };
 
-const TransactionHeader: React.FC<{
+const TransactionHeader = ({
+  transactionFailed,
+  title,
+  wrapperId,
+  timestamp,
+}: {
   transactionFailed: boolean;
   title: string;
   wrapperId?: string;
   timestamp?: number;
-}> = ({ transactionFailed, title, wrapperId, timestamp }) => {
+}): JSX.Element => {
   return (
     <div className="flex items-center gap-3">
       <i
@@ -413,10 +424,13 @@ const TransactionHeader: React.FC<{
   );
 };
 
-const TransactionAmount: React.FC<{
+const TransactionAmount = ({
+  asset,
+  amount,
+}: {
   asset: NamadaAsset | undefined;
   amount: BigNumber;
-}> = ({ asset, amount }) => {
+}): JSX.Element => {
   const tokenPrices = useAtomValue(
     tokenPricesFamily(asset?.address ? [asset.address] : [])
   );
@@ -446,7 +460,7 @@ const TransactionAmount: React.FC<{
   );
 };
 
-const BondUnbondTransactionCard: React.FC<Props> = ({ tx }) => {
+const BondUnbondTransactionCard = ({ tx }: Props): JSX.Element => {
   const { transaction, asset, transactionFailed, validators } =
     useTransactionCardData(tx);
   const txnInfo = getBondOrUnbondTransactionInfo(transaction);
@@ -495,7 +509,7 @@ const BondUnbondTransactionCard: React.FC<Props> = ({ tx }) => {
   );
 };
 
-const RedelegationTransactionCard: React.FC<Props> = ({ tx }) => {
+const RedelegationTransactionCard = ({ tx }: Props): JSX.Element => {
   const { transaction, asset, transactionFailed, validators } =
     useTransactionCardData(tx);
   const txnInfo = getRedelegationTransactionInfo(transaction);
@@ -564,7 +578,7 @@ const RedelegationTransactionCard: React.FC<Props> = ({ tx }) => {
   );
 };
 
-const VoteTransactionCard: React.FC<Props> = ({ tx }) => {
+const VoteTransactionCard = ({ tx }: Props): JSX.Element => {
   const { transaction, transactionFailed } = useTransactionCardData(tx);
   const voteInfo = getVoteTransactionInfo(transaction);
   const proposalId =
@@ -624,7 +638,7 @@ const VoteTransactionCard: React.FC<Props> = ({ tx }) => {
   );
 };
 
-const WithdrawTransactionCard: React.FC<Props> = ({ tx }) => {
+const WithdrawTransactionCard = ({ tx }: Props): JSX.Element => {
   const { transaction, transactionFailed, validators } =
     useTransactionCardData(tx);
 
@@ -664,7 +678,7 @@ const WithdrawTransactionCard: React.FC<Props> = ({ tx }) => {
   );
 };
 
-const GeneralTransactionCard: React.FC<Props> = ({ tx }) => {
+const GeneralTransactionCard = ({ tx }: Props): JSX.Element => {
   const { transaction, asset, transparentAddress, transactionFailed } =
     useTransactionCardData(tx);
   const txnInfo = getTransactionInfo(transaction, transparentAddress);
