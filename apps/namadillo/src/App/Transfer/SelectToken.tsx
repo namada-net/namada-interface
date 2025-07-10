@@ -7,22 +7,20 @@ import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
 } from "atoms/balance";
-import { chainAssetsMapAtom, chainTokensAtom } from "atoms/chain";
+import { chainTokensAtom } from "atoms/chain";
 import {
-  availableChainsAtom,
-  chainRegistryAtom,
   connectedWalletsAtom,
-  getDenomFromIbcTrace,
-  searchChainByDenom,
+  getAvailableChains,
+  getChainRegistryByChainName,
+  namadaRegistryChainAssetsMapAtom,
 } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
-import { findRegistryByChainId } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { IoArrowBack, IoClose } from "react-icons/io5";
-import { AddressWithAssetAndAmount } from "types";
+import { AssetWithAmount } from "types";
 import { capitalize } from "utils/etc";
 import { AddressDropdown } from "./AddressDropdown";
 import { isNamadaAddress, isShieldedAddress } from "./common";
@@ -44,17 +42,17 @@ type SelectTokenProps = {
 
 // Helper function to check if a token is an IBC token
 const isIbcToken = (
-  token: AddressWithAssetAndAmount,
+  token: AssetWithAmount,
   assetToNetworkMap: Record<string, string>
 ): boolean => {
-  // Check if originalAddress starts with 'ibc/'
-  if (token.originalAddress.startsWith("ibc/")) {
+  // TODO: this should be cleaned up b/c not all just have ibc
+  if (token.asset.address?.startsWith("ibc/")) {
     return true;
   }
 
   // Check if the token's network is not Namada
   const tokenNetworkName =
-    assetToNetworkMap[token.originalAddress] || token.asset.name;
+    assetToNetworkMap[token.asset.address || ""] || token.asset.name;
   return tokenNetworkName !== "Namada" && tokenNetworkName !== "namada";
 };
 
@@ -68,10 +66,10 @@ export const SelectToken = ({
   const transparentAssets = useAtomValue(namadaTransparentAssetsAtom);
   const shieldedAssets = useAtomValue(namadaShieldedAssetsAtom);
   const chainTokens = useAtomValue(chainTokensAtom);
-  const chainRegistry = useAtomValue(chainRegistryAtom);
-  const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
-  const chainAssetsMap = Object.values(useAtomValue(chainAssetsMapAtom));
-  const ibcChains = useAtomValue(availableChainsAtom);
+  const [connectedWallets] = useAtom(connectedWalletsAtom);
+  const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
+  const chainAssetsMap = Object.values(chainAssets.data ?? {});
+  const ibcChains = useMemo(getAvailableChains, []);
   const allChains = [...ibcChains, namadaChain as unknown as Chain];
 
   const isShielded = isShieldedAddress(sourceAddress);
@@ -79,8 +77,9 @@ export const SelectToken = ({
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
   const [showConnectWalletView, setShowConnectWalletView] = useState(false);
-  const [pendingToken, setPendingToken] =
-    useState<AddressWithAssetAndAmount | null>(null);
+  const [pendingToken, setPendingToken] = useState<AssetWithAmount | null>(
+    null
+  );
 
   const allNetworks: Network[] = useMemo(() => {
     return allChains
@@ -113,7 +112,7 @@ export const SelectToken = ({
 
   // Your tokens
   const tokens = useMemo(() => {
-    const result: AddressWithAssetAndAmount[] = [];
+    const result: AssetWithAmount[] = [];
 
     // Check if current address is a Keplr address (not shielded or transparent Namada)
     const isKeplrAddress = !isNamadaAddress(sourceAddress);
@@ -122,25 +121,27 @@ export const SelectToken = ({
       // For Keplr addresses, show all available chain assets but without amounts unless connected
       chainAssetsMap.forEach((asset) => {
         if (asset && asset.address && asset.name) {
-          const amount =
-            connectedWallets.keplr ? new BigNumber(0) : new BigNumber(0); // Could fetch actual balance if connected
           result.push({
-            originalAddress: asset.address,
             asset: {
+              type_asset: asset.type_asset,
+              address: asset.address,
               name: asset.name,
               symbol: asset.symbol || asset.name,
               logo_URIs: asset.logo_URIs,
               traces: asset.traces,
+              denom_units: asset.denom_units,
+              base: asset.base,
+              display: asset.display,
             },
-            amount,
-          } as AddressWithAssetAndAmount);
+            amount: BigNumber(0),
+          });
         }
       });
     } else {
       // For Namada addresses, use the appropriate assets atom
       const assets = isShielded ? shieldedAssets.data : transparentAssets.data;
-      Object.values(assets ?? []).forEach((item: AddressWithAssetAndAmount) => {
-        if (item.asset && item.originalAddress) {
+      Object.values(assets ?? {}).forEach((item) => {
+        if (item.asset && item.asset.address) {
           result.push(item);
         }
       });
@@ -166,7 +167,7 @@ export const SelectToken = ({
 
         // Filter by selected network (if any)
         const tokenNetworkName =
-          assetToNetworkMap[token.originalAddress] || token.asset.name;
+          assetToNetworkMap[token.asset.address || ""] || token.asset.name;
         const matchesNetwork =
           selectedNetwork === null || tokenNetworkName === selectedNetwork;
 
@@ -195,21 +196,8 @@ export const SelectToken = ({
         keplrWallet.install();
         return false;
       }
-
-      // Try to enable Keplr for a default chain (cosmoshub is commonly supported)
-      const defaultChainRegistry = findRegistryByChainId(
-        chainRegistry,
-        "cosmoshub-4"
-      );
-
-      if (defaultChainRegistry) {
-        await keplrWallet.connect(defaultChainRegistry);
-        setConnectedWallets((obj) => ({ ...obj, [keplrWallet.key]: true }));
-        return true;
-      } else {
-        console.warn("Could not find default chain for Keplr connection");
-        return false;
-      }
+      // TODO: we need to make to where the token clicked is connected to here
+      return true;
     } catch (error) {
       console.error("Failed to connect to Keplr:", error);
       return false;
@@ -218,9 +206,7 @@ export const SelectToken = ({
     }
   };
 
-  const handleTokenSelect = async (
-    token: AddressWithAssetAndAmount
-  ): Promise<void> => {
+  const handleTokenSelect = async (token: AssetWithAmount): Promise<void> => {
     try {
       // Check if current address is Keplr and if we need to connect to specific chain for this token
       const isKeplrAddress = !isNamadaAddress(sourceAddress);
@@ -245,17 +231,15 @@ export const SelectToken = ({
           // First, try to find the chain using the token's trace if available
           if (chainTokens.data) {
             const chainToken = chainTokens.data.find(
-              (chainToken) => chainToken.address === token.originalAddress
+              (chainToken) => chainToken.address === token.asset.address
             );
 
             if (chainToken && "trace" in chainToken) {
-              const denom = getDenomFromIbcTrace(chainToken.trace);
-              const chain = searchChainByDenom(denom);
-              if (chain) {
-                targetChainRegistry = findRegistryByChainId(
-                  chainRegistry,
-                  chain.chain_id
-                );
+              const chainName =
+                token.asset.traces?.[0]?.counterparty?.chain_name;
+
+              if (chainName) {
+                targetChainRegistry = getChainRegistryByChainName(chainName);
               }
             }
           }
@@ -277,13 +261,13 @@ export const SelectToken = ({
       }
 
       // Proceed with token selection
-      onSelect?.(token.originalAddress);
+      onSelect?.(token.asset.address);
       onClose();
     } catch (error) {
       console.error("Error in token selection:", error);
       setIsConnectingKeplr(false);
       // Still allow token selection to proceed
-      onSelect?.(token.originalAddress);
+      onSelect?.(token.asset.address);
       onClose();
     }
   };
@@ -442,7 +426,7 @@ export const SelectToken = ({
                               !isKeplrAddress || connectedWallets.keplr;
 
                             return (
-                              <li key={token.originalAddress}>
+                              <li key={token.asset.address}>
                                 <button
                                   onClick={() => handleTokenSelect(token)}
                                   disabled={isConnectingKeplr}

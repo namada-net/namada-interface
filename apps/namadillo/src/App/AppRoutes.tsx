@@ -21,7 +21,6 @@ import { SubmitVote } from "./Governance/SubmitVote";
 import { ViewJson } from "./Governance/ViewJson";
 import { IbcLayout } from "./Ibc/IbcLayout";
 import { IbcShieldAll } from "./Ibc/IbcShieldAll";
-import { IbcTransfer } from "./Ibc/IbcTransfer";
 import { IbcTransfersLayout } from "./Ibc/IbcTransfersLayout";
 import { IbcWithdraw } from "./Ibc/IbcWithdraw";
 import { MaspLayout } from "./Masp/MaspLayout";
@@ -106,7 +105,7 @@ export const MainRoutes = (): JSX.Element => {
           {/* Ibc Transfers */}
           {features.ibcTransfersEnabled && (
             <Route element={<IbcTransfersLayout />}>
-              <Route path={routes.ibc} element={<IbcTransfer />} />
+              {/* <Route path={routes.ibc} element={<IbcTransfer />} /> */}
               <Route path={routes.ibcWithdraw} element={<IbcWithdraw />} />
             </Route>
           )}
