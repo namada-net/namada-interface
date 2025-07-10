@@ -1,9 +1,9 @@
-import { Chain, Chains } from "@chain-registry/types";
+import { Chain } from "@chain-registry/types";
 import BigNumber from "bignumber.js";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
 import {
   Address,
-  AddressWithAssetAndAmountMap,
+  Asset,
   GasConfig,
   LedgerAccountInfo,
   WalletProvider,
@@ -14,7 +14,7 @@ export type TransferModuleConfig = {
   walletAddress?: string;
   availableWallets?: WalletProvider[];
   connected?: boolean;
-  availableChains?: Chains;
+  availableChains?: Chain[];
   chain?: Chain;
   isShieldedAddress?: boolean;
   onChangeWallet?: (wallet: WalletProvider) => void;
@@ -25,7 +25,7 @@ export type TransferModuleConfig = {
 };
 
 export type TransferSourceProps = TransferModuleConfig & {
-  availableAssets?: AddressWithAssetAndAmountMap;
+  availableAssets?: Asset[];
   isLoadingAssets?: boolean;
   selectedAssetAddress?: Address;
   availableAmount?: BigNumber;

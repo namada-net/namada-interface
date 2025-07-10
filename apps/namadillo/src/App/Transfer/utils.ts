@@ -2,7 +2,7 @@ import { Chain } from "@chain-registry/types";
 import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
 import BigNumber from "bignumber.js";
 import { wallets } from "integrations";
-import { AddressWithAssetAndAmountMap, GasConfig, WalletProvider } from "types";
+import { AssetWithAmount, GasConfig, WalletProvider } from "types";
 import { checkKeychainCompatibleWithMasp } from "utils/compatibility";
 import {
   TransferDestinationProps,
@@ -40,7 +40,7 @@ export const hasEnoughBalanceForFees = ({
   displayGasFeeAmount,
 }: {
   sourceWallet: WalletProvider | undefined;
-  availableAssets: AddressWithAssetAndAmountMap | undefined;
+  availableAssets: Record<string, AssetWithAmount> | undefined;
   gasConfig: GasConfig | undefined;
   displayGasFeeAmount: BigNumber | undefined;
 }): boolean => {
@@ -80,7 +80,7 @@ export const validateTransferForm = ({
   gasConfig: GasConfig | undefined;
   availableAmountMinusFees: BigNumber | undefined;
   keychainVersion: string | undefined;
-  availableAssets: AddressWithAssetAndAmountMap | undefined;
+  availableAssets: Record<string, AssetWithAmount> | undefined;
   displayGasFeeAmount: BigNumber | undefined;
 }): ValidationResult => {
   if (source.walletAddress === destination.customAddress) {

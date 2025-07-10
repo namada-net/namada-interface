@@ -2,10 +2,8 @@ import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { params } from "App/routes";
 import { isShieldedAddress } from "App/Transfer/common";
-import {
-  OnSubmitTransferParams,
-  TransferModule,
-} from "App/Transfer/TransferModule";
+import { TransferModule } from "App/Transfer/TransferModule";
+import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
   namadaShieldedAssetsAtom,
@@ -197,7 +195,6 @@ export const NamadaTransfer: React.FC = () => {
       <TransferModule
         source={{
           isLoadingAssets,
-          availableAssets,
           availableAmount: selectedAsset?.amount,
           chain,
           availableWallets: [wallets.namada],

@@ -7,7 +7,8 @@ import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
 } from "atoms/balance";
-import { chainAssetsMapAtom, chainParametersAtom } from "atoms/chain";
+import { chainParametersAtom } from "atoms/chain";
+import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
@@ -23,7 +24,6 @@ import { createTransferDataFromNamada } from "lib/transactions";
 import { useEffect, useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AddressWithAssetAndAmountMap } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
 import {
@@ -80,7 +80,7 @@ export const TransferModule = ({
     errorMessage: ledgerStatus.errorMessage,
   };
   const chainParameters = useAtomValue(chainParametersAtom);
-  const chainAssetsMap = useAtomValue(chainAssetsMapAtom);
+  const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const chainId = chainParameters.data?.chainId;
   const rpcUrl = useAtomValue(rpcUrlAtom);
 
@@ -104,7 +104,7 @@ export const TransferModule = ({
     }, [sourceAddress]);
 
   const availableAmount = selectedAsset?.amount;
-  const availableAssets: AddressWithAssetAndAmountMap = useMemo(() => {
+  const availableAssets = useMemo(() => {
     return filterAvailableAssetsWithBalance(usersAssets);
   }, [usersAssets]);
 
@@ -134,7 +134,7 @@ export const TransferModule = ({
   } = useTransfer({
     source: sourceAddress ?? "",
     target: destinationAddress ?? "",
-    token: selectedAsset?.originalAddress ?? "",
+    token: selectedAsset?.asset?.address ?? "",
     displayAmount: displayAmount ?? new BigNumber(0),
     onUpdateStatus: setCurrentStatus,
     onBeforeBuildTx: () => {
@@ -168,7 +168,9 @@ export const TransferModule = ({
 
   const gasConfig = feeProps?.gasConfig;
   const displayGasFee = useMemo(() => {
-    return gasConfig ? getDisplayGasFee(gasConfig, chainAssetsMap) : undefined;
+    return gasConfig ?
+        getDisplayGasFee(gasConfig, chainAssetsMap.data ?? {})
+      : undefined;
   }, [gasConfig]);
 
   const availableAmountMinusFees = useMemo(() => {
@@ -339,7 +341,7 @@ export const TransferModule = ({
           <TransferSource
             sourceAddress={sourceAddress}
             asset={selectedAsset?.asset}
-            originalAddress={selectedAsset?.originalAddress}
+            originalAddress={selectedAsset?.asset?.address}
             isLoadingAssets={source.isLoadingAssets}
             isShieldingTxn={isTargetShielded}
             chain={parseChainInfo(
