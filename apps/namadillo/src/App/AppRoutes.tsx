@@ -97,7 +97,7 @@ export const MainRoutes = (): JSX.Element => {
           {/* Masp */}
           {features.maspEnabled && (
             <Route element={<MaspLayout />}>
-              <Route path={routes.shield} element={<MaspShield />} />
+              <Route path={routes.maspShield} element={<MaspShield />} />
               <Route path={routes.unshield} element={<MaspUnshield />} />
             </Route>
           )}
