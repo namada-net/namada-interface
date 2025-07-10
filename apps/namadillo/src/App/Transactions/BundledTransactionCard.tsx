@@ -83,15 +83,10 @@ export const BundledTransactionCard: React.FC<Props> = ({
             <span className="font-mono text-sm">
               {shortenAddress(publicKey, 12, 12)}
             </span>
-            <div className="relative group/tooltip">
-              <CopyToClipboardControl
-                className="text-neutral-400"
-                value={publicKey}
-              />
-              <Tooltip position="left" className="p-2 w-[150px] z-10">
-                Copy public key
-              </Tooltip>
-            </div>
+            <CopyToClipboardControl
+              className="text-neutral-400"
+              value={publicKey}
+            />
           </h4>
         </div>
       </div>
