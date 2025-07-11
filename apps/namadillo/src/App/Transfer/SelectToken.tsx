@@ -108,42 +108,32 @@ export const SelectToken = ({
       chainAssetsMap.forEach((asset) => {
         if (asset && asset.address && asset.name) {
           let amount = BigNumber(0);
-
-          // Look for balance in allKeplrBalances using multiple possible key formats
+          // Look for balance in allKeplrBalances using the known key format
           if (allKeplrBalances.data) {
             const trace = asset.traces?.find((t) => t.type === "ibc");
             if (trace?.counterparty) {
+              // For IBC assets: try both chainName:baseDenom and chainName:ibcDenom
               const chainName = trace.counterparty.chain_name;
               const baseDenom = trace.counterparty.base_denom;
 
-              // Try different key formats to find the balance
-              const possibleKeys = [
-                `${chainName}:${baseDenom}`,
-                `${chainName}:${asset.base}`,
-                `${chainName}:${asset.address}`,
-              ];
-
-              for (const key of possibleKeys) {
+              // Try baseDenom first (e.g., "osmosis:uosmo")
+              let key = `${chainName}:${baseDenom}`;
+              if (allKeplrBalances.data[key]) {
+                amount = allKeplrBalances.data[key].amount;
+              } else {
+                // Try with asset.base as IBC denom (e.g., "osmosis:ibc/...")
+                key = `${chainName}:${asset.base}`;
                 if (allKeplrBalances.data[key]) {
                   amount = allKeplrBalances.data[key].amount;
-                  break;
                 }
               }
             } else {
-              // For native assets, try with the asset name as chain identifier
+              // For native assets: chainName:base
               const chainName = asset.name?.toLowerCase();
-
               if (chainName) {
-                const possibleKeys = [
-                  `${chainName}:${asset.base}`,
-                  `${chainName}:${asset.address}`,
-                ];
-
-                for (const key of possibleKeys) {
-                  if (allKeplrBalances.data[key]) {
-                    amount = allKeplrBalances.data[key].amount;
-                    break;
-                  }
+                const key = `${chainName}:${asset.base}`;
+                if (allKeplrBalances.data[key]) {
+                  amount = allKeplrBalances.data[key].amount;
                 }
               }
             }
