@@ -98,10 +98,6 @@ export const validateTransferForm = ({
     !checkKeychainCompatibleWithMasp(keychainVersion)
   ) {
     return "KeychainNotCompatibleWithMasp";
-  } else if (!source.chain) {
-    return "NoSourceChain";
-  } else if (!destination.chain) {
-    return "NoDestinationChain";
   } else if (!source.selectedAssetAddress) {
     return "NoSelectedAsset";
   } else if (
@@ -174,9 +170,6 @@ export const getButtonText = ({
       return getText("Select Wallet");
     case "TheSameAddress":
       return getText("Source and destination addresses are the same");
-    case "NoSourceChain":
-    case "NoDestinationChain":
-      return getText("Select Chain");
     case "NoSelectedAsset":
       return getText("Select Asset");
     case "NoDestinationWallet":

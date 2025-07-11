@@ -83,7 +83,6 @@ export type ValidationResult =
   | "NoSourceChain"
   | "NoSelectedAsset"
   | "NoDestinationWallet"
-  | "NoDestinationChain"
   | "NoTransactionFee"
   | "NotEnoughBalance"
   | "NotEnoughBalanceForFees"
