@@ -1,4 +1,4 @@
-import { Asset, Chain } from "@chain-registry/types";
+import { Asset } from "@chain-registry/types";
 import { AmountInput } from "@namada/components";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
@@ -15,7 +15,6 @@ export type TransferSourceProps = {
   isLoadingAssets?: boolean;
   isSubmitting?: boolean;
   isShieldingTxn?: boolean;
-  chain?: Chain;
   asset?: Asset;
   originalAddress?: Address;
   sourceAddress?: string;
@@ -73,7 +72,6 @@ const getWalletIcon = (
 export const TransferSource = ({
   isLoadingAssets,
   isSubmitting,
-  chain,
   asset,
   originalAddress,
   availableAmount,
@@ -90,7 +88,7 @@ export const TransferSource = ({
         <SelectedAsset
           asset={asset}
           isLoading={isLoadingAssets}
-          isDisabled={!chain || !sourceAddress}
+          isDisabled={!sourceAddress}
           onClick={openAssetSelector}
         />
         {sourceAddress && (
@@ -111,7 +109,7 @@ export const TransferSource = ({
               "text-center [&_input]:text-center [&_input]:text-3xl [&_input]:bg-transparent",
               "[&_input]:!border-0 [&_input]:px-0"
             )}
-            disabled={!chain || !asset}
+            disabled={!asset}
             value={amount}
             onChange={(e) => onChangeAmount?.(e.target.value)}
             placeholder="Amount"

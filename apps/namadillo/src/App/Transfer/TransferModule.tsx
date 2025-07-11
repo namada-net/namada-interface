@@ -24,6 +24,7 @@ import { createTransferDataFromNamada } from "lib/transactions";
 import { useEffect, useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AssetWithAmount } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
 import {
@@ -75,6 +76,10 @@ export const TransferModule = ({
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
   );
+  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
+    AssetWithAmount | undefined
+  >();
+
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
@@ -89,12 +94,17 @@ export const TransferModule = ({
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
+
+  // Find selected asset from users assets or use the one set from SelectToken
+  const selectedAsset =
+    selectedAssetWithAmount ||
+    Object.values(usersAssets ?? {}).find(
+      (item) => item.asset?.address === selectedAssetAddress
+    );
+
   const navigate = useNavigate();
   const location = useLocation();
   const keychainVersion = useKeychainVersion();
-
-  const selectedAsset =
-    selectedAssetAddress ? usersAssets?.[selectedAssetAddress] : undefined;
 
   const selectedTokenType: "shielded" | "transparent" | "keplr" =
     useMemo(() => {
@@ -344,10 +354,6 @@ export const TransferModule = ({
             originalAddress={selectedAsset?.asset?.address}
             isLoadingAssets={source.isLoadingAssets}
             isShieldingTxn={isTargetShielded}
-            chain={parseChainInfo(
-              source.chain,
-              isShieldedAddress(sourceAddress ?? "")
-            )}
             availableAmount={availableAmount}
             availableAmountMinusFees={availableAmountMinusFees}
             amount={displayAmount}
@@ -468,9 +474,10 @@ export const TransferModule = ({
         setSourceAddress={setSourceAddress}
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}
-        onSelect={(asset) => {
+        onSelect={(selectedAssetWithAmount) => {
           source.onChangeAmount?.(undefined);
-          setSelectedAssetAddress(asset);
+          setSelectedAssetAddress(selectedAssetWithAmount.asset.address);
+          setSelectedAssetWithAmount(selectedAssetWithAmount);
           setAssetSelectorModalOpen(false);
         }}
       />

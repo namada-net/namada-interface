@@ -7,24 +7,23 @@ import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
 } from "atoms/balance";
-import { chainTokensAtom } from "atoms/chain";
 import {
+  allKeplrAssetsBalanceAtom,
   connectedWalletsAtom,
   getAvailableChains,
   getChainRegistryByChainName,
   namadaRegistryChainAssetsMapAtom,
 } from "atoms/integrations";
+import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
-import { wallets } from "integrations";
+import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtom, useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
-import { IoArrowBack, IoClose } from "react-icons/io5";
+import { IoClose } from "react-icons/io5";
 import { AssetWithAmount } from "types";
-import { capitalize } from "utils/etc";
 import { AddressDropdown } from "./AddressDropdown";
 import { isNamadaAddress, isShieldedAddress } from "./common";
-import { WalletCard } from "./WalletCard";
 
 type Network = {
   name: string | undefined;
@@ -37,23 +36,7 @@ type SelectTokenProps = {
   sourceAddress: string;
   isOpen: boolean;
   onClose: () => void;
-  onSelect: ((address: string | undefined) => void) | undefined;
-};
-
-// Helper function to check if a token is an IBC token
-const isIbcToken = (
-  token: AssetWithAmount,
-  assetToNetworkMap: Record<string, string>
-): boolean => {
-  // TODO: this should be cleaned up b/c not all just have ibc
-  if (token.asset.address?.startsWith("ibc/")) {
-    return true;
-  }
-
-  // Check if the token's network is not Namada
-  const tokenNetworkName =
-    assetToNetworkMap[token.asset.address || ""] || token.asset.name;
-  return tokenNetworkName !== "Namada" && tokenNetworkName !== "namada";
+  onSelect: ((selectedAsset: AssetWithAmount) => void) | undefined;
 };
 
 export const SelectToken = ({
@@ -63,23 +46,26 @@ export const SelectToken = ({
   onClose,
   onSelect,
 }: SelectTokenProps): JSX.Element | null => {
-  const transparentAssets = useAtomValue(namadaTransparentAssetsAtom);
-  const shieldedAssets = useAtomValue(namadaShieldedAssetsAtom);
-  const chainTokens = useAtomValue(chainTokensAtom);
-  const [connectedWallets] = useAtom(connectedWalletsAtom);
+  const { data: availableAssets } = useAtomValue(
+    isShieldedAddress(sourceAddress) ?
+      namadaShieldedAssetsAtom
+    : namadaTransparentAssetsAtom
+  );
+  const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
   const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const chainAssetsMap = Object.values(chainAssets.data ?? {});
   const ibcChains = useMemo(getAvailableChains, []);
   const allChains = [...ibcChains, namadaChain as unknown as Chain];
-
-  const isShielded = isShieldedAddress(sourceAddress);
   const [filter, setFilter] = useState("");
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
-  const [showConnectWalletView, setShowConnectWalletView] = useState(false);
-  const [pendingToken, setPendingToken] = useState<AssetWithAmount | null>(
-    null
-  );
+
+  // Create KeplrWalletManager instance and use with useWalletManager hook
+  const keplr = new KeplrWalletManager();
+  const keplrWalletManager = useWalletManager(keplr);
+
+  // Get balances for connected chains
+  const allKeplrBalances = useAtomValue(allKeplrAssetsBalanceAtom);
 
   const allNetworks: Network[] = useMemo(() => {
     return allChains
@@ -118,9 +104,51 @@ export const SelectToken = ({
     const isKeplrAddress = !isNamadaAddress(sourceAddress);
 
     if (isKeplrAddress) {
-      // For Keplr addresses, show all available chain assets but without amounts unless connected
+      // For Keplr addresses, show all available chain assets with balance data from allKeplrBalances
       chainAssetsMap.forEach((asset) => {
         if (asset && asset.address && asset.name) {
+          let amount = BigNumber(0);
+
+          // Look for balance in allKeplrBalances using multiple possible key formats
+          if (allKeplrBalances.data) {
+            const trace = asset.traces?.find((t) => t.type === "ibc");
+            if (trace?.counterparty) {
+              const chainName = trace.counterparty.chain_name;
+              const baseDenom = trace.counterparty.base_denom;
+
+              // Try different key formats to find the balance
+              const possibleKeys = [
+                `${chainName}:${baseDenom}`,
+                `${chainName}:${asset.base}`,
+                `${chainName}:${asset.address}`,
+              ];
+
+              for (const key of possibleKeys) {
+                if (allKeplrBalances.data[key]) {
+                  amount = allKeplrBalances.data[key].amount;
+                  break;
+                }
+              }
+            } else {
+              // For native assets, try with the asset name as chain identifier
+              const chainName = asset.name?.toLowerCase();
+
+              if (chainName) {
+                const possibleKeys = [
+                  `${chainName}:${asset.base}`,
+                  `${chainName}:${asset.address}`,
+                ];
+
+                for (const key of possibleKeys) {
+                  if (allKeplrBalances.data[key]) {
+                    amount = allKeplrBalances.data[key].amount;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+
           result.push({
             asset: {
               type_asset: asset.type_asset,
@@ -133,14 +161,13 @@ export const SelectToken = ({
               base: asset.base,
               display: asset.display,
             },
-            amount: BigNumber(0),
+            amount: amount,
           });
         }
       });
     } else {
       // For Namada addresses, use the appropriate assets atom
-      const assets = isShielded ? shieldedAssets.data : transparentAssets.data;
-      Object.values(assets ?? {}).forEach((item) => {
+      Object.values(availableAssets ?? {}).forEach((item) => {
         if (item.asset && item.asset.address) {
           result.push(item);
         }
@@ -150,12 +177,18 @@ export const SelectToken = ({
     return result;
   }, [
     sourceAddress,
-    transparentAssets.data,
-    shieldedAssets.data,
+    availableAssets,
     chainAssetsMap,
     connectedWallets.keplr,
-    isShielded,
+    allKeplrBalances.data,
   ]);
+
+  // Get token prices for USD calculation
+  const tokenAddresses = tokens
+    .map((token) => token.asset.address)
+    .filter((address): address is string => Boolean(address));
+
+  const tokenPrices = useAtomValue(tokenPricesFamily(tokenAddresses));
 
   const filteredTokens = useMemo(() => {
     return tokens
@@ -185,75 +218,70 @@ export const SelectToken = ({
     setSelectedNetwork(null);
   };
 
-  const handleKeplrConnection = async (): Promise<boolean> => {
-    try {
-      setIsConnectingKeplr(true);
-      const keplrWallet = new KeplrWalletManager();
-      const keplrInstance = await keplrWallet.get();
-
-      if (!keplrInstance) {
-        // Keplr is not installed, redirect to download page
-        keplrWallet.install();
-        return false;
-      }
-      // TODO: we need to make to where the token clicked is connected to here
-      return true;
-    } catch (error) {
-      console.error("Failed to connect to Keplr:", error);
-      return false;
-    } finally {
-      setIsConnectingKeplr(false);
-    }
-  };
-
   const handleTokenSelect = async (token: AssetWithAmount): Promise<void> => {
+    // Check if current address is Keplr and if we need to connect to specific chain for this token
+    const isKeplrTokenSource = !isNamadaAddress(sourceAddress);
+    const isIbcOrKeplrToken = isKeplrTokenSource;
+
     try {
-      // Check if current address is Keplr and if we need to connect to specific chain for this token
-      const isKeplrAddress = !isNamadaAddress(sourceAddress);
-
-      if (isKeplrAddress || isIbcToken(token, assetToNetworkMap)) {
-        // Check if Keplr is already connected
-        if (!connectedWallets.keplr) {
-          // Store the pending token and show connect wallet view
-          setPendingToken(token);
-          setShowConnectWalletView(true);
-          return;
-        }
-
+      if (isIbcOrKeplrToken) {
         setIsConnectingKeplr(true);
 
         try {
-          const keplrWallet = new KeplrWalletManager();
+          // Run the logic from lines 229-236
+          const keplrInstance = await keplr.get();
 
-          // Find the correct chain for this token
+          if (!keplrInstance) {
+            // Keplr is not installed, redirect to download page
+            keplr.install();
+            return;
+          }
+
           let targetChainRegistry = null;
 
-          // First, try to find the chain using the token's trace if available
-          if (chainTokens.data) {
-            const chainToken = chainTokens.data.find(
-              (chainToken) => chainToken.address === token.asset.address
-            );
-
-            if (chainToken && "trace" in chainToken) {
-              const chainName =
-                token.asset.traces?.[0]?.counterparty?.chain_name;
-
-              if (chainName) {
-                targetChainRegistry = getChainRegistryByChainName(chainName);
-              }
+          // Find the correct chain for this token
+          if (token.asset.traces?.[0]?.counterparty?.chain_name) {
+            // Use the chain name from traces
+            const chainName = token.asset.traces[0].counterparty.chain_name;
+            targetChainRegistry = getChainRegistryByChainName(chainName);
+          } else {
+            // Fallback: try to find chain by looking at the token's network in assetToNetworkMap
+            const tokenNetworkName =
+              assetToNetworkMap[token.asset.address || ""];
+            if (tokenNetworkName && tokenNetworkName !== "Namada") {
+              targetChainRegistry = getChainRegistryByChainName(
+                tokenNetworkName.toLowerCase()
+              );
             }
           }
 
           if (targetChainRegistry) {
-            // Connect to the specific chain
-            await keplrWallet.connect(targetChainRegistry);
+            // Use useWalletManager's connectToChainId method for the specific chain
+            const chainId = targetChainRegistry.chain.chain_id;
+            await keplrWalletManager.connectToChainId(chainId);
+
+            // Update connected wallets state only after successful connection
+            setConnectedWallets((obj: Record<string, boolean>) => ({
+              ...obj,
+              [keplr.key]: true,
+            }));
           } else {
             console.warn(
-              "Could not determine target chain for token, but Keplr is available"
+              "Could not determine target chain for token:",
+              token.asset.symbol,
+              "Network:",
+              assetToNetworkMap[token.asset.address || ""]
             );
+            // Don't connect if we can't determine the target chain
+            setIsConnectingKeplr(false);
+            return;
           }
         } catch (error) {
-          console.error("Failed to connect to Keplr:", error);
+          console.error(
+            "Failed to connect to Keplr for token:",
+            token.asset.symbol,
+            error
+          );
           // Continue with token selection even if Keplr connection fails
         } finally {
           setIsConnectingKeplr(false);
@@ -261,275 +289,212 @@ export const SelectToken = ({
       }
 
       // Proceed with token selection
-      onSelect?.(token.asset.address);
+      onSelect?.(token);
       onClose();
     } catch (error) {
       console.error("Error in token selection:", error);
       setIsConnectingKeplr(false);
       // Still allow token selection to proceed
-      onSelect?.(token.asset.address);
+      onSelect?.(token);
       onClose();
     }
-  };
-
-  const handleKeplrConnect = async (): Promise<void> => {
-    const connected = await handleKeplrConnection();
-    if (connected && pendingToken) {
-      // Hide connect wallet view and proceed with token selection
-      setShowConnectWalletView(false);
-      // Proceed with the pending token
-      handleTokenSelect(pendingToken);
-      setPendingToken(null);
-      handleCloseModal();
-    }
-  };
-
-  const handleBackToTokens = (): void => {
-    setShowConnectWalletView(false);
-    setPendingToken(null);
-  };
-
-  const handleCloseModal = (): void => {
-    setShowConnectWalletView(false);
-    setPendingToken(null);
-    onClose();
-  };
-
-  const isKeplrInstalled = (): boolean => {
-    return Boolean((window as unknown as { keplr?: unknown }).keplr);
   };
 
   if (!isOpen) return null;
 
   return (
     <>
-      <Modal onClose={handleCloseModal} className="py-20">
+      <Modal onClose={onClose} className="py-20">
         <ModalTransition>
-          <div
-            className={`flex rounded-xl border border-neutral-700 overflow-hidden ${
-              showConnectWalletView ? "h-[180px] w-[500px]" : "h-[500px]"
-            }`}
-          >
-            {!showConnectWalletView ?
-              <>
-                {/* Left panel */}
-                <div className="w-[300px] bg-neutral-900 p-6 flex flex-col overflow-auto">
-                  <h5 className="text-neutral-500 text-sm mb-0">
-                    Your account
-                  </h5>
-                  <div className="mb-4">
-                    <AddressDropdown
-                      selectedAddress={sourceAddress}
-                      onSelectAddress={handleAddressChange}
-                      showAddress={true}
-                    />
-                  </div>
+          <div className="flex rounded-xl border border-neutral-700 overflow-hidden h-[500px]">
+            {/* Left panel */}
+            <div className="w-[300px] bg-neutral-900 p-6 flex flex-col overflow-auto">
+              <h5 className="text-neutral-500 text-sm mb-0">Your account</h5>
+              <div className="mb-4">
+                <AddressDropdown
+                  selectedAddress={sourceAddress}
+                  onSelectAddress={handleAddressChange}
+                  showAddress={true}
+                />
+              </div>
 
-                  <h2 className="text-neutral-500 text-sm mb-4">Networks</h2>
-                  <Stack
-                    as="ul"
-                    gap={2}
-                    className="flex-1 overflow-auto dark-scrollbar"
+              <h2 className="text-neutral-500 text-sm mb-4">Networks</h2>
+              <Stack
+                as="ul"
+                gap={2}
+                className="flex-1 overflow-auto dark-scrollbar"
+              >
+                <li>
+                  <button
+                    onClick={() => setSelectedNetwork(null)}
+                    className={`flex items-center gap-3 p-2 w-full rounded-lg transition-colors ${
+                      selectedNetwork === null ?
+                        "bg-yellow/20 border border-yellow"
+                      : "hover:bg-neutral-800"
+                    }`}
                   >
-                    <li>
-                      <button
-                        onClick={() => setSelectedNetwork(null)}
-                        className={`flex items-center gap-3 p-2 w-full rounded-lg transition-colors ${
-                          selectedNetwork === null ?
-                            "bg-yellow/20 border border-yellow"
-                          : "hover:bg-neutral-800"
-                        }`}
-                      >
-                        <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
-                          <span className="text-white">All</span>
-                        </div>
-                        <span
-                          className={
-                            selectedNetwork === null ? "text-yellow" : (
-                              "text-white"
-                            )
-                          }
-                        >
-                          All Networks
-                        </span>
-                      </button>
-                    </li>
-                    {allNetworks.map((network) => (
-                      <li key={network.name}>
-                        <button
-                          onClick={() =>
-                            handleNetworkSelect(network.name || "")
-                          }
-                          className={`flex items-center gap-3 p-2 w-full rounded-lg transition-colors ${
-                            selectedNetwork === network.name ?
-                              "bg-yellow/20 border border-yellow"
-                            : "hover:bg-neutral-800"
-                          }`}
-                        >
-                          <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
-                            {network.icon ?
-                              <img
-                                src={network.icon}
-                                alt={network.name}
-                                className="w-6 h-6"
-                              />
-                            : <span className="text-white">
-                                {network.name?.charAt(0)}
-                              </span>
-                            }
-                          </div>
-                          <span
-                            className={
-                              selectedNetwork === network.name ?
-                                "text-yellow"
-                              : "text-white"
-                            }
-                          >
-                            {network.name}
-                          </span>
-                        </button>
-                      </li>
-                    ))}
-                  </Stack>
-                </div>
-
-                {/* Right panel - Token Selection */}
-                <div className="bg-black w-[500px] p-6 flex flex-col">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-white text-xl font-medium">
-                      Select Token
-                    </h2>
-                    <button
-                      onClick={onClose}
-                      className="text-white hover:text-yellow"
+                    <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
+                      <span className="text-white">All</span>
+                    </div>
+                    <span
+                      className={
+                        selectedNetwork === null ? "text-yellow" : "text-white"
+                      }
                     >
-                      <IoClose size={24} />
+                      All Networks
+                    </span>
+                  </button>
+                </li>
+                {allNetworks.map((network) => (
+                  <li key={network.name}>
+                    <button
+                      onClick={() => handleNetworkSelect(network.name || "")}
+                      className={`flex items-center gap-3 p-2 w-full rounded-lg transition-colors ${
+                        selectedNetwork === network.name ?
+                          "bg-yellow/20 border border-yellow"
+                        : "hover:bg-neutral-800"
+                      }`}
+                    >
+                      <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
+                        {network.icon ?
+                          <img
+                            src={network.icon}
+                            alt={network.name}
+                            className="w-6 h-6"
+                          />
+                        : <span className="text-white">
+                            {network.name?.charAt(0)}
+                          </span>
+                        }
+                      </div>
+                      <span
+                        className={
+                          selectedNetwork === network.name ?
+                            "text-yellow"
+                          : "text-white"
+                        }
+                      >
+                        {network.name}
+                      </span>
                     </button>
-                  </div>
+                  </li>
+                ))}
+              </Stack>
+            </div>
 
-                  <div className="mb-6">
-                    <Search
-                      placeholder="Insert token name or symbol"
-                      onChange={setFilter}
-                    />
-                  </div>
+            {/* Right panel - Token Selection */}
+            <div className="bg-black w-[500px] p-6 flex flex-col">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-white text-xl font-medium">Select Token</h2>
+                <button
+                  onClick={onClose}
+                  className="text-white hover:text-yellow"
+                >
+                  <IoClose size={24} />
+                </button>
+              </div>
 
-                  <div className="mb-6">
-                    <div className="h-[400px] overflow-auto dark-scrollbar">
-                      <Stack as="ul" gap={2} className="pb-15">
-                        {filteredTokens.length > 0 ?
-                          filteredTokens.map((token) => {
-                            const isKeplrAddress =
-                              !isShieldedAddress(sourceAddress) &&
-                              !sourceAddress.startsWith("tnam");
-                            const showAmount =
-                              !isKeplrAddress || connectedWallets.keplr;
+              <div className="mb-6">
+                <Search
+                  placeholder="Insert token name or symbol"
+                  onChange={setFilter}
+                />
+              </div>
 
-                            return (
-                              <li key={token.asset.address}>
-                                <button
-                                  onClick={() => handleTokenSelect(token)}
-                                  disabled={isConnectingKeplr}
-                                  className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
-                                      {(
+              <div className="mb-6">
+                <div className="h-[400px] overflow-auto dark-scrollbar">
+                  <Stack as="ul" gap={2} className="pb-15">
+                    {filteredTokens.length > 0 ?
+                      filteredTokens.map((token) => {
+                        const isKeplrAddress = !isNamadaAddress(sourceAddress);
+
+                        // For Keplr addresses, only show amounts if we have balance data and it's > 0
+                        // For Namada addresses, show amounts if > 0
+                        const showAmount =
+                          isKeplrAddress ?
+                            token.amount.gt(0) && connectedWallets.keplr
+                          : token.amount.gt(0);
+                        return (
+                          <li key={token.asset.address}>
+                            <button
+                              onClick={() => handleTokenSelect(token)}
+                              disabled={isConnectingKeplr}
+                              className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+                                  {(
+                                    token.asset.logo_URIs?.png ||
+                                    token.asset.logo_URIs?.svg
+                                  ) ?
+                                    <img
+                                      src={
                                         token.asset.logo_URIs?.png ||
                                         token.asset.logo_URIs?.svg
-                                      ) ?
-                                        <img
-                                          src={
-                                            token.asset.logo_URIs?.png ||
-                                            token.asset.logo_URIs?.svg
-                                          }
-                                          alt={token.asset.symbol}
-                                          className="w-10 h-10"
-                                        />
-                                      : <span className="text-white text-lg">
-                                          {token.asset.symbol.charAt(0)}
-                                        </span>
                                       }
+                                      alt={token.asset.symbol}
+                                      className="w-10 h-10"
+                                    />
+                                  : <span className="text-white text-lg">
+                                      {token.asset.symbol.charAt(0)}
+                                    </span>
+                                  }
+                                </div>
+                                <div className="flex flex-col items-start">
+                                  <span className="text-white font-medium">
+                                    {token.asset.symbol}
+                                  </span>
+                                  {token.asset.traces?.[0]?.counterparty
+                                    .chain_name && (
+                                    <span className="text-xs capitalize text-neutral-400">
+                                      {token.asset.traces?.[0]?.counterparty
+                                        .chain_name ?? ""}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                {showAmount && (
+                                  <>
+                                    <div className="text-white">
+                                      {token.amount.toString()}
                                     </div>
-                                    <div className="flex flex-col items-start">
-                                      <span className="text-white font-medium">
-                                        {token.asset.symbol}
-                                      </span>
-                                      {isIbcToken(token, assetToNetworkMap) && (
-                                        <span className="text-xs text-neutral-400">
-                                          {capitalize(
-                                            token.asset.traces?.[0]
-                                              ?.counterparty.chain_name ?? ""
-                                          )}
-                                        </span>
-                                      )}
+                                    <div className="text-neutral-400 text-sm">
+                                      {(() => {
+                                        const tokenPrice =
+                                          token.asset.address ?
+                                            tokenPrices.data?.[
+                                              token.asset.address
+                                            ]
+                                          : undefined;
+                                        if (tokenPrice) {
+                                          const usdValue =
+                                            token.amount.multipliedBy(
+                                              tokenPrice
+                                            );
+                                          return `$${usdValue.toFixed(2)}`;
+                                        }
+                                        return null;
+                                      })()}
                                     </div>
-                                  </div>
-                                  <div className="text-right">
-                                    {showAmount ?
-                                      <>
-                                        <div className="text-white">
-                                          {token.amount.toString()}
-                                        </div>
-                                        <div className="text-neutral-400 text-sm">
-                                          {`$${token.amount.toFixed(2)}`}
-                                        </div>
-                                      </>
-                                    : <div className="text-neutral-400 text-sm">
-                                        Connect wallet
-                                      </div>
-                                    }
-                                  </div>
-                                </button>
-                              </li>
-                            );
-                          })
-                        : <p className="text-neutral-400">No tokens found</p>}
-                      </Stack>
-                    </div>
-                  </div>
-
-                  {isConnectingKeplr && (
-                    <div className="text-center text-yellow text-sm">
-                      {connectedWallets.keplr ?
-                        "Connecting to specific chain..."
-                      : "Connecting to Keplr..."}
-                    </div>
-                  )}
-                </div>
-              </>
-            : /* Connect Wallet View */
-              <div className="w-full bg-black p-6 flex flex-col">
-                <div className="flex justify-between items-center mb-6">
-                  <button
-                    onClick={handleBackToTokens}
-                    className="text-white hover:text-yellow flex items-center gap-2"
-                  >
-                    <IoArrowBack size={20} />
-                  </button>
-                  <h2 className="text-white text-xl font-medium">
-                    Connect wallet
-                  </h2>
-                  <button
-                    onClick={handleCloseModal}
-                    className="text-white hover:text-yellow"
-                  >
-                    <IoClose size={24} />
-                  </button>
-                </div>
-
-                <div className="flex-1 flex">
-                  <div className="w-full">
-                    <WalletCard
-                      wallet={wallets.keplr}
-                      installed={isKeplrInstalled()}
-                      connected={false}
-                      onConnect={handleKeplrConnect}
-                    />
-                  </div>
+                                  </>
+                                )}
+                              </div>
+                            </button>
+                          </li>
+                        );
+                      })
+                    : <p className="text-neutral-400">No tokens found</p>}
+                  </Stack>
                 </div>
               </div>
-            }
+
+              {isConnectingKeplr && (
+                <div className="text-center text-yellow text-sm">
+                  Connecting to Keplr...
+                </div>
+              )}
+            </div>
           </div>
         </ModalTransition>
       </Modal>
