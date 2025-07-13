@@ -40,3 +40,6 @@ export const isTransparentAddress = (address: string): boolean => {
 export const isNamadaAddress = (address: string): boolean => {
   return isShieldedAddress(address) || isTransparentAddress(address);
 };
+
+export const isIbcAddress = (address: string): boolean =>
+  !isNamadaAddress(address);

@@ -19,6 +19,7 @@ import clsx from "clsx";
 import { trackEvent } from "fathom-client";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
 import { useTransactionActions } from "hooks/useTransactionActions";
+import { useTransfer } from "hooks/useTransfer";
 import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
@@ -32,7 +33,7 @@ import { AssetWithAmount } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
 import {
-  isNamadaAddress,
+  isIbcAddress,
   isShieldedAddress,
   isTransparentAddress,
 } from "./common";
@@ -83,12 +84,7 @@ export const TransferModule = ({
     AssetWithAmount | undefined
   >();
   const keplr = new KeplrWalletManager();
-  const { registry: sourceRegistry } = useWalletManager(
-    isNamadaAddress(sourceAddress ?? "") ? namada : keplr
-  );
-  const { registry: destinationRegistry } = useWalletManager(
-    isNamadaAddress(destinationAddress ?? "") ? namada : keplr
-  );
+  const { registry: keplrRegistry } = useWalletManager(keplr);
 
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
@@ -108,7 +104,7 @@ export const TransferModule = ({
     data: ibcChannels,
     isError: unknownIbcChannels,
     isLoading: isLoadingIbcChannels,
-  } = useAtomValue(ibcChannelsFamily(registry?.chain.chain_name));
+  } = useAtomValue(ibcChannelsFamily(keplrRegistry?.chain.chain_name));
 
   // Find selected asset from users assets or use the one set from SelectToken
   const selectedAsset =
@@ -135,6 +131,14 @@ export const TransferModule = ({
 
   const isTargetShielded = isShieldedAddress(destinationAddress ?? "");
   const isSourceShielded = isShieldedAddress(sourceAddress ?? "");
+  const isShielding =
+    isShieldedAddress(destinationAddress ?? "") &&
+    (isTransparentAddress(sourceAddress ?? "") ||
+      isIbcAddress(sourceAddress ?? ""));
+  const isUnshielding =
+    isShieldedAddress(sourceAddress ?? "") &&
+    (isTransparentAddress(destinationAddress ?? "") ||
+      isIbcAddress(destinationAddress ?? ""));
   const buttonColor = isTargetShielded || isSourceShielded ? "yellow" : "white";
 
   const getButtonTextFromValidation = (): string =>
@@ -147,7 +151,7 @@ export const TransferModule = ({
     });
 
   const {
-    execute,
+    execute: performTransfer,
     isPending: isPerformingTransfer,
     isSuccess,
     error,
@@ -155,22 +159,43 @@ export const TransferModule = ({
     feeProps,
     completedAt,
     redirectToTransactionPage,
-  } = useTransferResolver({
-    transferType,
+  } = useTransfer({
     source: sourceAddress ?? "",
-    target: destinationAddress,
-    token: selectedAssetAddress ?? "",
+    target: destinationAddress ?? "",
+    token: selectedAsset?.asset.address ?? "",
     displayAmount: displayAmount ?? new BigNumber(0),
-    asset: selectedAssetWithAmount?.asset,
-    memo,
-
-    // Pass other necessary props for IBC and MASP
-    registry,
-    sourceAddress: sourceAddress,
-    sourceChannel,
-    destinationChannel,
-    shielded: isShieldedAddress(destinationAddress ?? ""),
-    selectedAsset: selectedAssetWithAmount?.asset,
+    onUpdateStatus: setCurrentStatus,
+    onBeforeBuildTx: () => {
+      if (isSourceShielded) {
+        setCurrentStatus("Generating MASP Parameters...");
+        setCurrentStatusExplanation(
+          "Generating MASP parameters can take a few seconds. Please wait..."
+        );
+      } else {
+        setCurrentStatus("Preparing transaction...");
+        setCurrentStatusExplanation("");
+      }
+    },
+    onBeforeSign: () => {
+      setCurrentStatus("Waiting for signature...");
+      setCurrentStatusExplanation("");
+    },
+    onBeforeBroadcast: async () => {
+      let broadcastMessage = "Broadcasting transaction to Namada...";
+      if (isShielding) {
+        broadcastMessage = "Broadcasting Shielding transaction...";
+      } else if (isUnshielding) {
+        broadcastMessage = "Broadcasting unshielding transaction...";
+      }
+      setCurrentStatus(broadcastMessage);
+      setCurrentStatusExplanation("");
+    },
+    onError: async (originalError) => {
+      setCurrentStatus("");
+      setCurrentStatusExplanation("");
+      setGeneralErrorMessage((originalError as Error).message);
+    },
+    asset: selectedAsset?.asset,
   });
 
   const gasConfig = feeProps?.gasConfig;
@@ -343,7 +368,6 @@ export const TransferModule = ({
   }, [ibcChannels]);
 
   const isSubmitting = isPerformingTransfer || isSuccess;
-  const isIbcAddress = (address: string): boolean => !isNamadaAddress(address);
   const requiresIbcChannels = !isLoadingIbcChannels && unknownIbcChannels;
 
   return (
