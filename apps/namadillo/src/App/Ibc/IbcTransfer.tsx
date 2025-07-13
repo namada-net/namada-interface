@@ -66,7 +66,7 @@ export const IbcTransfer = (): JSX.Element => {
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [sourceChannel, setSourceChannel] = useState("");
   const [destinationChannel, setDestinationChannel] = useState("");
-  const [currentProgress, setCurrentProgress] = useState<string>();
+  const [currentStatus, setCurrentStatus] = useState<string>();
   const [txHash, setTxHash] = useState<string | undefined>();
 
   const availableDisplayAmount = mapUndefined((baseDenom) => {
@@ -127,12 +127,12 @@ export const IbcTransfer = (): JSX.Element => {
     try {
       invariant(registry?.chain, "Error: Chain not selected");
       setGeneralErrorMessage("");
-      setCurrentProgress("Submitting...");
+      setCurrentStatus("Submitting...");
       const result = await transferToNamada.mutateAsync({
         destinationAddress,
         displayAmount,
         memo,
-        onUpdateStatus: setCurrentProgress,
+        onUpdateStatus: setCurrentStatus,
       });
       storeTransaction(result);
       setTxHash(result.hash);
@@ -141,7 +141,7 @@ export const IbcTransfer = (): JSX.Element => {
       );
     } catch (err) {
       setGeneralErrorMessage(err + "");
-      setCurrentProgress(undefined);
+      setCurrentStatus(undefined);
     }
   };
 
@@ -193,7 +193,7 @@ export const IbcTransfer = (): JSX.Element => {
         }
         completedAt={completedAt}
         isIbcTransfer={true}
-        currentStatus={currentProgress}
+        currentStatus={currentStatus}
         requiresIbcChannels={requiresIbcChannels}
         ibcOptions={{
           sourceChannel,
