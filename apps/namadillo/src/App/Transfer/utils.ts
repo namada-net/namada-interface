@@ -83,11 +83,11 @@ export const validateTransferForm = ({
   availableAssets: Record<string, AssetWithAmount> | undefined;
   displayGasFeeAmount: BigNumber | undefined;
 }): ValidationResult => {
-  if (source.walletAddress === destination.customAddress) {
+  if (source.walletAddress === destination.walletAddress) {
     return "TheSameAddress";
   } else if (
     !isValidDestinationAddress({
-      customAddress: destination.customAddress ?? "",
+      customAddress: destination.walletAddress ?? "",
       chain: destination.chain,
     })
   ) {
@@ -116,7 +116,7 @@ export const validateTransferForm = ({
     source.amount.gt(availableAmountMinusFees)
   ) {
     return "NotEnoughBalance";
-  } else if (!destination.wallet && !destination.customAddress) {
+  } else if (!destination.customAddress) {
     return "NoDestinationWallet";
   } else if (
     (source.isShieldedAddress || destination.isShieldedAddress) &&
