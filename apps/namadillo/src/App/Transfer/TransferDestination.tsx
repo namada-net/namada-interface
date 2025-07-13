@@ -5,7 +5,7 @@ import { shortenAddress } from "@namada/utils";
 import { TransactionFee } from "App/Common/TransactionFee";
 import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
 import { routes } from "App/routes";
-import { isTransparentAddress } from "App/Transfer/common";
+import { isNamadaAddress, isTransparentAddress } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import BigNumber from "bignumber.js";
 import { chains } from "chain-registry";
@@ -30,7 +30,6 @@ type TransferDestinationProps = {
   isShieldedAddress?: boolean;
   isShieldedTx?: boolean;
   isSubmitting?: boolean;
-  chain?: Chain;
   walletAddress?: string;
   gasDisplayAmount?: BigNumber;
   gasAsset?: Asset;
@@ -50,7 +49,6 @@ export const TransferDestination = ({
   isShieldedAddress,
   isShieldedTx = false,
   isSubmitting,
-  chain,
   walletAddress,
   gasDisplayAmount,
   gasAsset,
@@ -136,7 +134,7 @@ export const TransferDestination = ({
           "border border-yellow transition-colors duration-200":
             isShieldedAddress,
           "border border-white transition-colors duration-200":
-            chain?.chain_name === "namada" && !isShieldedAddress,
+            isNamadaAddress(walletAddress ?? "") && !isShieldedAddress,
         })}
       >
         {!isSubmitting && (
