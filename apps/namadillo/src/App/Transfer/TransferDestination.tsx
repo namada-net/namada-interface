@@ -34,8 +34,6 @@ type TransferDestinationProps = {
   gasDisplayAmount?: BigNumber;
   gasAsset?: Asset;
   feeProps?: TransactionFeeProps;
-  changeFeeEnabled?: boolean;
-  customAddressActive?: boolean;
   destinationAsset?: Asset;
   amount?: BigNumber;
   address?: string;
@@ -49,12 +47,9 @@ export const TransferDestination = ({
   isShieldedAddress,
   isShieldedTx = false,
   isSubmitting,
-  walletAddress,
   gasDisplayAmount,
   gasAsset,
   feeProps,
-  changeFeeEnabled = true,
-  customAddressActive,
   destinationAsset,
   amount,
   address,
@@ -65,7 +60,10 @@ export const TransferDestination = ({
 }: TransferDestinationProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  // TODO: NEED TO ACTUALLY FIND OUT IF IT'S IBC TRANSFER OR NOT
+  const isIbcTransfer = true;
+  const changeFeeEnabled = !isIbcTransfer;
+  const customAddressActive = !isNamadaAddress(address ?? "");
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
   );
@@ -122,6 +120,7 @@ export const TransferDestination = ({
 
   // Make sure destination address is pre-filled if it's a shielding transaction
   useEffect(() => {
+    if (address) return;
     if (isShieldingTransaction && shieldedAccount?.address) {
       setDestinationAddress?.(shieldedAccount?.address ?? "");
     }
@@ -134,7 +133,7 @@ export const TransferDestination = ({
           "border border-yellow transition-colors duration-200":
             isShieldedAddress,
           "border border-white transition-colors duration-200":
-            isNamadaAddress(walletAddress ?? "") && !isShieldedAddress,
+            isNamadaAddress(address ?? "") && !isShieldedAddress,
         })}
       >
         {!isSubmitting && (
@@ -169,10 +168,10 @@ export const TransferDestination = ({
                   )}
                 >
                   <div className="flex">
-                    {walletAddress && (
+                    {address && (
                       <img
-                        src={getChainImageUrl(getChain(walletAddress ?? ""))}
-                        alt={chain?.pretty_name}
+                        src={getChainImageUrl(getChain(address ?? ""))}
+                        alt={getChain(address ?? "")?.pretty_name}
                         className="w-7"
                       />
                     )}
@@ -192,7 +191,7 @@ export const TransferDestination = ({
                       }
                     </div>
                   </div>
-                  {!walletAddress ?
+                  {!address ?
                     <>
                       <ConnectProviderButton onClick={handleOpenModal} />
                     </>
@@ -231,9 +230,9 @@ export const TransferDestination = ({
           <footer>
             <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
             <div className="flex justify-between items-center gap-4">
-              {walletAddress && (
+              {address && (
                 <SelectedWallet
-                  address={customAddressActive ? address : walletAddress}
+                  address={customAddressActive ? address : address}
                   displayFullAddress={false}
                 />
               )}

@@ -147,7 +147,6 @@ export const getButtonTextError = (
 // Get appropriate button text based on validation result and state
 export const getButtonText = ({
   isSubmitting,
-  submittingText,
   validationResult,
   availableAmountMinusFees,
   buttonTextErrors = {},
@@ -159,7 +158,7 @@ export const getButtonText = ({
   buttonTextErrors?: Partial<Record<ValidationResult, string>>;
 }): string => {
   if (isSubmitting) {
-    return submittingText || "Submitting...";
+    return "Submitting...";
   }
 
   const getText = (defaultText: string): string =>
