@@ -44,18 +44,10 @@ import { SuccessAnimation } from "./SuccessAnimation";
 import { TransferArrow } from "./TransferArrow";
 import { TransferDestination } from "./TransferDestination";
 import { TransferSource } from "./TransferSource";
-import {
-  OnSubmitTransferParams,
-  TransferModuleProps,
-  ValidationResult,
-} from "./types";
+import { ValidationResult } from "./types";
 import { getButtonText, validateTransferForm } from "./utils";
 
-export const TransferModule = ({
-  changeFeeEnabled,
-  submittingText,
-  buttonTextErrors = {},
-}: TransferModuleProps): JSX.Element => {
+export const TransferModule = (): JSX.Element => {
   const { data: accounts, isLoading: isLoadingAccounts } = useAtomValue(
     allDefaultAccountsAtom
   );
@@ -141,15 +133,24 @@ export const TransferModule = ({
       isIbcAddress(destinationAddress ?? ""));
   const buttonColor = isTargetShielded || isSourceShielded ? "yellow" : "white";
 
-  const getButtonTextFromValidation = (): string =>
-    getButtonText({
+  const getButtonTextFromValidation = (): string => {
+    const buttonTextErrors =
+      isShielding || isUnshielding ?
+        {
+          NoAmount:
+            isShielding ? "Define an amount to shield"
+            : isUnshielding ? "Define an amount to unshield"
+            : "",
+        }
+      : {};
+
+    return getButtonText({
       isSubmitting,
-      submittingText,
       validationResult,
       availableAmountMinusFees,
       buttonTextErrors,
     });
-
+  };
   const {
     execute: performTransfer,
     isPending: isPerformingTransfer,
@@ -260,39 +261,55 @@ export const TransferModule = ({
     availableAssets,
     displayGasFee,
   ]);
-
   const onSubmitTransfer = async ({
+    sourceAddress: paramSourceAddress,
     memo,
-  }: OnSubmitTransferParams): Promise<void> => {
+  }: {
+    sourceAddress: string;
+    memo: string | undefined;
+  }): Promise<void> => {
     try {
       setGeneralErrorMessage("");
       setCurrentStatus("");
 
-      // Enhanced validation
-      invariant(sourceAddress, "Source address is not defined");
+      // Use parameter sourceAddress if provided, otherwise use state sourceAddress
+      const effectiveSourceAddress = paramSourceAddress || sourceAddress;
+
+      invariant(effectiveSourceAddress, "Source address is not defined");
       invariant(chainId, "Chain ID is undefined");
       invariant(selectedAsset, "No asset is selected");
 
-      // Prevent self-transfers when target validation is available
-      if (destinationAddress && sourceAddress === destinationAddress) {
+      // Validate recipient address for non-shielding transfers
+      if (destinationAddress && !isShielding) {
         invariant(
-          false,
+          effectiveSourceAddress !== destinationAddress,
           "The recipient address must differ from the sender address"
         );
       }
 
-      const txResponse = await execute({ memo });
+      const txResponse = await performTransfer({ memo });
 
       if (txResponse) {
+        // Determine target shielded status based on transfer type
+        let targetShielded: boolean;
+        if (isShielding) {
+          targetShielded = true;
+        } else if (isUnshielding) {
+          targetShielded = false;
+        } else {
+          targetShielded = isTargetShielded;
+        }
+
         const txList = createTransferDataFromNamada(
           txKind,
           selectedAsset.asset,
           rpcUrl,
-          isTargetShielded ?? false, // Use dynamic value with fallback
+          targetShielded,
           txResponse,
           memo
         );
 
+        // Currently we don't have the option of batching transfer transactions
         if (txList.length === 0) {
           throw "Couldn't create TransferData object";
         }
@@ -300,56 +317,55 @@ export const TransferModule = ({
         const tx = txList[0];
         storeTransaction(tx);
 
-        // Optional: Track success event if tracking is available
-        if (typeof trackEvent === "function") {
-          const transferType = determineTransferType(
-            isSourceShielded,
-            isTargetShielded
-          );
-          trackEvent(`${transferType} Transfer: complete`);
+        // Track events based on transfer type
+        if (trackEvent) {
+          let eventName: string;
+          if (isShielding) {
+            eventName = "Shielding Transfer: complete";
+          } else if (isUnshielding) {
+            eventName = "Unshielding Transfer: complete";
+          } else {
+            eventName = `${isShieldedAddress(sourceAddress ?? "") || isShieldedAddress(destinationAddress ?? "") ? "Shielded" : "Transparent"} Transfer: complete`;
+          }
+          trackEvent(eventName);
         }
       } else {
         throw "Invalid transaction response";
       }
     } catch (err) {
-      setGeneralErrorMessage(err + "");
-
-      // Optional: Track error event if tracking is available
-      if (typeof trackEvent === "function") {
-        const transferType = determineTransferType(
-          isSourceShielded,
-          isTargetShielded
+      // We only set the general error message if it is not already set by onError
+      if (generalErrorMessage === "") {
+        setGeneralErrorMessage(
+          err instanceof Error ? err.message : String(err)
         );
-        trackEvent(`${transferType} Transfer: error`);
+      }
+
+      // Track error events
+      if (trackEvent) {
+        let errorEventName: string;
+        if (isShielding) {
+          errorEventName = "Shielding Transfer: error";
+        } else if (isUnshielding) {
+          errorEventName = "Unshielding Transfer: error";
+        } else {
+          errorEventName = `${isShieldedAddress(sourceAddress ?? "") || isShieldedAddress(destinationAddress ?? "") ? "Shielded" : "Transparent"} Transfer: error`;
+        }
+        trackEvent(errorEventName);
       }
     }
   };
 
-  const determineTransferType = (
-    isSourceShielded?: boolean,
-    isTargetShielded?: boolean
-  ): string => {
-    if (isSourceShielded || isTargetShielded) {
-      return "Shielded";
-    }
-    return "Transparent";
-  };
-
   const onSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
-    const address = destinationAddress;
     if (!displayAmount) throw new Error("Amount is not valid");
-    if (!address) throw new Error("Address is not provided");
+    if (!sourceAddress || !destinationAddress)
+      throw new Error("Address is not provided");
     if (!selectedAssetAddress) throw new Error("Asset is not selected");
 
-    const params: OnSubmitTransferParams = {
-      displayAmount: displayAmount ?? new BigNumber(0),
-      destinationAddress: address.trim(),
+    onSubmitTransfer({
       sourceAddress: sourceAddress ?? "",
       memo,
-    };
-
-    onSubmitTransfer(params);
+    });
   };
 
   useEffect(() => {
@@ -407,7 +423,6 @@ export const TransferModule = ({
             />
           </i>
           <TransferDestination
-            walletAddress={destinationAddress}
             setDestinationAddress={setDestinationAddress}
             isShieldedAddress={isShieldedAddress(destinationAddress ?? "")}
             isShieldedTx={isShieldedTx}
@@ -416,7 +431,6 @@ export const TransferModule = ({
             memo={memo}
             onChangeMemo={setMemo}
             feeProps={feeProps}
-            changeFeeEnabled={changeFeeEnabled}
             gasDisplayAmount={displayGasFee?.totalDisplayAmount}
             gasAsset={displayGasFee?.asset}
             destinationAsset={selectedAsset?.asset}
