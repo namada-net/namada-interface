@@ -116,7 +116,7 @@ export const validateTransferForm = ({
     source.amount.gt(availableAmountMinusFees)
   ) {
     return "NotEnoughBalance";
-  } else if (!destination.customAddress) {
+  } else if (!destination.walletAddress) {
     return "NoDestinationWallet";
   } else if (
     (source.isShieldedAddress || destination.isShieldedAddress) &&
