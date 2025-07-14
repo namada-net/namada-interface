@@ -18,6 +18,8 @@ import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { Address } from "types";
+import namadaShieldedIcon from "./assets/namada-shielded.svg";
+import namadaTransparentIcon from "./assets/namada-transparent.svg";
 import shieldedEye from "./assets/shielded-eye.svg";
 import { ConnectProviderButton } from "./ConnectProviderButton";
 import { CustomAddressForm } from "./CustomAddressForm";
@@ -171,7 +173,12 @@ export const TransferDestination = ({
                   <div className="flex">
                     {address && (
                       <img
-                        src={getChainImageUrl(getChain(address ?? ""))}
+                        src={
+                          isShieldedAddress ? namadaShieldedIcon
+                          : isTransparentAddress(address) ?
+                            namadaTransparentIcon
+                          : getChainImageUrl(getChain(address ?? ""))
+                        }
                         alt={getChain(address ?? "")?.pretty_name}
                         className="w-7"
                       />
