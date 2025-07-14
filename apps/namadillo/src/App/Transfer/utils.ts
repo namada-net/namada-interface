@@ -1,12 +1,18 @@
 import { Chain } from "@chain-registry/types";
-import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
+import {
+  isIbcAddress,
+  isShieldedAddress,
+  isTransparentAddress,
+} from "App/Transfer/common";
 import BigNumber from "bignumber.js";
 import { wallets } from "integrations";
 import { AssetWithAmount, GasConfig, WalletProvider } from "types";
 import { checkKeychainCompatibleWithMasp } from "utils/compatibility";
 import {
+  OnSubmitTransferParams,
   TransferDestinationProps,
   TransferSourceProps,
+  TransferType,
   ValidationResult,
 } from "./types";
 
@@ -194,4 +200,30 @@ export const getButtonText = ({
   }
 
   return "Submit";
+};
+
+export const determineTransferType = (
+  params: OnSubmitTransferParams
+): TransferType => {
+  const { destinationAddress, sourceAddress } = params;
+  const sourceIsIbc = isIbcAddress(sourceAddress ?? "");
+  const destinationIsIbc = isIbcAddress(destinationAddress ?? "");
+  // 1. Source is shielded
+  // 2. Destination is IBC/Namada
+  const unshielding =
+    (isShieldedAddress(sourceAddress ?? "") &&
+      isTransparentAddress(destinationAddress ?? "")) ||
+    isIbcAddress(destinationAddress ?? "");
+  // 1. Source is IBC/Namada
+  // 2. Destination is shielded
+  const shielding =
+    (isTransparentAddress(sourceAddress ?? "") &&
+      isShieldedAddress(destinationAddress ?? "")) ||
+    isIbcAddress(sourceAddress ?? "");
+
+  if (unshielding) return "unshield";
+  if (destinationIsIbc) return "ibc-withdraw";
+  if (sourceIsIbc) return "ibc-deposit";
+  if (shielding) return "shield";
+  return "namada-transfer";
 };

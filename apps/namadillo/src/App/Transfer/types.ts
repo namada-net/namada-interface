@@ -39,13 +39,19 @@ export type TransferDestinationProps = TransferModuleConfig & {
   customAddress?: Address;
   onChangeCustomAddress?: (address: Address) => void;
 };
-
-export type OnSubmitTransferParams = {
-  displayAmount: BigNumber;
-  destinationAddress: Address;
-  sourceAddress: Address;
+export interface OnSubmitTransferParams {
+  displayAmount?: string;
+  destinationAddress?: string;
+  sourceAddress?: string;
   memo?: string;
-};
+}
+
+export type TransferType =
+  | "ibc-deposit"
+  | "ibc-withdraw"
+  | "shield"
+  | "unshield"
+  | "namada-transfer";
 
 export type ValidationResult =
   | "NoAmount"
