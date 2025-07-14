@@ -7,7 +7,6 @@ import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { Address } from "types";
-import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 
 type AddressOption = {
@@ -39,16 +38,10 @@ export const DestinationAddressModal = ({
     (account) => account.type === AccountType.ShieldedKeys
   );
 
-  // Build address options
   const addressOptions: AddressOption[] = [];
-
-  // Add Namada accounts
   if (accounts) {
     const transparentAccount = accounts.find(
       (account) => account.type !== AccountType.ShieldedKeys
-    );
-    const shieldedAccount = accounts.find(
-      (account) => account.type === AccountType.ShieldedKeys
     );
 
     if (transparentAccount) {
@@ -58,16 +51,6 @@ export const DestinationAddressModal = ({
         address: transparentAccount.address,
         icon: namadaTransparentIcon,
         type: "transparent",
-      });
-    }
-
-    if (shieldedAccount) {
-      addressOptions.push({
-        id: "shielded",
-        label: "Shielded Address",
-        address: shieldedAccount.address,
-        icon: namadaShieldedIcon,
-        type: "shielded",
       });
     }
   }
@@ -97,7 +80,6 @@ export const DestinationAddressModal = ({
       className="max-w-[500px] bg-neutral-800"
     >
       <Stack gap={6}>
-        {/* Custom Address Input */}
         <div>
           <Input
             label=""
@@ -108,7 +90,6 @@ export const DestinationAddressModal = ({
             className="text-sm border-neutral-500"
           />
         </div>
-        {/* Your Address Section */}
         {addressOptions.length > 0 && (
           <div>
             <h3 className="text-sm font-medium text-neutral-500 mb-3">
