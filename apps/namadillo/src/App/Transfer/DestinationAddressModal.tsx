@@ -3,17 +3,12 @@ import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { SelectModal } from "App/Common/SelectModal";
 import { allDefaultAccountsAtom } from "atoms/accounts";
-import { connectedWalletsAtom } from "atoms/integrations";
 import clsx from "clsx";
-import { wallets } from "integrations";
-import { KeplrWalletManager } from "integrations/Keplr";
-import { useAtom, useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import { useAtomValue } from "jotai";
+import { useState } from "react";
 import { Address } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
-
-const keplr = new KeplrWalletManager();
 
 type AddressOption = {
   id: string;
@@ -33,12 +28,9 @@ type DestinationAddressModalProps = {
 export const DestinationAddressModal = ({
   onClose,
   onSelectAddress,
-  // isShieldedTx,
 }: DestinationAddressModalProps): JSX.Element => {
   const [customAddress, setCustomAddress] = useState("");
-  const [keplrAddress, setKeplrAddress] = useState<string | null>(null);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
-  const [connectedWallets] = useAtom(connectedWalletsAtom);
 
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
@@ -46,25 +38,6 @@ export const DestinationAddressModal = ({
   const shieldedAccount = accounts?.find(
     (account) => account.type === AccountType.ShieldedKeys
   );
-
-  // Get Keplr address if connected
-  useEffect(() => {
-    const getKeplrAddress = async (): Promise<void> => {
-      if (connectedWallets.keplr) {
-        try {
-          const keplrInstance = await keplr.get();
-          if (keplrInstance) {
-            const address = await keplr.getAddress("cosmoshub-4");
-            setKeplrAddress(address);
-          }
-        } catch (error) {
-          console.error("Failed to get Keplr address:", error);
-        }
-      }
-    };
-
-    getKeplrAddress();
-  }, [connectedWallets.keplr]);
 
   // Build address options
   const addressOptions: AddressOption[] = [];
@@ -97,17 +70,6 @@ export const DestinationAddressModal = ({
         type: "shielded",
       });
     }
-  }
-
-  // Add Keplr account if connected
-  if (connectedWallets.keplr && keplrAddress) {
-    addressOptions.push({
-      id: "keplr",
-      label: "Keplr",
-      address: keplrAddress,
-      icon: wallets.keplr.iconUrl,
-      type: "keplr",
-    });
   }
 
   const handleAddressClick = (address: string): void => {

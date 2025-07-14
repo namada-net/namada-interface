@@ -36,6 +36,7 @@ type TransferDestinationProps = {
   feeProps?: TransactionFeeProps;
   destinationAsset?: Asset;
   amount?: BigNumber;
+  customAddress?: string;
   address?: string;
   memo?: string;
   onChangeAddress?: (address: Address) => void;
@@ -52,18 +53,18 @@ export const TransferDestination = ({
   feeProps,
   destinationAsset,
   amount,
+  customAddress,
   address,
   memo,
   setDestinationAddress,
-  onChangeAddress,
   onChangeMemo,
 }: TransferDestinationProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  console.log(address, "addyyy");
   // TODO: NEED TO ACTUALLY FIND OUT IF IT'S IBC TRANSFER OR NOT
   const isIbcTransfer = true;
   const changeFeeEnabled = !isIbcTransfer;
-  const customAddressActive = !isNamadaAddress(address ?? "");
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
   );
@@ -93,7 +94,7 @@ export const TransferDestination = ({
       const chain = getChain(selectedAddress);
       await connectToChainId(chain?.chain_id ?? "");
     }
-    onChangeAddress?.(selectedAddress);
+    setDestinationAddress?.(selectedAddress);
   };
   const keplr = new KeplrWalletManager();
 
@@ -154,7 +155,7 @@ export const TransferDestination = ({
               )}
             </div>
 
-            {!customAddressActive && (
+            {!customAddress && (
               <div className="mt-3">
                 <button
                   disabled={isShieldingTransaction || isSubmitting}
@@ -207,14 +208,9 @@ export const TransferDestination = ({
               </div>
             )}
 
-            {customAddressActive && (
+            {customAddress && (
               <Stack gap={8}>
-                <CustomAddressForm
-                  memo={memo}
-                  onChangeMemo={onChangeMemo}
-                  customAddress={address}
-                  onChangeAddress={onChangeAddress}
-                />
+                <CustomAddressForm memo={memo} onChangeMemo={onChangeMemo} />
               </Stack>
             )}
           </div>
@@ -232,7 +228,7 @@ export const TransferDestination = ({
             <div className="flex justify-between items-center gap-4">
               {address && (
                 <SelectedWallet
-                  address={customAddressActive ? address : address}
+                  address={customAddress ? customAddress : address}
                   displayFullAddress={false}
                 />
               )}

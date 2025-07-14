@@ -76,7 +76,8 @@ export const TransferModule = (): JSX.Element => {
     AssetWithAmount | undefined
   >();
   const keplr = new KeplrWalletManager();
-  const { registry: keplrRegistry } = useWalletManager(keplr);
+  const { registry: keplrRegistry, walletAddress: activeKeplrWalletAddress } =
+    useWalletManager(keplr);
 
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
@@ -426,6 +427,15 @@ export const TransferModule = (): JSX.Element => {
             setDestinationAddress={setDestinationAddress}
             isShieldedAddress={isShieldedAddress(destinationAddress ?? "")}
             isShieldedTx={isShieldedTx}
+            customAddress={
+              (
+                isIbcAddress(destinationAddress ?? "") &&
+                destinationAddress &&
+                destinationAddress !== activeKeplrWalletAddress
+              ) ?
+                destinationAddress
+              : undefined
+            }
             address={destinationAddress}
             onChangeAddress={setDestinationAddress}
             memo={memo}
