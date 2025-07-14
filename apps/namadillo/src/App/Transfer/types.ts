@@ -1,13 +1,6 @@
 import { Chain } from "@chain-registry/types";
 import BigNumber from "bignumber.js";
-import { TransactionFeeProps } from "hooks/useTransactionFee";
-import {
-  Address,
-  Asset,
-  GasConfig,
-  LedgerAccountInfo,
-  WalletProvider,
-} from "types";
+import { Address, Asset, LedgerAccountInfo, WalletProvider } from "types";
 
 export type TransferModuleConfig = {
   wallet?: WalletProvider;
@@ -53,29 +46,6 @@ export type OnSubmitTransferParams = {
   sourceAddress: Address;
   memo?: string;
 };
-
-export type TransferModuleProps = {
-  source: TransferSourceProps;
-  destination: TransferDestinationProps;
-  onSubmitTransfer?: (params: OnSubmitTransferParams) => void;
-  requiresIbcChannels?: boolean;
-  gasConfig?: GasConfig;
-  feeProps?: TransactionFeeProps;
-  changeFeeEnabled?: boolean;
-  submittingText?: string;
-  isSubmitting?: boolean;
-  errorMessage?: string;
-  currentStatus?: string;
-  currentStatusExplanation?: string;
-  completedAt?: Date;
-  isShieldedTx?: boolean;
-  isSyncingMasp?: boolean;
-  buttonTextErrors?: Partial<Record<ValidationResult, string>>;
-  onComplete?: () => void;
-} & (
-  | { isIbcTransfer?: false; ibcOptions?: undefined }
-  | { isIbcTransfer: true; ibcOptions: IbcOptions }
-);
 
 export type ValidationResult =
   | "NoAmount"
