@@ -2,8 +2,10 @@ import { Chain } from "@chain-registry/types";
 import { FeeToken } from "@chain-registry/types/chain.schema";
 import { Bech32Config, ChainInfo, Currency } from "@keplr-wallet/types";
 import tokenImage from "App/Common/assets/token.svg";
+import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
 import { getRestApiAddressByIndex, getRpcByIndex } from "atoms/integrations";
 import BigNumber from "bignumber.js";
+import { chains } from "chain-registry";
 import { Asset, ChainId, ChainRegistryEntry, GasConfig } from "types";
 
 type GasPriceStep = {
@@ -26,6 +28,18 @@ export const findRegistryByChainId = (
     return knownChains[chainId];
   }
   return undefined;
+};
+
+export const getChainFromAddress = (address: string): Chain | undefined => {
+  if (isShieldedAddress(address) || isTransparentAddress(address)) {
+    return chains.find((chain) => chain.chain_name === "namada") as Chain;
+  } else {
+    // Connect to IBC chain and then return the registered chain
+    const chain = chains.find(
+      (chain) => chain.bech32_prefix && address.startsWith(chain.bech32_prefix)
+    );
+    return chain as Chain | undefined;
+  }
 };
 
 const getSvgOrPng = (image?: {

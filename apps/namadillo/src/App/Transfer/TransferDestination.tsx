@@ -1,4 +1,4 @@
-import { Asset, Chain } from "@chain-registry/types";
+import { Asset } from "@chain-registry/types";
 import { Stack } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
@@ -8,12 +8,11 @@ import { routes } from "App/routes";
 import { isNamadaAddress, isTransparentAddress } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import BigNumber from "bignumber.js";
-import { chains } from "chain-registry";
 import clsx from "clsx";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
-import { getChainImageUrl } from "integrations/utils";
+import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
@@ -93,7 +92,7 @@ export const TransferDestination = ({
     const isIbcAsset =
       !isShieldedAddress && !isTransparentAddress(selectedAddress);
     if (isIbcAsset) {
-      const chain = getChain(selectedAddress);
+      const chain = getChainFromAddress(selectedAddress);
       await connectToChainId(chain?.chain_id ?? "");
     }
     setDestinationAddress?.(selectedAddress);
@@ -101,20 +100,6 @@ export const TransferDestination = ({
   const keplr = new KeplrWalletManager();
 
   const { connectToChainId } = useWalletManager(keplr);
-
-  const getChain = (destinationAddress: string): Chain | undefined => {
-    if (isShieldedAddress || isTransparentAddress(destinationAddress)) {
-      return chains.find((chain) => chain.chain_name === "namada") as Chain;
-    } else {
-      // Connect to IBC chain and then return the registered chain
-      const chain = chains.find(
-        (chain) =>
-          chain.bech32_prefix &&
-          destinationAddress.startsWith(chain.bech32_prefix)
-      );
-      return chain as Chain | undefined;
-    }
-  };
 
   const isShieldingTransaction = routes.maspShield === location.pathname;
   const isIbcAddress = (address: string): boolean => {
@@ -177,9 +162,9 @@ export const TransferDestination = ({
                           isShieldedAddress ? namadaShieldedIcon
                           : isTransparentAddress(address) ?
                             namadaTransparentIcon
-                          : getChainImageUrl(getChain(address ?? ""))
+                          : getChainImageUrl(getChainFromAddress(address ?? ""))
                         }
-                        alt={getChain(address ?? "")?.pretty_name}
+                        alt={getChainFromAddress(address ?? "")?.pretty_name}
                         className="w-7"
                       />
                     )}
