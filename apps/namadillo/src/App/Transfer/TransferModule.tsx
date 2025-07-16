@@ -2,7 +2,7 @@ import { ActionButton, Stack } from "@namada/components";
 import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
 import { params, routes } from "App/routes";
-import { allDefaultAccountsAtom, disposableSignerAtom } from "atoms/accounts";
+import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
@@ -14,10 +14,11 @@ import {
 } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
+import { clearDisposableSigner } from "atoms/transfer/services";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
+import { trackEvent } from "fathom-client";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
-import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransactionResolver } from "hooks/useTransactionResolver";
 import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
@@ -27,6 +28,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AssetWithAmount } from "types";
+import { useTransactionEventListener } from "utils";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
 import {
@@ -42,13 +44,13 @@ import { TransferArrow } from "./TransferArrow";
 import { TransferDestination } from "./TransferDestination";
 import { TransferSource } from "./TransferSource";
 import { ValidationResult } from "./types";
-import {
-  determineTransferType,
-  getButtonText,
-  validateTransferForm,
-} from "./utils";
+import { getButtonText, validateTransferForm } from "./utils";
 
 export const TransferModule = (): JSX.Element => {
+  // Accounts & Wallets
+  const keplr = new KeplrWalletManager();
+  const { registry: keplrRegistry, walletAddress: activeKeplrWalletAddress } =
+    useWalletManager(keplr);
   const { data: accounts, isLoading: isLoadingAccounts } = useAtomValue(
     allDefaultAccountsAtom
   );
@@ -58,11 +60,14 @@ export const TransferModule = (): JSX.Element => {
   const transparentAccount = accounts?.find((acc) =>
     isTransparentAddress(acc.address)
   );
-  const { storeTransaction } = useTransactionActions();
   const transparentAddress = accounts?.find((acc) =>
     isTransparentAddress(acc.address)
   )?.address;
+
+  const [txHash, setTxHash] = useState<string | undefined>();
+  const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
+  const [refundTarget, setRefundTarget] = useState<string>();
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
@@ -82,11 +87,6 @@ export const TransferModule = (): JSX.Element => {
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
   >();
-  const { refetch: genDisposableSigner } = useAtomValue(disposableSignerAtom);
-
-  const keplr = new KeplrWalletManager();
-  const { registry: keplrRegistry, walletAddress: activeKeplrWalletAddress } =
-    useWalletManager(keplr);
 
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
@@ -96,6 +96,7 @@ export const TransferModule = (): JSX.Element => {
   const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const chainId = chainParameters.data?.chainId;
   const rpcUrl = useAtomValue(rpcUrlAtom);
+  const shielded = isShieldedAddress(sourceAddress ?? "");
 
   const { data: usersAssets, isLoading: isLoadingUsersAssets } = useAtomValue(
     isShieldedAddress(sourceAddress ?? "") ?
@@ -143,6 +144,14 @@ export const TransferModule = (): JSX.Element => {
       isIbcAddress(destinationAddress ?? ""));
   const buttonColor = isTargetShielded || isSourceShielded ? "yellow" : "white";
 
+  const customAddress =
+    (
+      isIbcAddress(destinationAddress ?? "") &&
+      destinationAddress &&
+      destinationAddress !== activeKeplrWalletAddress
+    ) ?
+      destinationAddress
+    : undefined;
   const getButtonTextFromValidation = (): string => {
     const buttonTextErrors =
       isShielding || isUnshielding ?
@@ -161,6 +170,39 @@ export const TransferModule = (): JSX.Element => {
       buttonTextErrors,
     });
   };
+
+  const {
+    submitTransfer,
+    isPending: isPerformingTransfer,
+    isSuccess,
+    error,
+    feeProps,
+    redirectToTransactionPage,
+  } = useTransactionResolver({
+    selectedAsset,
+    chainId,
+    rpcUrl,
+    sourceAddress,
+    destinationAddress,
+    customAddress,
+    shieldedAccount,
+    transparentAccount,
+    activeKeplrWalletAddress,
+    keplrRegistry,
+    sourceChannel,
+    destinationChannel,
+    displayAmount,
+    isTargetShielded,
+    isSourceShielded,
+    isShielding,
+    isUnshielding,
+    setCurrentStatus,
+    setCurrentStatusExplanation,
+    setGeneralErrorMessage,
+    setTxHash,
+    setRefundTarget,
+    setLedgerStatus,
+  });
 
   const gasConfig = feeProps?.gasConfig;
   const displayGasFee = useMemo(() => {
@@ -225,40 +267,6 @@ export const TransferModule = (): JSX.Element => {
     displayGasFee,
   ]);
 
-  const {
-    submitTransfer,
-    isPending: isPerformingTransfer,
-    isSuccess,
-    error,
-    feeProps,
-  } = useTransactionResolver({
-    selectedAsset,
-    chainId,
-    rpcUrl,
-    sourceAddress,
-    destinationAddress,
-    customAddress,
-    shieldedAccount,
-    transparentAccount,
-    activeKeplrWalletAddress,
-    keplrRegistry,
-    sourceChannel,
-    destinationChannel,
-    displayAmount,
-    isTargetShielded,
-    isSourceShielded,
-    isShielding,
-    isUnshielding,
-    setCurrentStatus,
-    setCurrentStatusExplanation,
-    setStatusExplanation,
-    setGeneralErrorMessage,
-    setTxHash,
-    setRefundTarget,
-    setLedgerStatusStop,
-    determineTransferType,
-  });
-
   const onSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     if (!displayAmount) throw new Error("Amount is not valid");
@@ -291,14 +299,21 @@ export const TransferModule = (): JSX.Element => {
 
   const isSubmitting = isPerformingTransfer || isSuccess;
   const requiresIbcChannels = !isLoadingIbcChannels && unknownIbcChannels;
-  const customAddress =
-    (
-      isIbcAddress(destinationAddress ?? "") &&
-      destinationAddress &&
-      destinationAddress !== activeKeplrWalletAddress
-    ) ?
-      destinationAddress
-    : undefined;
+
+  useTransactionEventListener("IbcWithdraw.Success", async (e) => {
+    if (txHash && e.detail.hash === txHash) {
+      setCompletedAt(new Date());
+      // We are clearing the disposable signer only if the transaction was successful on the target chain
+      if (shielded && refundTarget) {
+        await clearDisposableSigner(refundTarget);
+      }
+      trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx complete`);
+    }
+  });
+
+  useTransactionEventListener("IbcWithdraw.Error", () => {
+    trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx error`);
+  });
 
   return (
     <>

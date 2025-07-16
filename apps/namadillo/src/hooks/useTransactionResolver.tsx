@@ -1,7 +1,16 @@
 import { IbcTransferMsgValue, NamadaKeychainAccount } from "@namada/types";
+import { determineTransferType } from "App/Transfer";
 import { isShieldedAddress } from "App/Transfer/common";
 import { disposableSignerAtom } from "atoms/accounts";
 import { chainAtom } from "atoms/chain";
+import {
+  executeIbcDeposit,
+  executeIbcWithdraw,
+  executeNamadaTransfer,
+  executeShieldTransfer,
+  executeUnshieldTransfer,
+  type TransferExecutionDependencies,
+} from "atoms/transactions/functions";
 import { createIbcTxAtom } from "atoms/transfer/atoms";
 import {
   clearDisposableSigner,
@@ -16,8 +25,7 @@ import { useTransfer } from "hooks/useTransfer";
 import invariant from "invariant";
 import { useAtomValue } from "jotai";
 import { TransactionPair } from "lib/query";
-import { createTransferDataFromNamada } from "lib/transactions";
-import { useCallback } from "react";
+import { Dispatch, SetStateAction } from "react";
 import {
   Asset,
   ChainRegistryEntry,
@@ -25,7 +33,7 @@ import {
   IbcTransferTransactionData,
   TransferStep,
 } from "types";
-import { toBaseAmount, toDisplayAmount } from "utils";
+import { toDisplayAmount } from "utils";
 import { TransactionFeeProps } from "./useTransactionFee";
 
 export type TransferType =
@@ -68,7 +76,7 @@ export interface UseTransactionResolverProps {
   activeKeplrWalletAddress: string | undefined;
 
   // IBC specific
-  keplrRegistry: ChainRegistryEntry;
+  keplrRegistry: ChainRegistryEntry | undefined;
   sourceChannel: string | undefined;
   destinationChannel: string | undefined;
 
@@ -80,19 +88,12 @@ export interface UseTransactionResolverProps {
   isUnshielding: boolean;
 
   // Status setters
-  setCurrentStatus: (status: string | undefined) => void;
+  setCurrentStatus: Dispatch<SetStateAction<string>>;
   setCurrentStatusExplanation: (explanation: string) => void;
-  setStatusExplanation: (explanation: string) => void;
   setGeneralErrorMessage: (message: string) => void;
   setTxHash: (hash: string) => void;
   setRefundTarget: (target: string) => void;
-  setLedgerStatusStop: (stop: boolean) => void;
-
-  // Additional functions
-  determineTransferType: (params: {
-    destinationAddress: string;
-    sourceAddress: string;
-  }) => TransferType;
+  setLedgerStatus: (stop: boolean) => void;
 }
 
 export const useTransactionResolver = ({
@@ -115,17 +116,16 @@ export const useTransactionResolver = ({
   isUnshielding,
   setCurrentStatus,
   setCurrentStatusExplanation,
-  setStatusExplanation,
   setGeneralErrorMessage,
   setTxHash,
   setRefundTarget,
-  setLedgerStatusStop,
-  determineTransferType,
+  setLedgerStatus,
 }: UseTransactionResolverProps): UseTransactionResolverReturn => {
   const { storeTransaction } = useTransactionActions();
-  const { refetch: genDisposableSigner } = useAtomValue(disposableSignerAtom);
+  const disposableSignerQuery = useAtomValue(disposableSignerAtom);
   const namadaChain = useAtomValue(chainAtom);
   const alias = shieldedAccount?.alias ?? transparentAccount?.alias;
+  const shielded = isShieldedAddress(sourceAddress ?? "");
 
   // Local function to store IBC transfer transaction
   const storeTransferTransaction = (
@@ -201,7 +201,6 @@ export const useTransactionResolver = ({
       setCurrentStatus("Waiting for signature...");
     },
     onBeforeBroadcast: async (tx) => {
-      const shielded = isShieldedAddress(sourceAddress ?? "");
       const props = tx.encodedTxData.meta?.props[0];
       if (shielded && props) {
         const refundTarget = props.refundTarget;
@@ -215,7 +214,7 @@ export const useTransactionResolver = ({
     },
     onBroadcasted: (tx) => {
       setCurrentStatus("Waiting for confirmation from target chain...");
-      setStatusExplanation(
+      setCurrentStatusExplanation(
         "This step may take a few minutes, depending on the current workload of the IBC relayers."
       );
 
@@ -235,18 +234,16 @@ export const useTransactionResolver = ({
         isShieldedAddress(sourceAddress ?? "")
       );
       setTxHash(ibcTxData.hash);
-      const shielded = isShieldedAddress(sourceAddress ?? "");
       trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx submitted`);
     },
     onError: async (err, context) => {
       setGeneralErrorMessage(String(err));
       setCurrentStatus("");
-      setStatusExplanation("");
+      setCurrentStatusExplanation("");
 
       // Clear disposable signer if the transaction failed on Namada side
       // We do not want to clear the disposable signer if the transaction failed on the target chain
       const refundTarget = context?.encodedTxData.meta?.props[0].refundTarget;
-      const shielded = isShieldedAddress(sourceAddress ?? "");
       if (shielded && refundTarget) {
         await clearDisposableSigner(refundTarget);
       }
@@ -302,277 +299,172 @@ export const useTransactionResolver = ({
     asset: selectedAsset?.asset,
   });
 
-  const onSubmitTransfer = useCallback(
-    async (
-      params: OnSubmitTransferParams,
-      transferType: TransferType
-    ): Promise<void> => {
-      const { displayAmount, destinationAddress, sourceAddress, memo } = params;
+  const onSubmitTransfer = async (
+    params: OnSubmitTransferParams,
+    transferType: TransferType
+  ): Promise<void> => {
+    const { displayAmount, destinationAddress, sourceAddress, memo } = params;
 
-      try {
-        // Common error state reset
-        setGeneralErrorMessage("");
+    try {
+      // Common error state reset
+      setGeneralErrorMessage("");
 
-        // Common validations
-        invariant(selectedAsset, "No asset is selected");
-        invariant(chainId, "Chain ID is undefined");
+      // Common validations
+      invariant(selectedAsset, "No asset is selected");
+      invariant(chainId, "Chain ID is undefined");
 
-        switch (transferType) {
-          case "ibc-deposit": {
-            // IBC Deposit - Transfer to Namada from another chain
-            invariant(keplrRegistry?.chain, "Error: Chain not selected");
-            invariant(displayAmount, "Display amount is required");
-            invariant(destinationAddress, "Destination address is required");
+      // Create dependencies object
+      const deps: TransferExecutionDependencies = {
+        setCurrentStatus,
+        setCurrentStatusExplanation,
+        setStatusExplanation: setCurrentStatusExplanation,
+        setGeneralErrorMessage,
+        setTxHash,
+        setRefundTarget,
+        setLedgerStatusStop: setLedgerStatus,
+        storeTransaction,
+      };
 
-            setCurrentStatus("Submitting...");
-
-            const result = await transferToNamada.mutateAsync({
+      switch (transferType) {
+        case "ibc-deposit": {
+          await executeIbcDeposit(
+            {
+              displayAmount,
               destinationAddress,
-              displayAmount: BigNumber(displayAmount),
+              sourceAddress,
               memo,
-              onUpdateStatus: setCurrentStatus,
-            });
-
-            storeTransaction(result);
-            setTxHash(result.hash);
-            trackEvent(
-              `${isShieldedAddress(sourceAddress ?? "") ? "Shielded " : ""}IbcTransfer: tx submitted (${result.asset.symbol})`
-            );
-            break;
-          }
-
-          case "ibc-withdraw": {
-            // IBC Withdraw - Transfer from Namada to another chain
-            invariant(displayAmount, "Display amount is required");
-            invariant(destinationAddress, "Destination address is required");
-            invariant(sourceChannel, "No channel ID is set");
-            invariant(activeKeplrWalletAddress, "No address is selected");
-            invariant(shieldedAccount, "No shielded account is found");
-            invariant(transparentAccount, "No transparent account is found");
-
-            const amountInBaseDenom = toBaseAmount(
-              selectedAsset.asset,
-              BigNumber(displayAmount)
-            );
-            const shielded = isShieldedAddress(sourceAddress ?? "");
-            const source =
-              shielded ?
-                shieldedAccount.pseudoExtendedKey!
-              : transparentAccount.address;
-            const gasSpendingKey =
-              shielded ? shieldedAccount.pseudoExtendedKey : undefined;
-            const refundTarget =
-              shielded ?
-                (await genDisposableSigner()).data?.address
-              : undefined;
-
-            setLedgerStatusStop(true);
-
-            try {
-              await performWithdraw({
-                signer: {
-                  publicKey: transparentAccount.publicKey!,
-                  address: transparentAccount.address!,
-                },
-                params: [
-                  {
-                    amountInBaseDenom,
-                    channelId: sourceChannel.trim(),
-                    portId: "transfer",
-                    token: selectedAsset.asset.address ?? "",
-                    source,
-                    receiver: destinationAddress,
-                    gasSpendingKey,
-                    memo,
-                    refundTarget,
-                  },
-                ],
-              });
-            } finally {
-              setLedgerStatusStop(false);
-            }
-            break;
-          }
-
-          case "shield": {
-            // Shield transfer - Move assets to shielded pool
-            invariant(sourceAddress, "Source address is not defined");
-
-            setCurrentStatus("");
-
-            const txResponse = await performTransfer({ memo });
-
-            if (txResponse) {
-              const txList = createTransferDataFromNamada(
-                txKind,
-                selectedAsset.asset,
-                rpcUrl,
-                true, // isShielded = true
-                txResponse,
-                memo
-              );
-
-              if (txList.length === 0) {
-                throw "Couldn't create TransferData object";
-              }
-
-              const tx = txList[0];
-              storeTransaction(tx);
-            } else {
-              throw "Invalid transaction response";
-            }
-            break;
-          }
-
-          case "unshield": {
-            // Unshield transfer - Move assets from shielded pool to transparent
-            invariant(sourceAddress, "Source address is not defined");
-
-            const txResponse = await performTransfer({ memo });
-
-            if (txResponse) {
-              const txList = createTransferDataFromNamada(
-                txKind,
-                selectedAsset.asset,
-                rpcUrl,
-                false, // isShielded = false
-                txResponse,
-                memo
-              );
-
-              if (txList.length === 0) {
-                throw "Couldn't create TransferData object";
-              }
-
-              const tx = txList[0];
-              storeTransaction(tx);
-            } else {
-              throw "Invalid transaction response";
-            }
-            break;
-          }
-
-          case "namada-transfer": {
-            // Internal Namada transfer between accounts
-            invariant(sourceAddress, "Source address is not defined");
-            invariant(customAddress, "Custom address is not defined");
-            invariant(
-              sourceAddress !== customAddress,
-              "The recipient address must differ from the sender address"
-            );
-
-            const txResponse = await performTransfer({ memo });
-
-            if (txResponse) {
-              const txList = createTransferDataFromNamada(
-                txKind,
-                selectedAsset.asset,
-                rpcUrl,
-                isTargetShielded,
-                txResponse,
-                memo
-              );
-
-              if (txList.length === 0) {
-                throw "Couldn't create TransferData object";
-              }
-
-              const tx = txList[0];
-              storeTransaction(tx);
-              const shielded = isShieldedAddress(sourceAddress ?? "");
-              trackEvent(
-                `${shielded ? "Shielded" : "Transparent"} Transfer: complete`
-              );
-            } else {
-              throw "Invalid transaction response";
-            }
-            break;
-          }
-
-          default:
-            throw new Error(`Unknown transfer type: ${transferType}`);
-        }
-      } catch (err) {
-        // Handle errors consistently across all transfer types
-        if (transferType === "ibc-deposit") {
-          setGeneralErrorMessage(err + "");
-          setCurrentStatus(undefined);
-        } else {
-          // For other transfer types, only set error if not already set
-          const currentError = "";
-          if (currentError === "") {
-            setGeneralErrorMessage(
-              err instanceof Error ? err.message : String(err)
-            );
-          }
+              selectedAsset: selectedAsset.asset,
+              chainId,
+              keplrRegistry: keplrRegistry!,
+              transferToNamada,
+            },
+            deps
+          );
+          break;
         }
 
-        // Track error events for applicable transfer types
-        if (transferType === "namada-transfer") {
-          const shielded = isShieldedAddress(sourceAddress ?? "");
-          trackEvent(
-            `${shielded ? "Shielded" : "Transparent"} Transfer: error`
+        case "ibc-withdraw": {
+          await executeIbcWithdraw(
+            {
+              displayAmount,
+              destinationAddress,
+              sourceAddress,
+              memo,
+              selectedAsset: selectedAsset.asset,
+              chainId,
+              sourceChannel: sourceChannel!,
+              activeKeplrWalletAddress: activeKeplrWalletAddress!,
+              shieldedAccount: shieldedAccount!,
+              transparentAccount: transparentAccount!,
+              performWithdraw,
+              genDisposableSigner: disposableSignerQuery,
+              persistDisposableSigner,
+            },
+            deps
+          );
+          break;
+        }
+
+        case "shield": {
+          await executeShieldTransfer(
+            {
+              sourceAddress: sourceAddress!,
+              memo,
+              selectedAsset: selectedAsset.asset,
+              txKind,
+              rpcUrl,
+              performTransfer,
+            },
+            deps
+          );
+          break;
+        }
+
+        case "unshield": {
+          await executeUnshieldTransfer(
+            {
+              sourceAddress: sourceAddress!,
+              memo,
+              selectedAsset: selectedAsset.asset,
+              txKind,
+              rpcUrl,
+              performTransfer,
+            },
+            deps
+          );
+          break;
+        }
+
+        case "namada-transfer": {
+          await executeNamadaTransfer(
+            {
+              sourceAddress: sourceAddress!,
+              customAddress: customAddress!,
+              memo,
+              selectedAsset: selectedAsset.asset,
+              txKind,
+              rpcUrl,
+              isTargetShielded,
+              performTransfer,
+            },
+            deps
+          );
+          break;
+        }
+
+        default:
+          throw new Error(`Unknown transfer type: ${transferType}`);
+      }
+    } catch (err) {
+      // Handle errors consistently across all transfer types
+      if (transferType === "ibc-deposit") {
+        setGeneralErrorMessage(err + "");
+        setCurrentStatus("");
+      } else {
+        // For other transfer types, only set error if not already set
+        const currentError = "";
+        if (currentError === "") {
+          setGeneralErrorMessage(
+            err instanceof Error ? err.message : String(err)
           );
         }
       }
-    },
-    [
-      selectedAsset,
-      chainId,
-      keplrRegistry,
-      sourceChannel,
-      activeKeplrWalletAddress,
-      shieldedAccount,
-      transparentAccount,
-      customAddress,
-      isTargetShielded,
-      txKind,
-      rpcUrl,
+
+      // Track error events for applicable transfer types
+      if (transferType === "namada-transfer") {
+        trackEvent(`${shielded ? "Shielded" : "Transparent"} Transfer: error`);
+      }
+    }
+  };
+
+  const submitTransfer = (params: {
+    displayAmount: string;
+    destinationAddress: string;
+    sourceAddress: string;
+    memo?: string;
+  }): Promise<void> => {
+    const { displayAmount, destinationAddress, sourceAddress, memo } = params;
+
+    if (!displayAmount) throw new Error("Amount is not valid");
+    if (!sourceAddress || !destinationAddress)
+      throw new Error("Address is not provided");
+    if (!selectedAsset) throw new Error("Asset is not selected");
+
+    const transferType = determineTransferType({
+      destinationAddress,
       sourceAddress,
-      transferToNamada,
-      performWithdraw,
-      performTransfer,
-      setCurrentStatus,
-      setCurrentStatusExplanation,
-      setStatusExplanation,
-      setGeneralErrorMessage,
-      setTxHash,
-      setRefundTarget,
-      setLedgerStatusStop,
-    ]
-  );
+    });
 
-  const submitTransfer = useCallback(
-    (params: {
-      displayAmount: string;
-      destinationAddress: string;
-      sourceAddress: string;
-      memo?: string;
-    }) => {
-      const { displayAmount, destinationAddress, sourceAddress, memo } = params;
-
-      if (!displayAmount) throw new Error("Amount is not valid");
-      if (!sourceAddress || !destinationAddress)
-        throw new Error("Address is not provided");
-      if (!selectedAsset) throw new Error("Asset is not selected");
-
-      const transferType = determineTransferType({
+    return onSubmitTransfer(
+      {
+        displayAmount,
         destinationAddress,
         sourceAddress,
-      });
-
-      return onSubmitTransfer(
-        {
-          displayAmount,
-          destinationAddress,
-          sourceAddress,
-          memo,
-        },
-        transferType
-      );
-    },
-    [onSubmitTransfer, selectedAsset, determineTransferType]
-  );
+        memo,
+      },
+      transferType
+    );
+  };
 
   return {
     submitTransfer,

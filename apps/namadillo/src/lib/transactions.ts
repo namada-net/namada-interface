@@ -12,18 +12,21 @@ import {
   UnshieldingTransferProps,
 } from "@namada/sdk-multicore";
 import BigNumber from "bignumber.js";
-import { Asset } from "types";
+import {
+  Asset,
+  IbcTransferTransactionData,
+  TransferStep,
+  TransferTransactionData,
+} from "types";
+import { toDisplayAmount } from "utils";
 
 import {
   allTransferStages,
   AllTransferTxKind,
   IbcTransferStage,
-  IbcTransferTransactionData,
   NamadaTransferTxKind,
-  TransferStep,
-  TransferTransactionData,
 } from "types";
-import { isNamadaAsset, toDisplayAmount } from "utils";
+import { isNamadaAsset } from "utils";
 import { TransactionPair } from "./query";
 
 export const getEventAttribute = (
