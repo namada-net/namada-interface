@@ -7,6 +7,7 @@ import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { Address } from "types";
+import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 
 type AddressOption = {
@@ -51,6 +52,15 @@ export const DestinationAddressModal = ({
         address: transparentAccount.address,
         icon: namadaTransparentIcon,
         type: "transparent",
+      });
+    }
+    if (shieldedAccount) {
+      addressOptions.push({
+        id: "shielded",
+        label: "Shielded Address",
+        address: shieldedAccount.address,
+        icon: namadaShieldedIcon,
+        type: "shielded",
       });
     }
   }

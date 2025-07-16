@@ -64,21 +64,11 @@ export const TransferModule = (): JSX.Element => {
     isTransparentAddress(acc.address)
   )?.address;
 
-  const [txHash, setTxHash] = useState<string | undefined>();
-  const [completedAt, setCompletedAt] = useState<Date | undefined>();
+  // Transfer Config
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
-  const [refundTarget, setRefundTarget] = useState<string>();
-  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
-  const [sourceChannel, setSourceChannel] = useState("");
-  const [destinationChannel, setDestinationChannel] = useState("");
-  const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
   const [sourceAddress, setSourceAddress] = useState<string | undefined>(
     transparentAddress ?? ""
   );
-  const [ledgerStatus, setLedgerStatus] = useAtom(ledgerStatusDataAtom);
-  const isShieldedTx = isShieldedAddress(sourceAddress ?? "");
   const [destinationAddress, setDestinationAddress] = useState<string>("");
   const [memo, setMemo] = useState<undefined | string>();
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
@@ -87,63 +77,69 @@ export const TransferModule = (): JSX.Element => {
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
   >();
-
-  const ledgerAccountInfo = ledgerStatus && {
-    deviceConnected: ledgerStatus.connected,
-    errorMessage: ledgerStatus.errorMessage,
-  };
-  const chainParameters = useAtomValue(chainParametersAtom);
-  const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
-  const chainId = chainParameters.data?.chainId;
-  const rpcUrl = useAtomValue(rpcUrlAtom);
-  const shielded = isShieldedAddress(sourceAddress ?? "");
-
   const { data: usersAssets, isLoading: isLoadingUsersAssets } = useAtomValue(
     isShieldedAddress(sourceAddress ?? "") ?
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
+  const selectedAsset =
+    selectedAssetWithAmount ||
+    Object.values(usersAssets ?? {}).find(
+      (item) => item.asset?.address === selectedAssetAddress
+    );
+  const availableAmount = selectedAsset?.amount;
+  const availableAssets = useMemo(() => {
+    return filterAvailableAssetsWithBalance(usersAssets);
+  }, [usersAssets]);
+
+  // Transaction Handling
+  const [txHash, setTxHash] = useState<string | undefined>();
+  const [completedAt, setCompletedAt] = useState<Date | undefined>();
+
+  // IBC Transactions
+  const [sourceChannel, setSourceChannel] = useState("");
+  const [destinationChannel, setDestinationChannel] = useState("");
+  const [refundTarget, setRefundTarget] = useState<string>();
   const {
     data: ibcChannels,
     isError: unknownIbcChannels,
     isLoading: isLoadingIbcChannels,
   } = useAtomValue(ibcChannelsFamily(keplrRegistry?.chain.chain_name));
 
-  // Find selected asset from users assets or use the one set from SelectToken
-  const selectedAsset =
-    selectedAssetWithAmount ||
-    Object.values(usersAssets ?? {}).find(
-      (item) => item.asset?.address === selectedAssetAddress
-    );
+  // Error handling
+  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
+  const [currentStatus, setCurrentStatus] = useState("");
+  const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
 
+  // Ledger
+  const [ledgerStatus, setLedgerStatus] = useAtom(ledgerStatusDataAtom);
+  const ledgerAccountInfo = ledgerStatus && {
+    deviceConnected: ledgerStatus.connected,
+    errorMessage: ledgerStatus.errorMessage,
+  };
+
+  // Chain & Assets
+  const chainParameters = useAtomValue(chainParametersAtom);
+  const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
+  const chainId = chainParameters.data?.chainId;
+  const rpcUrl = useAtomValue(rpcUrlAtom);
+
+  // UI & Miscellaneous
+  const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const keychainVersion = useKeychainVersion();
-
-  const selectedTokenType: "shielded" | "transparent" | "keplr" =
-    useMemo(() => {
-      if (isTransparentAddress(sourceAddress ?? "")) return "transparent";
-      if (isShieldedAddress(sourceAddress ?? "")) return "shielded";
-      return "keplr";
-    }, [sourceAddress]);
-
-  const availableAmount = selectedAsset?.amount;
-  const availableAssets = useMemo(() => {
-    return filterAvailableAssetsWithBalance(usersAssets);
-  }, [usersAssets]);
-
   const isTargetShielded = isShieldedAddress(destinationAddress ?? "");
   const isSourceShielded = isShieldedAddress(sourceAddress ?? "");
   const isShielding =
     isShieldedAddress(destinationAddress ?? "") &&
-    (isTransparentAddress(sourceAddress ?? "") ||
-      isIbcAddress(sourceAddress ?? ""));
+    !isShieldedAddress(sourceAddress ?? "");
   const isUnshielding =
     isShieldedAddress(sourceAddress ?? "") &&
-    (isTransparentAddress(destinationAddress ?? "") ||
-      isIbcAddress(destinationAddress ?? ""));
+    !isShieldedAddress(destinationAddress ?? "");
+  const shielded = isShieldedAddress(sourceAddress ?? "");
+  const isShieldedTx = isShieldedAddress(sourceAddress ?? "");
   const buttonColor = isTargetShielded || isSourceShielded ? "yellow" : "white";
-
   const customAddress =
     (
       isIbcAddress(destinationAddress ?? "") &&
@@ -311,8 +307,10 @@ export const TransferModule = (): JSX.Element => {
     }
   });
 
-  useTransactionEventListener("IbcWithdraw.Error", () => {
-    trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx error`);
+  useTransactionEventListener("IbcWithdraw.Error", (e) => {
+    if (txHash && e.detail.hash === txHash) {
+      trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx error`);
+    }
   });
 
   return (
@@ -331,11 +329,10 @@ export const TransferModule = (): JSX.Element => {
             asset={selectedAsset?.asset}
             originalAddress={selectedAsset?.asset?.address}
             isLoadingAssets={isLoadingAccounts || isLoadingUsersAssets}
-            isShieldingTxn={isTargetShielded}
+            isShieldingTxn={isShielding}
             availableAmount={availableAmount}
             availableAmountMinusFees={availableAmountMinusFees}
             amount={displayAmount}
-            selectedTokenType={selectedTokenType}
             openAssetSelector={
               !isSubmitting ? () => setAssetSelectorModalOpen(true) : undefined
             }

@@ -78,10 +78,14 @@ export const TransferSource = ({
   availableAmountMinusFees,
   amount,
   sourceAddress,
-  selectedTokenType,
   openAssetSelector,
   onChangeAmount,
 }: TransferSourceProps): JSX.Element => {
+  const selectedTokenType =
+    isTransparentAddress(sourceAddress ?? "") ? "transparent"
+    : isShieldedAddress(sourceAddress ?? "") ? "shielded"
+    : "keplr";
+
   return (
     <div className="relative bg-neutral-800 rounded-lg px-4 py-5">
       <header className="relative flex justify-between">
