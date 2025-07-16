@@ -89,8 +89,7 @@ export const TransferDestination = ({
   const handleSelectAddress = async (
     selectedAddress: Address
   ): Promise<void> => {
-    const isIbcAsset =
-      !isShieldedAddress && !isTransparentAddress(selectedAddress);
+    const isIbcAsset = !isNamadaAddress(selectedAddress);
     if (isIbcAsset) {
       const chain = getChainFromAddress(selectedAddress);
       await connectToChainId(chain?.chain_id ?? "");
