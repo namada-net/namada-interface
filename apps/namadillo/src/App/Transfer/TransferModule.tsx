@@ -64,13 +64,14 @@ export const TransferModule = (): JSX.Element => {
     isTransparentAddress(acc.address)
   )?.address;
 
-  // Transfer Config
-  const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
+  // Transfer Addresses & Settings
   const [sourceAddress, setSourceAddress] = useState<string | undefined>(
     transparentAddress ?? ""
   );
   const [destinationAddress, setDestinationAddress] = useState<string>("");
   const [memo, setMemo] = useState<undefined | string>();
+
+  // Asset & Amounts
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
   );
@@ -87,6 +88,7 @@ export const TransferModule = (): JSX.Element => {
     Object.values(usersAssets ?? {}).find(
       (item) => item.asset?.address === selectedAssetAddress
     );
+  const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const availableAmount = selectedAsset?.amount;
   const availableAssets = useMemo(() => {
     return filterAvailableAssetsWithBalance(usersAssets);
@@ -124,7 +126,7 @@ export const TransferModule = (): JSX.Element => {
   const chainId = chainParameters.data?.chainId;
   const rpcUrl = useAtomValue(rpcUrlAtom);
 
-  // UI & Miscellaneous
+  // UI & Computed Values
   const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
