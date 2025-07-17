@@ -7,35 +7,26 @@ import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
 } from "atoms/balance";
-import { chainParametersAtom } from "atoms/chain";
-import {
-  ibcChannelsFamily,
-  namadaRegistryChainAssetsMapAtom,
-} from "atoms/integrations";
-import { ledgerStatusDataAtom } from "atoms/ledger";
-import { rpcUrlAtom } from "atoms/settings";
-import { clearDisposableSigner } from "atoms/transfer/services";
+import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
-import { trackEvent } from "fathom-client";
+import { TransactionFeeProps } from "hooks";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
-import { useTransactionResolver } from "hooks/useTransactionResolver";
 import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
-import { useAtom, useAtomValue } from "jotai";
-import { useEffect, useMemo, useState } from "react";
+import { useAtomValue } from "jotai";
+import { useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AssetWithAmount } from "types";
-import { useTransactionEventListener } from "utils";
+import {
+  AssetWithAmount,
+  IbcChannels as IbcChannelsType,
+  LedgerAccountInfo,
+} from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
-import {
-  isIbcAddress,
-  isShieldedAddress,
-  isTransparentAddress,
-} from "./common";
+import { isIbcAddress, isShieldedAddress } from "./common";
 import { CurrentStatus } from "./CurrentStatus";
 import { IbcChannels } from "./IbcChannels";
 import { SelectToken } from "./SelectToken";
@@ -43,10 +34,55 @@ import { SuccessAnimation } from "./SuccessAnimation";
 import { TransferArrow } from "./TransferArrow";
 import { TransferDestination } from "./TransferDestination";
 import { TransferSource } from "./TransferSource";
-import { ValidationResult } from "./types";
+import { OnSubmitTransferParams, ValidationResult } from "./types";
 import { getButtonText, validateTransferForm } from "./utils";
 
-export const TransferModule = (): JSX.Element => {
+type TransferModuleProps = {
+  source: {
+    address: string | undefined;
+    availableAmount: BigNumber | undefined;
+    amount: BigNumber | undefined;
+    selectedAssetWithAmount: AssetWithAmount | undefined;
+    onChangeSelectedAsset: (asset: AssetWithAmount | undefined) => void;
+    onChangeAmount: (amount: BigNumber | undefined) => void;
+    ledgerAccountInfo?: LedgerAccountInfo | undefined;
+    onChangeAddress: (address: string | undefined) => void;
+  };
+  destination: {
+    address: string | undefined;
+    isShieldedAddress: boolean;
+    memo?: string;
+    onChangeMemo?: (memo: string | undefined) => void;
+    onChangeAddress: (address: string | undefined) => void;
+  };
+  requiresIbcChannels?: boolean;
+  feeProps: TransactionFeeProps;
+  ibcChannels?: IbcChannelsType | undefined;
+  isSubmitting: boolean;
+  errorMessage?: string;
+  currentStatus: string;
+  currentStatusExplanation: string;
+  onSubmitTransfer: (params: OnSubmitTransferParams) => Promise<void>;
+  completedAt?: Date;
+  setCompletedAt?: (completedAt: Date | undefined) => void;
+  onComplete: () => void;
+};
+
+export const TransferModule = ({
+  source,
+  destination,
+  feeProps,
+  isSubmitting,
+  errorMessage,
+  currentStatus,
+  currentStatusExplanation,
+  onSubmitTransfer,
+  completedAt,
+  setCompletedAt,
+  onComplete,
+  ibcChannels,
+  requiresIbcChannels,
+}: TransferModuleProps): JSX.Element => {
   // Accounts & Wallets
   const keplr = new KeplrWalletManager();
   const { registry: keplrRegistry, walletAddress: activeKeplrWalletAddress } =
@@ -54,41 +90,22 @@ export const TransferModule = (): JSX.Element => {
   const { data: accounts, isLoading: isLoadingAccounts } = useAtomValue(
     allDefaultAccountsAtom
   );
-  const shieldedAccount = accounts?.find((acc) =>
-    isShieldedAddress(acc.address)
-  );
-  const transparentAccount = accounts?.find((acc) =>
-    isTransparentAddress(acc.address)
-  );
-  const transparentAddress = accounts?.find((acc) =>
-    isTransparentAddress(acc.address)
-  )?.address;
-
-  // Transfer Addresses & Settings
-  const [sourceAddress, setSourceAddress] = useState<string | undefined>(
-    transparentAddress ?? ""
-  );
-  const [destinationAddress, setDestinationAddress] = useState<string>("");
-  const [memo, setMemo] = useState<undefined | string>();
 
   // Asset & Amounts
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
   );
-  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmount | undefined
-  >();
+
   const { data: usersAssets, isLoading: isLoadingUsersAssets } = useAtomValue(
-    isShieldedAddress(sourceAddress ?? "") ?
+    isShieldedAddress(source.address ?? "") ?
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
   const selectedAsset =
-    selectedAssetWithAmount ||
+    source.selectedAssetWithAmount ||
     Object.values(usersAssets ?? {}).find(
       (item) => item.asset?.address === selectedAssetAddress
     );
-  const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const availableAmount = selectedAsset?.amount;
   const availableAssets = useMemo(() => {
     return filterAvailableAssetsWithBalance(usersAssets);
@@ -96,59 +113,40 @@ export const TransferModule = (): JSX.Element => {
 
   // Transaction Handling
   const [txHash, setTxHash] = useState<string | undefined>();
-  const [completedAt, setCompletedAt] = useState<Date | undefined>();
 
   // IBC Transactions
   const [sourceChannel, setSourceChannel] = useState("");
   const [destinationChannel, setDestinationChannel] = useState("");
   const [refundTarget, setRefundTarget] = useState<string>();
-  const {
-    data: ibcChannels,
-    isError: unknownIbcChannels,
-    isLoading: isLoadingIbcChannels,
-  } = useAtomValue(ibcChannelsFamily(keplrRegistry?.chain.chain_name));
-
-  // Error handling
-  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
-
-  // Ledger
-  const [ledgerStatus, setLedgerStatus] = useAtom(ledgerStatusDataAtom);
-  const ledgerAccountInfo = ledgerStatus && {
-    deviceConnected: ledgerStatus.connected,
-    errorMessage: ledgerStatus.errorMessage,
-  };
 
   // Chain & Assets
-  const chainParameters = useAtomValue(chainParametersAtom);
   const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
-  const chainId = chainParameters.data?.chainId;
-  const rpcUrl = useAtomValue(rpcUrlAtom);
 
   // UI & Computed Values
   const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const keychainVersion = useKeychainVersion();
-  const isTargetShielded = isShieldedAddress(destinationAddress ?? "");
-  const isSourceShielded = isShieldedAddress(sourceAddress ?? "");
+  const isTargetShielded = isShieldedAddress(destination.address ?? "");
+  const isSourceShielded = isShieldedAddress(source.address ?? "");
   const isShielding =
-    isShieldedAddress(destinationAddress ?? "") &&
-    !isShieldedAddress(sourceAddress ?? "");
+    isShieldedAddress(destination.address ?? "") &&
+    !isShieldedAddress(source.address ?? "");
   const isUnshielding =
-    isShieldedAddress(sourceAddress ?? "") &&
-    !isShieldedAddress(destinationAddress ?? "");
-  const shielded = isShieldedAddress(sourceAddress ?? "");
-  const isShieldedTx = isShieldedAddress(sourceAddress ?? "");
+    isShieldedAddress(source.address ?? "") &&
+    !isShieldedAddress(destination.address ?? "");
+  const isShieldedTx = isShieldedAddress(source.address ?? "");
   const buttonColor = isTargetShielded || isSourceShielded ? "yellow" : "white";
+  const ibcTransfer =
+    isIbcAddress(destination.address ?? "") ||
+    isIbcAddress(source.address ?? "");
   const customAddress =
     (
-      isIbcAddress(destinationAddress ?? "") &&
-      destinationAddress &&
-      destinationAddress !== activeKeplrWalletAddress
+      isIbcAddress(destination.address ?? "") &&
+      destination.address &&
+      destination.address !== activeKeplrWalletAddress
     ) ?
-      destinationAddress
+      destination.address
     : undefined;
   const getButtonTextFromValidation = (): string => {
     const buttonTextErrors =
@@ -169,39 +167,6 @@ export const TransferModule = (): JSX.Element => {
     });
   };
 
-  const {
-    submitTransfer,
-    isPending: isPerformingTransfer,
-    isSuccess,
-    error,
-    feeProps,
-    redirectToTransactionPage,
-  } = useTransactionResolver({
-    selectedAsset,
-    chainId,
-    rpcUrl,
-    sourceAddress,
-    destinationAddress,
-    customAddress,
-    shieldedAccount,
-    transparentAccount,
-    activeKeplrWalletAddress,
-    keplrRegistry,
-    sourceChannel,
-    destinationChannel,
-    displayAmount,
-    isTargetShielded,
-    isSourceShielded,
-    isShielding,
-    isUnshielding,
-    setCurrentStatus,
-    setCurrentStatusExplanation,
-    setGeneralErrorMessage,
-    setTxHash,
-    setRefundTarget,
-    setLedgerStatus,
-  });
-
   const gasConfig = feeProps?.gasConfig;
   const displayGasFee = useMemo(() => {
     return gasConfig ?
@@ -210,10 +175,8 @@ export const TransferModule = (): JSX.Element => {
   }, [gasConfig]);
 
   const availableAmountMinusFees = useMemo(() => {
-    if (!selectedAssetAddress || !availableAmount || !availableAssets) {
+    if (!selectedAssetAddress || !availableAmount || !availableAssets)
       return undefined;
-    }
-
     if (
       !displayGasFee?.totalDisplayAmount ||
       // Don't subtract if the gas token is different than the selected asset:
@@ -232,15 +195,15 @@ export const TransferModule = (): JSX.Element => {
   const validationResult = useMemo((): ValidationResult => {
     return validateTransferForm({
       source: {
-        walletAddress: sourceAddress,
-        isShieldedAddress: isShieldedAddress(sourceAddress ?? ""),
+        walletAddress: source.address,
+        isShieldedAddress: isShieldedAddress(source.address ?? ""),
         selectedAssetAddress: selectedAssetAddress,
-        amount: displayAmount,
-        ledgerAccountInfo,
+        amount: source.amount,
+        ledgerAccountInfo: source.ledgerAccountInfo,
       },
       destination: {
-        walletAddress: destinationAddress,
-        isShieldedAddress: isShieldedAddress(destinationAddress ?? ""),
+        walletAddress: destination.address,
+        isShieldedAddress: isShieldedAddress(destination.address ?? ""),
         chain: undefined,
       },
       gasConfig,
@@ -250,10 +213,10 @@ export const TransferModule = (): JSX.Element => {
       displayGasFeeAmount: displayGasFee?.totalDisplayAmount,
     });
   }, [
-    sourceAddress,
+    source.address,
     selectedAssetAddress,
-    displayAmount,
-    ledgerAccountInfo,
+    source.amount,
+    source.ledgerAccountInfo,
     gasConfig,
     availableAmountMinusFees,
     keychainVersion,
@@ -263,53 +226,13 @@ export const TransferModule = (): JSX.Element => {
 
   const onSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
-    if (!displayAmount) throw new Error("Amount is not valid");
-    if (!sourceAddress || !destinationAddress)
-      throw new Error("Address is not provided");
-    if (!selectedAsset) throw new Error("Asset is not selected");
-
-    submitTransfer({
-      displayAmount: displayAmount.toString(),
-      destinationAddress,
-      sourceAddress,
-      memo,
+    onSubmitTransfer({
+      displayAmount: source.amount?.toString() ?? "",
+      destinationAddress: destination.address,
+      sourceAddress: source.address,
+      memo: destination.memo,
     });
   };
-
-  useEffect(() => {
-    if (!sourceAddress && transparentAddress) {
-      setSourceAddress(transparentAddress);
-    }
-  }, [transparentAddress]);
-
-  useEffect(() => {
-    if (isPerformingTransfer) setLedgerStatus(isPerformingTransfer);
-  }, [isPerformingTransfer]);
-
-  useEffect(() => {
-    setSourceChannel(ibcChannels?.ibcChannel || "");
-    setDestinationChannel(ibcChannels?.namadaChannel || "");
-  }, [ibcChannels]);
-
-  const isSubmitting = isPerformingTransfer || isSuccess;
-  const requiresIbcChannels = !isLoadingIbcChannels && unknownIbcChannels;
-
-  useTransactionEventListener("IbcWithdraw.Success", async (e) => {
-    if (txHash && e.detail.hash === txHash) {
-      setCompletedAt(new Date());
-      // We are clearing the disposable signer only if the transaction was successful on the target chain
-      if (shielded && refundTarget) {
-        await clearDisposableSigner(refundTarget);
-      }
-      trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx complete`);
-    }
-  });
-
-  useTransactionEventListener("IbcWithdraw.Error", (e) => {
-    if (txHash && e.detail.hash === txHash) {
-      trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx error`);
-    }
-  });
 
   return (
     <>
@@ -323,60 +246,58 @@ export const TransferModule = (): JSX.Element => {
           onSubmit={onSubmit}
         >
           <TransferSource
-            sourceAddress={sourceAddress}
+            sourceAddress={source.address}
             asset={selectedAsset?.asset}
             originalAddress={selectedAsset?.asset?.address}
             isLoadingAssets={isLoadingAccounts || isLoadingUsersAssets}
             isShieldingTxn={isShielding}
             availableAmount={availableAmount}
             availableAmountMinusFees={availableAmountMinusFees}
-            amount={displayAmount}
+            amount={source.amount}
             openAssetSelector={
               !isSubmitting ? () => setAssetSelectorModalOpen(true) : undefined
             }
-            onChangeAmount={setDisplayAmount}
-            onChangeWalletAddress={setSourceAddress}
+            onChangeAmount={source.onChangeAmount}
             isSubmitting={isSubmitting}
           />
           <i className="flex items-center justify-center w-11 mx-auto -my-8 relative z-10">
             <TransferArrow
               color={
-                isShieldedAddress(destinationAddress ?? "") ? "#FF0" : "#FFF"
+                isShieldedAddress(destination.address ?? "") ? "#FF0" : "#FFF"
               }
               isAnimating={isSubmitting}
             />
           </i>
           <TransferDestination
-            setDestinationAddress={setDestinationAddress}
-            isShieldedAddress={isShieldedAddress(destinationAddress ?? "")}
+            setDestinationAddress={destination.onChangeAddress}
+            isShieldedAddress={isShieldedAddress(destination.address ?? "")}
             isShieldedTx={isShieldedTx}
             customAddress={customAddress}
-            address={destinationAddress}
-            sourceAddress={sourceAddress}
-            onChangeAddress={setDestinationAddress}
-            memo={memo}
-            onChangeMemo={setMemo}
+            address={destination.address}
+            sourceAddress={source.address}
+            onChangeAddress={destination.onChangeAddress}
+            memo={destination.memo}
+            onChangeMemo={destination.onChangeMemo}
             feeProps={feeProps}
             gasDisplayAmount={displayGasFee?.totalDisplayAmount}
             gasAsset={displayGasFee?.asset}
             destinationAsset={selectedAsset?.asset}
-            amount={displayAmount}
+            amount={source.amount}
             isSubmitting={isSubmitting}
           />
-          {isIbcAddress(sourceAddress ?? "") ||
-            (isIbcAddress(destinationAddress) && requiresIbcChannels && (
-              <IbcChannels
-                isShielded={Boolean(
-                  isShieldedAddress(sourceAddress ?? "") ||
-                    isShieldedAddress(destinationAddress ?? "")
-                )}
-                sourceChannel={sourceChannel}
-                onChangeSource={setSourceChannel}
-                destinationChannel={destinationChannel}
-                onChangeDestination={setDestinationChannel}
-              />
-            ))}
-          {!isSubmitting && <InlineError errorMessage={generalErrorMessage} />}
+          {ibcTransfer && requiresIbcChannels && (
+            <IbcChannels
+              isShielded={Boolean(
+                isShieldedAddress(source.address ?? "") ||
+                  isShieldedAddress(destination.address ?? "")
+              )}
+              sourceChannel={sourceChannel}
+              onChangeSource={setSourceChannel}
+              destinationChannel={destinationChannel}
+              onChangeDestination={setDestinationChannel}
+            />
+          )}
+          {!isSubmitting && <InlineError errorMessage={errorMessage} />}
           {currentStatus && isSubmitting && (
             <CurrentStatus
               status={currentStatus}
@@ -431,23 +352,23 @@ export const TransferModule = (): JSX.Element => {
             </div>
           )}
         </Stack>
-        {completedAt && selectedAsset?.asset && displayAmount && (
+        {completedAt && selectedAsset?.asset && source.amount && (
           <SuccessAnimation
             asset={selectedAsset.asset}
-            amount={displayAmount}
-            onCompleteAnimation={redirectToTransactionPage}
+            amount={source.amount}
+            onCompleteAnimation={onComplete}
           />
         )}
       </section>
       <SelectToken
-        sourceAddress={sourceAddress || ""}
-        setSourceAddress={setSourceAddress}
+        sourceAddress={source.address || ""}
+        setSourceAddress={source.onChangeAddress}
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}
         onSelect={(selectedAssetWithAmount) => {
-          setDisplayAmount(undefined);
+          source.onChangeAmount(undefined);
           setSelectedAssetAddress(selectedAssetWithAmount.asset.address);
-          setSelectedAssetWithAmount(selectedAssetWithAmount);
+          source.onChangeSelectedAsset(selectedAssetWithAmount);
           setAssetSelectorModalOpen(false);
         }}
       />
