@@ -39,6 +39,7 @@ type TransferDestinationProps = {
   amount?: BigNumber;
   customAddress?: string;
   address?: string;
+  sourceAddress?: string;
   memo?: string;
   onChangeAddress?: (address: Address) => void;
   onChangeMemo?: (address: string) => void;
@@ -56,13 +57,15 @@ export const TransferDestination = ({
   amount,
   customAddress,
   address,
+  sourceAddress,
   memo,
   setDestinationAddress,
   onChangeMemo,
 }: TransferDestinationProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const isIbcTransfer = !isNamadaAddress(address ?? "");
+  const isIbcTransfer =
+    !isNamadaAddress(address ?? "") || !isNamadaAddress(sourceAddress ?? "");
   const changeFeeEnabled = !isIbcTransfer;
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
