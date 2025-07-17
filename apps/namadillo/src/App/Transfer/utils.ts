@@ -208,6 +208,7 @@ export const determineTransferType = (
   const { destinationAddress, sourceAddress } = params;
   const sourceIsIbc = isIbcAddress(sourceAddress ?? "");
   const destinationIsIbc = isIbcAddress(destinationAddress ?? "");
+
   // 1. Source is shielded
   // 2. Destination is IBC/Namada
   const unshielding =
@@ -221,9 +222,9 @@ export const determineTransferType = (
       isShieldedAddress(destinationAddress ?? "")) ||
     isIbcAddress(sourceAddress ?? "");
 
-  if (unshielding) return "unshield";
-  if (destinationIsIbc) return "ibc-withdraw";
   if (sourceIsIbc) return "ibc-deposit";
+  if (destinationIsIbc) return "ibc-withdraw";
   if (shielding) return "shield";
+  if (unshielding) return "unshield";
   return "namada-transfer";
 };

@@ -1,6 +1,11 @@
-import { IbcTransferMsgValue, NamadaKeychainAccount } from "@namada/types";
+import { IbcTransferMsgValue } from "@namada/types";
 import { determineTransferType } from "App/Transfer";
 import { isShieldedAddress } from "App/Transfer/common";
+import {
+  OnSubmitTransferParams,
+  UseTransactionResolverProps,
+  UseTransactionResolverReturn,
+} from "App/Transfer/types";
 import { disposableSignerAtom } from "atoms/accounts";
 import { chainAtom } from "atoms/chain";
 import {
@@ -22,77 +27,12 @@ import { useIbcTransaction } from "hooks/useIbcTransaction";
 import { useTransaction } from "hooks/useTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
+import { TransferType } from "hooks/useTransferResolver";
 import invariant from "invariant";
 import { useAtomValue } from "jotai";
 import { TransactionPair } from "lib/query";
-import { Dispatch, SetStateAction } from "react";
-import {
-  Asset,
-  ChainRegistryEntry,
-  IbcTransferTransactionData,
-  TransferStep,
-} from "types";
+import { Asset, IbcTransferTransactionData, TransferStep } from "types";
 import { toDisplayAmount } from "utils";
-import { TransactionFeeProps } from "./useTransactionFee";
-
-export type TransferType =
-  | "ibc-deposit"
-  | "ibc-withdraw"
-  | "shield"
-  | "unshield"
-  | "namada-transfer";
-
-export interface OnSubmitTransferParams {
-  displayAmount: string;
-  destinationAddress: string;
-  sourceAddress: string;
-  memo?: string;
-}
-
-export interface UseTransactionResolverReturn {
-  submitTransfer: (params: OnSubmitTransferParams) => Promise<void>;
-  isPending: boolean;
-  isSuccess: boolean;
-  error: Error | undefined;
-  feeProps: TransactionFeeProps | undefined;
-  completedAt: Date | undefined;
-  redirectToTransactionPage: () => void;
-}
-
-export interface UseTransactionResolverProps {
-  // Asset and chain info
-  selectedAsset: { asset: Asset } | undefined;
-  chainId: string | undefined;
-  rpcUrl: string;
-
-  // Addresses and accounts
-  sourceAddress: string | undefined;
-  destinationAddress: string | undefined;
-  customAddress: string | undefined;
-  shieldedAccount: NamadaKeychainAccount | undefined;
-  transparentAccount: NamadaKeychainAccount | undefined;
-  activeKeplrWalletAddress: string | undefined;
-
-  // IBC specific
-  keplrRegistry: ChainRegistryEntry | undefined;
-  sourceChannel: string | undefined;
-  destinationChannel: string | undefined;
-
-  // Transfer specific
-  displayAmount: BigNumber | undefined;
-  isTargetShielded: boolean;
-  isSourceShielded: boolean;
-  isShielding: boolean;
-  isUnshielding: boolean;
-
-  // Status setters
-  setCurrentStatus: Dispatch<SetStateAction<string>>;
-  setCurrentStatusExplanation: (explanation: string) => void;
-  setGeneralErrorMessage: (message: string) => void;
-  setTxHash: (hash: string) => void;
-  setRefundTarget: (target: string) => void;
-  setLedgerStatus: (stop: boolean) => void;
-}
 
 export const useTransactionResolver = ({
   selectedAsset,
@@ -166,14 +106,17 @@ export const useTransactionResolver = ({
     return transferTransaction;
   };
 
+  // Only run IBC transaction hook for IBC deposit transfers
+  const isIbcDeposit = transferType === "ibc-deposit";
+
   // Used for IBC Transfers
   const { transferToNamada, gasConfig: ibcGasConfig } = useIbcTransaction({
-    registry: keplrRegistry,
-    sourceAddress,
-    sourceChannel,
-    destinationChannel,
-    shielded: isShieldedAddress(sourceAddress ?? ""),
-    selectedAsset: selectedAsset?.asset,
+    registry: isIbcDeposit ? keplrRegistry : undefined,
+    sourceAddress: isIbcDeposit ? sourceAddress : undefined,
+    sourceChannel: isIbcDeposit ? sourceChannel : undefined,
+    destinationChannel: isIbcDeposit ? destinationChannel : undefined,
+    shielded: isIbcDeposit ? isShieldedAddress(sourceAddress ?? "") : undefined,
+    selectedAsset: isIbcDeposit ? selectedAsset?.asset : undefined,
   });
 
   // Used for IBC Withdrawals
@@ -331,9 +274,9 @@ export const useTransactionResolver = ({
         case "ibc-deposit": {
           await executeIbcDeposit(
             {
-              displayAmount,
-              destinationAddress,
-              sourceAddress,
+              displayAmount: displayAmount ?? "",
+              destinationAddress: destinationAddress ?? "",
+              sourceAddress: sourceAddress ?? "",
               memo,
               selectedAsset: selectedAsset.asset,
               chainId,
@@ -348,9 +291,9 @@ export const useTransactionResolver = ({
         case "ibc-withdraw": {
           await executeIbcWithdraw(
             {
-              displayAmount,
-              destinationAddress,
-              sourceAddress,
+              displayAmount: displayAmount ?? "",
+              destinationAddress: destinationAddress ?? "",
+              sourceAddress: sourceAddress ?? "",
               memo,
               selectedAsset: selectedAsset.asset,
               chainId,
@@ -439,12 +382,7 @@ export const useTransactionResolver = ({
     }
   };
 
-  const submitTransfer = (params: {
-    displayAmount: string;
-    destinationAddress: string;
-    sourceAddress: string;
-    memo?: string;
-  }): Promise<void> => {
+  const submitTransfer = (params: OnSubmitTransferParams): Promise<void> => {
     const { displayAmount, destinationAddress, sourceAddress, memo } = params;
 
     if (!displayAmount) throw new Error("Amount is not valid");

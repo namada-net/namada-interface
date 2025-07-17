@@ -241,7 +241,6 @@ export const allKeplrAssetsBalanceAtom = atomWithQuery<
       type BalanceEntry = {
         asset: Asset;
         balance: Coin;
-        chainName: string;
       };
 
       // Process balances and create entries for ALL assets in chainAssetsMap
@@ -249,7 +248,7 @@ export const allKeplrAssetsBalanceAtom = atomWithQuery<
       const entries: [string, AssetWithAmount][] = [];
 
       // First, add assets that have actual balances
-      allBalances.forEach(({ asset, balance, chainName }: BalanceEntry) => {
+      allBalances.forEach(({ asset, balance }: BalanceEntry) => {
         // Try to find corresponding Namada asset in chainAssetsMap
         const namadaAsset = allChainAssets.find((namadaAsset) => {
           // Match by base denom
@@ -280,7 +279,7 @@ export const allKeplrAssetsBalanceAtom = atomWithQuery<
 
         if (amount.gt(0)) {
           entries.push([
-            `${chainName}:${asset.base}`,
+            `${asset.base}`,
             {
               asset: finalAsset,
               amount,
@@ -288,9 +287,6 @@ export const allKeplrAssetsBalanceAtom = atomWithQuery<
           ]);
         }
       });
-
-      // Note: We only include assets with actual balances from connected chains
-      // No zero-balance entries or "namada:" prefixed assets
 
       return Object.fromEntries(entries);
     }, [chainSettings, chainAssetsMap, !!connectedWallets?.keplr]),
