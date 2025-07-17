@@ -62,7 +62,7 @@ export const SelectToken = ({
 
   // Create KeplrWalletManager instance and use with useWalletManager hook
   const keplr = new KeplrWalletManager();
-  const keplrWalletManager = useWalletManager(keplr);
+  const { registry, connectToChainId } = useWalletManager(keplr);
 
   // Get balances for connected chains
   const allKeplrBalances = useAtomValue(allKeplrAssetsBalanceAtom);
@@ -210,19 +210,16 @@ export const SelectToken = ({
 
   const handleTokenSelect = async (token: AssetWithAmount): Promise<void> => {
     // Check if current address is Keplr and if we need to connect to specific chain for this token
-    const isKeplrTokenSource = !isNamadaAddress(sourceAddress);
-    const isIbcOrKeplrToken = isKeplrTokenSource;
+    const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
 
     try {
       if (isIbcOrKeplrToken) {
         setIsConnectingKeplr(true);
 
         try {
-          // Run the logic from lines 229-236
           const keplrInstance = await keplr.get();
-
+          // Keplr is not installed, redirect to download page
           if (!keplrInstance) {
-            // Keplr is not installed, redirect to download page
             keplr.install();
             return;
           }
@@ -248,13 +245,15 @@ export const SelectToken = ({
           if (targetChainRegistry) {
             // Use useWalletManager's connectToChainId method for the specific chain
             const chainId = targetChainRegistry.chain.chain_id;
-            await keplrWalletManager.connectToChainId(chainId);
+            await connectToChainId(chainId);
 
             // Update connected wallets state only after successful connection
             setConnectedWallets((obj: Record<string, boolean>) => ({
               ...obj,
               [keplr.key]: true,
             }));
+            const key = await keplrInstance.getKey(chainId);
+            setSourceAddress(key.bech32Address);
           } else {
             console.warn(
               "Could not determine target chain for token:",

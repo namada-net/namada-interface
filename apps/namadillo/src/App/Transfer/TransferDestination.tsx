@@ -62,9 +62,7 @@ export const TransferDestination = ({
 }: TransferDestinationProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  console.log(address, "addyyy");
-  // TODO: NEED TO ACTUALLY FIND OUT IF IT'S IBC TRANSFER OR NOT
-  const isIbcTransfer = true;
+  const isIbcTransfer = !isNamadaAddress(address ?? "");
   const changeFeeEnabled = !isIbcTransfer;
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys

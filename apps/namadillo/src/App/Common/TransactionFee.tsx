@@ -10,8 +10,6 @@ export const TransactionFee = ({
   displayAmount,
   symbol,
 }: TransactionFeeProps): JSX.Element => {
-  console.log("displayAmount", Number(displayAmount));
-  console.log("symbol", symbol);
   return (
     <div className="flex w-full gap-2">
       <span className="text-sm mt-[3px] ml-1 underline leading-none text-neutral-300">
