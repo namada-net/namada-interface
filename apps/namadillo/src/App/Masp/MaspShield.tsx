@@ -35,18 +35,15 @@ export const MaspShield: React.FC = () => {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-  const [sourceAddress, setSourceAddress] = useState<string | undefined>(
-    transparentAddress
+  const [sourceAddress, setSourceAddress] = useState<string>(
+    transparentAddress ?? ""
   );
-  const [destinationAddress, setDestinationAddress] = useState<
-    string | undefined
-  >();
+  const [destinationAddress, setDestinationAddress] = useState<string>("");
 
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
   >();
 
-  // Make sure we set a source addy
   useEffect(() => {
     if (sourceAddress) return;
     if (transparentAddress) {
