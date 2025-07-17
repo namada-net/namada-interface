@@ -29,7 +29,6 @@ import { Dispatch, SetStateAction } from "react";
 import {
   Asset,
   ChainRegistryEntry,
-  GasConfig,
   IbcTransferTransactionData,
   TransferStep,
 } from "types";
@@ -56,7 +55,6 @@ export interface UseTransactionResolverReturn {
   isSuccess: boolean;
   error: Error | undefined;
   feeProps: TransactionFeeProps | undefined;
-  ibcGasConfig: GasConfig | undefined;
   completedAt: Date | undefined;
   redirectToTransactionPage: () => void;
 }
@@ -126,6 +124,10 @@ export const useTransactionResolver = ({
   const namadaChain = useAtomValue(chainAtom);
   const alias = shieldedAccount?.alias ?? transparentAccount?.alias;
   const shielded = isShieldedAddress(sourceAddress ?? "");
+  const transferType = determineTransferType({
+    destinationAddress,
+    sourceAddress,
+  });
 
   // Local function to store IBC transfer transaction
   const storeTransferTransaction = (
@@ -177,7 +179,7 @@ export const useTransactionResolver = ({
   // Used for IBC Withdrawals
   const {
     execute: performWithdraw,
-    feeProps,
+    feeProps: ibcFeeProps,
     error,
     isPending,
     isSuccess,
@@ -471,8 +473,14 @@ export const useTransactionResolver = ({
     isPending: isPending || isPerformingTransfer,
     isSuccess: isSuccess || isTransferSuccess,
     error: error || transferError || undefined,
-    feeProps: feeProps || transferFeeProps,
-    ibcGasConfig: ibcGasConfig.data,
+    feeProps:
+      transferType === "ibc-withdraw" ? ibcFeeProps
+      : transferType === "ibc-deposit" && ibcGasConfig.data ?
+        {
+          ...ibcFeeProps,
+          gasConfig: ibcGasConfig.data,
+        }
+      : transferFeeProps,
     completedAt,
     redirectToTransactionPage,
   };

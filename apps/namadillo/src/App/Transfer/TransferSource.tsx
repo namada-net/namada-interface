@@ -85,7 +85,7 @@ export const TransferSource = ({
     isTransparentAddress(sourceAddress ?? "") ? "transparent"
     : isShieldedAddress(sourceAddress ?? "") ? "shielded"
     : "keplr";
-  console.log("sourceAddress", sourceAddress);
+
   return (
     <div className="relative bg-neutral-800 rounded-lg px-4 py-5">
       <header className="relative flex justify-between">

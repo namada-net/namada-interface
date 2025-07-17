@@ -209,12 +209,10 @@ export const TransferModule = (): JSX.Element => {
       : undefined;
   }, [gasConfig]);
 
+  console.log(displayGasFee, "displayGasFee");
+
   const availableAmountMinusFees = useMemo(() => {
-    if (
-      typeof selectedAssetAddress === "undefined" ||
-      typeof availableAmount === "undefined" ||
-      typeof availableAssets === "undefined"
-    ) {
+    if (!selectedAssetAddress || !availableAmount || !availableAssets) {
       return undefined;
     }
 
