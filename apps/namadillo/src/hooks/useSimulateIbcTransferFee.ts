@@ -46,6 +46,7 @@ export const useSimulateIbcTransferFee = ({
           if (isNamadaAsset(selectedAsset)) {
             return "uosmo";
           }
+
           return selectedAsset?.base || registry?.assets.assets[0].base || "";
         };
 
@@ -59,7 +60,6 @@ export const useSimulateIbcTransferFee = ({
           getToken(),
           isShieldedTransfer ? "0".repeat(MASP_MEMO_LENGTH) : ""
         );
-
         const simulatedGas = await simulateIbcTransferGas(
           stargateClient!,
           sourceAddress!,

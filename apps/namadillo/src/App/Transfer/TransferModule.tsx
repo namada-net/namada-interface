@@ -209,8 +209,6 @@ export const TransferModule = (): JSX.Element => {
       : undefined;
   }, [gasConfig]);
 
-  console.log(displayGasFee, "displayGasFee");
-
   const availableAmountMinusFees = useMemo(() => {
     if (!selectedAssetAddress || !availableAmount || !availableAssets) {
       return undefined;
@@ -354,6 +352,7 @@ export const TransferModule = (): JSX.Element => {
             isShieldedTx={isShieldedTx}
             customAddress={customAddress}
             address={destinationAddress}
+            sourceAddress={sourceAddress}
             onChangeAddress={setDestinationAddress}
             memo={memo}
             onChangeMemo={setMemo}
@@ -446,7 +445,6 @@ export const TransferModule = (): JSX.Element => {
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}
         onSelect={(selectedAssetWithAmount) => {
-          console.log("selectedAssetWithAmount", selectedAssetWithAmount);
           setDisplayAmount(undefined);
           setSelectedAssetAddress(selectedAssetWithAmount.asset.address);
           setSelectedAssetWithAmount(selectedAssetWithAmount);

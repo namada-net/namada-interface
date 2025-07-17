@@ -25,12 +25,6 @@ import { AssetWithAmount } from "types";
 import { AddressDropdown } from "./AddressDropdown";
 import { isNamadaAddress, isShieldedAddress } from "./common";
 
-type Network = {
-  name: string | undefined;
-  icon?: string;
-  chainId?: string;
-};
-
 type SelectTokenProps = {
   setSourceAddress: (address: string) => void;
   sourceAddress: string;
@@ -62,26 +56,14 @@ export const SelectToken = ({
 
   // Create KeplrWalletManager instance and use with useWalletManager hook
   const keplr = new KeplrWalletManager();
-  const { registry, connectToChainId } = useWalletManager(keplr);
+  const { connectToChainId } = useWalletManager(keplr);
 
   // Get balances for connected chains
-  const allKeplrBalances = useAtomValue(allKeplrAssetsBalanceAtom);
-
-  const allNetworks: Network[] = useMemo(() => {
+  const keplrBalances = useAtomValue(allKeplrAssetsBalanceAtom);
+  const allNetworks: Chain[] = useMemo(() => {
     return allChains
       .filter((chain) => chain.network_type !== "testnet")
-      .map((chainAsset) => {
-        return {
-          name:
-            chainAsset?.chain_name ?
-              chainAsset.chain_name.charAt(0).toUpperCase() +
-              chainAsset.chain_name.slice(1)
-            : "",
-          icon: chainAsset?.logo_URIs?.svg,
-          chainId: chainAsset?.chain_id,
-        };
-      })
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .sort((a, b) => a.chain_name.localeCompare(b.chain_name));
   }, [chainAssetsMap]);
 
   // Create a mapping of assets to their network names for better filtering
@@ -95,63 +77,38 @@ export const SelectToken = ({
     });
     return map;
   }, [chainAssetsMap]);
-
   // Your tokens
   const tokens = useMemo(() => {
     const result: AssetWithAmount[] = [];
-
     // Check if current address is a Keplr address (not shielded or transparent Namada)
     const isKeplrAddress = !isNamadaAddress(sourceAddress);
 
     if (isKeplrAddress) {
       // For Keplr addresses, show all available chain assets with balance data from allKeplrBalances
       chainAssetsMap.forEach((asset) => {
-        if (asset && asset.address && asset.name) {
-          let amount = BigNumber(0);
-          // Look for balance in allKeplrBalances using the known key format
-          if (allKeplrBalances.data) {
-            const trace = asset.traces?.find((t) => t.type === "ibc");
-            if (trace?.counterparty) {
-              // For IBC assets: try both chainName:baseDenom and chainName:ibcDenom
-              const chainName = trace.counterparty.chain_name;
-              const baseDenom = trace.counterparty.base_denom;
-
-              // Try baseDenom first (e.g., "osmosis:uosmo")
-              let key = `${chainName}:${baseDenom}`;
-              if (allKeplrBalances.data[key]) {
-                amount = allKeplrBalances.data[key].amount;
-              } else {
-                // Try with asset.base as IBC denom (e.g., "osmosis:ibc/...")
-                key = `${chainName}:${asset.base}`;
-                if (allKeplrBalances.data[key]) {
-                  amount = allKeplrBalances.data[key].amount;
-                }
-              }
-            } else {
-              // For native assets: chainName:base
-              const chainName = asset.name?.toLowerCase();
-              if (chainName) {
-                const key = `${chainName}:${asset.base}`;
-                if (allKeplrBalances.data[key]) {
-                  amount = allKeplrBalances.data[key].amount;
-                }
+        let amount = BigNumber(0);
+        // Look for balance in allKeplrBalances using the known key format
+        if (keplrBalances.data) {
+          const trace = asset.traces?.find((t) => t.type === "ibc");
+          if (trace?.counterparty) {
+            // For IBC assets
+            const baseDenom = trace.counterparty.base_denom;
+            if (keplrBalances.data[baseDenom])
+              amount = keplrBalances.data[baseDenom].amount;
+          } else {
+            // For native assets: chainName:base
+            const chainName = asset.name?.toLowerCase();
+            if (chainName) {
+              const key = `${asset.base}`;
+              if (keplrBalances.data[key]) {
+                amount = keplrBalances.data[key].amount;
               }
             }
           }
 
           result.push({
-            asset: {
-              type_asset: asset.type_asset,
-              address: asset.address,
-              name: asset.name,
-              symbol: asset.symbol || asset.name,
-              logo_URIs: asset.logo_URIs,
-              traces: asset.traces,
-              denom_units: asset.denom_units,
-              base: asset.base,
-              display: asset.display,
-            },
-            amount: amount,
+            asset,
+            amount,
           });
         }
       });
@@ -170,7 +127,7 @@ export const SelectToken = ({
     availableAssets,
     chainAssetsMap,
     connectedWallets.keplr,
-    allKeplrBalances.data,
+    keplrBalances.data,
   ]);
 
   // Get token prices for USD calculation
@@ -335,35 +292,37 @@ export const SelectToken = ({
                   </button>
                 </li>
                 {allNetworks.map((network) => (
-                  <li key={network.name}>
+                  <li key={network.chain_name}>
                     <button
-                      onClick={() => handleNetworkSelect(network.name || "")}
+                      onClick={() =>
+                        handleNetworkSelect(network.chain_name || "")
+                      }
                       className={`flex items-center gap-3 p-2 w-full rounded-lg transition-colors ${
-                        selectedNetwork === network.name ?
+                        selectedNetwork === network.chain_name ?
                           "bg-yellow/20 border border-yellow"
                         : "hover:bg-neutral-800"
                       }`}
                     >
                       <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
-                        {network.icon ?
+                        {network.logo_URIs?.svg ?
                           <img
-                            src={network.icon}
-                            alt={network.name}
+                            src={network.logo_URIs?.svg}
+                            alt={network.chain_name}
                             className="w-6 h-6"
                           />
                         : <span className="text-white">
-                            {network.name?.charAt(0)}
+                            {network.chain_name?.charAt(0)}
                           </span>
                         }
                       </div>
                       <span
                         className={
-                          selectedNetwork === network.name ?
+                          selectedNetwork === network.chain_name ?
                             "text-yellow"
                           : "text-white"
                         }
                       >
-                        {network.name}
+                        {network.chain_name}
                       </span>
                     </button>
                   </li>

@@ -1,5 +1,3 @@
-// apps/namadillo/src/hooks/useTransferResolver.ts
-
 import { IbcTransferMsgValue } from "@namada/types";
 import { isShieldedAddress } from "App/Transfer";
 import {
@@ -13,23 +11,20 @@ import { BigNumber } from "bignumber.js";
 import { Asset, ChainRegistryEntry, NamadaTransferTxKind } from "types";
 
 export type TransferType =
-  | "namada-transfer"
-  | "masp-shield"
-  | "masp-unshield"
-  | "ibc-transfer"
-  | "ibc-withdraw";
+  | "ibc-deposit"
+  | "ibc-withdraw"
+  | "shield"
+  | "unshield"
+  | "namada-transfer";
 
 type UseTransferResolverProps = {
   transferType: TransferType;
-  // Add other necessary parameters from the different transfer hooks
-  // For example:
   source: string;
   target: string;
   token: string;
   displayAmount: BigNumber;
   asset?: Asset;
   memo?: string;
-
   // For IBC
   registry?: ChainRegistryEntry;
   sourceAddress?: string;
@@ -49,6 +44,8 @@ export const getTransferConfig = (
 
   // Return configuration for the appropriate hook
   switch (transferType) {
+    case "shield":
+    case "unshield":
     case "namada-transfer": {
       const { source, target } = rest;
       const txKind: NamadaTransferTxKind = `${
@@ -86,7 +83,7 @@ export const getTransferConfig = (
       };
     }
 
-    case "ibc-transfer": {
+    case "ibc-deposit": {
       return {
         type: "ibcTransaction" as const,
         config: {
@@ -101,7 +98,7 @@ export const getTransferConfig = (
     }
 
     case "ibc-withdraw": {
-      const { source, target, token, displayAmount, asset, memo } = rest;
+      const { source, target, token, displayAmount, memo } = rest;
       const params: IbcTransferMsgValue[] = [
         {
           source,
@@ -131,17 +128,17 @@ export const getTransferConfig = (
   }
 };
 
-// This function returns the appropriate hook call based on transfer type
-// Usage: const result = useTransferByType(getTransferConfig(props));
-export const useTransferByType = (
+// Helper function to determine which hook to use based on config type
+// This should be used by components to call the appropriate hook
+export const getHookTypeFromConfig = (
   config: ReturnType<typeof getTransferConfig>
-) => {
+): "useTransfer" | "useIbcTransaction" | "useTransaction" => {
   if (config.type === "transfer") {
-    return useTransfer(config.config);
+    return "useTransfer";
   } else if (config.type === "ibcTransaction") {
-    return useIbcTransaction(config.config);
+    return "useIbcTransaction";
   } else if (config.type === "transaction") {
-    return useTransaction(config.config);
+    return "useTransaction";
   }
 
   throw new Error("Invalid config type");
