@@ -63,6 +63,7 @@ type TransferModuleProps = {
     onChangeSourceChannel: (sourceChannel: string) => void;
     onChangeDestinationChannel?: (destinationChannel: string) => void;
   };
+  txHash?: string;
   isSubmitting: boolean;
   errorMessage?: string;
   gasConfig?: GasConfig;
@@ -85,9 +86,7 @@ export const TransferModule = ({
   gasConfig: gasConfigProp,
   onSubmitTransfer,
   completedAt,
-  setCompletedAt,
   onComplete,
-  ibcOptions,
   ibcChannels,
   requiresIbcChannels,
 }: TransferModuleProps): JSX.Element => {
@@ -109,8 +108,6 @@ export const TransferModule = ({
   const availableAssets = useMemo(() => {
     return filterAvailableAssetsWithBalance(usersAssets);
   }, [usersAssets]);
-  const [txHash, setTxHash] = useState<string | undefined>();
-  const [refundTarget, setRefundTarget] = useState<string>();
   const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
   const navigate = useNavigate();
