@@ -1,5 +1,5 @@
 import { Asset } from "@chain-registry/types";
-import { AmountInput } from "@namada/components";
+import { AmountInput, Tooltip } from "@namada/components";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { wallets } from "integrations";
@@ -85,7 +85,7 @@ export const TransferSource = ({
     isTransparentAddress(sourceAddress ?? "") ? "transparent"
     : isShieldedAddress(sourceAddress ?? "") ? "shielded"
     : "keplr";
-
+  console.log("sourceAddress", sourceAddress);
   return (
     <div className="relative bg-neutral-800 rounded-lg px-4 py-5">
       <header className="relative flex justify-between">
@@ -97,11 +97,16 @@ export const TransferSource = ({
         />
         {sourceAddress && (
           <div className="flex items-center">
-            <img
-              src={getWalletIcon(sourceAddress, selectedTokenType)}
-              alt="Wallet icon"
-              className="w-6 h-6"
-            />
+            <div className="relative group/tooltip">
+              <img
+                src={getWalletIcon(sourceAddress, selectedTokenType)}
+                alt="Wallet icon"
+                className="w-6 h-6"
+              />
+              <Tooltip position="top" className="z-50">
+                {sourceAddress}
+              </Tooltip>
+            </div>
           </div>
         )}
       </header>

@@ -448,6 +448,7 @@ export const TransferModule = (): JSX.Element => {
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}
         onSelect={(selectedAssetWithAmount) => {
+          console.log("selectedAssetWithAmount", selectedAssetWithAmount);
           setDisplayAmount(undefined);
           setSelectedAssetAddress(selectedAssetWithAmount.asset.address);
           setSelectedAssetWithAmount(selectedAssetWithAmount);
