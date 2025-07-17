@@ -32,18 +32,15 @@ export const IbcTransfer = (): JSX.Element => {
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [sourceChannel, setSourceChannel] = useState("");
   const [destinationChannel, setDestinationChannel] = useState("");
-  // Global & Atom states
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
 
   // Wallet & Registry
   const { registry, walletAddress: keplrSourceAddress } =
     useWalletManager(keplr);
-  const [sourceAddress, setSourceAddress] = useState<string | undefined>(
-    keplrSourceAddress
+  const [sourceAddress, setSourceAddress] = useState<string>(
+    keplrSourceAddress ?? ""
   );
-  const [destinationAddress, setDestinationAddress] = useState<
-    string | undefined
-  >();
+  const [destinationAddress, setDestinationAddress] = useState<string>("");
 
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
