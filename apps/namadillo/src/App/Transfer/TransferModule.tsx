@@ -2,7 +2,6 @@ import { ActionButton, Stack } from "@namada/components";
 import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
 import { params, routes } from "App/routes";
-import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
@@ -13,14 +12,13 @@ import clsx from "clsx";
 import { TransactionFeeProps } from "hooks";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
 import { useUrlState } from "hooks/useUrlState";
-import { useWalletManager } from "hooks/useWalletManager";
-import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   AssetWithAmount,
+  GasConfig,
   IbcChannels as IbcChannelsType,
   LedgerAccountInfo,
 } from "types";
@@ -50,18 +48,26 @@ type TransferModuleProps = {
   };
   destination: {
     address: string | undefined;
+    customAddress?: string;
     isShieldedAddress: boolean;
     memo?: string;
     onChangeMemo?: (memo: string | undefined) => void;
     onChangeAddress: (address: string | undefined) => void;
   };
   requiresIbcChannels?: boolean;
-  feeProps: TransactionFeeProps;
-  ibcChannels?: IbcChannelsType | undefined;
+  feeProps?: TransactionFeeProps;
+  ibcOptions?: IbcChannelsType | undefined;
+  ibcChannels?: {
+    sourceChannel: string;
+    destinationChannel: string;
+    onChangeSourceChannel: (sourceChannel: string) => void;
+    onChangeDestinationChannel: (destinationChannel: string) => void;
+  };
   isSubmitting: boolean;
   errorMessage?: string;
+  gasConfig?: GasConfig;
   currentStatus: string;
-  currentStatusExplanation: string;
+  currentStatusExplanation?: string;
   onSubmitTransfer: (params: OnSubmitTransferParams) => Promise<void>;
   completedAt?: Date;
   setCompletedAt?: (completedAt: Date | undefined) => void;
@@ -76,22 +82,15 @@ export const TransferModule = ({
   errorMessage,
   currentStatus,
   currentStatusExplanation,
+  gasConfig: gasConfigProp,
   onSubmitTransfer,
   completedAt,
   setCompletedAt,
   onComplete,
+  ibcOptions,
   ibcChannels,
   requiresIbcChannels,
 }: TransferModuleProps): JSX.Element => {
-  // Accounts & Wallets
-  const keplr = new KeplrWalletManager();
-  const { registry: keplrRegistry, walletAddress: activeKeplrWalletAddress } =
-    useWalletManager(keplr);
-  const { data: accounts, isLoading: isLoadingAccounts } = useAtomValue(
-    allDefaultAccountsAtom
-  );
-
-  // Asset & Amounts
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
   );
@@ -110,19 +109,9 @@ export const TransferModule = ({
   const availableAssets = useMemo(() => {
     return filterAvailableAssetsWithBalance(usersAssets);
   }, [usersAssets]);
-
-  // Transaction Handling
   const [txHash, setTxHash] = useState<string | undefined>();
-
-  // IBC Transactions
-  const [sourceChannel, setSourceChannel] = useState("");
-  const [destinationChannel, setDestinationChannel] = useState("");
   const [refundTarget, setRefundTarget] = useState<string>();
-
-  // Chain & Assets
   const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
-
-  // UI & Computed Values
   const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -140,14 +129,7 @@ export const TransferModule = ({
   const ibcTransfer =
     isIbcAddress(destination.address ?? "") ||
     isIbcAddress(source.address ?? "");
-  const customAddress =
-    (
-      isIbcAddress(destination.address ?? "") &&
-      destination.address &&
-      destination.address !== activeKeplrWalletAddress
-    ) ?
-      destination.address
-    : undefined;
+
   const getButtonTextFromValidation = (): string => {
     const buttonTextErrors =
       isShielding || isUnshielding ?
@@ -167,7 +149,7 @@ export const TransferModule = ({
     });
   };
 
-  const gasConfig = feeProps?.gasConfig;
+  const gasConfig = gasConfigProp ?? feeProps?.gasConfig;
   const displayGasFee = useMemo(() => {
     return gasConfig ?
         getDisplayGasFee(gasConfig, chainAssetsMap.data ?? {})
@@ -175,12 +157,12 @@ export const TransferModule = ({
   }, [gasConfig]);
 
   const availableAmountMinusFees = useMemo(() => {
-    if (!selectedAssetAddress || !availableAmount || !availableAssets)
+    if (!selectedAsset?.asset.address || !availableAmount || !availableAssets)
       return undefined;
     if (
       !displayGasFee?.totalDisplayAmount ||
       // Don't subtract if the gas token is different than the selected asset:
-      gasConfig?.gasToken !== selectedAssetAddress
+      gasConfig?.gasToken !== selectedAsset?.asset.address
     ) {
       return availableAmount;
     }
@@ -190,14 +172,14 @@ export const TransferModule = ({
       .decimalPlaces(6);
 
     return BigNumber.max(amountMinusFees, 0);
-  }, [selectedAssetAddress, availableAmount, displayGasFee]);
+  }, [selectedAsset?.asset.address, availableAmount, displayGasFee]);
 
   const validationResult = useMemo((): ValidationResult => {
     return validateTransferForm({
       source: {
         walletAddress: source.address,
         isShieldedAddress: isShieldedAddress(source.address ?? ""),
-        selectedAssetAddress: selectedAssetAddress,
+        selectedAssetAddress: selectedAsset?.asset.address,
         amount: source.amount,
         ledgerAccountInfo: source.ledgerAccountInfo,
       },
@@ -214,7 +196,7 @@ export const TransferModule = ({
     });
   }, [
     source.address,
-    selectedAssetAddress,
+    selectedAsset?.asset.address,
     source.amount,
     source.ledgerAccountInfo,
     gasConfig,
@@ -249,7 +231,7 @@ export const TransferModule = ({
             sourceAddress={source.address}
             asset={selectedAsset?.asset}
             originalAddress={selectedAsset?.asset?.address}
-            isLoadingAssets={isLoadingAccounts || isLoadingUsersAssets}
+            isLoadingAssets={isLoadingUsersAssets}
             isShieldingTxn={isShielding}
             availableAmount={availableAmount}
             availableAmountMinusFees={availableAmountMinusFees}
@@ -272,7 +254,7 @@ export const TransferModule = ({
             setDestinationAddress={destination.onChangeAddress}
             isShieldedAddress={isShieldedAddress(destination.address ?? "")}
             isShieldedTx={isShieldedTx}
-            customAddress={customAddress}
+            customAddress={destination.customAddress}
             address={destination.address}
             sourceAddress={source.address}
             onChangeAddress={destination.onChangeAddress}
@@ -285,16 +267,16 @@ export const TransferModule = ({
             amount={source.amount}
             isSubmitting={isSubmitting}
           />
-          {ibcTransfer && requiresIbcChannels && (
+          {ibcTransfer && requiresIbcChannels && ibcChannels && (
             <IbcChannels
               isShielded={Boolean(
                 isShieldedAddress(source.address ?? "") ||
                   isShieldedAddress(destination.address ?? "")
               )}
-              sourceChannel={sourceChannel}
-              onChangeSource={setSourceChannel}
-              destinationChannel={destinationChannel}
-              onChangeDestination={setDestinationChannel}
+              sourceChannel={ibcChannels.sourceChannel}
+              onChangeSource={ibcChannels.onChangeSourceChannel}
+              destinationChannel={ibcChannels.destinationChannel}
+              onChangeDestination={ibcChannels.onChangeDestinationChannel}
             />
           )}
           {!isSubmitting && <InlineError errorMessage={errorMessage} />}
