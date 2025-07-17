@@ -63,7 +63,6 @@ type TransferModuleProps = {
     onChangeSourceChannel: (sourceChannel: string) => void;
     onChangeDestinationChannel?: (destinationChannel: string) => void;
   };
-  txHash?: string;
   isSubmitting: boolean;
   errorMessage?: string;
   gasConfig?: GasConfig;
@@ -71,7 +70,6 @@ type TransferModuleProps = {
   currentStatusExplanation?: string;
   onSubmitTransfer: (params: OnSubmitTransferParams) => Promise<void>;
   completedAt?: Date;
-  setCompletedAt?: (completedAt: Date | undefined) => void;
   onComplete: () => void;
 };
 
