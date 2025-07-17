@@ -34,7 +34,6 @@ import { useTransaction } from "hooks/useTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
-import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
@@ -369,64 +368,7 @@ export const IbcWithdraw = (): JSX.Element => {
         <IbcTopHeader type="namToIbc" isShielded={shielded} />
       </header>
       <div className="mb-6">{!completedAt && <IbcTabNavigation />}</div>
-      <TransferModule
-        source={{
-          isLoadingAssets,
-          wallet: wallets.namada,
-          walletAddress:
-            shielded ?
-              shieldedAccount?.address
-            : transparentAccount.data?.address,
-          chain,
-          isShieldedAddress: shielded,
-          availableChains: chain ? [chain] : [],
-          availableAmount,
-          selectedAssetAddress,
-          onChangeSelectedAsset: setSelectedAssetAddress,
-          onChangeShielded: (isShielded) => {
-            if (requiresNewShieldedSync) {
-              setShielded(false);
-            } else {
-              setShielded(isShielded);
-            }
-          },
-          amount,
-          onChangeAmount: setAmount,
-          ledgerAccountInfo,
-        }}
-        destination={{
-          wallet: wallets.keplr,
-          walletAddress: keplrAddress,
-          availableWallets: [wallets.keplr],
-          enableCustomAddress: true,
-          customAddress,
-          onChangeCustomAddress: setCustomAddress,
-          chain: destinationChain,
-          onChangeWallet,
-          isShieldedAddress: false,
-        }}
-        isShieldedTx={shielded}
-        errorMessage={generalErrorMessage || error?.message || ""}
-        currentStatus={currentStatus}
-        currentStatusExplanation={statusExplanation}
-        isSubmitting={
-          isPending ||
-          /*Before the transaction was successfully broadcasted (isSuccess) we need to wait
-           * from the confirmation event from target chain */
-          isSuccess
-        }
-        isIbcTransfer={true}
-        requiresIbcChannels={requiresIbcChannels}
-        ibcOptions={{
-          sourceChannel,
-          onChangeSourceChannel: setSourceChannel,
-        }}
-        onSubmitTransfer={submitIbcTransfer}
-        feeProps={feeProps}
-        onComplete={redirectToTimeline}
-        completedAt={completedAt}
-        isSyncingMasp={requiresNewShieldedSync}
-      />
+      <TransferModule />
     </div>
   );
 };

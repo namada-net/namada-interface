@@ -19,7 +19,6 @@ import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
 import { useUrlState } from "hooks/useUrlState";
-import { wallets } from "integrations";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
@@ -149,41 +148,7 @@ export const MaspUnshield: React.FC = () => {
           isDestinationShielded={false}
         />
       </header>
-      <TransferModule
-        source={{
-          isLoadingAssets: isLoadingAssets,
-          selectedAssetAddress,
-          availableAmount: selectedAsset?.amount,
-          chain,
-          availableWallets: [wallets.namada],
-          wallet: wallets.namada,
-          walletAddress: sourceAddress,
-          isShieldedAddress: true,
-          onChangeSelectedAsset: setSelectedAssetAddress,
-          amount: displayAmount,
-          onChangeAmount: setDisplayAmount,
-          ledgerAccountInfo,
-        }}
-        destination={{
-          chain,
-          availableWallets: [wallets.namada],
-          wallet: wallets.namada,
-          walletAddress: destinationAddress,
-          isShieldedAddress: false,
-        }}
-        feeProps={feeProps}
-        isShieldedTx={true}
-        isSubmitting={isPerformingTransfer || isSuccess}
-        errorMessage={generalErrorMessage}
-        onSubmitTransfer={onSubmitTransfer}
-        currentStatus={currentStatus}
-        currentStatusExplanation={currentStatusExplanation}
-        completedAt={completedAt}
-        onComplete={redirectToTransactionPage}
-        buttonTextErrors={{
-          NoAmount: "Define an amount to unshield",
-        }}
-      />
+      <TransferModule />
       {requiresNewSync && <MaspSyncCover longSync={lastSync === undefined} />}
     </Panel>
   );

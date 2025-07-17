@@ -13,7 +13,6 @@ import BigNumber from "bignumber.js";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
 import { useUrlState } from "hooks/useUrlState";
-import { wallets } from "integrations";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
@@ -144,38 +143,7 @@ export const MaspShield: React.FC = () => {
           Shield assets into Namada&apos;s Shieldpool
         </h3>
       </header>
-      <TransferModule
-        source={{
-          isLoadingAssets,
-          selectedAssetAddress,
-          availableAmount: selectedAsset?.amount,
-          availableWallets: [wallets.namada, wallets.keplr],
-          wallet: wallets.namada,
-          walletAddress: sourceAddress,
-          onChangeSelectedAsset: setSelectedAssetAddress,
-          amount: displayAmount,
-          onChangeAmount: setDisplayAmount,
-          ledgerAccountInfo,
-        }}
-        destination={{
-          chain,
-          availableWallets: [wallets.namada],
-          wallet: wallets.namada,
-          walletAddress: destinationAddress,
-          isShieldedAddress: true,
-        }}
-        feeProps={feeProps}
-        isSubmitting={isPerformingTransfer || isSuccess}
-        errorMessage={generalErrorMessage || error?.message}
-        currentStatus={currentStatus}
-        currentStatusExplanation={currentStatusExplanation}
-        onSubmitTransfer={onSubmitTransfer}
-        completedAt={completedAt}
-        buttonTextErrors={{
-          NoAmount: "Define an amount to shield",
-        }}
-        onComplete={redirectToTransactionPage}
-      />
+      <TransferModule />
     </Panel>
   );
 };
