@@ -1,6 +1,15 @@
 import { Chain } from "@chain-registry/types";
+import { NamadaKeychainAccount } from "@namada/types";
 import BigNumber from "bignumber.js";
-import { Address, Asset, LedgerAccountInfo, WalletProvider } from "types";
+import { TransactionFeeProps } from "hooks/useTransactionFee";
+import { Dispatch, SetStateAction } from "react";
+import {
+  Address,
+  Asset,
+  ChainRegistryEntry,
+  LedgerAccountInfo,
+  WalletProvider,
+} from "types";
 
 export type TransferModuleConfig = {
   wallet?: WalletProvider;
@@ -47,11 +56,11 @@ export interface OnSubmitTransferParams {
 }
 
 export type TransferType =
-  | "ibc-deposit"
-  | "ibc-withdraw"
-  | "shield"
-  | "unshield"
-  | "namada-transfer";
+  | "ibc-deposit" // IBC => Namada
+  | "ibc-withdraw" // Namada => IBC
+  | "shield" // Namada Transparent => Namada Shielded
+  | "unshield" // Namada Shielded => Namada Transparent
+  | "namada-transfer"; // Namada Transparent => Namada Transparent OR Namada Shielded => Namada Shielded
 
 export type ValidationResult =
   | "NoAmount"
@@ -67,3 +76,48 @@ export type ValidationResult =
   | "TheSameAddress"
   | "NoLedgerConnected"
   | "Ok";
+
+export interface UseTransactionResolverReturn {
+  submitTransfer: (params: OnSubmitTransferParams) => Promise<void>;
+  isPending: boolean;
+  isSuccess: boolean;
+  error: Error | undefined;
+  feeProps: TransactionFeeProps | undefined;
+  completedAt: Date | undefined;
+  redirectToTransactionPage: () => void;
+}
+
+export interface UseTransactionResolverProps {
+  // Asset and chain info
+  selectedAsset: { asset: Asset } | undefined;
+  chainId: string | undefined;
+  rpcUrl: string;
+
+  // Addresses and accounts
+  sourceAddress: string | undefined;
+  destinationAddress: string | undefined;
+  customAddress: string | undefined;
+  shieldedAccount: NamadaKeychainAccount | undefined;
+  transparentAccount: NamadaKeychainAccount | undefined;
+  activeKeplrWalletAddress: string | undefined;
+
+  // IBC specific
+  keplrRegistry: ChainRegistryEntry | undefined;
+  sourceChannel: string | undefined;
+  destinationChannel: string | undefined;
+
+  // Transfer specific
+  displayAmount: BigNumber | undefined;
+  isTargetShielded: boolean;
+  isSourceShielded: boolean;
+  isShielding: boolean;
+  isUnshielding: boolean;
+
+  // Status setters
+  setCurrentStatus: Dispatch<SetStateAction<string>>;
+  setCurrentStatusExplanation: (explanation: string) => void;
+  setGeneralErrorMessage: (message: string) => void;
+  setTxHash: (hash: string) => void;
+  setRefundTarget: (target: string) => void;
+  setLedgerStatus: (stop: boolean) => void;
+}
