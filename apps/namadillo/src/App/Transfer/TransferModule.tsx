@@ -59,9 +59,9 @@ type TransferModuleProps = {
   ibcOptions?: IbcChannelsType | undefined;
   ibcChannels?: {
     sourceChannel: string;
-    destinationChannel: string;
+    destinationChannel?: string;
     onChangeSourceChannel: (sourceChannel: string) => void;
-    onChangeDestinationChannel: (destinationChannel: string) => void;
+    onChangeDestinationChannel?: (destinationChannel: string) => void;
   };
   isSubmitting: boolean;
   errorMessage?: string;

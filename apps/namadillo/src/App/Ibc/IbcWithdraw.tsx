@@ -2,7 +2,8 @@ import { Chain } from "@chain-registry/types";
 import { IbcTransferProps } from "@namada/sdk-multicore";
 import { AccountType } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
-import { params, routes } from "App/routes";
+import { routes } from "App/routes";
+import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import {
@@ -18,7 +19,6 @@ import { chainAtom } from "atoms/chain";
 import {
   getChainRegistryByChainName,
   ibcChannelsFamily,
-  namadaChainRegistryAtom,
 } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { createIbcTxAtom } from "atoms/transfer/atoms";
@@ -29,10 +29,8 @@ import {
 import BigNumber from "bignumber.js";
 import * as osmosis from "chain-registry/mainnet/osmosis";
 import { useFathomTracker } from "hooks/useFathomTracker";
-import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransaction } from "hooks/useTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
-import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
@@ -40,7 +38,12 @@ import { useAtom, useAtomValue } from "jotai";
 import { TransactionPair } from "lib/query";
 import { useEffect, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
-import { Asset, IbcTransferTransactionData, TransferStep } from "types";
+import {
+  Asset,
+  AssetWithAmount,
+  IbcTransferTransactionData,
+  TransferStep,
+} from "types";
 import {
   isNamadaAsset,
   toBaseAmount,
@@ -50,7 +53,6 @@ import {
 import { IbcTabNavigation } from "./IbcTabNavigation";
 import { IbcTopHeader } from "./IbcTopHeader";
 
-const defaultChainId = "cosmoshub-4";
 const keplr = new KeplrWalletManager();
 
 export const IbcWithdraw = (): JSX.Element => {
@@ -58,30 +60,45 @@ export const IbcWithdraw = (): JSX.Element => {
   const shieldedAccount = defaultAccounts.data?.find(
     (account) => account.type === AccountType.ShieldedKeys
   );
+  const {
+    walletAddress: keplrAddress,
+    connectToChainId,
+    chainId,
+    loadWalletAddress,
+  } = useWalletManager(keplr);
   const transparentAccount = useAtomValue(defaultAccountAtom);
   const namadaChain = useAtomValue(chainAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
-  const namadaChainRegistry = useAtomValue(namadaChainRegistryAtom);
-  const chain = namadaChainRegistry.data?.chain;
-
-  const requiresNewShieldedSync = useRequiresNewShieldedSync();
-  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
-  const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
-    params.asset
-  );
-  const [shielded, setShielded] = useState<boolean>(!requiresNewShieldedSync);
-  const [refundTarget, setRefundTarget] = useState<string>();
-  const [amount, setAmount] = useState<BigNumber | undefined>();
-  const [customAddress, setCustomAddress] = useState<string>("");
-  const [sourceChannel, setSourceChannel] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [statusExplanation, setStatusExplanation] = useState("");
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [txHash, setTxHash] = useState<string | undefined>();
+  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
+  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
+    AssetWithAmount | undefined
+  >();
+  const [refundTarget, setRefundTarget] = useState<string>();
+  const [amount, setAmount] = useState<BigNumber | undefined>();
+  const [destinationAddress, setDestinationAddress] = useState<string>("");
+  const [customAddress, setCustomAddress] = useState<string>("");
+  const [sourceChannel, setSourceChannel] = useState("");
   const [destinationChain, setDestinationChain] = useState<Chain | undefined>();
   const { refetch: genDisposableSigner } = useAtomValue(disposableSignerAtom);
   const alias = shieldedAccount?.alias ?? transparentAccount.data?.alias;
 
+  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
+
+  const transparentAddress = accounts?.find((acc) =>
+    isTransparentAddress(acc.address)
+  )?.address;
+  const shieldedAddress = accounts?.find((acc) =>
+    isShieldedAddress(acc.address)
+  )?.address;
+
+  const [sourceAddress, setSourceAddress] = useState<string>(
+    shieldedAddress ?? transparentAddress ?? ""
+  );
+  const shielded = isShieldedAddress(sourceAddress);
   const { data: availableAssets, isLoading: isLoadingAssets } = useAtomValue(
     shielded ? namadaShieldedAssetsAtom : namadaTransparentAssetsAtom
   );
@@ -97,27 +114,13 @@ export const IbcWithdraw = (): JSX.Element => {
 
   const availableAmount = mapUndefined(
     (address) => availableAssets?.[address]?.amount,
-    selectedAssetAddress
+    selectedAssetWithAmount?.asset.address
   );
 
   const selectedAsset =
-    selectedAssetAddress ? availableAssets?.[selectedAssetAddress] : undefined;
-
-  const {
-    walletAddress: keplrAddress,
-    connectToChainId,
-    chainId,
-    registry,
-    loadWalletAddress,
-  } = useWalletManager(keplr);
-
-  const onChangeWallet = (): void => {
-    if (registry) {
-      connectToChainId(registry.chain.chain_id);
-      return;
-    }
-    connectToChainId(defaultChainId);
-  };
+    selectedAssetWithAmount?.asset.address ?
+      availableAssets?.[selectedAssetWithAmount?.asset.address]
+    : undefined;
 
   useTransactionEventListener(
     ["IbcWithdraw.Success", "ShieldedIbcWithdraw.Success"],
@@ -323,7 +326,10 @@ export const IbcWithdraw = (): JSX.Element => {
     invariant(shieldedAccount, "No shielded account is found");
     invariant(transparentAccount.data, "No transparent account is found");
 
-    const amountInBaseDenom = toBaseAmount(selectedAsset.asset, displayAmount);
+    const amountInBaseDenom = toBaseAmount(
+      selectedAsset.asset,
+      BigNumber(displayAmount ?? 0)
+    );
     const source =
       shielded ?
         shieldedAccount.pseudoExtendedKey!
@@ -348,7 +354,7 @@ export const IbcWithdraw = (): JSX.Element => {
             portId: "transfer",
             token: selectedAsset.asset.address,
             source,
-            receiver: destinationAddress,
+            receiver: destinationAddress ?? "",
             gasSpendingKey,
             memo,
             refundTarget,
@@ -368,7 +374,43 @@ export const IbcWithdraw = (): JSX.Element => {
         <IbcTopHeader type="namToIbc" isShielded={shielded} />
       </header>
       <div className="mb-6">{!completedAt && <IbcTabNavigation />}</div>
-      <TransferModule />
+      <TransferModule
+        source={{
+          address: sourceAddress,
+          onChangeAddress: setSourceAddress,
+          availableAmount,
+          selectedAssetWithAmount,
+          onChangeSelectedAsset: setSelectedAssetWithAmount,
+          amount,
+          onChangeAmount: setAmount,
+          ledgerAccountInfo,
+        }}
+        destination={{
+          customAddress,
+          address: destinationAddress,
+          onChangeAddress:
+            customAddress ? setCustomAddress : setDestinationAddress,
+          isShieldedAddress: false,
+        }}
+        errorMessage={generalErrorMessage || error?.message || ""}
+        currentStatus={currentStatus}
+        currentStatusExplanation={statusExplanation}
+        isSubmitting={
+          isPending ||
+          /*Before the transaction was successfully broadcasted (isSuccess) we need to wait
+           * from the confirmation event from target chain */
+          isSuccess
+        }
+        requiresIbcChannels={requiresIbcChannels}
+        ibcChannels={{
+          sourceChannel,
+          onChangeSourceChannel: setSourceChannel,
+        }}
+        onSubmitTransfer={submitIbcTransfer}
+        feeProps={feeProps}
+        onComplete={redirectToTimeline}
+        completedAt={completedAt}
+      />
     </div>
   );
 };
