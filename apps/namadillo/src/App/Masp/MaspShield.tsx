@@ -1,57 +1,50 @@
 import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
-import { params } from "App/routes";
+import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
-import { namadaTransparentAssetsAtom } from "atoms/balance/atoms";
 import { chainParametersAtom } from "atoms/chain/atoms";
-import { namadaChainRegistryAtom } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
-import { useUrlState } from "hooks/useUrlState";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useState } from "react";
+import { AssetWithAmount } from "types";
 
 export const MaspShield: React.FC = () => {
   const { storeTransaction } = useTransactionActions();
-
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
-
   const rpcUrl = useAtomValue(rpcUrlAtom);
   const chainParameters = useAtomValue(chainParametersAtom);
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
+
+  const transparentAddress = defaultAccounts.data?.find(
+    (account) => account.type !== AccountType.ShieldedKeys
+  )?.address;
+
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
-  const { data: availableAssets, isLoading: isLoadingAssets } = useAtomValue(
-    namadaTransparentAssetsAtom
-  );
-  const namadaChainRegistry = useAtomValue(namadaChainRegistryAtom);
-  const chain = namadaChainRegistry.data?.chain;
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-  const chainId = chainParameters.data?.chainId;
-  const sourceAddress = defaultAccounts.data?.find(
-    (account) => account.type !== AccountType.ShieldedKeys
-  )?.address;
-  const destinationAddress = defaultAccounts.data?.find(
-    (account) => account.type === AccountType.ShieldedKeys
-  )?.address;
-
-  const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
-    params.asset
+  const [sourceAddress, setSourceAddress] = useState<string | undefined>(
+    transparentAddress
   );
-  const selectedAsset =
-    selectedAssetAddress ? availableAssets?.[selectedAssetAddress] : undefined;
+  const [destinationAddress, setDestinationAddress] = useState<
+    string | undefined
+  >();
+
+  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
+    AssetWithAmount | undefined
+  >();
 
   const {
     execute: performTransfer,
@@ -65,7 +58,7 @@ export const MaspShield: React.FC = () => {
   } = useTransfer({
     source: sourceAddress ?? "",
     target: destinationAddress ?? "",
-    token: selectedAsset?.asset.address ?? "",
+    token: selectedAssetWithAmount?.asset.address ?? "",
     displayAmount: displayAmount ?? new BigNumber(0),
     onUpdateStatus: setCurrentStatus,
     onBeforeBuildTx: () => {
@@ -85,11 +78,10 @@ export const MaspShield: React.FC = () => {
       setCurrentStatusExplanation("");
       setGeneralErrorMessage((originalError as Error).message);
     },
-    asset: selectedAsset?.asset,
+    asset: selectedAssetWithAmount?.asset,
   });
 
   const onSubmitTransfer = async ({
-    sourceAddress,
     memo,
   }: OnSubmitTransferParams): Promise<void> => {
     try {
@@ -97,15 +89,15 @@ export const MaspShield: React.FC = () => {
       setCurrentStatus("");
 
       invariant(sourceAddress, "Source address is not defined");
-      invariant(chainId, "Chain ID is undefined");
-      invariant(selectedAsset, "No asset is selected");
+      invariant(chainParameters.data?.chainId, "Chain ID is undefined");
+      invariant(selectedAssetWithAmount, "No asset is selected");
 
       const txResponse = await performTransfer({ memo });
 
       if (txResponse) {
         const txList = createTransferDataFromNamada(
           txKind,
-          selectedAsset.asset,
+          selectedAssetWithAmount.asset,
           rpcUrl,
           true,
           txResponse,
@@ -137,13 +129,37 @@ export const MaspShield: React.FC = () => {
 
   return (
     <Panel className="rounded-sm flex flex-col flex-1 py-9">
-      <header className="flex flex-col items-center text-center mb-4 gap-2">
-        <h2 className="text-lg text-yellow">Shield Assets</h2>
-        <h3 className="text-md text-yellow font-normal">
-          Shield assets into Namada&apos;s Shieldpool
-        </h3>
+      <header className="flex flex-col items-center text-center mb-8 gap-6">
+        <NamadaTransferTopHeader
+          isSourceShielded={false}
+          isDestinationShielded={true}
+        />
       </header>
-      <TransferModule />
+      <TransferModule
+        source={{
+          address: sourceAddress,
+          selectedAssetWithAmount,
+          availableAmount: selectedAssetWithAmount?.amount,
+          amount: displayAmount,
+          onChangeSelectedAsset: setSelectedAssetWithAmount,
+          onChangeAmount: setDisplayAmount,
+          ledgerAccountInfo,
+          onChangeAddress: setSourceAddress,
+        }}
+        destination={{
+          address: destinationAddress,
+          isShieldedAddress: true,
+          onChangeAddress: setDestinationAddress,
+        }}
+        feeProps={feeProps}
+        isSubmitting={isPerformingTransfer || isSuccess}
+        errorMessage={generalErrorMessage || error?.message}
+        currentStatus={currentStatus}
+        currentStatusExplanation={currentStatusExplanation}
+        onSubmitTransfer={onSubmitTransfer}
+        completedAt={completedAt}
+        onComplete={redirectToTransactionPage}
+      />
     </Panel>
   );
 };

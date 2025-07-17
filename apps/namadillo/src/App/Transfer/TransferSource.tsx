@@ -25,7 +25,6 @@ export type TransferSourceProps = {
   openAssetSelector?: () => void;
   openProviderSelector?: () => void;
   onChangeAmount?: (amount: BigNumber | undefined) => void;
-  onChangeWalletAddress?: (address: string) => void;
 };
 
 const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {

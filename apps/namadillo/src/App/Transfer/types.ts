@@ -23,7 +23,7 @@ export type TransferModuleConfig = {
   onChangeShielded?: (isShielded: boolean) => void;
   isSyncingMasp?: boolean;
   // Additional information if selected account is a ledger
-  ledgerAccountInfo?: LedgerAccountInfo;
+  ledgerAccountInfo?: LedgerAccountInfo | undefined;
 };
 
 export type TransferSourceProps = TransferModuleConfig & {
