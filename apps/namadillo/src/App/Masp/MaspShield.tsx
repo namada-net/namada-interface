@@ -13,7 +13,7 @@ import { useTransfer } from "hooks/useTransfer";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AssetWithAmount } from "types";
 
 export const MaspShield: React.FC = () => {
@@ -45,6 +45,14 @@ export const MaspShield: React.FC = () => {
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
   >();
+
+  // Make sure we set a source addy
+  useEffect(() => {
+    if (sourceAddress) return;
+    if (transparentAddress) {
+      setSourceAddress(transparentAddress);
+    }
+  }, [transparentAddress, sourceAddress]);
 
   const {
     execute: performTransfer,
