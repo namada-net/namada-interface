@@ -19,7 +19,6 @@ import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
 import { useUrlState } from "hooks/useUrlState";
-import { wallets } from "integrations";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
@@ -192,44 +191,7 @@ export const NamadaTransfer: React.FC = () => {
           isDestinationShielded={target ? isTargetShielded : undefined}
         />
       </header>
-      <TransferModule
-        source={{
-          isLoadingAssets,
-          availableAmount: selectedAsset?.amount,
-          chain,
-          availableWallets: [wallets.namada],
-          wallet: wallets.namada,
-          walletAddress: sourceAddress,
-          selectedAssetAddress,
-          onChangeSelectedAsset: setSelectedAssetAddress,
-          isShieldedAddress: shielded,
-          onChangeShielded,
-          amount: displayAmount,
-          onChangeAmount: setDisplayAmount,
-          ledgerAccountInfo,
-        }}
-        destination={{
-          chain,
-          enableCustomAddress: true,
-          customAddress,
-          onChangeCustomAddress: setCustomAddress,
-          wallet: wallets.namada,
-          walletAddress: customAddress,
-          isShieldedAddress: isShieldedAddress(customAddress),
-        }}
-        feeProps={feeProps}
-        currentStatus={currentStatus}
-        currentStatusExplanation={currentStatusExplanation}
-        isShieldedTx={isSourceShielded}
-        isSyncingMasp={requiresNewShieldedSync}
-        isSubmitting={
-          isPerformingTransfer || isTransferSuccessful || Boolean(completedAt)
-        }
-        errorMessage={generalErrorMessage}
-        onSubmitTransfer={onSubmitTransfer}
-        completedAt={completedAt}
-        onComplete={redirectToTransactionPage}
-      />
+      <TransferModule />
     </Panel>
   );
 };
