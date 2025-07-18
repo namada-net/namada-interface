@@ -5,11 +5,7 @@ import { isShieldedAddress } from "App/Transfer/common";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
-import {
-  assetBalanceAtomFamily,
-  ibcChannelsFamily,
-  SUPPORTED_ASSETS_MAP,
-} from "atoms/integrations";
+import { assetBalanceAtomFamily, ibcChannelsFamily } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import { useFathomTracker } from "hooks/useFathomTracker";
 import { useIbcTransaction } from "hooks/useIbcTransaction";
@@ -99,27 +95,27 @@ export const IbcTransfer = ({
   // const selectedAsset =
   //   selectedAssetBase ? userAssets?.[selectedAssetBase]?.asset : undefined;
 
-  const availableAssets = useMemo(() => {
-    if (!userAssets || !registry) return undefined;
+  // const availableAssets = useMemo(() => {
+  //   if (!userAssets || !registry) return undefined;
 
-    //     Object.entries(userAssets).forEach(([key, { asset }]) => {
-    //       const namadaAsset = getNamadaAssetByIbcAsset(
-    //         asset,
-    //         chainRegistry?.assets.assets ?? []
-    //       );
+  //   //     Object.entries(userAssets).forEach(([key, { asset }]) => {
+  //   //       const namadaAsset = getNamadaAssetByIbcAsset(
+  //   //         asset,
+  //   //         chainRegistry?.assets.assets ?? []
+  //   //       );
 
-    Object.entries(userAssets).forEach(([key, { asset }]) => {
-      if (
-        SUPPORTED_ASSETS_MAP.get(registry.chain.chain_name)?.includes(
-          asset.symbol
-        )
-      ) {
-        output[key] = { ...userAssets[key] };
-      }
-    });
+  //   Object.entries(userAssets).forEach(([key, { asset }]) => {
+  //     if (
+  //       SUPPORTED_ASSETS_MAP.get(registry.chain.chain_name)?.includes(
+  //         asset.symbol
+  //       )
+  //     ) {
+  //       output[key] = { ...userAssets[key] };
+  //     }
+  //   });
 
-    return output;
-  }, [Object.keys(userAssets || {}).join(""), registry?.chain.chain_name]);
+  //   return output;
+  // }, [Object.keys(userAssets || {}).join(""), registry?.chain.chain_name]);
   const requiresIbcChannels = Boolean(
     !isLoadingIbcChannels &&
       (unknownIbcChannels ||
