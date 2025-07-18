@@ -19,10 +19,19 @@ import { createTransferDataFromNamada } from "lib/transactions";
 import { useEffect, useState } from "react";
 import { AssetWithAmount } from "types";
 
-export const MaspShield = (): JSX.Element => {
-  const [sourceAddress, setSourceAddress] = useUrlState("source");
-  const [destinationAddress, setDestinationAddress] =
-    useUrlState("destination");
+interface MaspShieldProps {
+  sourceAddress: string | undefined;
+  setSourceAddress: (address: string | undefined) => void;
+  destinationAddress: string | undefined;
+  setDestinationAddress: (address: string | undefined) => void;
+}
+
+export const MaspShield = ({
+  sourceAddress,
+  setSourceAddress,
+  destinationAddress,
+  setDestinationAddress,
+}: MaspShieldProps): JSX.Element => {
   const [assetAddress] = useUrlState(params.asset);
   const { storeTransaction } = useTransactionActions();
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
@@ -55,7 +64,7 @@ export const MaspShield = (): JSX.Element => {
     if (transparentAddress) {
       setSourceAddress(transparentAddress);
     }
-  }, [transparentAddress, sourceAddress]);
+  }, [transparentAddress, sourceAddress, setSourceAddress]);
 
   // Initialize selectedAssetWithAmount from URL parameter when assets are available
   useEffect(() => {

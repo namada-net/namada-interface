@@ -16,6 +16,7 @@ import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
+import { useLocation } from "react-router-dom";
 import { Address } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
@@ -62,6 +63,8 @@ export const TransferDestination = ({
 }: TransferDestinationProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const location = useLocation();
+
   const isIbcTransfer =
     !isNamadaAddress(address ?? "") || !isNamadaAddress(sourceAddress ?? "");
   const changeFeeEnabled = !isIbcTransfer;
@@ -110,7 +113,12 @@ export const TransferDestination = ({
     if (isShieldingTransaction && shieldedAccount?.address) {
       setDestinationAddress?.(shieldedAccount?.address ?? "");
     }
-  }, [isShieldingTransaction, shieldedAccount?.address]);
+  }, [
+    isShieldingTransaction,
+    shieldedAccount?.address,
+    address,
+    setDestinationAddress,
+  ]);
 
   // Write a customAddress variable that checks if the address doesn't come from our transparent or shielded accounts
   const customAddress =

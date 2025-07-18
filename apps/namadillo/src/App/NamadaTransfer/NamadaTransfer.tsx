@@ -11,7 +11,6 @@ import { useFathomTracker } from "hooks/useFathomTracker";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
-import { useUrlState } from "hooks/useUrlState";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
@@ -20,10 +19,19 @@ import { useSearchParams } from "react-router-dom";
 import { AssetWithAmount } from "types";
 import { NamadaTransferTopHeader } from "./NamadaTransferTopHeader";
 
-export const NamadaTransfer = (): JSX.Element => {
-  const [sourceAddress, setSourceAddress] = useUrlState("source");
-  const [destinationAddress, setDestinationAddress] =
-    useUrlState("destination");
+interface NamadaTransferProps {
+  sourceAddress: string | undefined;
+  setSourceAddress: (address: string | undefined) => void;
+  destinationAddress: string | undefined;
+  setDestinationAddress: (address: string | undefined) => void;
+}
+
+export const NamadaTransfer = ({
+  sourceAddress,
+  setSourceAddress,
+  destinationAddress,
+  setDestinationAddress,
+}: NamadaTransferProps): JSX.Element => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const [customAddress, setCustomAddress] = useState<string>("");

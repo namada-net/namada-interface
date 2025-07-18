@@ -10,17 +10,25 @@ import BigNumber from "bignumber.js";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
-import { useUrlState } from "hooks/useUrlState";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useState } from "react";
 import { AssetWithAmount } from "types";
 
-export const MaspUnshield = (): JSX.Element => {
-  const [sourceAddress, setSourceAddress] = useUrlState("source");
-  const [destinationAddress, setDestinationAddress] =
-    useUrlState("destination");
+interface MaspUnshieldProps {
+  sourceAddress: string | undefined;
+  setSourceAddress: (address: string | undefined) => void;
+  destinationAddress: string | undefined;
+  setDestinationAddress: (address: string | undefined) => void;
+}
+
+export const MaspUnshield = ({
+  sourceAddress,
+  setSourceAddress,
+  destinationAddress,
+  setDestinationAddress,
+}: MaspUnshieldProps): JSX.Element => {
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
