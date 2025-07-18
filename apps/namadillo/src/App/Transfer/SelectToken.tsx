@@ -19,7 +19,7 @@ import BigNumber from "bignumber.js";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtom, useAtomValue } from "jotai";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { AssetWithAmount } from "types";
 import { AddressDropdown } from "./AddressDropdown";
@@ -41,20 +41,12 @@ export const SelectToken = ({
   onSelect,
 }: SelectTokenProps): JSX.Element | null => {
   // Local state for address selection within the modal
-  const [localSourceAddress, setLocalSourceAddress] = useState(sourceAddress);
   const [filter, setFilter] = useState("");
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
 
-  // Update local address when modal opens or sourceAddress prop changes
-  useEffect(() => {
-    if (isOpen) {
-      setLocalSourceAddress(sourceAddress);
-    }
-  }, [isOpen, sourceAddress]);
-
   const { data: availableAssets } = useAtomValue(
-    isShieldedAddress(localSourceAddress) ?
+    isShieldedAddress(sourceAddress) ?
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
@@ -91,7 +83,7 @@ export const SelectToken = ({
   const tokens = useMemo(() => {
     const result: AssetWithAmount[] = [];
     // Check if current address is a Keplr address (not shielded or transparent Namada)
-    const isKeplrAddress = !isNamadaAddress(localSourceAddress);
+    const isKeplrAddress = !isNamadaAddress(sourceAddress);
 
     if (isKeplrAddress) {
       // For Keplr addresses, show all available chain assets with balance data from allKeplrBalances
@@ -133,7 +125,7 @@ export const SelectToken = ({
 
     return result;
   }, [
-    localSourceAddress,
+    sourceAddress,
     availableAssets,
     chainAssetsMap,
     connectedWallets.keplr,
@@ -171,19 +163,19 @@ export const SelectToken = ({
   };
 
   const handleAddressChange = (address: string): void => {
-    setLocalSourceAddress(address); // Only update local state
+    setSourceAddress(address); // Only update local state
     setSelectedNetwork(null); // Reset network filter when address changes
   };
 
   const handleClose = (): void => {
     // Apply the local address to parent when closing
-    setSourceAddress(localSourceAddress);
+    setSourceAddress(sourceAddress);
     onClose();
   };
 
   const handleTokenSelect = async (token: AssetWithAmount): Promise<void> => {
     // Check if current address is Keplr and if we need to connect to specific chain for this token
-    const isIbcOrKeplrToken = !isNamadaAddress(localSourceAddress);
+    const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
 
     try {
       if (isIbcOrKeplrToken) {
@@ -226,7 +218,7 @@ export const SelectToken = ({
               [keplr.key]: true,
             }));
             const key = await keplrInstance.getKey(chainId);
-            setLocalSourceAddress(key.bech32Address);
+            setSourceAddress(key.bech32Address);
           } else {
             console.warn(
               "Could not determine target chain for token:",
@@ -251,13 +243,13 @@ export const SelectToken = ({
       }
 
       // Apply the final address to parent and proceed with token selection
-      setSourceAddress(localSourceAddress);
+      setSourceAddress(sourceAddress);
       onSelect?.(token);
       onClose();
     } catch (error) {
       console.error("Error in token selection:", error);
       setIsConnectingKeplr(false);
-      setSourceAddress(localSourceAddress);
+      setSourceAddress(sourceAddress);
       onSelect?.(token);
       onClose();
     }
@@ -275,7 +267,7 @@ export const SelectToken = ({
               <h5 className="text-neutral-500 text-sm mb-0">Your account</h5>
               <div className="mb-4">
                 <AddressDropdown
-                  selectedAddress={localSourceAddress}
+                  selectedAddress={sourceAddress}
                   onSelectAddress={handleAddressChange}
                   showAddress={true}
                 />
@@ -371,8 +363,7 @@ export const SelectToken = ({
                   <Stack as="ul" gap={2} className="pb-15">
                     {filteredTokens.length > 0 ?
                       filteredTokens.map((token) => {
-                        const isKeplrAddress =
-                          !isNamadaAddress(localSourceAddress);
+                        const isKeplrAddress = !isNamadaAddress(sourceAddress);
 
                         // For Keplr addresses, only show amounts if we have balance data and it's > 0
                         // For Namada addresses, show amounts if > 0
