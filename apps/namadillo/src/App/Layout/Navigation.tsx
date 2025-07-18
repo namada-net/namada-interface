@@ -66,8 +66,7 @@ export const Navigation = (): JSX.Element => {
         {menuItems.map((item) => {
           const shieldingRoute = item.label === "Shield";
           const highlightTransferItem =
-            item.url &&
-            location.pathname === item.url &&
+            item.label === "Transfer" &&
             (
               [
                 routes.maspUnshield,
@@ -75,8 +74,7 @@ export const Navigation = (): JSX.Element => {
                 routes.ibcWithdraw,
                 routes.transfer,
               ] as string[]
-            ).includes(item.url);
-
+            ).includes(location.pathname);
           const historyRoute = item.label === "History";
           return (
             <>
