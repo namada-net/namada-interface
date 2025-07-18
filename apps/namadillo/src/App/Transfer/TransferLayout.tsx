@@ -130,7 +130,7 @@ export const TransferLayout: React.FC = () => {
     if (transferType === "ibc-deposit") {
       // IBC Deposit - render IbcTransfer component directly
       return (
-        <Panel className="py-8 rounded-t-none h-full">
+        <Panel className="py-8 rounded-t-none h-full w-full">
           <IbcTransfer
             sourceAddress={sourceAddress}
             setSourceAddress={setSourceAddress}
@@ -142,7 +142,6 @@ export const TransferLayout: React.FC = () => {
     }
 
     if (transferType === "ibc-withdraw") {
-      // IBC Withdraw - render IbcWithdraw component directly
       return (
         <Panel className="py-8 rounded-t-none h-full w-full">
           <IbcWithdraw
@@ -156,7 +155,6 @@ export const TransferLayout: React.FC = () => {
     }
 
     if (transferType === "shield") {
-      // MASP Shield - render MaspShield component directly
       return (
         <div className="flex relative flex-col flex-1">
           <MaspShield
@@ -170,7 +168,6 @@ export const TransferLayout: React.FC = () => {
     }
 
     if (transferType === "unshield") {
-      // MASP Unshield - render MaspUnshield component directly
       return (
         <div className="flex relative flex-col flex-1">
           <MaspUnshield
@@ -183,7 +180,6 @@ export const TransferLayout: React.FC = () => {
       );
     }
 
-    // Default namada transfer - render NamadaTransfer component directly
     return (
       <NamadaTransfer
         sourceAddress={sourceAddress}
