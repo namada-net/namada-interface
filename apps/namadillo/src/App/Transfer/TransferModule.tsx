@@ -13,7 +13,7 @@ import { TransactionFeeProps } from "hooks";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
 import { useUrlState } from "hooks/useUrlState";
 import { useAtomValue } from "jotai";
-import { Dispatch, SetStateAction, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -44,14 +44,14 @@ type TransferModuleProps = {
     onChangeSelectedAsset: (asset: AssetWithAmount | undefined) => void;
     onChangeAmount: (amount: BigNumber | undefined) => void;
     ledgerAccountInfo?: LedgerAccountInfo | undefined;
-    onChangeAddress: Dispatch<SetStateAction<string>>;
+    onChangeAddress: (sourceAddress: string) => void;
   };
   destination: {
     address: string | undefined;
     customAddress?: string;
     isShieldedAddress: boolean;
     memo?: string;
-    onChangeAddress?: Dispatch<SetStateAction<string>>;
+    onChangeAddress?: (sourceAddress: string) => void;
     onChangeMemo?: (memo: string | undefined) => void;
   };
   requiresIbcChannels?: boolean;

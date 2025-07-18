@@ -42,4 +42,4 @@ export const isNamadaAddress = (address: string): boolean => {
 };
 
 export const isIbcAddress = (address: string): boolean =>
-  !isNamadaAddress(address);
+  !!address && !isNamadaAddress(address);
