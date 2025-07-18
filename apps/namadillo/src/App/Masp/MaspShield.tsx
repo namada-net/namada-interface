@@ -1,22 +1,29 @@
 import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
+import { params } from "App/routes";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
+import { namadaTransparentAssetsAtom } from "atoms/balance";
 import { chainParametersAtom } from "atoms/chain/atoms";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
+import { useUrlState } from "hooks/useUrlState";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useEffect, useState } from "react";
 import { AssetWithAmount } from "types";
 
-export const MaspShield: React.FC = () => {
+export const MaspShield = (): JSX.Element => {
+  const [sourceAddress, setSourceAddress] = useUrlState("source");
+  const [destinationAddress, setDestinationAddress] =
+    useUrlState("destination");
+  const [assetAddress] = useUrlState(params.asset);
   const { storeTransaction } = useTransactionActions();
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
@@ -25,6 +32,9 @@ export const MaspShield: React.FC = () => {
   const rpcUrl = useAtomValue(rpcUrlAtom);
   const chainParameters = useAtomValue(chainParametersAtom);
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
+
+  // Get transparent assets since this is shielding (transparent to shielded)
+  const { data: transparentAssets } = useAtomValue(namadaTransparentAssetsAtom);
 
   const transparentAddress = defaultAccounts.data?.find(
     (account) => account.type !== AccountType.ShieldedKeys
@@ -35,10 +45,6 @@ export const MaspShield: React.FC = () => {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-  const [sourceAddress, setSourceAddress] = useState<string>(
-    transparentAddress ?? ""
-  );
-  const [destinationAddress, setDestinationAddress] = useState<string>("");
 
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
@@ -50,6 +56,19 @@ export const MaspShield: React.FC = () => {
       setSourceAddress(transparentAddress);
     }
   }, [transparentAddress, sourceAddress]);
+
+  // Initialize selectedAssetWithAmount from URL parameter when assets are available
+  useEffect(() => {
+    if (!assetAddress || !transparentAssets || selectedAssetWithAmount) return;
+
+    const assetFromUrl = Object.values(transparentAssets).find(
+      (item) => item.asset?.address === assetAddress
+    );
+
+    if (assetFromUrl) {
+      setSelectedAssetWithAmount(assetFromUrl);
+    }
+  }, [assetAddress, transparentAssets, selectedAssetWithAmount]);
 
   const {
     execute: performTransfer,

@@ -1,9 +1,8 @@
 import { Panel } from "@namada/components";
 import { params } from "App/routes";
-import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
+import { isShieldedAddress } from "App/Transfer/common";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
-import { allDefaultAccountsAtom } from "atoms/accounts";
 import { chainParametersAtom } from "atoms/chain/atoms";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
@@ -12,6 +11,7 @@ import { useFathomTracker } from "hooks/useFathomTracker";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
+import { useUrlState } from "hooks/useUrlState";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
@@ -20,7 +20,10 @@ import { useSearchParams } from "react-router-dom";
 import { AssetWithAmount } from "types";
 import { NamadaTransferTopHeader } from "./NamadaTransferTopHeader";
 
-export const NamadaTransfer: React.FC = () => {
+export const NamadaTransfer = (): JSX.Element => {
+  const [sourceAddress, setSourceAddress] = useUrlState("source");
+  const [destinationAddress, setDestinationAddress] =
+    useUrlState("destination");
   const [searchParams, setSearchParams] = useSearchParams();
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const [customAddress, setCustomAddress] = useState<string>("");
@@ -36,22 +39,12 @@ export const NamadaTransfer: React.FC = () => {
     }
     return shieldedParam ? shieldedParam === "1" : true;
   }, [shieldedParam, requiresNewShieldedSync]);
-  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
+
   const chainParameters = useAtomValue(chainParametersAtom);
-  const transparentAddress = accounts?.find((acc) =>
-    isTransparentAddress(acc.address)
-  )?.address;
-  const shieldedAddress = accounts?.find((acc) =>
-    isShieldedAddress(acc.address)
-  )?.address;
 
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
   >();
-
-  const [sourceAddress, setSourceAddress] = useState<string>(
-    shielded ? (shieldedAddress ?? "") : (transparentAddress ?? "")
-  );
 
   const rpcUrl = useAtomValue(rpcUrlAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
@@ -65,7 +58,7 @@ export const NamadaTransfer: React.FC = () => {
   };
 
   const source = sourceAddress ?? "";
-  const target = customAddress ?? "";
+  const target = destinationAddress ?? "";
 
   const {
     execute: performTransfer,
@@ -177,7 +170,9 @@ export const NamadaTransfer: React.FC = () => {
       <header className="flex flex-col items-center text-center mb-8 gap-6">
         <NamadaTransferTopHeader
           isSourceShielded={isSourceShielded}
-          isDestinationShielded={target ? isTargetShielded : undefined}
+          isDestinationShielded={
+            destinationAddress ? isTargetShielded : undefined
+          }
         />
       </header>
       <TransferModule
@@ -192,10 +187,10 @@ export const NamadaTransfer: React.FC = () => {
           ledgerAccountInfo,
         }}
         destination={{
-          customAddress,
-          onChangeAddress: setCustomAddress,
-          address: customAddress,
-          isShieldedAddress: isShieldedAddress(customAddress),
+          customAddress: destinationAddress,
+          onChangeAddress: setDestinationAddress,
+          address: destinationAddress,
+          isShieldedAddress: isShieldedAddress(destinationAddress ?? ""),
         }}
         feeProps={feeProps}
         currentStatus={currentStatus}

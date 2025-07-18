@@ -3,7 +3,7 @@ import { IbcTransferProps } from "@namada/sdk-multicore";
 import { AccountType } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
 import { routes } from "App/routes";
-import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
+import { isShieldedAddress } from "App/Transfer/common";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import {
@@ -31,6 +31,7 @@ import * as osmosis from "chain-registry/mainnet/osmosis";
 import { useFathomTracker } from "hooks/useFathomTracker";
 import { useTransaction } from "hooks/useTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
+import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
@@ -50,12 +51,14 @@ import {
   toDisplayAmount,
   useTransactionEventListener,
 } from "utils";
-import { IbcTabNavigation } from "./IbcTabNavigation";
 import { IbcTopHeader } from "./IbcTopHeader";
 
 const keplr = new KeplrWalletManager();
 
 export const IbcWithdraw = (): JSX.Element => {
+  const [sourceAddress, setSourceAddress] = useUrlState("source");
+  const [destinationAddress, setDestinationAddress] =
+    useUrlState("destination");
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const shieldedAccount = defaultAccounts.data?.find(
     (account) => account.type === AccountType.ShieldedKeys
@@ -79,26 +82,13 @@ export const IbcWithdraw = (): JSX.Element => {
   >();
   const [refundTarget, setRefundTarget] = useState<string>();
   const [amount, setAmount] = useState<BigNumber | undefined>();
-  const [destinationAddress, setDestinationAddress] = useState<string>("");
   const [customAddress, setCustomAddress] = useState<string>("");
   const [sourceChannel, setSourceChannel] = useState("");
   const [destinationChain, setDestinationChain] = useState<Chain | undefined>();
   const { refetch: genDisposableSigner } = useAtomValue(disposableSignerAtom);
   const alias = shieldedAccount?.alias ?? transparentAccount.data?.alias;
 
-  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
-
-  const transparentAddress = accounts?.find((acc) =>
-    isTransparentAddress(acc.address)
-  )?.address;
-  const shieldedAddress = accounts?.find((acc) =>
-    isShieldedAddress(acc.address)
-  )?.address;
-
-  const [sourceAddress, setSourceAddress] = useState<string>(
-    shieldedAddress ?? transparentAddress ?? ""
-  );
-  const shielded = isShieldedAddress(sourceAddress);
+  const shielded = isShieldedAddress(sourceAddress ?? "");
   const { data: availableAssets, isLoading: isLoadingAssets } = useAtomValue(
     shielded ? namadaShieldedAssetsAtom : namadaTransparentAssetsAtom
   );
@@ -373,7 +363,6 @@ export const IbcWithdraw = (): JSX.Element => {
       <header className="flex flex-col items-center text-center mb-8 gap-6">
         <IbcTopHeader type="namToIbc" isShielded={shielded} />
       </header>
-      <div className="mb-6">{!completedAt && <IbcTabNavigation />}</div>
       <TransferModule
         source={{
           address: sourceAddress,

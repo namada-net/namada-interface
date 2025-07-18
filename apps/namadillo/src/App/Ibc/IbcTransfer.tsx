@@ -14,6 +14,7 @@ import BigNumber from "bignumber.js";
 import { useFathomTracker } from "hooks/useFathomTracker";
 import { useIbcTransaction } from "hooks/useIbcTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
+import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
@@ -22,12 +23,14 @@ import { useEffect, useMemo, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
 import { AssetWithAmount } from "types";
 import { useTransactionEventListener } from "utils";
-import { IbcTabNavigation } from "./IbcTabNavigation";
 import { IbcTopHeader } from "./IbcTopHeader";
 
 const keplr = new KeplrWalletManager();
 
 export const IbcTransfer = (): JSX.Element => {
+  const [sourceAddress, setSourceAddress] = useUrlState("source");
+  const [destinationAddress, setDestinationAddress] =
+    useUrlState("destination");
   const navigate = useNavigate();
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [sourceChannel, setSourceChannel] = useState("");
@@ -35,12 +38,7 @@ export const IbcTransfer = (): JSX.Element => {
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
 
   // Wallet & Registry
-  const { registry, walletAddress: keplrSourceAddress } =
-    useWalletManager(keplr);
-  const [sourceAddress, setSourceAddress] = useState<string>(
-    keplrSourceAddress ?? ""
-  );
-  const [destinationAddress, setDestinationAddress] = useState<string>("");
+  const { registry } = useWalletManager(keplr);
 
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
@@ -174,7 +172,6 @@ export const IbcTransfer = (): JSX.Element => {
       <header className="flex flex-col items-center text-center mb-8 gap-6">
         <IbcTopHeader type="ibcToNam" isShielded={shielded} />
       </header>
-      <div className="mb-6">{!completedAt && <IbcTabNavigation />}</div>
       <TransferModule
         source={{
           selectedAssetWithAmount,
