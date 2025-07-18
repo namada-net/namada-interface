@@ -16,6 +16,7 @@ export const CustomAddressForm = ({
           label="Memo"
           value={memo}
           onChange={(e) => onChangeMemo(e.target.value)}
+          className="mt-4"
           placeholder="Insert memo here"
         />
       )}

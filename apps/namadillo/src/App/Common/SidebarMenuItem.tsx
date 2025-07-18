@@ -4,9 +4,14 @@ import { NavLink } from "react-router-dom";
 type Props = {
   url?: string;
   children: React.ReactNode;
+  shouldHighlight?: boolean;
 };
 
-export const SidebarMenuItem = ({ url, children }: Props): JSX.Element => {
+export const SidebarMenuItem = ({
+  url,
+  children,
+  shouldHighlight,
+}: Props): JSX.Element => {
   const className = clsx(
     "flex items-center gap-5 text-lg text-white",
     "transition-colors duration-300 ease-out-quad hover:text-cyan",
@@ -24,7 +29,7 @@ export const SidebarMenuItem = ({ url, children }: Props): JSX.Element => {
       to={url}
       className={({ isActive }) =>
         clsx(className, {
-          "text-yellow font-bold": isActive,
+          "text-yellow font-bold": isActive || shouldHighlight,
         })
       }
     >

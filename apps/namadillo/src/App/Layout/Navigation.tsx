@@ -64,6 +64,17 @@ export const Navigation = (): JSX.Element => {
       <ul className="flex flex-col gap-4">
         {menuItems.map((item) => {
           const shieldingRoute = item.label === "Shield";
+          const highlightTransferItem =
+            item.url &&
+            (
+              [
+                routes.maspUnshield,
+                routes.ibc,
+                routes.ibcWithdraw,
+                routes.transfer,
+              ] as string[]
+            ).includes(item.url);
+
           const historyRoute = item.label === "History";
           return (
             <>
@@ -76,7 +87,10 @@ export const Navigation = (): JSX.Element => {
                     </h5>
                   </>
                 )}
-                <SidebarMenuItem url={item.url}>
+                <SidebarMenuItem
+                  url={item.url}
+                  shouldHighlight={!!highlightTransferItem}
+                >
                   {item.icon}
                   {item.label}
                 </SidebarMenuItem>

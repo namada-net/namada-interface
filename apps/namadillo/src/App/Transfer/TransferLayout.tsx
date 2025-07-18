@@ -22,7 +22,6 @@ import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { isTransparentAddress } from ".";
-import { TransferType } from "./types";
 import { determineTransferType } from "./utils";
 
 export const TransferLayout: React.FC = () => {
@@ -40,24 +39,11 @@ export const TransferLayout: React.FC = () => {
   const { refetch: refetchShieldedBalance } = useAtomValue(shieldedBalanceAtom);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
 
-  // Determine transfer type based on both addresses AND current route
-  const getTransferTypeFromRoute = (pathname: string): TransferType | null => {
-    if (pathname === routes.ibc) return "ibc-deposit";
-    if (pathname === routes.ibcWithdraw) return "ibc-withdraw";
-    if (pathname === routes.maspShield) return "shield";
-    if (pathname === routes.maspUnshield) return "unshield";
-    if (pathname === routes.transfer) return "namada-transfer";
-    return null;
-  };
-
-  const routeBasedTransferType = getTransferTypeFromRoute(location.pathname);
-  const addressBasedTransferType = determineTransferType({
+  const transferType = determineTransferType({
     sourceAddress,
     destinationAddress,
   });
-
-  // Use route-based type if available, otherwise fall back to address-based determination
-  const transferType = routeBasedTransferType || addressBasedTransferType;
+  console.log(sourceAddress, destinationAddress, "ay");
 
   const transparentAddress =
     accounts?.find((acc) => isTransparentAddress(acc.address))?.address ?? "";
@@ -71,28 +57,10 @@ export const TransferLayout: React.FC = () => {
 
   // Only navigate if the addresses suggest a different transfer type than the current route
   useEffect(() => {
-    // Don't auto-navigate if we're already on a route that explicitly handles a transfer type
-    if (routeBasedTransferType) {
-      // Only set default source address for namada transfers if none exists
-      if (
-        transferType === "namada-transfer" &&
-        !sourceAddress &&
-        transparentAddress
-      ) {
-        const searchParams = new URLSearchParams(location.search);
-        searchParams.set("source", transparentAddress);
-        navigate(`${location.pathname}?${searchParams.toString()}`, {
-          replace: true,
-        });
-      }
-      return;
-    }
-
-    // Only navigate based on address-based transfer type if we're not on a specific route
     const currentPath = location.pathname;
     let targetRoute = "";
 
-    switch (addressBasedTransferType) {
+    switch (transferType) {
       case "ibc-deposit":
         targetRoute = routes.ibc;
         break;
@@ -116,8 +84,7 @@ export const TransferLayout: React.FC = () => {
       });
     }
   }, [
-    addressBasedTransferType,
-    routeBasedTransferType,
+    transferType,
     sourceAddress,
     destinationAddress,
     navigate,
@@ -161,7 +128,7 @@ export const TransferLayout: React.FC = () => {
     if (transferType === "ibc-withdraw") {
       // IBC Withdraw - render IbcWithdraw component directly
       return (
-        <Panel className="py-8 rounded-t-none h-full">
+        <Panel className="py-8 rounded-t-none h-full w-full">
           <IbcWithdraw
             sourceAddress={sourceAddress}
             setSourceAddress={setSourceAddress}
