@@ -9,11 +9,12 @@ import { FaBug } from "react-icons/fa6";
 import { GoHistory, GoStack } from "react-icons/go";
 import { IoSwapHorizontal } from "react-icons/io5";
 import { TbVectorTriangle } from "react-icons/tb";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { DISCORD_URL, TWITTER_URL } from "urls";
 
 export const Navigation = (): JSX.Element => {
   const features = useAtomValue(applicationFeaturesAtom);
+  const location = useLocation();
 
   const menuItems: { label: string; icon: React.ReactNode; url?: string }[] = [
     {
@@ -66,6 +67,7 @@ export const Navigation = (): JSX.Element => {
           const shieldingRoute = item.label === "Shield";
           const highlightTransferItem =
             item.url &&
+            location.pathname === item.url &&
             (
               [
                 routes.maspUnshield,

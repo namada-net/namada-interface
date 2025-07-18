@@ -48,6 +48,13 @@ export const TransferLayout: React.FC = () => {
   const transparentAddress =
     accounts?.find((acc) => isTransparentAddress(acc.address))?.address ?? "";
 
+  // Initialize source address
+  useEffect(() => {
+    if (!sourceAddress && transparentAddress) {
+      setSourceAddress(transparentAddress);
+    }
+  }, [location.pathname, sourceAddress, transparentAddress, setSourceAddress]);
+
   // Refetch shielded balance for MASP operations
   useEffect(() => {
     if (transferType === "shield" || transferType === "unshield") {
@@ -77,7 +84,16 @@ export const TransferLayout: React.FC = () => {
         targetRoute = routes.transfer;
     }
 
-    if (currentPath !== targetRoute) {
+    // Don't redirect if user is already on a shield/unshield route and transferType is default
+    // This prevents sidebar navigation from being overridden
+    const isOnShieldRoute =
+      currentPath === routes.maspShield || currentPath === routes.maspUnshield;
+    const isDefaultTransferType = transferType === "namada-transfer";
+
+    if (
+      currentPath !== targetRoute &&
+      !(isOnShieldRoute && isDefaultTransferType)
+    ) {
       const searchParams = new URLSearchParams(location.search);
       navigate(`${targetRoute}?${searchParams.toString()}`, {
         replace: true,
