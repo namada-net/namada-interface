@@ -169,6 +169,8 @@ export const SelectToken = ({
     // Check if current address is Keplr and if we need to connect to specific chain for this token
     const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
 
+    let shouldProceedWithSelection = true;
+
     try {
       if (isIbcOrKeplrToken) {
         setIsConnectingKeplr(true);
@@ -178,7 +180,8 @@ export const SelectToken = ({
           // Keplr is not installed, redirect to download page
           if (!keplrInstance) {
             keplr.install();
-            return;
+            setIsConnectingKeplr(false);
+            return; // Don't proceed with token selection if Keplr needs to be installed
           }
 
           let targetChainRegistry = null;
@@ -218,9 +221,9 @@ export const SelectToken = ({
               "Network:",
               assetToNetworkMap[token.asset.address || ""]
             );
-            // Don't connect if we can't determine the target chain
+            // Don't proceed with token selection if we can't determine the target chain
             setIsConnectingKeplr(false);
-            return;
+            shouldProceedWithSelection = false;
           }
         } catch (error) {
           console.error(
@@ -228,21 +231,23 @@ export const SelectToken = ({
             token.asset.symbol,
             error
           );
-          // Continue with token selection even if Keplr connection fails
+          // Don't proceed with token selection if Keplr connection fails
+          setIsConnectingKeplr(false);
+          shouldProceedWithSelection = false;
         } finally {
           setIsConnectingKeplr(false);
         }
       }
 
-      // Proceed with token selection
-      onSelect?.(token);
-      onClose();
+      // Only proceed with token selection if connection was successful or if it's a Namada token
+      if (shouldProceedWithSelection) {
+        onSelect?.(token);
+        onClose();
+      }
     } catch (error) {
       console.error("Error in token selection:", error);
       setIsConnectingKeplr(false);
-      // Still allow token selection to proceed
-      onSelect?.(token);
-      onClose();
+      // Don't close modal on unexpected errors to allow user to try again
     }
   };
 
@@ -432,7 +437,15 @@ export const SelectToken = ({
                           </li>
                         );
                       })
-                    : <p className="text-neutral-400">No tokens found</p>}
+                    : <p className="text-neutral-400">
+                        {(
+                          !isNamadaAddress(sourceAddress) &&
+                          !connectedWallets.keplr
+                        ) ?
+                          "Select a token to connect to Keplr and view available assets"
+                        : "No tokens found"}
+                      </p>
+                    }
                   </Stack>
                 </div>
               </div>

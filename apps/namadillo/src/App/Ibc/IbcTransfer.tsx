@@ -35,55 +35,48 @@ export const IbcTransfer = ({
   destinationAddress,
   setDestinationAddress,
 }: IbcTransferProps): JSX.Element => {
-  const navigate = useNavigate();
+  //  COMPONENT STATE
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [sourceChannel, setSourceChannel] = useState("");
   const [destinationChannel, setDestinationChannel] = useState("");
-  const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
-
-  // Wallet & Registry
-  const { registry } = useWalletManager(keplr);
-
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
   >();
-  // IBC Channels & Balances
+  const [amount, setAmount] = useState<BigNumber | undefined>();
+  const [txHash, setTxHash] = useState<string | undefined>();
+  //  ERROR & STATUS STATE
+  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
+  const [currentStatus, setCurrentStatus] = useState<string>();
+  //  GLOBAL STATE
+  const navigate = useNavigate();
+  const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
+  const { registry } = useWalletManager(keplr);
   const {
     data: ibcChannels,
     isError: unknownIbcChannels,
     isLoading: isLoadingIbcChannels,
   } = useAtomValue(ibcChannelsFamily(registry?.chain.chain_name));
-
   const { data: userAssets, isLoading: isLoadingBalances } = useAtomValue(
     assetBalanceAtomFamily({
       chain: registry?.chain,
       walletAddress: sourceAddress,
     })
   );
-  const shielded = isShieldedAddress(destinationAddress ?? "");
   const { trackEvent } = useFathomTracker();
-  const [amount, setAmount] = useState<BigNumber | undefined>();
-  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
-  const [currentStatus, setCurrentStatus] = useState<string>();
-  const [txHash, setTxHash] = useState<string | undefined>();
-
-  const availableDisplayAmount = mapUndefined((baseDenom) => {
-    return userAssets ? userAssets[baseDenom]?.amount : undefined;
-  }, selectedAssetWithAmount?.asset?.address);
-
-  // Manage the history of transactions
   const { storeTransaction } = useTransactionActions();
-
-  // Utils for IBC transfers
   const { transferToNamada, gasConfig } = useIbcTransaction({
     registry,
     sourceAddress,
     sourceChannel,
     destinationChannel,
-    shielded,
+    shielded: isShieldedAddress(destinationAddress ?? ""),
     selectedAsset: selectedAssetWithAmount?.asset,
   });
-
+  // DERIVED VALUES
+  const shielded = isShieldedAddress(destinationAddress ?? "");
+  const availableDisplayAmount = mapUndefined((baseDenom) => {
+    return userAssets ? userAssets[baseDenom]?.amount : undefined;
+  }, selectedAssetWithAmount?.asset?.address);
   const namadaAddress = useMemo(() => {
     return (
       defaultAccounts.data?.find(
@@ -91,7 +84,11 @@ export const IbcTransfer = ({
       )?.address || ""
     );
   }, [defaultAccounts, shielded]);
-
+  const requiresIbcChannels = Boolean(
+    !isLoadingIbcChannels &&
+      (unknownIbcChannels ||
+        (shielded && ibcChannels && !ibcChannels?.namadaChannel))
+  );
   // const selectedAsset =
   //   selectedAssetBase ? userAssets?.[selectedAssetBase]?.asset : undefined;
 
@@ -116,13 +113,6 @@ export const IbcTransfer = ({
 
   //   return output;
   // }, [Object.keys(userAssets || {}).join(""), registry?.chain.chain_name]);
-  const requiresIbcChannels = Boolean(
-    !isLoadingIbcChannels &&
-      (unknownIbcChannels ||
-        (shielded && ibcChannels && !ibcChannels?.namadaChannel))
-  );
-
-  // useEffect(() => setSelectedAssetBase(undefined), [registry]);
 
   // Set source and destination channels based on IBC channels data
   useEffect(() => {
