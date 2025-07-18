@@ -67,10 +67,23 @@ export const IbcWithdraw = ({
   destinationAddress,
   setDestinationAddress,
 }: IbcWithdrawProps): JSX.Element => {
+  //  COMPONENT STATE
+  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
+    AssetWithAmount | undefined
+  >();
+  const [refundTarget, setRefundTarget] = useState<string>();
+  const [amount, setAmount] = useState<BigNumber | undefined>();
+  const [customAddress, setCustomAddress] = useState<string>("");
+  const [sourceChannel, setSourceChannel] = useState("");
+  const [destinationChain, setDestinationChain] = useState<Chain | undefined>();
+  const [completedAt, setCompletedAt] = useState<Date | undefined>();
+  const [txHash, setTxHash] = useState<string | undefined>();
+  //  ERROR & STATUS STATE
+  const [currentStatus, setCurrentStatus] = useState("");
+  const [statusExplanation, setStatusExplanation] = useState("");
+  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
+  //  GLOBAL STATE
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
-  const shieldedAccount = defaultAccounts.data?.find(
-    (account) => account.type === AccountType.ShieldedKeys
-  );
   const {
     walletAddress: keplrAddress,
     connectToChainId,
@@ -80,41 +93,27 @@ export const IbcWithdraw = ({
   const transparentAccount = useAtomValue(defaultAccountAtom);
   const namadaChain = useAtomValue(chainAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [statusExplanation, setStatusExplanation] = useState("");
-  const [completedAt, setCompletedAt] = useState<Date | undefined>();
-  const [txHash, setTxHash] = useState<string | undefined>();
-  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
-  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmount | undefined
-  >();
-  const [refundTarget, setRefundTarget] = useState<string>();
-  const [amount, setAmount] = useState<BigNumber | undefined>();
-  const [customAddress, setCustomAddress] = useState<string>("");
-  const [sourceChannel, setSourceChannel] = useState("");
-  const [destinationChain, setDestinationChain] = useState<Chain | undefined>();
   const { refetch: genDisposableSigner } = useAtomValue(disposableSignerAtom);
+  const { storeTransaction } = useTransactionActions();
+  const { trackEvent } = useFathomTracker();
+  const navigate = useNavigate();
+  // DERIVED VALUES
+  const shieldedAccount = defaultAccounts.data?.find(
+    (account) => account.type === AccountType.ShieldedKeys
+  );
   const alias = shieldedAccount?.alias ?? transparentAccount.data?.alias;
-
   const shielded = isShieldedAddress(sourceAddress ?? "");
   const { data: availableAssets, isLoading: isLoadingAssets } = useAtomValue(
     shielded ? namadaShieldedAssetsAtom : namadaTransparentAssetsAtom
   );
-
-  const { storeTransaction } = useTransactionActions();
-  const { trackEvent } = useFathomTracker();
-  const navigate = useNavigate();
-
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-
   const availableAmount = mapUndefined(
     (address) => availableAssets?.[address]?.amount,
     selectedAssetWithAmount?.asset.address
   );
-
   const selectedAsset =
     selectedAssetWithAmount?.asset.address ?
       availableAssets?.[selectedAssetWithAmount?.asset.address]
