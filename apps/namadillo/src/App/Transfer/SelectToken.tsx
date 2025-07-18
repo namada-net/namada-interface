@@ -19,7 +19,7 @@ import BigNumber from "bignumber.js";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtom, useAtomValue } from "jotai";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { AssetWithAmount } from "types";
 import { AddressDropdown } from "./AddressDropdown";
@@ -40,8 +40,21 @@ export const SelectToken = ({
   onClose,
   onSelect,
 }: SelectTokenProps): JSX.Element | null => {
+  // Local state for address selection within the modal
+  const [localSourceAddress, setLocalSourceAddress] = useState(sourceAddress);
+  const [filter, setFilter] = useState("");
+  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
+  const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
+
+  // Update local address when modal opens or sourceAddress prop changes
+  useEffect(() => {
+    if (isOpen) {
+      setLocalSourceAddress(sourceAddress);
+    }
+  }, [isOpen, sourceAddress]);
+
   const { data: availableAssets } = useAtomValue(
-    isShieldedAddress(sourceAddress) ?
+    isShieldedAddress(localSourceAddress) ?
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
@@ -50,9 +63,6 @@ export const SelectToken = ({
   const chainAssetsMap = Object.values(chainAssets.data ?? {});
   const ibcChains = useMemo(getAvailableChains, []);
   const allChains = [...ibcChains, namadaChain as unknown as Chain];
-  const [filter, setFilter] = useState("");
-  const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
-  const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
 
   // Create KeplrWalletManager instance and use with useWalletManager hook
   const keplr = new KeplrWalletManager();
@@ -81,7 +91,7 @@ export const SelectToken = ({
   const tokens = useMemo(() => {
     const result: AssetWithAmount[] = [];
     // Check if current address is a Keplr address (not shielded or transparent Namada)
-    const isKeplrAddress = !isNamadaAddress(sourceAddress);
+    const isKeplrAddress = !isNamadaAddress(localSourceAddress);
 
     if (isKeplrAddress) {
       // For Keplr addresses, show all available chain assets with balance data from allKeplrBalances
@@ -123,7 +133,7 @@ export const SelectToken = ({
 
     return result;
   }, [
-    sourceAddress,
+    localSourceAddress,
     availableAssets,
     chainAssetsMap,
     connectedWallets.keplr,
@@ -161,13 +171,19 @@ export const SelectToken = ({
   };
 
   const handleAddressChange = (address: string): void => {
-    setSourceAddress(address); // Reset network filter when address changes
-    setSelectedNetwork(null);
+    setLocalSourceAddress(address); // Only update local state
+    setSelectedNetwork(null); // Reset network filter when address changes
+  };
+
+  const handleClose = (): void => {
+    // Apply the local address to parent when closing
+    setSourceAddress(localSourceAddress);
+    onClose();
   };
 
   const handleTokenSelect = async (token: AssetWithAmount): Promise<void> => {
     // Check if current address is Keplr and if we need to connect to specific chain for this token
-    const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
+    const isIbcOrKeplrToken = !isNamadaAddress(localSourceAddress);
 
     try {
       if (isIbcOrKeplrToken) {
@@ -210,7 +226,7 @@ export const SelectToken = ({
               [keplr.key]: true,
             }));
             const key = await keplrInstance.getKey(chainId);
-            setSourceAddress(key.bech32Address);
+            setLocalSourceAddress(key.bech32Address);
           } else {
             console.warn(
               "Could not determine target chain for token:",
@@ -234,23 +250,24 @@ export const SelectToken = ({
         }
       }
 
-      // Proceed with token selection
+      // Apply the final address to parent and proceed with token selection
+      setSourceAddress(localSourceAddress);
       onSelect?.(token);
       onClose();
     } catch (error) {
       console.error("Error in token selection:", error);
       setIsConnectingKeplr(false);
-      // Still allow token selection to proceed
+      setSourceAddress(localSourceAddress);
       onSelect?.(token);
       onClose();
     }
   };
-
+  console.log(isOpen, "isOpen");
   if (!isOpen) return null;
 
   return (
     <>
-      <Modal onClose={onClose} className="py-20">
+      <Modal onClose={handleClose} className="py-20">
         <ModalTransition>
           <div className="flex rounded-xl border border-neutral-700 overflow-hidden h-[500px]">
             {/* Left panel */}
@@ -258,7 +275,7 @@ export const SelectToken = ({
               <h5 className="text-neutral-500 text-sm mb-0">Your account</h5>
               <div className="mb-4">
                 <AddressDropdown
-                  selectedAddress={sourceAddress}
+                  selectedAddress={localSourceAddress}
                   onSelectAddress={handleAddressChange}
                   showAddress={true}
                 />
@@ -335,7 +352,7 @@ export const SelectToken = ({
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-white text-xl font-medium">Select Token</h2>
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="text-white hover:text-yellow"
                 >
                   <IoClose size={24} />
@@ -354,7 +371,8 @@ export const SelectToken = ({
                   <Stack as="ul" gap={2} className="pb-15">
                     {filteredTokens.length > 0 ?
                       filteredTokens.map((token) => {
-                        const isKeplrAddress = !isNamadaAddress(sourceAddress);
+                        const isKeplrAddress =
+                          !isNamadaAddress(localSourceAddress);
 
                         // For Keplr addresses, only show amounts if we have balance data and it's > 0
                         // For Namada addresses, show amounts if > 0
