@@ -32,6 +32,7 @@ export const NamadaTransfer = (): JSX.Element => {
   const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
   const shieldedParam = searchParams.get(params.shielded);
   const requiresNewShieldedSync = useRequiresNewShieldedSync();
+  const [memo, setMemo] = useState<string>("");
 
   const shielded = useMemo(() => {
     if (requiresNewShieldedSync) {
@@ -191,6 +192,8 @@ export const NamadaTransfer = (): JSX.Element => {
           onChangeAddress: setDestinationAddress,
           address: destinationAddress,
           isShieldedAddress: isShieldedAddress(destinationAddress ?? ""),
+          memo,
+          onChangeMemo: setMemo,
         }}
         feeProps={feeProps}
         currentStatus={currentStatus}

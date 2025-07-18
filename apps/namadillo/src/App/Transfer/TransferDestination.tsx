@@ -37,7 +37,6 @@ type TransferDestinationProps = {
   feeProps?: TransactionFeeProps;
   destinationAsset?: Asset;
   amount?: BigNumber;
-  customAddress?: string;
   address?: string;
   sourceAddress?: string;
   memo?: string;
@@ -55,7 +54,6 @@ export const TransferDestination = ({
   feeProps,
   destinationAsset,
   amount,
-  customAddress,
   address,
   sourceAddress,
   memo,
@@ -114,6 +112,12 @@ export const TransferDestination = ({
     }
   }, [isShieldingTransaction, shieldedAccount?.address]);
 
+  // Write a customAddress variable that checks if the address doesn't come from our transparent or shielded accounts
+  const customAddress =
+    [shieldedAccount?.address, transparentAccount?.address].includes(address) ?
+      undefined
+    : address;
+
   return (
     <>
       <div
@@ -142,63 +146,61 @@ export const TransferDestination = ({
               )}
             </div>
 
-            {!customAddress && (
-              <div className="mt-3">
-                <button
-                  disabled={isShieldingTransaction || isSubmitting}
-                  onClick={handleOpenModal}
-                  className={clsx(
-                    "flex justify-between items-center bg-neutral-900 p-2 rounded-sm w-full",
-                    {
-                      "hover:bg-neutral-700 transition-colors":
-                        !isShieldingTransaction,
-                    }
-                  )}
-                >
-                  <div className="flex">
-                    {address && (
-                      <img
-                        src={
-                          isShieldedAddress ? namadaShieldedIcon
-                          : isTransparentAddress(address) ?
-                            namadaTransparentIcon
-                          : getChainImageUrl(getChainFromAddress(address ?? ""))
-                        }
-                        alt={getChainFromAddress(address ?? "")?.pretty_name}
-                        className="w-7"
-                      />
-                    )}
-                    <div className="flex flex-col ml-4">
-                      {address ?
-                        <div className="flex flex-col">
-                          <span className="text-neutral-500 text-left font-normal text-xs">
-                            {isIbcAddress(address) ? "Keplr" : alias}
-                          </span>
-                          <span className="text-white text-sm font-normal">
-                            {shortenAddress(address, 15, 15)}
-                          </span>
-                        </div>
-                      : <span className="text-neutral-500 font-normal">
-                          Select address
-                        </span>
-                      }
-                    </div>
-                  </div>
-                  {!address ?
-                    <>
-                      <ConnectProviderButton onClick={handleOpenModal} />
-                    </>
-                  : !isShieldingTransaction && (
-                      <GoChevronDown
-                        className={clsx(
-                          "mr-3 transition-transform text-neutral-400 text-xs"
-                        )}
-                      />
-                    )
+            <div className="mt-3">
+              <button
+                disabled={isShieldingTransaction || isSubmitting}
+                onClick={handleOpenModal}
+                className={clsx(
+                  "flex justify-between items-center bg-neutral-900 p-2 rounded-sm w-full",
+                  {
+                    "hover:bg-neutral-700 transition-colors":
+                      !isShieldingTransaction,
                   }
-                </button>
-              </div>
-            )}
+                )}
+              >
+                <div className="flex">
+                  {address && (
+                    <img
+                      src={
+                        isShieldedAddress ? namadaShieldedIcon
+                        : isTransparentAddress(address) ?
+                          namadaTransparentIcon
+                        : getChainImageUrl(getChainFromAddress(address ?? ""))
+                      }
+                      alt={getChainFromAddress(address ?? "")?.pretty_name}
+                      className="w-7"
+                    />
+                  )}
+                  <div className="flex flex-col ml-4">
+                    {address ?
+                      <div className="flex flex-col">
+                        <span className="text-neutral-500 text-left font-normal text-xs">
+                          {isIbcAddress(address) ? "Keplr" : alias}
+                        </span>
+                        <span className="text-white text-sm font-normal">
+                          {shortenAddress(address, 15, 15)}
+                        </span>
+                      </div>
+                    : <span className="text-neutral-500 font-normal">
+                        Select address
+                      </span>
+                    }
+                  </div>
+                </div>
+                {!address ?
+                  <>
+                    <ConnectProviderButton onClick={handleOpenModal} />
+                  </>
+                : !isShieldingTransaction && (
+                    <GoChevronDown
+                      className={clsx(
+                        "mr-3 transition-transform text-neutral-400 text-xs"
+                      )}
+                    />
+                  )
+                }
+              </button>
+            </div>
 
             {customAddress && (
               <Stack gap={8}>

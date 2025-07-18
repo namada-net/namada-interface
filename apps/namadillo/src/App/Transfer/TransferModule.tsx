@@ -13,7 +13,7 @@ import { TransactionFeeProps } from "hooks";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
 import { useUrlState } from "hooks/useUrlState";
 import { useAtomValue } from "jotai";
-import { useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -52,7 +52,7 @@ type TransferModuleProps = {
     isShieldedAddress: boolean;
     memo?: string;
     onChangeAddress?: (sourceAddress: string) => void;
-    onChangeMemo?: (memo: string | undefined) => void;
+    onChangeMemo?: Dispatch<SetStateAction<string>>;
   };
   requiresIbcChannels?: boolean;
   feeProps?: TransactionFeeProps;
@@ -249,7 +249,6 @@ export const TransferModule = ({
             setDestinationAddress={destination.onChangeAddress}
             isShieldedAddress={isShieldedAddress(destination.address ?? "")}
             isShieldedTx={isShieldedTx}
-            customAddress={destination.customAddress}
             address={destination.address}
             sourceAddress={source.address}
             onChangeAddress={destination.onChangeAddress}
