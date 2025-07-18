@@ -31,7 +31,6 @@ import * as osmosis from "chain-registry/mainnet/osmosis";
 import { useFathomTracker } from "hooks/useFathomTracker";
 import { useTransaction } from "hooks/useTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
-import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
@@ -55,10 +54,19 @@ import { IbcTopHeader } from "./IbcTopHeader";
 
 const keplr = new KeplrWalletManager();
 
-export const IbcWithdraw = (): JSX.Element => {
-  const [sourceAddress, setSourceAddress] = useUrlState("source");
-  const [destinationAddress, setDestinationAddress] =
-    useUrlState("destination");
+interface IbcWithdrawProps {
+  sourceAddress: string | undefined;
+  setSourceAddress: (address: string | undefined) => void;
+  destinationAddress: string | undefined;
+  setDestinationAddress: (address: string | undefined) => void;
+}
+
+export const IbcWithdraw = ({
+  sourceAddress,
+  setSourceAddress,
+  destinationAddress,
+  setDestinationAddress,
+}: IbcWithdrawProps): JSX.Element => {
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const shieldedAccount = defaultAccounts.data?.find(
     (account) => account.type === AccountType.ShieldedKeys

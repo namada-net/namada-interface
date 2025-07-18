@@ -14,7 +14,6 @@ import BigNumber from "bignumber.js";
 import { useFathomTracker } from "hooks/useFathomTracker";
 import { useIbcTransaction } from "hooks/useIbcTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
-import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
@@ -27,10 +26,19 @@ import { IbcTopHeader } from "./IbcTopHeader";
 
 const keplr = new KeplrWalletManager();
 
-export const IbcTransfer = (): JSX.Element => {
-  const [sourceAddress, setSourceAddress] = useUrlState("source");
-  const [destinationAddress, setDestinationAddress] =
-    useUrlState("destination");
+interface IbcTransferProps {
+  sourceAddress: string | undefined;
+  setSourceAddress: (address: string | undefined) => void;
+  destinationAddress: string | undefined;
+  setDestinationAddress: (address: string | undefined) => void;
+}
+
+export const IbcTransfer = ({
+  sourceAddress,
+  setSourceAddress,
+  destinationAddress,
+  setDestinationAddress,
+}: IbcTransferProps): JSX.Element => {
   const navigate = useNavigate();
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [sourceChannel, setSourceChannel] = useState("");
