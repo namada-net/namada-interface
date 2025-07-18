@@ -1,10 +1,8 @@
 import { Panel } from "@namada/components";
-import { AccountType } from "@namada/types";
 import { MaspSyncCover } from "App/Common/MaspSyncCover";
 import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
-import { allDefaultAccountsAtom } from "atoms/accounts";
 import { lastCompletedShieldedSyncAtom } from "atoms/balance/atoms";
 import { ledgerStatusDataAtom } from "atoms/ledger/atoms";
 import { rpcUrlAtom } from "atoms/settings";
@@ -12,35 +10,24 @@ import BigNumber from "bignumber.js";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
+import { useUrlState } from "hooks/useUrlState";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useState } from "react";
 import { AssetWithAmount } from "types";
 
-export const MaspUnshield: React.FC = () => {
+export const MaspUnshield = (): JSX.Element => {
+  const [sourceAddress, setSourceAddress] = useUrlState("source");
+  const [destinationAddress, setDestinationAddress] =
+    useUrlState("destination");
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
   const requiresNewSync = useRequiresNewShieldedSync();
-
   const rpcUrl = useAtomValue(rpcUrlAtom);
-  const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
-
-  const shieldedAddress = defaultAccounts.data?.find(
-    (account) => account.type === AccountType.ShieldedKeys
-  )?.address;
-  const transparentAddress = defaultAccounts.data?.find(
-    (account) => account.type !== AccountType.ShieldedKeys
-  )?.address;
-  const [sourceAddress, setSourceAddress] = useState<string | undefined>(
-    shieldedAddress
-  );
-  const [destinationAddress, setDestinationAddress] = useState<
-    string | undefined
-  >(transparentAddress);
 
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
