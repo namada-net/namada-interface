@@ -32,32 +32,32 @@ export const MaspShield = ({
   destinationAddress,
   setDestinationAddress,
 }: MaspShieldProps): JSX.Element => {
+  //  URL STATE
   const [assetAddress] = useUrlState(params.asset);
-  const { storeTransaction } = useTransactionActions();
+  //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
+  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
+    AssetWithAmount | undefined
+  >();
+  //  ERROR & STATUS STATE
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
+  //  GLOBAL STATE
+  const { storeTransaction } = useTransactionActions();
   const rpcUrl = useAtomValue(rpcUrlAtom);
   const chainParameters = useAtomValue(chainParametersAtom);
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
-
-  // Get transparent assets since this is shielding (transparent to shielded)
   const { data: transparentAssets } = useAtomValue(namadaTransparentAssetsAtom);
-
+  const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
+  // DERIVED VALUES
   const transparentAddress = defaultAccounts.data?.find(
     (account) => account.type !== AccountType.ShieldedKeys
   )?.address;
-
-  const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-
-  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmount | undefined
-  >();
 
   useEffect(() => {
     if (sourceAddress) return;

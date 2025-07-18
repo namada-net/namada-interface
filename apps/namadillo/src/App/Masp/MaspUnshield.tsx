@@ -29,26 +29,26 @@ export const MaspUnshield = ({
   destinationAddress,
   setDestinationAddress,
 }: MaspUnshieldProps): JSX.Element => {
+  //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
-  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
-  const [currentStatus, setCurrentStatus] = useState("");
-  const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
-  const requiresNewSync = useRequiresNewShieldedSync();
-  const rpcUrl = useAtomValue(rpcUrlAtom);
-  const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
-
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
   >();
-
+  //  ERROR & STATUS STATE
+  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
+  const [currentStatus, setCurrentStatus] = useState("");
+  const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
+  //  GLOBAL STATE
+  const requiresNewSync = useRequiresNewShieldedSync();
+  const rpcUrl = useAtomValue(rpcUrlAtom);
+  const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
   const { storeTransaction } = useTransactionActions();
-
+  const lastSync = useAtomValue(lastCompletedShieldedSyncAtom);
+  // DERIVED VALUES
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-
-  const lastSync = useAtomValue(lastCompletedShieldedSyncAtom);
 
   const {
     execute: performTransfer,

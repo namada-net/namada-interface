@@ -32,42 +32,38 @@ export const NamadaTransfer = ({
   destinationAddress,
   setDestinationAddress,
 }: NamadaTransferProps): JSX.Element => {
+  //  URL STATE
   const [searchParams, setSearchParams] = useSearchParams();
+  const shieldedParam = searchParams.get(params.shielded);
+  //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const [customAddress, setCustomAddress] = useState<string>("");
+  const [memo, setMemo] = useState<string>("");
+  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
+    AssetWithAmount | undefined
+  >();
+  //  ERROR & STATUS STATE
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
-  const shieldedParam = searchParams.get(params.shielded);
+  //  GLOBAL STATE
   const requiresNewShieldedSync = useRequiresNewShieldedSync();
-  const [memo, setMemo] = useState<string>("");
-
+  const chainParameters = useAtomValue(chainParametersAtom);
+  const rpcUrl = useAtomValue(rpcUrlAtom);
+  const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
+  const { trackEvent } = useFathomTracker();
+  const { storeTransaction } = useTransactionActions();
+  // DERIVED VALUES
   const shielded = useMemo(() => {
     if (requiresNewShieldedSync) {
       return false;
     }
     return shieldedParam ? shieldedParam === "1" : true;
   }, [shieldedParam, requiresNewShieldedSync]);
-
-  const chainParameters = useAtomValue(chainParametersAtom);
-
-  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmount | undefined
-  >();
-
-  const rpcUrl = useAtomValue(rpcUrlAtom);
-  const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
-  const { trackEvent } = useFathomTracker();
-
-  const { storeTransaction } = useTransactionActions();
-
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-
-  const source = sourceAddress ?? "";
-  const target = destinationAddress ?? "";
 
   const {
     execute: performTransfer,
@@ -78,8 +74,8 @@ export const NamadaTransfer = ({
     completedAt,
     redirectToTransactionPage,
   } = useTransfer({
-    source,
-    target,
+    source: sourceAddress ?? "",
+    target: destinationAddress ?? "",
     token: selectedAssetWithAmount?.asset.address ?? "",
     displayAmount: displayAmount ?? new BigNumber(0),
     onBeforeBuildTx: () => {
@@ -107,8 +103,8 @@ export const NamadaTransfer = ({
     asset: selectedAssetWithAmount?.asset,
   });
 
-  const isSourceShielded = isShieldedAddress(source);
-  const isTargetShielded = isShieldedAddress(target);
+  const isSourceShielded = isShieldedAddress(sourceAddress ?? "");
+  const isTargetShielded = isShieldedAddress(destinationAddress ?? "");
 
   // TODO: Add this back in when we have a way to change the shielded param
   // const onChangeShielded = (isShielded: boolean): void => {
