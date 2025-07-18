@@ -18,7 +18,7 @@ export const TransferSwitcher = (): JSX.Element => {
     sourceAddress,
     destinationAddress,
   });
-
+  console.log("transferType", transferType);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const transparentAddress =
     accounts?.find((acc) => isTransparentAddress(acc.address))?.address ?? "";

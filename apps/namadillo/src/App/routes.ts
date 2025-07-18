@@ -21,7 +21,6 @@ export const routes = {
   // Masp
   maspShield: "/masp/shield",
   maspUnshield: "/masp/unshield",
-  unshield: "/unshield",
   shieldAssets: "/shield-assets",
 
   // Ibc
