@@ -6,10 +6,49 @@ import { Dispatch, SetStateAction } from "react";
 import {
   Address,
   Asset,
+  AssetWithAmount,
   ChainRegistryEntry,
+  GasConfig,
   LedgerAccountInfo,
   WalletProvider,
 } from "types";
+
+export type TransferModuleProps = {
+  source: {
+    address: string | undefined;
+    availableAmount: BigNumber | undefined;
+    amount: BigNumber | undefined;
+    selectedAssetWithAmount: AssetWithAmount | undefined;
+    onChangeSelectedAsset: (asset: AssetWithAmount | undefined) => void;
+    onChangeAmount: (amount: BigNumber | undefined) => void;
+    ledgerAccountInfo?: LedgerAccountInfo | undefined;
+    onChangeAddress: (sourceAddress: string) => void;
+  };
+  destination: {
+    address: string | undefined;
+    customAddress?: string;
+    isShieldedAddress: boolean;
+    memo?: string;
+    onChangeAddress?: (sourceAddress: string) => void;
+    onChangeMemo?: Dispatch<SetStateAction<string>>;
+  };
+  requiresIbcChannels?: boolean;
+  feeProps?: TransactionFeeProps;
+  ibcChannels?: {
+    sourceChannel: string;
+    destinationChannel?: string;
+    onChangeSourceChannel: (sourceChannel: string) => void;
+    onChangeDestinationChannel?: (destinationChannel: string) => void;
+  };
+  isSubmitting: boolean;
+  errorMessage?: string;
+  gasConfig?: GasConfig;
+  currentStatus: string;
+  currentStatusExplanation?: string;
+  onSubmitTransfer: (params: OnSubmitTransferParams) => Promise<void>;
+  completedAt?: Date;
+  onComplete: () => void;
+};
 
 export type TransferModuleConfig = {
   wallet?: WalletProvider;

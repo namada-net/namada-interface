@@ -9,19 +9,12 @@ import {
 import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
-import { TransactionFeeProps } from "hooks";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
 import { useUrlState } from "hooks/useUrlState";
 import { useAtomValue } from "jotai";
-import { Dispatch, SetStateAction, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import {
-  AssetWithAmount,
-  GasConfig,
-  IbcChannels as IbcChannelsType,
-  LedgerAccountInfo,
-} from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
 import { isIbcAddress, isShieldedAddress } from "./common";
@@ -32,46 +25,8 @@ import { SuccessAnimation } from "./SuccessAnimation";
 import { TransferArrow } from "./TransferArrow";
 import { TransferDestination } from "./TransferDestination";
 import { TransferSource } from "./TransferSource";
-import { OnSubmitTransferParams, ValidationResult } from "./types";
+import { TransferModuleProps, ValidationResult } from "./types";
 import { getButtonText, validateTransferForm } from "./utils";
-
-type TransferModuleProps = {
-  source: {
-    address: string | undefined;
-    availableAmount: BigNumber | undefined;
-    amount: BigNumber | undefined;
-    selectedAssetWithAmount: AssetWithAmount | undefined;
-    onChangeSelectedAsset: (asset: AssetWithAmount | undefined) => void;
-    onChangeAmount: (amount: BigNumber | undefined) => void;
-    ledgerAccountInfo?: LedgerAccountInfo | undefined;
-    onChangeAddress: (sourceAddress: string) => void;
-  };
-  destination: {
-    address: string | undefined;
-    customAddress?: string;
-    isShieldedAddress: boolean;
-    memo?: string;
-    onChangeAddress?: (sourceAddress: string) => void;
-    onChangeMemo?: Dispatch<SetStateAction<string>>;
-  };
-  requiresIbcChannels?: boolean;
-  feeProps?: TransactionFeeProps;
-  ibcOptions?: IbcChannelsType | undefined;
-  ibcChannels?: {
-    sourceChannel: string;
-    destinationChannel?: string;
-    onChangeSourceChannel: (sourceChannel: string) => void;
-    onChangeDestinationChannel?: (destinationChannel: string) => void;
-  };
-  isSubmitting: boolean;
-  errorMessage?: string;
-  gasConfig?: GasConfig;
-  currentStatus: string;
-  currentStatusExplanation?: string;
-  onSubmitTransfer: (params: OnSubmitTransferParams) => Promise<void>;
-  completedAt?: Date;
-  onComplete: () => void;
-};
 
 export const TransferModule = ({
   source,
