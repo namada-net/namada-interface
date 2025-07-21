@@ -1,11 +1,9 @@
-import { Chain } from "@chain-registry/types";
 import { fireEvent, render, screen } from "@testing-library/react";
 import {
   TransferSource,
   TransferSourceProps,
 } from "App/Transfer/TransferSource";
 import BigNumber from "bignumber.js";
-import { namadaChainMock } from "../__mocks__/chains";
 
 describe("Component: TransferSource", () => {
   it("should render the component with the default props", () => {
@@ -61,7 +59,6 @@ describe("Component: TransferSource", () => {
     const openAssetSelectorMock = jest.fn();
     setup({
       openAssetSelector: openAssetSelectorMock,
-      chain: namadaChainMock as Chain,
     });
     const assetControl = getEmptyAsset();
     fireEvent.click(assetControl);

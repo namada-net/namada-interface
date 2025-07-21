@@ -254,7 +254,6 @@ export const SelectToken = ({
       onClose();
     }
   };
-  console.log(isOpen, "isOpen");
   if (!isOpen) return null;
 
   return (

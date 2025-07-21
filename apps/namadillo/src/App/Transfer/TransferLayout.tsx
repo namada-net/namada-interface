@@ -43,7 +43,6 @@ export const TransferLayout: React.FC = () => {
     sourceAddress,
     destinationAddress,
   });
-  console.log(sourceAddress, destinationAddress, "ay");
 
   const transparentAddress =
     accounts?.find((acc) => isTransparentAddress(acc.address))?.address ?? "";
@@ -79,6 +78,9 @@ export const TransferLayout: React.FC = () => {
         break;
       case "unshield":
         targetRoute = routes.maspUnshield;
+        break;
+      case "namada-transfer":
+        targetRoute = routes.transfer;
         break;
       default:
         targetRoute = routes.transfer;
