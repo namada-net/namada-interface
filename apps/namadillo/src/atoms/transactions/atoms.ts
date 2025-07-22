@@ -15,6 +15,13 @@ import {
 } from "./functions";
 import { fetchHistoricalTransactions, fetchTransaction } from "./services";
 
+export type RecentAddress = {
+  address: Address;
+  label?: string;
+  type: "transparent" | "shielded" | "ibc";
+  timestamp: number;
+};
+
 export interface TransactionHistory extends TransactionHistoryBase {
   timestamp?: number;
 }
@@ -29,6 +36,13 @@ export const transactionStorageKey = "namadillo:transactions";
 export const transactionHistoryAtom = atomWithStorage<
   Record<Address, TransferTransactionData[]>
 >(transactionStorageKey, {});
+
+export const recentAddressesAtom = atomWithStorage<RecentAddress[]>(
+  "namadillo:recentAddresses",
+  [],
+  undefined,
+  { getOnInit: true }
+);
 
 export const myTransactionHistoryAtom = atom<TransferTransactionData[]>(
   (get) => {

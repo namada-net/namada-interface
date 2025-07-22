@@ -91,7 +91,7 @@ export const TransferSource = ({
         <SelectedAsset
           asset={asset}
           isLoading={isLoadingAssets}
-          isDisabled={!sourceAddress}
+          isDisabled={isSubmitting}
           onClick={openAssetSelector}
         />
         {sourceAddress && (

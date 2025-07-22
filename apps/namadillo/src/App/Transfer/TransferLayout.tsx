@@ -183,12 +183,14 @@ export const TransferLayout: React.FC = () => {
     }
 
     return (
-      <NamadaTransfer
-        sourceAddress={sourceAddress}
-        setSourceAddress={setSourceAddress}
-        destinationAddress={destinationAddress}
-        setDestinationAddress={setDestinationAddress}
-      />
+      <div className="flex relative flex-col flex-1">
+        <NamadaTransfer
+          sourceAddress={sourceAddress}
+          setSourceAddress={setSourceAddress}
+          destinationAddress={destinationAddress}
+          setDestinationAddress={setDestinationAddress}
+        />
+      </div>
     );
   };
 

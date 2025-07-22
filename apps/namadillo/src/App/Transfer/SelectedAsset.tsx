@@ -21,12 +21,12 @@ export const SelectedAsset = ({
   const selectorClassList = clsx(
     `flex items-center gap-4 text-xl text-white font-light cursor-pointer uppercase`
   );
-
   return (
     <button
       type="button"
       className={clsx("block group", {
-        "pointer-events-none opacity-30": isDisabled || isLoading,
+        "opacity-30": isLoading,
+        "pointer-events-none": isDisabled,
       })}
       disabled={isDisabled}
       onClick={onClick}
@@ -44,7 +44,7 @@ export const SelectedAsset = ({
               width="70px"
             />
           )}
-          {!isLoading && (
+          {!isLoading && !isDisabled && (
             <>
               Asset
               <GoChevronDown className="text-sm" />
@@ -64,9 +64,11 @@ export const SelectedAsset = ({
           />
           <span className="flex items-center gap-1 text-md">
             {asset.symbol}
-            <i className="text-sm">
-              <GoChevronDown />
-            </i>
+            {!isDisabled && (
+              <i className="text-sm">
+                <GoChevronDown />
+              </i>
+            )}
           </span>
         </span>
       )}
