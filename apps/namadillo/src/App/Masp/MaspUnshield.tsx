@@ -140,9 +140,9 @@ export const MaspUnshield = ({
           selectedAssetWithAmount,
           availableAmount: selectedAssetWithAmount?.amount,
           amount: displayAmount,
+          ledgerAccountInfo,
           onChangeSelectedAsset: setSelectedAssetWithAmount,
           onChangeAmount: setDisplayAmount,
-          ledgerAccountInfo,
           onChangeAddress: setSourceAddress,
         }}
         destination={{

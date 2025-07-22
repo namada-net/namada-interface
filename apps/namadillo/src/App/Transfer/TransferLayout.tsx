@@ -52,7 +52,15 @@ export const TransferLayout: React.FC = () => {
     if (!sourceAddress && transparentAddress) {
       setSourceAddress(transparentAddress);
     }
-  }, [location.pathname, sourceAddress, transparentAddress, setSourceAddress]);
+  }, [
+    transferType,
+    sourceAddress,
+    destinationAddress,
+    navigate,
+    location,
+    transparentAddress,
+    transferType,
+  ]);
 
   // Refetch shielded balance for MASP operations
   useEffect(() => {
@@ -101,15 +109,7 @@ export const TransferLayout: React.FC = () => {
         replace: true,
       });
     }
-  }, [
-    transferType,
-    sourceAddress,
-    destinationAddress,
-    navigate,
-    location,
-    transparentAddress,
-    transferType,
-  ]);
+  }, [transferType, navigate, location.pathname]);
 
   if (!userHasAccount) {
     const actionText = (() => {
