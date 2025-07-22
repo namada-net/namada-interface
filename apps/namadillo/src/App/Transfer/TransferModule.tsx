@@ -1,7 +1,7 @@
 import { ActionButton, Stack } from "@namada/components";
 import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
-import { params, routes } from "App/routes";
+import { routes } from "App/routes";
 import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
@@ -10,11 +10,11 @@ import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
-import { useUrlState } from "hooks/useUrlState";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AssetWithAmount } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
 import { isIbcAddress, isShieldedAddress } from "./common";
@@ -44,20 +44,12 @@ export const TransferModule = ({
   requiresIbcChannels,
   keplrWalletManager,
 }: TransferModuleProps): JSX.Element => {
-  const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
-    params.asset
-  );
-
   const { data: usersAssets, isLoading: isLoadingUsersAssets } = useAtomValue(
     isShieldedAddress(source.address ?? "") ?
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
-  const selectedAsset =
-    source.selectedAssetWithAmount ||
-    Object.values(usersAssets ?? {}).find(
-      (item) => item.asset?.address === selectedAssetAddress
-    );
+  const selectedAsset = source.selectedAssetWithAmount;
   const availableAmount = selectedAsset?.amount;
   const availableAssets = useMemo(() => {
     return filterAvailableAssetsWithBalance(usersAssets);
@@ -298,10 +290,8 @@ export const TransferModule = ({
         setSourceAddress={source.onChangeAddress}
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}
-        onSelect={(selectedAssetWithAmount) => {
-          console.log(selectedAssetWithAmount, "selectedAssetWithAmount");
+        onSelect={(selectedAssetWithAmount: AssetWithAmount) => {
           source.onChangeAmount(undefined);
-          setSelectedAssetAddress(selectedAssetWithAmount.asset.address);
           source.onChangeSelectedAsset(selectedAssetWithAmount);
           setAssetSelectorModalOpen(false);
         }}
