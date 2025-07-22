@@ -46,7 +46,11 @@ export const useSimulateIbcTransferFee = ({
           if (isNamadaAsset(selectedAsset)) {
             return "uosmo";
           }
-          return selectedAsset?.base || registry?.assets.assets[0].base || "";
+          return (
+            selectedAsset?.traces?.[0]?.counterparty?.base_denom ||
+            registry?.assets.assets[0].base ||
+            ""
+          );
         };
 
         const transferMsg = createIbcTransferMessage(
