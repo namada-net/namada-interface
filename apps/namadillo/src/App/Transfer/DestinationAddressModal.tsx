@@ -3,8 +3,16 @@ import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { SelectModal } from "App/Common/SelectModal";
 import { allDefaultAccountsAtom } from "atoms/accounts";
+import {
+  addToRecentAddresses,
+  getAddressLabel,
+  recentAddressesAtom,
+  validateAddress,
+  type ValidationResult,
+} from "atoms/transactions";
 import clsx from "clsx";
-import { useAtomValue } from "jotai";
+import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
+import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
 import { Address } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
@@ -15,7 +23,7 @@ type AddressOption = {
   label: string;
   address: string;
   icon: string;
-  type: "transparent" | "shielded" | "keplr";
+  type: "transparent" | "shielded" | "ibc";
 };
 
 type DestinationAddressModalProps = {
@@ -30,7 +38,10 @@ export const DestinationAddressModal = ({
   onSelectAddress,
 }: DestinationAddressModalProps): JSX.Element => {
   const [customAddress, setCustomAddress] = useState("");
+  const [validationResult, setValidationResult] =
+    useState<ValidationResult | null>(null);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
+  const [recentAddresses, setRecentAddresses] = useAtom(recentAddressesAtom);
 
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
@@ -39,6 +50,7 @@ export const DestinationAddressModal = ({
     (account) => account.type === AccountType.ShieldedKeys
   );
 
+  // Build your addresses options
   const addressOptions: AddressOption[] = [];
   if (accounts) {
     const transparentAccount = accounts.find(
@@ -65,14 +77,60 @@ export const DestinationAddressModal = ({
     }
   }
 
+  // Build recent addresses options
+  const recentAddressOptions: AddressOption[] = recentAddresses.map(
+    (recent) => ({
+      id: `recent-${recent.address}`,
+      label: recent.label || getAddressLabel(recent.address, recent.type),
+      address: recent.address,
+      icon:
+        recent.type === "shielded" ? namadaShieldedIcon
+        : recent.type === "transparent" ? namadaTransparentIcon
+        : getChainImageUrl(getChainFromAddress(recent.address ?? "")), // fallback for IBC
+      type: recent.type,
+    })
+  );
+
   const handleAddressClick = (address: string): void => {
     onSelectAddress(address);
     onClose();
   };
 
+  const handleCustomAddressChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value = e.target.value;
+    setCustomAddress(value);
+
+    // Validate the address as user types
+    if (value.trim()) {
+      const result = validateAddress(value);
+      setValidationResult(result);
+    } else {
+      setValidationResult(null);
+    }
+  };
+
   const handleCustomAddressSubmit = (): void => {
-    if (customAddress.trim()) {
-      onSelectAddress(customAddress.trim());
+    const trimmedAddress = customAddress.trim();
+    if (!trimmedAddress) return;
+
+    const result = validateAddress(trimmedAddress);
+    setValidationResult(result);
+
+    if (result.isValid && result.addressType) {
+      // Add to recent addresses
+      const label = getAddressLabel(trimmedAddress, result.addressType);
+      const updatedRecents = addToRecentAddresses(
+        recentAddresses,
+        trimmedAddress,
+        result.addressType,
+        label
+      );
+      setRecentAddresses(updatedRecents);
+
+      // Select the address
+      onSelectAddress(trimmedAddress);
       onClose();
     }
   };
@@ -81,6 +139,21 @@ export const DestinationAddressModal = ({
     if (e.key === "Enter") {
       handleCustomAddressSubmit();
     }
+  };
+
+  // Determine input styling based on validation
+  const getInputClassName = (): string => {
+    if (!customAddress.trim()) {
+      return "text-sm border-neutral-500";
+    }
+
+    if (validationResult?.isValid) {
+      return "text-sm border-green-500 focus:border-green-500";
+    } else if (validationResult?.error) {
+      return "text-sm border-red-500 focus:border-red-500";
+    }
+
+    return "text-sm border-neutral-500";
   };
 
   return (
@@ -95,11 +168,50 @@ export const DestinationAddressModal = ({
             label=""
             placeholder="Paste destination address"
             value={customAddress}
-            onChange={(e) => setCustomAddress(e.target.value)}
+            onChange={handleCustomAddressChange}
             onKeyPress={handleKeyPress}
-            className="text-sm border-neutral-500"
+            className={getInputClassName()}
           />
+          {validationResult?.error && (
+            <div className="mt-2 text-sm text-red-400">
+              {validationResult.error.message}
+            </div>
+          )}
         </div>
+
+        {recentAddressOptions.length > 0 && (
+          <div>
+            <h3 className="text-sm font-medium text-neutral-500 mb-3">
+              Recent addresses
+            </h3>
+            <Stack gap={2}>
+              {recentAddressOptions.map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleAddressClick(option.address)}
+                  className={clsx(
+                    "flex items-center justify-between w-full p-3 rounded-sm text-left transition-colors",
+                    "bg-neutral-900 hover:border-yellow border border-transparent"
+                  )}
+                >
+                  <div className="flex items-center gap-3 flex-1">
+                    <img
+                      src={option.icon}
+                      alt={option.label}
+                      className="w-8 h-8 rounded-full"
+                    />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-white">
+                        {shortenAddress(option.address, 8, 8)}
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </Stack>
+          </div>
+        )}
+
         {addressOptions.length > 0 && (
           <div>
             <h3 className="text-sm font-medium text-neutral-500 mb-3">
@@ -132,7 +244,7 @@ export const DestinationAddressModal = ({
                       {option.type === "transparent" &&
                         transparentAccount?.alias}
                       {option.type === "shielded" && shieldedAccount?.alias}
-                      {option.type === "keplr" && "Keplr"}
+                      {option.type === "ibc" && "IBC"}
                     </span>
                   </div>
                 </button>
