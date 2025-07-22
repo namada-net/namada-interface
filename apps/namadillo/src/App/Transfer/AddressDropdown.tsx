@@ -2,15 +2,18 @@ import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { connectedWalletsAtom } from "atoms/integrations";
+import { getAvailableChains } from "atoms/integrations/functions";
 import clsx from "clsx";
 import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
+import { getChainFromAddress } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { twMerge } from "tailwind-merge";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
+import { isNamadaAddress } from "./common";
 
 type AddressOption = {
   id: string;
@@ -46,27 +49,53 @@ export const AddressDropdown = ({
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
 
-  // Get Keplr address if connected
+  // Helper function to fetch Keplr address for the appropriate chain
+  const fetchKeplrAddressForChain = async (
+    keplrInstance: any
+  ): Promise<void> => {
+    let chainId: string | undefined;
+
+    // If we have a selectedAddress and it's not a Namada address,
+    // determine the chain from that address
+    if (selectedAddress && !isNamadaAddress(selectedAddress)) {
+      const chain = getChainFromAddress(selectedAddress);
+      chainId = chain?.chain_id;
+    }
+
+    // Fallback to first available chain if we couldn't determine from selectedAddress
+    if (!chainId) {
+      const availableChains = getAvailableChains();
+      if (availableChains.length > 0) {
+        chainId = availableChains[0].chain_id;
+      }
+    }
+
+    if (chainId) {
+      const key = await keplrInstance.getKey(chainId);
+      setKeplrAddress(key.bech32Address);
+    }
+  };
+
+  // Fetch Keplr address when connected - use the correct chain based on selectedAddress
   useEffect(() => {
-    const getKeplrAddress = async (): Promise<void> => {
+    const fetchKeplrAddress = async (): Promise<void> => {
       if (connectedWallets.keplr) {
         try {
           const keplrInstance = await keplr.get();
           if (keplrInstance) {
-            // Use cosmoshub as default chain for address display
-            const address = await keplr.getAddress("cosmoshub-4");
-            setKeplrAddress(address);
+            await fetchKeplrAddressForChain(keplrInstance);
           }
         } catch (error) {
-          console.error("Failed to get Keplr address:", error);
+          console.error("Failed to fetch Keplr address:", error);
+          setKeplrAddress(null);
         }
       } else {
         setKeplrAddress(null);
       }
     };
 
-    getKeplrAddress();
-  }, [connectedWallets.keplr]);
+    fetchKeplrAddress();
+  }, [connectedWallets.keplr, selectedAddress]);
 
   // Build available address options
   const addressOptions: AddressOption[] = [];
@@ -103,12 +132,12 @@ export const AddressDropdown = ({
     }
   }
 
-  // Add Keplr account if connected
-  if (connectedWallets.keplr && keplrAddress) {
+  // Add Keplr option only if we have a connected address
+  if (keplrAddress) {
     addressOptions.push({
       id: "keplr",
       label: "Keplr",
-      address: "Keplr",
+      address: keplrAddress,
       walletType: "keplr",
       iconUrl: wallets.keplr.iconUrl,
     });
@@ -145,19 +174,30 @@ export const AddressDropdown = ({
         return;
       }
 
-      // Enable Keplr for cosmoshub (commonly supported)
-      await keplrInstance.enable("cosmoshub-4");
+      // Get all available chains
+      const availableChains = getAvailableChains();
+
+      // Enable Keplr for all supported chains
+      const enablePromises = availableChains.map(async (chain) => {
+        try {
+          await keplrInstance.enable(chain.chain_id);
+          return { chainId: chain.chain_id, success: true };
+        } catch (error) {
+          console.warn(`Failed to enable chain ${chain.chain_id}:`, error);
+          return { chainId: chain.chain_id, success: false, error };
+        }
+      });
+
+      await Promise.allSettled(enablePromises);
 
       // Update connected wallets state
       setConnectedWallets((obj) => ({ ...obj, [keplr.key]: true }));
 
-      // Get and set the Keplr address
-      const address = await keplr.getAddress("cosmoshub-4");
-      setKeplrAddress(address);
-
-      // Automatically select the Keplr address if no address is currently selected
-      if (!selectedAddress && onSelectAddress) {
-        onSelectAddress(address);
+      // Fetch the Keplr address for the correct chain after successful connection
+      try {
+        await fetchKeplrAddressForChain(keplrInstance);
+      } catch (error) {
+        console.error("Failed to fetch Keplr address after connection:", error);
       }
 
       setIsOpen(false);

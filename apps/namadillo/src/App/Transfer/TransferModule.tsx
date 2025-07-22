@@ -42,6 +42,7 @@ export const TransferModule = ({
   onComplete,
   ibcChannels,
   requiresIbcChannels,
+  keplrWalletManager,
 }: TransferModuleProps): JSX.Element => {
   const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
     params.asset
@@ -292,11 +293,13 @@ export const TransferModule = ({
         )}
       </section>
       <SelectToken
+        keplrWalletManager={keplrWalletManager}
         sourceAddress={source.address || ""}
         setSourceAddress={source.onChangeAddress}
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}
         onSelect={(selectedAssetWithAmount) => {
+          console.log(selectedAssetWithAmount, "selectedAssetWithAmount");
           source.onChangeAmount(undefined);
           setSelectedAssetAddress(selectedAssetWithAmount.asset.address);
           source.onChangeSelectedAsset(selectedAssetWithAmount);
