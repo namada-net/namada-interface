@@ -14,6 +14,20 @@ import {
   WalletProvider,
 } from "types";
 
+export type ValidateTransferFormSource = {
+  address: string | undefined;
+  isShieldedAddress: boolean;
+  amount: BigNumber | undefined;
+  ledgerAccountInfo: LedgerAccountInfo | undefined;
+  selectedAssetAddress: string | undefined;
+};
+
+export type ValidateTransferFormDestination = {
+  address: string | undefined;
+  isShieldedAddress: boolean;
+  chain: Chain | undefined;
+};
+
 export type TransferModuleProps = {
   source: {
     address: string | undefined;
@@ -53,12 +67,7 @@ export type TransferModuleProps = {
 };
 
 export type TransferModuleConfig = {
-  wallet?: WalletProvider;
-  walletAddress?: string;
-  availableWallets?: WalletProvider[];
   connected?: boolean;
-  availableChains?: Chain[];
-  chain?: Chain;
   isShieldedAddress?: boolean;
   onChangeWallet?: (wallet: WalletProvider) => void;
   onChangeShielded?: (isShielded: boolean) => void;
@@ -67,15 +76,7 @@ export type TransferModuleConfig = {
   ledgerAccountInfo?: LedgerAccountInfo | undefined;
 };
 
-export type TransferSourceProps = TransferModuleConfig & {
-  availableAssets?: Asset[];
-  isLoadingAssets?: boolean;
-  selectedAssetAddress?: Address;
-  availableAmount?: BigNumber;
-  onChangeSelectedAsset?: (address: Address | undefined) => void;
-  amount?: BigNumber;
-  onChangeAmount?: (amount: BigNumber | undefined) => void;
-};
+export type TransferSourceProps = TransferModuleProps["source"];
 
 export type IbcOptions = {
   sourceChannel: string;

@@ -9,9 +9,9 @@ import { AssetWithAmount, GasConfig } from "types";
 import { checkKeychainCompatibleWithMasp } from "utils/compatibility";
 import {
   OnSubmitTransferParams,
-  TransferDestinationProps,
-  TransferSourceProps,
   TransferType,
+  ValidateTransferFormDestination,
+  ValidateTransferFormSource,
   ValidationResult,
 } from "./types";
 
@@ -79,20 +79,19 @@ export const validateTransferForm = ({
   availableAssets,
   displayGasFeeAmount,
 }: {
-  source: TransferSourceProps;
-  destination: TransferDestinationProps;
+  source: ValidateTransferFormSource;
+  destination: ValidateTransferFormDestination;
   gasConfig: GasConfig | undefined;
   availableAmountMinusFees: BigNumber | undefined;
   keychainVersion: string | undefined;
   availableAssets: Record<string, AssetWithAmount> | undefined;
   displayGasFeeAmount: BigNumber | undefined;
 }): ValidationResult => {
-  console.log(source, "sourceeee");
-  if (source.walletAddress === destination.walletAddress) {
+  if (source.address === destination.address) {
     return "TheSameAddress";
   } else if (
     !isValidDestinationAddress({
-      customAddress: destination.walletAddress ?? "",
+      customAddress: destination.address ?? "",
       chain: destination.chain,
     })
   ) {
@@ -107,7 +106,7 @@ export const validateTransferForm = ({
     return "NoSelectedAsset";
   } else if (
     !hasEnoughBalanceForFees({
-      isIbcToken: isIbcAddress(source.walletAddress ?? ""),
+      isIbcToken: isIbcAddress(source.address ?? ""),
       availableAssets,
       gasConfig,
       displayGasFeeAmount,
@@ -121,7 +120,7 @@ export const validateTransferForm = ({
     source.amount.gt(availableAmountMinusFees)
   ) {
     return "NotEnoughBalance";
-  } else if (!destination.walletAddress) {
+  } else if (!destination.address) {
     return "NoDestinationWallet";
   } else if (
     (source.isShieldedAddress || destination.isShieldedAddress) &&

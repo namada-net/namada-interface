@@ -16,6 +16,7 @@ import {
 } from "atoms/integrations";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
+import clsx from "clsx";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtom, useAtomValue } from "jotai";
@@ -294,11 +295,12 @@ export const SelectToken = ({
                         }
                       </div>
                       <span
-                        className={
+                        className={clsx(
                           selectedNetwork === network.chain_name ?
                             "text-yellow"
-                          : "text-white"
-                        }
+                          : "text-white",
+                          "capitalize"
+                        )}
                       >
                         {network.chain_name}
                       </span>
