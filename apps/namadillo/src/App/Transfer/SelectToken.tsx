@@ -31,6 +31,7 @@ type SelectTokenProps = {
   isOpen: boolean;
   onClose: () => void;
   onSelect: ((selectedAsset: AssetWithAmount) => void) | undefined;
+  keplrWalletManager?: KeplrWalletManager | undefined;
 };
 
 export const SelectToken = ({
@@ -39,8 +40,8 @@ export const SelectToken = ({
   isOpen,
   onClose,
   onSelect,
+  keplrWalletManager,
 }: SelectTokenProps): JSX.Element | null => {
-  // Local state for address selection within the modal
   const [filter, setFilter] = useState("");
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
@@ -57,8 +58,8 @@ export const SelectToken = ({
   const allChains = [...ibcChains, namadaChain as unknown as Chain];
 
   // Create KeplrWalletManager instance and use with useWalletManager hook
-  const keplr = new KeplrWalletManager();
-  const { connectToChainId } = useWalletManager(keplr);
+  const keplrWallet = keplrWalletManager ?? new KeplrWalletManager();
+  const { connectToChainId } = useWalletManager(keplrWallet);
 
   // Get balances for connected chains
   const keplrBalances = useAtomValue(allKeplrAssetsBalanceAtom);
@@ -168,8 +169,6 @@ export const SelectToken = ({
   };
 
   const handleClose = (): void => {
-    // Apply the local address to parent when closing
-    setSourceAddress(sourceAddress);
     onClose();
   };
 
@@ -182,10 +181,10 @@ export const SelectToken = ({
         setIsConnectingKeplr(true);
 
         try {
-          const keplrInstance = await keplr.get();
+          const keplrInstance = await keplrWallet.get();
           // Keplr is not installed, redirect to download page
           if (!keplrInstance) {
-            keplr.install();
+            keplrWallet.install();
             return;
           }
 
@@ -206,7 +205,7 @@ export const SelectToken = ({
               );
             }
           }
-
+          console.log(targetChainRegistry, "targetChainRegistry");
           if (targetChainRegistry) {
             // Use useWalletManager's connectToChainId method for the specific chain
             const chainId = targetChainRegistry.chain.chain_id;
@@ -215,9 +214,10 @@ export const SelectToken = ({
             // Update connected wallets state only after successful connection
             setConnectedWallets((obj: Record<string, boolean>) => ({
               ...obj,
-              [keplr.key]: true,
+              [keplrWallet.key]: true,
             }));
             const key = await keplrInstance.getKey(chainId);
+            console.log(key, "key");
             setSourceAddress(key.bech32Address);
           } else {
             console.warn(
@@ -243,13 +243,13 @@ export const SelectToken = ({
       }
 
       // Apply the final address to parent and proceed with token selection
-      setSourceAddress(sourceAddress);
+      // setSourceAddress(sourceAddress);
+      console.log(token, "jr token");
       onSelect?.(token);
       onClose();
     } catch (error) {
       console.error("Error in token selection:", error);
       setIsConnectingKeplr(false);
-      setSourceAddress(sourceAddress);
       onSelect?.(token);
       onClose();
     }

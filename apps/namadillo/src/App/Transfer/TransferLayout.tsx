@@ -18,6 +18,7 @@ import { shieldedBalanceAtom } from "atoms/balance";
 import { applicationFeaturesAtom } from "atoms/settings";
 import { useUserHasAccount } from "hooks/useIsAuthenticated";
 import { useUrlState } from "hooks/useUrlState";
+import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -25,10 +26,9 @@ import { isTransparentAddress } from ".";
 import { determineTransferType } from "./utils";
 
 export const TransferLayout: React.FC = () => {
+  const keplrWalletManager = new KeplrWalletManager();
   const userHasAccount = useUserHasAccount();
   const features = useAtomValue(applicationFeaturesAtom);
-
-  // Extract both values and setters from useUrlState
   const [sourceAddress, setSourceAddress] = useUrlState("source");
   const [destinationAddress, setDestinationAddress] =
     useUrlState("destination");
@@ -127,10 +127,8 @@ export const TransferLayout: React.FC = () => {
     return <ConnectPanel actionText={actionText} />;
   }
 
-  // Render content based on transfer type
   const renderContent = (): JSX.Element => {
     if (transferType === "ibc-deposit") {
-      // IBC Deposit - render IbcTransfer component directly
       return (
         <Panel className="py-8 rounded-t-none h-full w-full">
           <IbcTransfer
@@ -138,6 +136,7 @@ export const TransferLayout: React.FC = () => {
             setSourceAddress={setSourceAddress}
             destinationAddress={destinationAddress}
             setDestinationAddress={setDestinationAddress}
+            keplrWalletManager={keplrWalletManager}
           />
         </Panel>
       );
@@ -151,6 +150,7 @@ export const TransferLayout: React.FC = () => {
             setSourceAddress={setSourceAddress}
             destinationAddress={destinationAddress}
             setDestinationAddress={setDestinationAddress}
+            keplrWalletManager={keplrWalletManager}
           />
         </Panel>
       );

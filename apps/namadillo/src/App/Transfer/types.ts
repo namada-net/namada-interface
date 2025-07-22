@@ -2,6 +2,7 @@ import { Chain } from "@chain-registry/types";
 import { NamadaKeychainAccount } from "@namada/types";
 import BigNumber from "bignumber.js";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
+import { KeplrWalletManager } from "integrations/Keplr";
 import { Dispatch, SetStateAction } from "react";
 import {
   Address,
@@ -48,6 +49,7 @@ export type TransferModuleProps = {
   onSubmitTransfer: (params: OnSubmitTransferParams) => Promise<void>;
   completedAt?: Date;
   onComplete: () => void;
+  keplrWalletManager?: KeplrWalletManager;
 };
 
 export type TransferModuleConfig = {
