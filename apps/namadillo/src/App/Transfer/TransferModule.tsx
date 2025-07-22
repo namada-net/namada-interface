@@ -120,14 +120,14 @@ export const TransferModule = ({
   const validationResult = useMemo((): ValidationResult => {
     return validateTransferForm({
       source: {
-        walletAddress: source.address,
+        address: source.address,
         isShieldedAddress: isShieldedAddress(source.address ?? ""),
         selectedAssetAddress: selectedAsset?.asset.address,
         amount: source.amount,
         ledgerAccountInfo: source.ledgerAccountInfo,
       },
       destination: {
-        walletAddress: destination.address,
+        address: destination.address,
         isShieldedAddress: isShieldedAddress(destination.address ?? ""),
         chain: undefined,
       },
