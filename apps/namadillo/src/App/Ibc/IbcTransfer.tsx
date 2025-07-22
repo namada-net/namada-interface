@@ -64,6 +64,7 @@ export const IbcTransfer = ({
   );
   const { trackEvent } = useFathomTracker();
   const { storeTransaction } = useTransactionActions();
+
   const { transferToNamada, gasConfig } = useIbcTransaction({
     registry,
     sourceAddress,

@@ -5,8 +5,7 @@ import {
   isTransparentAddress,
 } from "App/Transfer/common";
 import BigNumber from "bignumber.js";
-import { wallets } from "integrations";
-import { AssetWithAmount, GasConfig, WalletProvider } from "types";
+import { AssetWithAmount, GasConfig } from "types";
 import { checkKeychainCompatibleWithMasp } from "utils/compatibility";
 import {
   OnSubmitTransferParams,
@@ -40,21 +39,20 @@ export const isValidDestinationAddress = ({
 
 // Check if there's enough balance to pay for transaction fees
 export const hasEnoughBalanceForFees = ({
-  sourceWallet,
+  isIbcToken,
   availableAssets,
   gasConfig,
   displayGasFeeAmount,
 }: {
-  sourceWallet: WalletProvider | undefined;
+  isIbcToken: boolean;
   availableAssets: Record<string, AssetWithAmount> | undefined;
   gasConfig: GasConfig | undefined;
   displayGasFeeAmount: BigNumber | undefined;
 }): boolean => {
+  console.log(isIbcToken, availableAssets, gasConfig, displayGasFeeAmount);
   // Skip if transaction fees will be handled by another wallet, like Keplr.
   // (Ex: when users transfer from IBC to Namada)
-  if (sourceWallet && sourceWallet !== wallets.namada) {
-    return true;
-  }
+  if (isIbcToken) return true;
 
   if (!availableAssets || !gasConfig || !displayGasFeeAmount) {
     return false;
@@ -89,6 +87,7 @@ export const validateTransferForm = ({
   availableAssets: Record<string, AssetWithAmount> | undefined;
   displayGasFeeAmount: BigNumber | undefined;
 }): ValidationResult => {
+  console.log(source, "sourceeee");
   if (source.walletAddress === destination.walletAddress) {
     return "TheSameAddress";
   } else if (
@@ -108,7 +107,7 @@ export const validateTransferForm = ({
     return "NoSelectedAsset";
   } else if (
     !hasEnoughBalanceForFees({
-      sourceWallet: source.wallet,
+      isIbcToken: isIbcAddress(source.walletAddress ?? ""),
       availableAssets,
       gasConfig,
       displayGasFeeAmount,
