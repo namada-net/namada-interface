@@ -136,7 +136,7 @@ export const IbcTransfer = ({
       setCurrentStatus(undefined);
     }
   };
-  console.log(sourceAddress, "sourceAddress");
+
   return (
     <div className="relative min-h-[600px]">
       <header className="flex flex-col items-center text-center mb-8 gap-6">

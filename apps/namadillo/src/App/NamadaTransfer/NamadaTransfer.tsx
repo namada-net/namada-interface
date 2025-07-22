@@ -184,12 +184,12 @@ export const NamadaTransfer = ({
         source={{
           availableAmount: selectedAssetWithAmount?.amount,
           address: sourceAddress,
-          onChangeAddress: setSourceAddress,
           selectedAssetWithAmount,
-          onChangeSelectedAsset: setSelectedAssetWithAmount,
           amount: displayAmount,
-          onChangeAmount: setDisplayAmount,
           ledgerAccountInfo,
+          onChangeAddress: setSourceAddress,
+          onChangeSelectedAsset: setSelectedAssetWithAmount,
+          onChangeAmount: setDisplayAmount,
         }}
         destination={{
           customAddress: destinationAddress,

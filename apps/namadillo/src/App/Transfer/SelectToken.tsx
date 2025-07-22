@@ -80,7 +80,7 @@ export const SelectToken = ({
     });
     return map;
   }, [chainAssetsMap]);
-  // Your tokens
+
   const tokens = useMemo(() => {
     const result: AssetWithAmount[] = [];
     // Check if current address is a Keplr address (not shielded or transparent Namada)
@@ -188,48 +188,21 @@ export const SelectToken = ({
             return;
           }
 
-          let targetChainRegistry = null;
+          const chainName =
+            token.asset.base === "unam" ?
+              "osmosis"
+            : token.asset.traces?.[0]?.counterparty?.chain_name;
+          const targetChainRegistry = getChainRegistryByChainName(chainName!);
+          const chainId = targetChainRegistry?.chain.chain_id as string;
+          await connectToChainId(chainId);
 
-          // Find the correct chain for this token
-          if (token.asset.traces?.[0]?.counterparty?.chain_name) {
-            // Use the chain name from traces
-            const chainName = token.asset.traces[0].counterparty.chain_name;
-            targetChainRegistry = getChainRegistryByChainName(chainName);
-          } else {
-            // Fallback: try to find chain by looking at the token's network in assetToNetworkMap
-            const tokenNetworkName =
-              assetToNetworkMap[token.asset.address || ""];
-            if (tokenNetworkName && tokenNetworkName !== "Namada") {
-              targetChainRegistry = getChainRegistryByChainName(
-                tokenNetworkName.toLowerCase()
-              );
-            }
-          }
-          console.log(targetChainRegistry, "targetChainRegistry");
-          if (targetChainRegistry) {
-            // Use useWalletManager's connectToChainId method for the specific chain
-            const chainId = targetChainRegistry.chain.chain_id;
-            await connectToChainId(chainId);
-
-            // Update connected wallets state only after successful connection
-            setConnectedWallets((obj: Record<string, boolean>) => ({
-              ...obj,
-              [keplrWallet.key]: true,
-            }));
-            const key = await keplrInstance.getKey(chainId);
-            console.log(key, "key");
-            setSourceAddress(key.bech32Address);
-          } else {
-            console.warn(
-              "Could not determine target chain for token:",
-              token.asset.symbol,
-              "Network:",
-              assetToNetworkMap[token.asset.address || ""]
-            );
-            // Don't connect if we can't determine the target chain
-            setIsConnectingKeplr(false);
-            return;
-          }
+          // Update connected wallets state only after successful connection
+          setConnectedWallets((obj: Record<string, boolean>) => ({
+            ...obj,
+            [keplrWallet.key]: true,
+          }));
+          const key = await keplrInstance.getKey(chainId);
+          setSourceAddress(key.bech32Address);
         } catch (error) {
           console.error(
             "Failed to connect to Keplr for token:",
@@ -242,9 +215,6 @@ export const SelectToken = ({
         }
       }
 
-      // Apply the final address to parent and proceed with token selection
-      // setSourceAddress(sourceAddress);
-      console.log(token, "jr token");
       onSelect?.(token);
       onClose();
     } catch (error) {
