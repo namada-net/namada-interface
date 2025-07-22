@@ -20,13 +20,12 @@ import { AssetWithAmount } from "types";
 import { useTransactionEventListener } from "utils";
 import { IbcTopHeader } from "./IbcTopHeader";
 
-const keplr = new KeplrWalletManager();
-
 interface IbcTransferProps {
   sourceAddress: string | undefined;
   setSourceAddress: (address: string | undefined) => void;
   destinationAddress: string | undefined;
   setDestinationAddress: (address: string | undefined) => void;
+  keplrWalletManager: KeplrWalletManager;
 }
 
 export const IbcTransfer = ({
@@ -34,6 +33,7 @@ export const IbcTransfer = ({
   setSourceAddress,
   destinationAddress,
   setDestinationAddress,
+  keplrWalletManager,
 }: IbcTransferProps): JSX.Element => {
   //  COMPONENT STATE
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
@@ -50,7 +50,7 @@ export const IbcTransfer = ({
   //  GLOBAL STATE
   const navigate = useNavigate();
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
-  const { registry } = useWalletManager(keplr);
+  const { registry } = useWalletManager(keplrWalletManager);
   const {
     data: ibcChannels,
     isError: unknownIbcChannels,
@@ -89,30 +89,6 @@ export const IbcTransfer = ({
       (unknownIbcChannels ||
         (shielded && ibcChannels && !ibcChannels?.namadaChannel))
   );
-  // const selectedAsset =
-  //   selectedAssetBase ? userAssets?.[selectedAssetBase]?.asset : undefined;
-
-  // const availableAssets = useMemo(() => {
-  //   if (!userAssets || !registry) return undefined;
-
-  //   //     Object.entries(userAssets).forEach(([key, { asset }]) => {
-  //   //       const namadaAsset = getNamadaAssetByIbcAsset(
-  //   //         asset,
-  //   //         chainRegistry?.assets.assets ?? []
-  //   //       );
-
-  //   Object.entries(userAssets).forEach(([key, { asset }]) => {
-  //     if (
-  //       SUPPORTED_ASSETS_MAP.get(registry.chain.chain_name)?.includes(
-  //         asset.symbol
-  //       )
-  //     ) {
-  //       output[key] = { ...userAssets[key] };
-  //     }
-  //   });
-
-  //   return output;
-  // }, [Object.keys(userAssets || {}).join(""), registry?.chain.chain_name]);
 
   // Set source and destination channels based on IBC channels data
   useEffect(() => {
@@ -160,7 +136,7 @@ export const IbcTransfer = ({
       setCurrentStatus(undefined);
     }
   };
-
+  console.log(sourceAddress, "sourceAddress");
   return (
     <div className="relative min-h-[600px]">
       <header className="flex flex-col items-center text-center mb-8 gap-6">
@@ -171,9 +147,9 @@ export const IbcTransfer = ({
           selectedAssetWithAmount,
           availableAmount: availableDisplayAmount,
           address: sourceAddress,
+          amount,
           onChangeSelectedAsset: setSelectedAssetWithAmount,
           onChangeAddress: setSourceAddress,
-          amount,
           onChangeAmount: setAmount,
         }}
         destination={{
@@ -204,6 +180,7 @@ export const IbcTransfer = ({
           txHash &&
             navigate(generatePath(routes.transaction, { hash: txHash }));
         }}
+        keplrWalletManager={keplrWalletManager}
       />
     </div>
   );
