@@ -156,6 +156,7 @@ export const TransferDestination = ({
 
             <div className="mt-3">
               <button
+                type="button"
                 disabled={isShieldingTransaction || isSubmitting}
                 onClick={handleOpenModal}
                 className={clsx(
