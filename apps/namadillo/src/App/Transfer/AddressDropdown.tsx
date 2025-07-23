@@ -1,3 +1,4 @@
+import { Keplr } from "@keplr-wallet/types";
 import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { routes } from "App/routes";
@@ -53,7 +54,7 @@ export const AddressDropdown = ({
 
   // Helper function to fetch Keplr address for the appropriate chain
   const fetchKeplrAddressForChain = async (
-    keplrInstance: any
+    keplrInstance: Keplr
   ): Promise<void> => {
     let chainId: string | undefined;
 
@@ -291,7 +292,6 @@ export const AddressDropdown = ({
                   location.pathname !== routes.maspShield &&
                   isShieldedAddress(destinationAddress ?? "");
                 const isShieldingTxn = location.pathname === routes.maspShield;
-
                 const disabled =
                   (keplr && isShieldedTransfer) ||
                   (transparent && isShieldedTransfer) ||
