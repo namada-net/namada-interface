@@ -287,6 +287,7 @@ export const TransferModule = ({
       <SelectToken
         keplrWalletManager={keplrWalletManager}
         sourceAddress={source.address || ""}
+        destinationAddress={destination.address || ""}
         setSourceAddress={source.onChangeAddress}
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}

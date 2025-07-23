@@ -29,6 +29,7 @@ import { isNamadaAddress, isShieldedAddress } from "./common";
 type SelectTokenProps = {
   setSourceAddress: (address: string) => void;
   sourceAddress: string;
+  destinationAddress: string;
   isOpen: boolean;
   onClose: () => void;
   onSelect: ((selectedAsset: AssetWithAmount) => void) | undefined;
@@ -37,6 +38,7 @@ type SelectTokenProps = {
 
 export const SelectToken = ({
   sourceAddress,
+  destinationAddress,
   setSourceAddress,
   isOpen,
   onClose,
@@ -237,6 +239,7 @@ export const SelectToken = ({
               <h5 className="text-neutral-500 text-sm mb-0">Your account</h5>
               <div className="mb-4">
                 <AddressDropdown
+                  destinationAddress={destinationAddress}
                   selectedAddress={sourceAddress}
                   onSelectAddress={handleAddressChange}
                   showAddress={true}
