@@ -11,7 +11,6 @@ import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { GoChevronDown } from "react-icons/go";
 import { useLocation } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
@@ -27,12 +26,10 @@ type AddressOption = {
   iconUrl: string;
 };
 
-type AddressDropdownProps = {
+type AddressListProps = {
   selectedAddress?: string;
   destinationAddress?: string;
   className?: string;
-  showAddress?: boolean;
-  onClick?: () => void;
   onSelectAddress?: (address: string) => void;
 };
 
@@ -42,11 +39,8 @@ export const AddressDropdown = ({
   selectedAddress,
   destinationAddress,
   className = "",
-  showAddress = false,
-  onClick,
   onSelectAddress,
-}: AddressDropdownProps): JSX.Element => {
-  const [isOpen, setIsOpen] = useState(false);
+}: AddressListProps): JSX.Element => {
   const [keplrAddress, setKeplrAddress] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
@@ -147,21 +141,7 @@ export const AddressDropdown = ({
     });
   }
 
-  // Find the selected option
-  const selectedOption = addressOptions.find(
-    (option) => option.address === selectedAddress
-  );
-
-  const handleToggle = (): void => {
-    if (onClick) {
-      onClick();
-    } else if (addressOptions.length > 1 || !connectedWallets.keplr) {
-      setIsOpen(!isOpen);
-    }
-  };
-
   const handleSelectOption = (option: AddressOption): void => {
-    setIsOpen(false);
     if (onSelectAddress) {
       onSelectAddress(option.address);
     }
@@ -203,8 +183,6 @@ export const AddressDropdown = ({
       } catch (error) {
         console.error("Failed to fetch Keplr address after connection:", error);
       }
-
-      setIsOpen(false);
     } catch (error) {
       console.error("Failed to connect to Keplr:", error);
     } finally {
@@ -212,150 +190,83 @@ export const AddressDropdown = ({
     }
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent): void => {
-      const target = event.target as Element;
-      if (!target.closest("[data-dropdown-container]")) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isOpen]);
-
-  if (!selectedAddress || addressOptions.length === 0) return <></>;
-
-  const shouldShowDropdown =
-    addressOptions.length > 1 || !connectedWallets.keplr;
+  if (addressOptions.length === 0 && connectedWallets.keplr) return <></>;
 
   return (
-    <div className="relative" data-dropdown-container>
-      <div
-        role="button"
-        className={twMerge(
-          clsx(
-            "flex justify-between items-center gap-2.5 text-sm text-neutral-500",
-            "font-light text-right transition-colors",
-            {
-              "hover:text-neutral-400": Boolean(onClick) || shouldShowDropdown,
-              "cursor-auto": !onClick && !shouldShowDropdown,
-              "cursor-pointer": Boolean(onClick) || shouldShowDropdown,
-            },
-            className
-          )
-        )}
-        onClick={handleToggle}
-      >
-        <div className="flex items-center gap-2.5 mt-2">
-          <img
-            src={selectedOption?.iconUrl || namadaTransparentIcon}
-            alt={(selectedOption?.walletType || "Namada") + " Logo"}
-            className="w-7 select-none"
-          />
-          {showAddress && selectedOption && (
-            <div className="text-xs text-neutral-400">
-              {shortenAddress(selectedOption.address, 10, 10)}
-            </div>
-          )}
-        </div>
-        {shouldShowDropdown && (
-          <GoChevronDown
+    <div className={twMerge("space-y-1", className)}>
+      {/* Address Options List */}
+      {addressOptions.map((option) => {
+        const keplr = option.id === "keplr";
+        const transparent = option.id === "namada-transparent";
+        const shielded = option.id === "namada-shielded";
+        const isShieldedTransfer =
+          location.pathname !== routes.maspShield &&
+          isShieldedAddress(destinationAddress ?? "");
+        const isShieldingTxn = location.pathname === routes.maspShield;
+        const disabled =
+          (keplr && isShieldedTransfer) ||
+          (transparent && isShieldedTransfer) ||
+          (shielded && isShieldingTxn);
+        const isSelected = option.address === selectedAddress;
+        if (disabled) return null;
+        return (
+          <button
+            key={option.id}
+            type="button"
             className={clsx(
-              "text-xs text-neutral-400 transition-transform ml-1",
-              isOpen && "rotate-180"
+              "w-full p-2 text-left flex items-center gap-3",
+              "transition-all duration-200",
+              {
+                "opacity-40 cursor-not-allowed": disabled,
+              }
             )}
+            onClick={() => handleSelectOption(option)}
+          >
+            <div className="flex-shrink-0">
+              <img
+                src={option.iconUrl}
+                alt={option.label}
+                className="w-6 h-6"
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div
+                className={clsx(
+                  "text-sm truncate",
+                  isSelected ?
+                    "text-yellow-300 font-medium"
+                  : "text-neutral-300"
+                )}
+              >
+                {shortenAddress(option.address, 8, 6)}
+              </div>
+            </div>
+          </button>
+        );
+      })}
+
+      {/* Connect Wallet button if Keplr is not connected */}
+      {!connectedWallets.keplr && (
+        <button
+          type="button"
+          className={clsx(
+            "w-full p-2 text-left flex items-center gap-3",
+            "transition-all duration-200",
+            "text-sm font-medium text-neutral-300",
+            isConnectingKeplr && "opacity-50 cursor-not-allowed"
+          )}
+          onClick={handleConnectKeplr}
+          disabled={isConnectingKeplr}
+        >
+          <img
+            src={wallets.keplr.iconUrl}
+            alt="Keplr"
+            className="w-6 h-6 flex-shrink-0 opacity-70"
           />
-        )}
-      </div>
-
-      {isOpen && shouldShowDropdown && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
-
-          <div className="absolute right-0 top-full mt-1 z-20 bg-neutral-800 rounded-md border border-neutral-700 shadow-lg min-w-[240px]">
-            <ul className="py-1">
-              {addressOptions.map((option) => {
-                const keplr = option.id === "keplr";
-                const transparent = option.id === "namada-transparent";
-                const shielded = option.id === "namada-shielded";
-                const isShieldedTransfer =
-                  location.pathname !== routes.maspShield &&
-                  isShieldedAddress(destinationAddress ?? "");
-                const isShieldingTxn = location.pathname === routes.maspShield;
-                const disabled =
-                  (keplr && isShieldedTransfer) ||
-                  (transparent && isShieldedTransfer) ||
-                  (shielded && isShieldingTxn);
-                return (
-                  <li key={option.id}>
-                    <button
-                      disabled={disabled}
-                      type="button"
-                      className={clsx(
-                        "w-full px-4 py-3 text-left flex items-center gap-3",
-                        "hover:bg-neutral-700 transition-colors",
-                        "text-sm text-white",
-                        option.address === selectedAddress && "bg-neutral-700",
-                        disabled && "opacity-30 cursor-not-allowed"
-                      )}
-                      onClick={() => handleSelectOption(option)}
-                    >
-                      <img
-                        src={option.iconUrl}
-                        alt={option.label}
-                        className="w-6 h-6 flex-shrink-0"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-white">
-                          {option.label}
-                        </div>
-                        <div className="text-xs text-neutral-400 truncate">
-                          {shortenAddress(option.address, 10, 10)}
-                        </div>
-                      </div>
-                    </button>
-                  </li>
-                );
-              })}
-
-              {/* Connect Wallet button if Keplr is not connected */}
-              {!connectedWallets.keplr && (
-                <li className="border-t border-neutral-700 mt-1 pt-1">
-                  <button
-                    type="button"
-                    className={clsx(
-                      "w-full px-4 py-3 text-left flex items-center gap-3",
-                      "hover:bg-neutral-700 transition-colors",
-                      "text-sm  font-medium",
-                      isConnectingKeplr && "opacity-50 cursor-not-allowed"
-                    )}
-                    onClick={handleConnectKeplr}
-                    disabled={isConnectingKeplr}
-                  >
-                    <img
-                      src={wallets.keplr.iconUrl}
-                      alt="Keplr"
-                      className="w-5 h-5 flex-shrink-0"
-                    />
-                    <div className="flex-1 ml-1">
-                      {isConnectingKeplr ? "Connecting..." : "Connect Wallet"}
-                    </div>
-                  </button>
-                </li>
-              )}
-            </ul>
+          <div className="flex-1">
+            {isConnectingKeplr ? "Connecting..." : "Connect Wallet"}
           </div>
-        </>
+        </button>
       )}
     </div>
   );
