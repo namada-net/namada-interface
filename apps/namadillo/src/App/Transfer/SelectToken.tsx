@@ -242,7 +242,6 @@ export const SelectToken = ({
                   destinationAddress={destinationAddress}
                   selectedAddress={sourceAddress}
                   onSelectAddress={handleAddressChange}
-                  showAddress={true}
                 />
               </div>
 
