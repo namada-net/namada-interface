@@ -69,47 +69,38 @@ export const TransferLayout: React.FC = () => {
     }
   }, [transferType, refetchShieldedBalance]);
 
-  // Only navigate if the addresses suggest a different transfer type than the current route
+  // Avoid *any* automatic redirection *from* or *to* /masp/shield
   useEffect(() => {
-    const currentPath = location.pathname;
-    let targetRoute = "";
+    const { pathname, search } = location;
 
-    switch (transferType) {
-      case "ibc-deposit":
-        targetRoute = routes.ibc;
-        break;
-      case "ibc-withdraw":
-        targetRoute = routes.ibcWithdraw;
-        break;
-      case "shield":
-        targetRoute = routes.maspShield;
-        break;
-      case "unshield":
-        targetRoute = routes.maspUnshield;
-        break;
-      case "namada-transfer":
-        targetRoute = routes.transfer;
-        break;
-      default:
-        targetRoute = routes.transfer;
+    // 1. Stay put when already on /masp/shield
+    if (pathname === routes.maspShield) return;
+
+    // 2. Decide where the current transfer type would normally send us
+    const targetRoute = (() => {
+      switch (transferType) {
+        case "ibc-deposit":
+          return routes.ibc;
+        case "ibc-withdraw":
+          return routes.ibcWithdraw;
+        case "shield":
+          return routes.maspShield; // handled in step 3
+        case "unshield":
+          return routes.maspUnshield;
+        default:
+          return routes.transfer; // "namada-transfer" and fallback
+      }
+    })();
+
+    // 3. Never auto‑navigate *to* /masp/shield
+    if (targetRoute === routes.maspShield) return;
+
+    // 4. Navigate only when we’re not already on the desired page
+    if (pathname !== targetRoute) {
+      const params = new URLSearchParams(search).toString();
+      navigate(`${targetRoute}?${params}`, { replace: true });
     }
-
-    // Don't redirect if user is already on a shield/unshield route and transferType is default
-    // This prevents sidebar navigation from being overridden
-    const isOnShieldRoute =
-      currentPath === routes.maspShield || currentPath === routes.maspUnshield;
-    const isDefaultTransferType = transferType === "namada-transfer";
-
-    if (
-      currentPath !== targetRoute &&
-      !(isOnShieldRoute && isDefaultTransferType)
-    ) {
-      const searchParams = new URLSearchParams(location.search);
-      navigate(`${targetRoute}?${searchParams.toString()}`, {
-        replace: true,
-      });
-    }
-  }, [transferType, navigate, location.pathname]);
+  }, [transferType, location.pathname, location.search, navigate]);
 
   if (!userHasAccount) {
     const actionText = (() => {

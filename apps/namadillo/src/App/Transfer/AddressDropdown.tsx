@@ -1,5 +1,6 @@
 import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
+import { routes } from "App/routes";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { connectedWalletsAtom } from "atoms/integrations";
 import { getAvailableChains } from "atoms/integrations/functions";
@@ -10,10 +11,11 @@ import { getChainFromAddress } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
+import { useLocation } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
-import { isNamadaAddress } from "./common";
+import { isNamadaAddress, isShieldedAddress } from "./common";
 
 type AddressOption = {
   id: string;
@@ -26,8 +28,8 @@ type AddressOption = {
 
 type AddressDropdownProps = {
   selectedAddress?: string;
+  destinationAddress?: string;
   className?: string;
-  isShieldingTxn?: boolean;
   showAddress?: boolean;
   onClick?: () => void;
   onSelectAddress?: (address: string) => void;
@@ -36,8 +38,8 @@ type AddressDropdownProps = {
 const keplr = new KeplrWalletManager();
 
 export const AddressDropdown = ({
-  isShieldingTxn,
   selectedAddress,
+  destinationAddress,
   className = "",
   showAddress = false,
   onClick,
@@ -99,6 +101,7 @@ export const AddressDropdown = ({
 
   // Build available address options
   const addressOptions: AddressOption[] = [];
+  const location = useLocation();
 
   // Add Namada accounts
   if (accounts) {
@@ -120,7 +123,7 @@ export const AddressDropdown = ({
       });
     }
 
-    if (shieldedAccount && !isShieldingTxn) {
+    if (shieldedAccount) {
       addressOptions.push({
         id: "namada-shielded",
         label: "Namada Shielded",
@@ -280,34 +283,50 @@ export const AddressDropdown = ({
 
           <div className="absolute right-0 top-full mt-1 z-20 bg-neutral-800 rounded-md border border-neutral-700 shadow-lg min-w-[240px]">
             <ul className="py-1">
-              {addressOptions.map((option) => (
-                <li key={option.id}>
-                  <button
-                    type="button"
-                    className={clsx(
-                      "w-full px-4 py-3 text-left flex items-center gap-3",
-                      "hover:bg-neutral-700 transition-colors",
-                      "text-sm text-white",
-                      option.address === selectedAddress && "bg-neutral-700"
-                    )}
-                    onClick={() => handleSelectOption(option)}
-                  >
-                    <img
-                      src={option.iconUrl}
-                      alt={option.label}
-                      className="w-6 h-6 flex-shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-white">
-                        {option.label}
+              {addressOptions.map((option) => {
+                const keplr = option.id === "keplr";
+                const transparent = option.id === "namada-transparent";
+                const shielded = option.id === "namada-shielded";
+                const isShieldedTransfer =
+                  location.pathname !== routes.maspShield &&
+                  isShieldedAddress(destinationAddress ?? "");
+                const isShieldingTxn = location.pathname === routes.maspShield;
+
+                const disabled =
+                  (keplr && isShieldedTransfer) ||
+                  (transparent && isShieldedTransfer) ||
+                  (shielded && isShieldingTxn);
+                return (
+                  <li key={option.id}>
+                    <button
+                      disabled={disabled}
+                      type="button"
+                      className={clsx(
+                        "w-full px-4 py-3 text-left flex items-center gap-3",
+                        "hover:bg-neutral-700 transition-colors",
+                        "text-sm text-white",
+                        option.address === selectedAddress && "bg-neutral-700",
+                        disabled && "opacity-30 cursor-not-allowed"
+                      )}
+                      onClick={() => handleSelectOption(option)}
+                    >
+                      <img
+                        src={option.iconUrl}
+                        alt={option.label}
+                        className="w-6 h-6 flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-white">
+                          {option.label}
+                        </div>
+                        <div className="text-xs text-neutral-400 truncate">
+                          {shortenAddress(option.address, 10, 10)}
+                        </div>
                       </div>
-                      <div className="text-xs text-neutral-400 truncate">
-                        {shortenAddress(option.address, 10, 10)}
-                      </div>
-                    </div>
-                  </button>
-                </li>
-              ))}
+                    </button>
+                  </li>
+                );
+              })}
 
               {/* Connect Wallet button if Keplr is not connected */}
               {!connectedWallets.keplr && (
