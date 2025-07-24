@@ -49,7 +49,6 @@ export const hasEnoughBalanceForFees = ({
   gasConfig: GasConfig | undefined;
   displayGasFeeAmount: BigNumber | undefined;
 }): boolean => {
-  console.log(isIbcToken, availableAssets, gasConfig, displayGasFeeAmount);
   // Skip if transaction fees will be handled by another wallet, like Keplr.
   // (Ex: when users transfer from IBC to Namada)
   if (isIbcToken) return true;
