@@ -1,6 +1,5 @@
 import { Keplr } from "@keplr-wallet/types";
 import { AccountType } from "@namada/types";
-import { shortenAddress } from "@namada/utils";
 import { routes } from "App/routes";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { connectedWalletsAtom } from "atoms/integrations";
@@ -21,6 +20,7 @@ type AddressOption = {
   id: string;
   label: string;
   address: string;
+  alias: string;
   walletType: "namada" | "keplr";
   accountType?: AccountType;
   iconUrl: string;
@@ -111,6 +111,7 @@ export const AddressDropdown = ({
       addressOptions.push({
         id: "namada-transparent",
         label: "Namada Transparent",
+        alias: transparentAccount.alias,
         address: transparentAccount.address,
         walletType: "namada",
         accountType: transparentAccount.type,
@@ -122,6 +123,7 @@ export const AddressDropdown = ({
       addressOptions.push({
         id: "namada-shielded",
         label: "Namada Shielded",
+        alias: shieldedAccount.alias,
         address: shieldedAccount.address,
         walletType: "namada",
         accountType: shieldedAccount.type,
@@ -135,6 +137,7 @@ export const AddressDropdown = ({
     addressOptions.push({
       id: "keplr",
       label: "Keplr",
+      alias: "Keplr",
       address: keplrAddress,
       walletType: "keplr",
       iconUrl: wallets.keplr.iconUrl,
@@ -230,7 +233,7 @@ export const AddressDropdown = ({
                   : "text-neutral-300"
                 )}
               >
-                {shortenAddress(option.address, 8, 6)}
+                {option.alias ?? "Keplr"}
               </div>
             </div>
           </button>
