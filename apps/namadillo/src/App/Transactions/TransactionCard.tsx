@@ -230,7 +230,7 @@ export const TransactionCard = ({
   };
 
   const displayAmount = getDisplayAmount();
-
+  console.log(transactionTopLevel?.timestamp);
   return (
     <article
       className={twMerge(
