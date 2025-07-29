@@ -12,6 +12,6 @@ export const sortedTableData = (data: TokenBalance[]): TokenBalance[] => {
     if (aIsNam !== bIsNam) return aIsNam ? -1 : 1;
     const aValue = BigNumber(a.amount);
     const bValue = BigNumber(b.amount);
-    return bValue.comparedTo(aValue) || 0;
+    return bValue.comparedTo(aValue);
   });
 };
