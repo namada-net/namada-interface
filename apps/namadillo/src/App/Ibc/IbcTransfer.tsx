@@ -73,6 +73,7 @@ export const IbcTransfer = ({
     shielded: isShieldedAddress(destinationAddress ?? ""),
     selectedAsset: selectedAssetWithAmount?.asset,
   });
+
   // DERIVED VALUES
   const shielded = isShieldedAddress(destinationAddress ?? "");
   const availableDisplayAmount = mapUndefined((baseDenom) => {
