@@ -14,7 +14,7 @@ import { useLocation } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
-import { isNamadaAddress } from "./common";
+import { isIbcAddress, isNamadaAddress } from "./common";
 
 type AddressOption = {
   id: string;
@@ -204,8 +204,11 @@ export const AddressDropdown = ({
       {/* Address Options List */}
       {addressOptions.map((option) => {
         const shielded = option.id === "namada-shielded";
+        const keplr = option.id === "keplr";
         const isShieldingTxn = location.pathname === routes.maspShield;
-        const disabled = shielded && isShieldingTxn;
+        const isIbcDestination = isIbcAddress(destinationAddress ?? "");
+        const disabled =
+          (shielded && isShieldingTxn) || (keplr && isIbcDestination);
         const isSelected = option.address === selectedAddress;
         if (disabled) return null;
         return (
