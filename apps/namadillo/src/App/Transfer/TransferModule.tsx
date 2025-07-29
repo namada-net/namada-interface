@@ -13,7 +13,7 @@ import { useAssetsWithAmounts } from "hooks/useAssetsWithAmounts";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
 import { useUrlState } from "hooks/useUrlState";
 import { useAtomValue } from "jotai";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AssetWithAmount } from "types";
@@ -59,6 +59,7 @@ export const TransferModule = ({
     assetsWithAmounts.find(
       (assetWithAmount) => assetWithAmount.asset.address === asset
     );
+
   const availableAmount = selectedAsset?.amount;
   const availableAssets = useMemo(() => {
     return filterAvailableAssetsWithBalance(usersAssets);
@@ -102,6 +103,7 @@ export const TransferModule = ({
   };
 
   const gasConfig = gasConfigProp ?? feeProps?.gasConfig;
+
   const displayGasFee = useMemo(() => {
     return gasConfig ?
         getDisplayGasFee(gasConfig, chainAssets.data ?? {})
@@ -167,6 +169,13 @@ export const TransferModule = ({
       memo: destination.memo,
     });
   };
+
+  // Set the selected asset in the parent component from the URL state if it's not set
+  useEffect(() => {
+    if (!source.selectedAssetWithAmount && selectedAsset) {
+      source.onChangeSelectedAsset(selectedAsset);
+    }
+  }, [selectedAsset]);
 
   return (
     <>

@@ -19,7 +19,11 @@ import { useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { AssetWithAmount } from "types";
 import { AddressDropdown } from "./AddressDropdown";
-import { isNamadaAddress } from "./common";
+import {
+  isNamadaAddress,
+  isShieldedAddress,
+  isTransparentAddress,
+} from "./common";
 
 type SelectTokenProps = {
   setSourceAddress: (address: string) => void;
@@ -278,6 +282,20 @@ export const SelectToken = ({
               <div className="mb-6">
                 <div className="h-[400px] overflow-auto dark-scrollbar">
                   <Stack as="ul" gap={2} className="pb-15">
+                    <span
+                      className={clsx(
+                        "text-white text-sm",
+                        isShieldedAddress(sourceAddress) ? "text-yellow" : (
+                          "text-white"
+                        )
+                      )}
+                    >
+                      {isShieldedAddress(sourceAddress) ?
+                        "Namada Shielded"
+                      : isTransparentAddress(sourceAddress) ?
+                        "Namada Transparent"
+                      : "Keplr"}
+                    </span>
                     {filteredTokens.length > 0 ?
                       filteredTokens.map((token) => {
                         const isKeplrAddress = !isNamadaAddress(sourceAddress);
