@@ -16,6 +16,7 @@ type AmountsInFiatOutput = {
   shieldedQuery: AtomWithQueryResult;
   unshieldedQuery: AtomWithQueryResult;
   stakingQuery: AtomWithQueryResult;
+  isLoading: boolean;
 };
 
 export const useAmountsInFiat = (): AmountsInFiatOutput => {
@@ -68,5 +69,11 @@ export const useAmountsInFiat = (): AmountsInFiatOutput => {
     shieldedAmountInFiat: shieldedDollars,
     unshieldedAmountInFiat: unshieldedDollars,
     stakingAmountInFiat: stakingDollars,
+    isLoading:
+      shieldedTokensQuery.isLoading ||
+      unshieldedTokensQuery.isLoading ||
+      stakingTotalsQuery.isLoading ||
+      nativeTokenAddressQuery.isLoading ||
+      tokenPricesQuery.isLoading,
   };
 };
