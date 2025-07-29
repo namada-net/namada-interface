@@ -4,7 +4,6 @@ import { Modal, Stack } from "@namada/components";
 import { ModalTransition } from "App/Common/ModalTransition";
 import { Search } from "App/Common/Search";
 import {
-  allKeplrAssetsBalanceAtom,
   connectedWalletsAtom,
   getAvailableChains,
   getChainRegistryByChainName,
@@ -60,7 +59,6 @@ export const SelectToken = ({
   const { connectToChainId } = useWalletManager(keplrWallet);
 
   // Get balances for connected chains
-  const keplrBalances = useAtomValue(allKeplrAssetsBalanceAtom);
   const allNetworks: Chain[] = useMemo(() => {
     return allChains
       .filter((chain) => chain.network_type !== "testnet")
