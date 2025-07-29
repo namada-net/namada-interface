@@ -6,6 +6,7 @@ import { getStakingTotalAtom } from "atoms/staking";
 import BigNumber from "bignumber.js";
 import { useAtomValue } from "jotai";
 import { AtomWithQueryResult } from "jotai-tanstack-query";
+import { useMemo } from "react";
 
 type AmountsInFiatOutput = {
   shieldedAmountInFiat: BigNumber;
@@ -31,7 +32,7 @@ export const useAmountsInFiat = (): AmountsInFiatOutput => {
   const shieldedDollars = getTotalDollar(shieldedTokensQuery.data);
   const unshieldedDollars = getTotalDollar(unshieldedTokensQuery.data);
 
-  const stakingDollars = (() => {
+  const stakingDollars = useMemo(() => {
     if (
       !stakingTotalsQuery.data ||
       !nativeTokenAddressQuery.data ||
@@ -49,7 +50,11 @@ export const useAmountsInFiat = (): AmountsInFiatOutput => {
       tokenPricesQuery.data[nativeTokenAddressQuery.data] ?? new BigNumber(0);
 
     return totalStakingAmount.multipliedBy(namPrice);
-  })();
+  }, [
+    stakingTotalsQuery.data,
+    nativeTokenAddressQuery.data,
+    tokenPricesQuery.data,
+  ]);
 
   const totalAmountInDollars = shieldedDollars
     .plus(unshieldedDollars)
