@@ -36,7 +36,7 @@ export const useAssetsWithAmounts = (
         let amount = BigNumber(0);
         // Look for balance in allKeplrBalances using the known key format
         if (keplrBalances.data) {
-          const trace = asset.traces?.find((t: any) => t.type === "ibc");
+          const trace = asset.traces?.find((t) => t.type === "ibc");
           if (trace?.counterparty) {
             // For IBC assets
             const baseDenom = trace.counterparty.base_denom;
