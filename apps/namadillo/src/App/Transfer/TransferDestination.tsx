@@ -11,6 +11,7 @@ import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
 import { useWalletManager } from "hooks/useWalletManager";
+import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
 import { useAtomValue } from "jotai";
@@ -18,6 +19,7 @@ import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { useLocation } from "react-router-dom";
 import { Address } from "types";
+import { SelectedChain } from ".";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 import shieldedEye from "./assets/shielded-eye.svg";
@@ -38,7 +40,7 @@ type TransferDestinationProps = {
   feeProps?: TransactionFeeProps;
   destinationAsset?: Asset;
   amount?: BigNumber;
-  address?: string;
+  destinationAddress?: string;
   sourceAddress?: string;
   memo?: string;
   onChangeAddress?: (address: Address) => void;
@@ -55,7 +57,7 @@ export const TransferDestination = ({
   feeProps,
   destinationAsset,
   amount,
-  address,
+  destinationAddress,
   sourceAddress,
   memo,
   setDestinationAddress,
@@ -66,7 +68,8 @@ export const TransferDestination = ({
   const location = useLocation();
 
   const isIbcTransfer =
-    !isNamadaAddress(address ?? "") || !isNamadaAddress(sourceAddress ?? "");
+    !isNamadaAddress(destinationAddress ?? "") ||
+    !isNamadaAddress(sourceAddress ?? "");
   const changeFeeEnabled = !isIbcTransfer;
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
@@ -109,23 +112,30 @@ export const TransferDestination = ({
 
   // Make sure destination address is pre-filled if it's a shielding transaction
   useEffect(() => {
-    if (address) return;
+    if (destinationAddress) return;
     if (isShieldingTransaction && shieldedAccount?.address) {
       setDestinationAddress?.(shieldedAccount?.address ?? "");
     }
   }, [
     isShieldingTransaction,
     shieldedAccount?.address,
-    address,
+    destinationAddress,
     setDestinationAddress,
   ]);
 
   // Write a customAddress variable that checks if the address doesn't come from our transparent or shielded accounts
   const customAddress =
-    [shieldedAccount?.address, transparentAccount?.address].includes(address) ?
+    (
+      [shieldedAccount?.address, transparentAccount?.address].includes(
+        destinationAddress
+      )
+    ) ?
       undefined
-    : address;
+    : destinationAddress;
 
+  const sourceWallet =
+    isNamadaAddress(destinationAddress || "") ? wallets.namada : wallets.keplr;
+  const chain = getChainFromAddress(destinationAddress ?? "");
   return (
     <>
       <div
@@ -133,7 +143,7 @@ export const TransferDestination = ({
           "border border-yellow transition-colors duration-200":
             isShieldedAddress,
           "border border-white transition-colors duration-200":
-            isNamadaAddress(address ?? "") && !isShieldedAddress,
+            isNamadaAddress(destinationAddress ?? "") && !isShieldedAddress,
         })}
       >
         {!isSubmitting && (
@@ -168,26 +178,32 @@ export const TransferDestination = ({
                 )}
               >
                 <div className="flex">
-                  {address && (
+                  {destinationAddress && (
                     <img
                       src={
                         isShieldedAddress ? namadaShieldedIcon
-                        : isTransparentAddress(address) ?
+                        : isTransparentAddress(destinationAddress) ?
                           namadaTransparentIcon
-                        : getChainImageUrl(getChainFromAddress(address ?? ""))
+                        : getChainImageUrl(
+                            getChainFromAddress(destinationAddress ?? "")
+                          )
+
                       }
-                      alt={getChainFromAddress(address ?? "")?.pretty_name}
+                      alt={
+                        getChainFromAddress(destinationAddress ?? "")
+                          ?.pretty_name
+                      }
                       className="w-7"
                     />
                   )}
                   <div className="flex flex-col ml-4">
-                    {address ?
+                    {destinationAddress ?
                       <div className="flex flex-col">
                         <span className="text-neutral-500 text-left font-normal text-xs">
-                          {isIbcAddress(address) ? "Keplr" : alias}
+                          {isIbcAddress(destinationAddress) ? "Keplr" : alias}
                         </span>
                         <span className="text-white text-sm font-normal">
-                          {shortenAddress(address, 15, 15)}
+                          {shortenAddress(destinationAddress, 15, 15)}
                         </span>
                       </div>
                     : <span className="text-neutral-500 font-normal">
@@ -196,7 +212,7 @@ export const TransferDestination = ({
                     }
                   </div>
                 </div>
-                {!address ?
+                {!destinationAddress ?
                   <>
                     <ConnectProviderButton onClick={handleOpenModal} />
                   </>
@@ -229,9 +245,16 @@ export const TransferDestination = ({
           <footer>
             <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
             <div className="flex justify-between items-center gap-4">
-              {address && (
+              {chain && (
+                <SelectedChain
+                  chain={chain}
+                  wallet={sourceWallet}
+                  iconSize="36px"
+                />
+              )}
+              {destinationAddress && (
                 <SelectedWallet
-                  address={customAddress ? customAddress : address}
+                  address={customAddress ? customAddress : destinationAddress}
                   displayFullAddress={false}
                 />
               )}
@@ -265,7 +288,7 @@ export const TransferDestination = ({
           isShieldedTx={isShieldedTx}
           onClose={handleCloseModal}
           onSelectAddress={handleSelectAddress}
-          selectedAddress={address}
+          selectedAddress={destinationAddress}
         />
       )}
     </>
