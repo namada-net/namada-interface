@@ -4,10 +4,6 @@ import { Modal, Stack } from "@namada/components";
 import { ModalTransition } from "App/Common/ModalTransition";
 import { Search } from "App/Common/Search";
 import {
-  namadaShieldedAssetsAtom,
-  namadaTransparentAssetsAtom,
-} from "atoms/balance";
-import {
   allKeplrAssetsBalanceAtom,
   connectedWalletsAtom,
   getAvailableChains,
@@ -15,7 +11,6 @@ import {
   namadaRegistryChainAssetsMapAtom,
 } from "atoms/integrations";
 import { tokenPricesFamily } from "atoms/prices/atoms";
-import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
@@ -24,7 +19,7 @@ import { useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { AssetWithAmount } from "types";
 import { AddressDropdown } from "./AddressDropdown";
-import { isNamadaAddress, isShieldedAddress } from "./common";
+import { isNamadaAddress } from "./common";
 
 type SelectTokenProps = {
   setSourceAddress: (address: string) => void;
@@ -34,6 +29,7 @@ type SelectTokenProps = {
   onClose: () => void;
   onSelect: ((selectedAsset: AssetWithAmount) => void) | undefined;
   keplrWalletManager?: KeplrWalletManager | undefined;
+  assetsWithAmounts: AssetWithAmount[];
 };
 
 export const SelectToken = ({
@@ -43,17 +39,12 @@ export const SelectToken = ({
   isOpen,
   onClose,
   onSelect,
+  assetsWithAmounts,
   keplrWalletManager,
 }: SelectTokenProps): JSX.Element | null => {
   const [filter, setFilter] = useState("");
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
-
-  const { data: availableAssets } = useAtomValue(
-    isShieldedAddress(sourceAddress) ?
-      namadaShieldedAssetsAtom
-    : namadaTransparentAssetsAtom
-  );
   const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
   const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const chainAssetsMap = Object.values(chainAssets.data ?? {});
@@ -84,83 +75,36 @@ export const SelectToken = ({
     return map;
   }, [chainAssetsMap]);
 
-  const tokens = useMemo(() => {
-    const result: AssetWithAmount[] = [];
-    // Check if current address is a Keplr address (not shielded or transparent Namada)
-    const isKeplrAddress = !isNamadaAddress(sourceAddress);
-
-    if (isKeplrAddress) {
-      // For Keplr addresses, show all available chain assets with balance data from allKeplrBalances
-      chainAssetsMap.forEach((asset) => {
-        let amount = BigNumber(0);
-        // Look for balance in allKeplrBalances using the known key format
-        if (keplrBalances.data) {
-          const trace = asset.traces?.find((t) => t.type === "ibc");
-          if (trace?.counterparty) {
-            // For IBC assets
-            const baseDenom = trace.counterparty.base_denom;
-            if (keplrBalances.data[baseDenom])
-              amount = keplrBalances.data[baseDenom].amount;
-          } else {
-            // For native assets: chainName:base
-            const chainName = asset.name?.toLowerCase();
-            if (chainName) {
-              const key = `${asset.base}`;
-              if (keplrBalances.data[key]) {
-                amount = keplrBalances.data[key].amount;
-              }
-            }
-          }
-
-          result.push({
-            asset,
-            amount,
-          });
-        }
-      });
-    } else {
-      // For Namada addresses, use the appropriate assets atom
-      Object.values(availableAssets ?? {}).forEach((item) => {
-        if (item.asset && item.asset.address) {
-          result.push(item);
-        }
-      });
-    }
-
-    return result;
-  }, [
-    sourceAddress,
-    availableAssets,
-    chainAssetsMap,
-    connectedWallets.keplr,
-    keplrBalances.data,
-  ]);
-
   // Get token prices for USD calculation
-  const tokenAddresses = tokens
-    .map((token) => token.asset.address)
+  const tokenAddresses = assetsWithAmounts
+    .map((assetWithAmount) => assetWithAmount.asset.address)
     .filter((address): address is string => Boolean(address));
 
   const tokenPrices = useAtomValue(tokenPricesFamily(tokenAddresses));
 
   const filteredTokens = useMemo(() => {
-    return tokens
-      .filter((token) => {
+    return assetsWithAmounts
+      .filter((assetWithAmount) => {
         // Filter by search term
         const matchesSearch =
-          token.asset.name.toLowerCase().includes(filter.toLowerCase()) ||
-          token.asset.symbol.toLowerCase().includes(filter.toLowerCase());
+          assetWithAmount.asset.name
+            .toLowerCase()
+            .includes(filter.toLowerCase()) ||
+          assetWithAmount.asset.symbol
+            .toLowerCase()
+            .includes(filter.toLowerCase());
 
         // Filter by selected network (if any)
         const tokenNetworkName =
-          assetToNetworkMap[token.asset.address || ""] || token.asset.name;
+          assetToNetworkMap[assetWithAmount.asset.address || ""] ||
+          assetWithAmount.asset.name;
         const matchesNetwork =
           selectedNetwork === null || tokenNetworkName === selectedNetwork;
 
         return matchesSearch && matchesNetwork;
       })
       .sort((a, b) => Number(b.amount) - Number(a.amount));
-  }, [tokens, filter, selectedNetwork, assetToNetworkMap]);
+  }, [assetsWithAmounts, filter, selectedNetwork, assetToNetworkMap]);
 
   const handleNetworkSelect = (networkName: string): void => {
     setSelectedNetwork(selectedNetwork === networkName ? null : networkName);

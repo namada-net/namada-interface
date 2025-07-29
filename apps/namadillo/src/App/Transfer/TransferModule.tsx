@@ -1,7 +1,7 @@
 import { ActionButton, Stack } from "@namada/components";
 import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
-import { routes } from "App/routes";
+import { params, routes } from "App/routes";
 import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
@@ -9,7 +9,9 @@ import {
 import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
+import { useAssetsWithAmounts } from "hooks/useAssetsWithAmounts";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
+import { useUrlState } from "hooks/useUrlState";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
@@ -44,18 +46,25 @@ export const TransferModule = ({
   requiresIbcChannels,
   keplrWalletManager,
 }: TransferModuleProps): JSX.Element => {
+  const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
   const { data: usersAssets, isLoading: isLoadingUsersAssets } = useAtomValue(
     isShieldedAddress(source.address ?? "") ?
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
-  const selectedAsset = source.selectedAssetWithAmount;
+  const [asset, setAsset] = useUrlState(params.asset);
+  const assetsWithAmounts = useAssetsWithAmounts(source.address ?? "");
+  const selectedAsset =
+    source.selectedAssetWithAmount ??
+    assetsWithAmounts.find(
+      (assetWithAmount) => assetWithAmount.asset.address === asset
+    );
   const availableAmount = selectedAsset?.amount;
   const availableAssets = useMemo(() => {
     return filterAvailableAssetsWithBalance(usersAssets);
   }, [usersAssets]);
-  const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
-  const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
+  const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
+
   const navigate = useNavigate();
   const location = useLocation();
   const keychainVersion = useKeychainVersion();
@@ -95,7 +104,7 @@ export const TransferModule = ({
   const gasConfig = gasConfigProp ?? feeProps?.gasConfig;
   const displayGasFee = useMemo(() => {
     return gasConfig ?
-        getDisplayGasFee(gasConfig, chainAssetsMap.data ?? {})
+        getDisplayGasFee(gasConfig, chainAssets.data ?? {})
       : undefined;
   }, [gasConfig]);
 
@@ -291,7 +300,9 @@ export const TransferModule = ({
         setSourceAddress={source.onChangeAddress}
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}
+        assetsWithAmounts={assetsWithAmounts}
         onSelect={(selectedAssetWithAmount: AssetWithAmount) => {
+          setAsset(selectedAssetWithAmount.asset.address);
           source.onChangeAmount(undefined);
           source.onChangeSelectedAsset(selectedAssetWithAmount);
           setAssetSelectorModalOpen(false);
