@@ -1,7 +1,6 @@
 import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
-import { params } from "App/routes";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -12,7 +11,6 @@ import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
-import { useUrlState } from "hooks/useUrlState";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
@@ -32,8 +30,6 @@ export const MaspShield = ({
   destinationAddress,
   setDestinationAddress,
 }: MaspShieldProps): JSX.Element => {
-  //  URL STATE
-  const [assetAddress] = useUrlState(params.asset);
   //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
@@ -65,19 +61,6 @@ export const MaspShield = ({
       setSourceAddress(transparentAddress);
     }
   }, [transparentAddress, sourceAddress, setSourceAddress]);
-
-  // Initialize selectedAssetWithAmount from URL parameter when assets are available
-  useEffect(() => {
-    if (!assetAddress || !transparentAssets || selectedAssetWithAmount) return;
-
-    const assetFromUrl = Object.values(transparentAssets).find(
-      (item) => item.asset?.address === assetAddress
-    );
-
-    if (assetFromUrl) {
-      setSelectedAssetWithAmount(assetFromUrl);
-    }
-  }, [assetAddress, transparentAssets, selectedAssetWithAmount]);
 
   const {
     execute: performTransfer,
