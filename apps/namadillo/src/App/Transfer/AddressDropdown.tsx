@@ -1,4 +1,4 @@
-import { Keplr } from "@keplr-wallet/types";
+import { Keplr, Key } from "@keplr-wallet/types";
 import { AccountType } from "@namada/types";
 import { routes } from "App/routes";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -42,6 +42,7 @@ export const AddressDropdown = ({
   onSelectAddress,
 }: AddressListProps): JSX.Element => {
   const [keplrAddress, setKeplrAddress] = useState<string | null>(null);
+  const [keplrAlias, setKeplrAlias] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
@@ -68,8 +69,9 @@ export const AddressDropdown = ({
     }
 
     if (chainId) {
-      const key = await keplrInstance.getKey(chainId);
+      const key: Key = await keplrInstance.getKey(chainId);
       setKeplrAddress(key.bech32Address);
+      setKeplrAlias(key.name);
     }
   };
 
@@ -85,9 +87,11 @@ export const AddressDropdown = ({
         } catch (error) {
           console.error("Failed to fetch Keplr address:", error);
           setKeplrAddress(null);
+          setKeplrAlias(null);
         }
       } else {
         setKeplrAddress(null);
+        setKeplrAlias(null);
       }
     };
 
@@ -137,7 +141,7 @@ export const AddressDropdown = ({
     addressOptions.push({
       id: "keplr",
       label: "Keplr",
-      alias: "Keplr",
+      alias: keplrAlias || "Keplr",
       address: keplrAddress,
       walletType: "keplr",
       iconUrl: wallets.keplr.iconUrl,
