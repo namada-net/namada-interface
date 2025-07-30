@@ -1,4 +1,4 @@
-FROM rust:1.79 AS builder
+FROM rust:1.85.1 AS builder
 WORKDIR /app
 
 RUN apt update && apt install -y nodejs npm clang pkg-config libssl-dev protobuf-compiler curl
