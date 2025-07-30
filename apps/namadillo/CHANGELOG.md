@@ -9,9 +9,6 @@
 * History filtering ([#2263](https://github.com/namada-net/namada-interface/issues/2263)) ([d8ebad4](https://github.com/namada-net/namada-interface/commit/d8ebad4deed555031590112f6fe3a6699e675892))
 * Threshold fix ([#2258](https://github.com/namada-net/namada-interface/issues/2258)) ([12fdcef](https://github.com/namada-net/namada-interface/commit/12fdcefcd03463b7585591e5e244e5632882687f))
 
-### Chores
-* Bump namada_sdk ([#2260](https://github.com/namada-net/namada-interface/pull/2260)) ([c817701](https://github.com/namada-net/namada-interface/commit/c817701bb69729ba2d0a41246a24da422660c03f))
-
 ## [1.31.2](https://github.com/namada-net/namada-interface/compare/namadillo@v1.31.1...namadillo@v1.31.2) (2025-07-22)
 
 
