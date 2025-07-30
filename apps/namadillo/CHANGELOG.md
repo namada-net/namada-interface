@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.31.4](https://github.com/namada-net/namada-interface/compare/namadillo@v1.31.3...namadillo@v1.31.4) (2025-07-30)
+
+
+### Bug Fixes
+
+* Namada repository in package json ([#2268](https://github.com/namada-net/namada-interface/issues/2268)) ([70d0f42](https://github.com/namada-net/namada-interface/commit/70d0f4255390e715900071005a9e5d48909fcc74))
+
 ## [1.31.3](https://github.com/namada-net/namada-interface/compare/namadillo@v1.31.2...namadillo@v1.31.3) (2025-07-30)
 
 
