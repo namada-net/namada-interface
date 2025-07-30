@@ -79,7 +79,7 @@ export const TransactionHistory = (): JSX.Element => {
         return transactionKind.startsWith("ibc");
       } else return transactionKind === filter;
     },
-    []
+    [filter]
   );
 
   const JSONstringifyOrder = useCallback((obj: unknown): string => {
