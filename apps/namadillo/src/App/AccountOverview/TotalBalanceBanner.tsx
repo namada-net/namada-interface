@@ -14,12 +14,15 @@ export const TotalBalanceBanner = (): JSX.Element => {
   const { isFetching: isShieldSyncing } = useAtomValue(shieldedBalanceAtom);
   const requiresNewShieldedSync = useRequiresNewShieldedSync();
   const shouldWaitForShieldedSync = requiresNewShieldedSync && isShieldSyncing;
-  const { shieldedQuery, unshieldedQuery, totalAmountInFiat } =
+  const { shieldedQuery, unshieldedQuery, stakingQuery, totalAmountInFiat } =
     useAmountsInFiat();
 
   const balancesHaveLoaded =
-    shieldedQuery.isSuccess && unshieldedQuery.isSuccess;
-  const hasErrors = shieldedQuery.isError && unshieldedQuery.isError;
+    shieldedQuery.isSuccess &&
+    unshieldedQuery.isSuccess &&
+    stakingQuery.isSuccess;
+  const hasErrors =
+    shieldedQuery.isError && unshieldedQuery.isError && stakingQuery.isError;
   const balanceIsLoading = !balancesHaveLoaded && !hasErrors;
 
   return (
