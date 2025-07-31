@@ -484,13 +484,23 @@ export class Tx {
       // Wrapper fee payer is always defined at this point
       wrapperFeePayer: wrapperTx.wrapperFeePayer!,
       commitments: commitments.map(
-        ({ txType, hash, txCodeId, data, memo, maspTxIn, maspTxOut }) => ({
+        ({
+          txType,
+          hash,
+          txCodeId,
+          data,
+          memo,
+          maspTxIn,
+          maspTxOut,
+          maspTxConv,
+        }) => ({
           txType: txType as TxType,
           hash,
           txCodeId,
           memo,
           maspTxIn,
           maspTxOut,
+          maspTxConv,
           ...getProps(txType, data),
         })
       ),

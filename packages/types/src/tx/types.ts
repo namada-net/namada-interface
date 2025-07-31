@@ -4,6 +4,7 @@ import {
   ClaimRewardsMsgValue,
   EthBridgeTransferMsgValue,
   IbcTransferMsgValue,
+  MaspTxConv,
   MaspTxIn,
   MaspTxOut,
   RedelegateMsgValue,
@@ -75,6 +76,7 @@ export type CommitmentDetailProps = SupportedTxProps & {
   memo?: string;
   maspTxIn?: MaspTxIn[];
   maspTxOut?: MaspTxOut[];
+  maspTxConv?: MaspTxConv[];
 };
 
 export type TxDetails = WrapperTxProps & {

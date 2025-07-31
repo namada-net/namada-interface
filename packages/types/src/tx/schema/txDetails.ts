@@ -32,6 +32,18 @@ export class MaspTxOut {
   }
 }
 
+export class MaspTxConv {
+  @field({ type: "string" })
+  token!: string;
+
+  @field({ type: "string" })
+  value!: string;
+
+  constructor(data: MaspTxConv) {
+    Object.assign(this, data);
+  }
+}
+
 export class CommitmentMsgValue {
   @field({ type: "u8" })
   txType!: number;
@@ -54,6 +66,9 @@ export class CommitmentMsgValue {
   @field({ type: option(vec(MaspTxOut)) })
   maspTxOut?: MaspTxOut[];
 
+  @field({ type: option(vec(MaspTxConv)) })
+  maspTxConv?: MaspTxConv[];
+
   constructor(data: CommitmentMsgValue) {
     const maspTxIn =
       data.maspTxIn ?
@@ -63,11 +78,16 @@ export class CommitmentMsgValue {
       data.maspTxOut ?
         data.maspTxOut.map((txOut) => new MaspTxOut(txOut))
       : undefined;
+    const maspTxConv =
+      data.maspTxConv ?
+        data.maspTxConv.map((txConv) => new MaspTxConv(txConv))
+      : undefined;
 
     Object.assign(this, {
       ...data,
       maspTxIn,
       maspTxOut,
+      maspTxConv,
     });
   }
 }

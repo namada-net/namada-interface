@@ -5,7 +5,8 @@ use gloo_utils::format::JsValueSerdeExt;
 use namada_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use namada_sdk::collections::HashSet;
 use namada_sdk::masp_primitives::transaction::components::sapling::builder::StoredBuildParams;
-use namada_sdk::masp_primitives::transaction::components::sapling::fees::{InputView, OutputView};
+use namada_sdk::masp_primitives::transaction::components::sapling::fees::{ConvertView, InputView, OutputView};
+use namada_sdk::masp_primitives::transaction::components::I128Sum;
 use namada_sdk::masp_primitives::zip32::ExtendedFullViewingKey;
 use namada_sdk::signing::SigningTxData;
 use namada_sdk::token::{Amount, DenominatedAmount, Transfer};
@@ -264,7 +265,7 @@ pub fn deserialize_tx(tx_bytes: Vec<u8>, wasm_hashes: JsValue) -> Result<Vec<u8>
     Ok(borsh::to_vec(&tx)?)
 }
 
-#[derive(BorshSerialize, BorshDeserialize)]
+#[derive(Debug, BorshSerialize, BorshDeserialize)]
 #[borsh(crate = "namada_sdk::borsh")]
 pub struct TxIn {
     pub token: String,
@@ -272,7 +273,14 @@ pub struct TxIn {
     pub owner: String,
 }
 
-#[derive(BorshSerialize, BorshDeserialize)]
+#[derive(Debug, BorshSerialize, BorshDeserialize)]
+#[borsh(crate = "namada_sdk::borsh")]
+pub struct TxConv {
+    pub token: String,
+    pub value: String,
+}
+
+#[derive(Debug, BorshSerialize, BorshDeserialize)]
 #[borsh(crate = "namada_sdk::borsh")]
 pub struct TxOut {
     pub token: String,
@@ -290,6 +298,7 @@ pub struct Commitment {
     memo: Option<String>,
     masp_tx_in: Option<Vec<TxIn>>,
     masp_tx_out: Option<Vec<TxOut>>,
+    masp_tx_conv: Option<Vec<TxConv>>,
 }
 
 #[derive(BorshSerialize, BorshDeserialize)]
@@ -352,7 +361,12 @@ impl TxDetails {
                             let tx_kind = transaction::TransactionKind::from(tx_type, &tx_data);
                             let data = tx_kind.to_bytes()?;
 
-                            let (inputs, outputs) = get_masp_details(&tx, &tx_kind);
+                            let (inputs, outputs, conversions) = get_masp_details(&tx, &tx_kind);
+
+                            web_sys::console::log_1(&format!(
+                                "Conversions: {:?}",
+                                conversions
+                            ).into());
 
                             commitments.push(Commitment {
                                 tx_type,
@@ -362,6 +376,7 @@ impl TxDetails {
                                 memo,
                                 masp_tx_out: outputs,
                                 masp_tx_in: inputs,
+                                masp_tx_conv: conversions,
                             });
                         }
                     }
@@ -380,7 +395,7 @@ impl TxDetails {
 fn get_masp_details(
     tx: &tx::Tx,
     tx_kind: &transaction::TransactionKind,
-) -> (Option<Vec<TxIn>>, Option<Vec<TxOut>>) {
+) -> (Option<Vec<TxIn>>, Option<Vec<TxOut>>, Option<Vec<TxConv>>) {
     let parse = |transfer: &Transfer| {
         if let Some(shielded_hash) = transfer.shielded_section_hash {
             let masp_builder = tx
@@ -410,6 +425,29 @@ fn get_masp_details(
                 })
                 .collect::<Vec<_>>();
 
+            let conversions = masp_builder.builder.sapling_converts().
+                iter()
+                .map(|convert| {
+                    let asset_data = asset_types
+                        .iter()
+                        .find(|ad| {
+                            let conv_asset_types = I128Sum::from(convert.conversion().clone()).asset_types()
+                            .cloned().collect::<Vec<_>>();
+                            let ad = ad.encode().unwrap();
+
+                            conv_asset_types.into_iter().any(|w| w == ad)
+                        })
+                        .expect("Asset data to exist");
+
+                    let amount = Amount::from_u64(convert.value());
+                    let denominated_amount = DenominatedAmount::new(amount, asset_data.denom);
+
+                    TxConv {
+                        token: asset_data.token.to_string(),
+                        value: denominated_amount.to_string(),
+                    }
+                }).collect::<Vec<_>>();
+
             let outputs = masp_builder
                 .builder
                 .sapling_outputs()
@@ -431,19 +469,19 @@ fn get_masp_details(
                 })
                 .collect::<Vec<_>>();
 
-            (Some(inputs), Some(outputs))
+            (Some(inputs), Some(outputs), Some(conversions))
         } else {
-            (None, None)
+            (None, None, None)
         }
     };
 
     match tx_kind {
         transaction::TransactionKind::IbcTransfer(ibc_transfer) => match &ibc_transfer.transfer {
             Some(transfer) => parse(transfer),
-            None => (None, None),
+            None => (None, None, None),
         },
         transaction::TransactionKind::Transfer(transfer) => parse(transfer),
-        _ => (None, None),
+        _ => (None, None , None),
     }
 }
 
