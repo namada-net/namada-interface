@@ -105,7 +105,8 @@ export const TransferDestination = ({
 
   const { connectToChainId } = useWalletManager(keplr);
 
-  const isShieldingTransaction = routes.maspShield === location.pathname;
+  const isShieldingTransaction =
+    routes.maspShield === location.pathname || routes.ibc === location.pathname;
   const isIbcAddress = (address: string): boolean => {
     return !isShieldedAddress && !isTransparentAddress(address);
   };
