@@ -65,9 +65,6 @@ export const TransferLayout: React.FC = () => {
   useEffect(() => {
     const { pathname, search } = location;
 
-    // 1. Stay put when already on /masp/shield
-    if (pathname === routes.maspShield) return;
-
     // 2. Decide where the current transfer type would normally send us
     const targetRoute = (() => {
       switch (transferType) {
@@ -83,6 +80,8 @@ export const TransferLayout: React.FC = () => {
           return routes.transfer; // "namada-transfer" and fallback
       }
     })();
+
+    if (pathname === routes.maspShield && targetRoute !== routes.ibc) return;
 
     // 3. Never auto‑navigate *to* /masp/shield
     if (targetRoute === routes.maspShield) return;
