@@ -22,7 +22,7 @@ import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtomValue } from "jotai";
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { isTransparentAddress } from ".";
+import { isShieldedAddress, isTransparentAddress } from ".";
 import { determineTransferType } from "./utils";
 
 export const TransferLayout: React.FC = () => {
@@ -47,12 +47,22 @@ export const TransferLayout: React.FC = () => {
   const transparentAddress =
     accounts?.find((acc) => isTransparentAddress(acc.address))?.address ?? "";
 
+  const shieldedAddress =
+    accounts?.find((acc) => isShieldedAddress(acc.address))?.address ?? "";
+
   // Initialize source address
   useEffect(() => {
     if (!sourceAddress && transparentAddress) {
       setSourceAddress(transparentAddress);
     }
   }, [transparentAddress]);
+
+  // Set destination address to shielded address when on Shield tab
+  useEffect(() => {
+    if (transferType === "shield" && shieldedAddress) {
+      setDestinationAddress(shieldedAddress);
+    }
+  }, [transferType, shieldedAddress, setDestinationAddress]);
 
   // Refetch shielded balance for MASP operations
   useEffect(() => {
