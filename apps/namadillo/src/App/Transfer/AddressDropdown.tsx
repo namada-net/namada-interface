@@ -1,4 +1,4 @@
-import { Keplr, Key } from "@keplr-wallet/types";
+import { Keplr, Window as KeplrWindow, Key } from "@keplr-wallet/types";
 import { AccountType } from "@namada/types";
 import { routes } from "App/routes";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -80,7 +80,8 @@ export const AddressDropdown = ({
     const fetchKeplrAddress = async (): Promise<void> => {
       if (connectedWallets.keplr) {
         try {
-          const keplrInstance = await keplr.get();
+          // Only get Keplr instance if it's already available, don't trigger connection
+          const keplrInstance = (window as KeplrWindow).keplr;
           if (keplrInstance) {
             await fetchKeplrAddressForChain(keplrInstance);
           }
