@@ -206,7 +206,9 @@ export const AddressDropdown = ({
       {addressOptions.map((option) => {
         const shielded = option.id === "namada-shielded";
         const keplr = option.id === "keplr";
-        const isShieldingTxn = location.pathname === routes.maspShield;
+        const isShieldingTxn = [routes.maspShield, routes.ibc].includes(
+          location.pathname as "/masp/shield" | "/ibc"
+        );
         const isIbcDestination = isIbcAddress(destinationAddress ?? "");
         const disabled =
           (shielded && isShieldingTxn) || (keplr && isIbcDestination);
