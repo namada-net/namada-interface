@@ -1,42 +1,25 @@
-import { Chain } from "@chain-registry/types";
 import { fireEvent, render, screen } from "@testing-library/react";
 import {
   TransferSource,
   TransferSourceProps,
 } from "App/Transfer/TransferSource";
 import BigNumber from "bignumber.js";
-import { namadaChainMock } from "../__mocks__/chains";
-import { walletMock } from "../__mocks__/providers";
 
 describe("Component: TransferSource", () => {
   it("should render the component with the default props", () => {
-    render(
-      <TransferSource
-        isConnected={false}
-        openProviderSelector={jest.fn()}
-        openChainSelector={jest.fn()}
-      />
-    );
+    render(<TransferSource openProviderSelector={jest.fn()} />);
     expect(screen.getByText("Connect Wallet")).toBeInTheDocument();
     expect(screen.getByText(/select chain/i)).toBeInTheDocument();
   });
 
   it("should not render chain selector when openChainSelector is not defined", () => {
-    render(
-      <TransferSource isConnected={false} openProviderSelector={jest.fn()} />
-    );
+    render(<TransferSource openProviderSelector={jest.fn()} />);
     const selectChain = screen.queryByText(/selected chain/i);
     expect(selectChain).not.toBeInTheDocument();
   });
 
   const setup = (props: Partial<TransferSourceProps> = {}): void => {
-    render(
-      <TransferSource
-        isConnected={false}
-        openProviderSelector={jest.fn()}
-        {...props}
-      />
-    );
+    render(<TransferSource openProviderSelector={jest.fn()} {...props} />);
   };
 
   const getEmptyChain = (): HTMLElement => {
@@ -56,10 +39,7 @@ describe("Component: TransferSource", () => {
 
   it("should call openChainSelector when the SelectedChain is clicked", () => {
     const openChainSelectorMock = jest.fn();
-    setup({
-      openChainSelector: openChainSelectorMock,
-      wallet: walletMock,
-    });
+
     const chain = getEmptyChain();
     fireEvent.click(chain);
     expect(openChainSelectorMock).toHaveBeenCalled();
@@ -79,8 +59,6 @@ describe("Component: TransferSource", () => {
     const openAssetSelectorMock = jest.fn();
     setup({
       openAssetSelector: openAssetSelectorMock,
-      chain: namadaChainMock as Chain,
-      walletAddress: "123",
     });
     const assetControl = getEmptyAsset();
     fireEvent.click(assetControl);
