@@ -126,7 +126,7 @@ export const buildTx = async <T>(
 
   return {
     txs: txProps.map(({ args, hash, bytes, signingData }) => {
-      const innerTxHashes = sdk.tx.getInnerTxHashes(bytes);
+      const innerTxHashes = sdk.tx.getInnerTxMeta(bytes);
       return {
         args,
         hash,

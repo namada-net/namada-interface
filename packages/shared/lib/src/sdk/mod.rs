@@ -453,11 +453,8 @@ impl Sdk {
 
                     match result {
                         Some(InnerTxResult::Success(_)) => {
-                            batch_tx_results.push((tx::BatchTxResult::new(
-                                        hash.to_string(),
-                                        true,
-                                        None,
-                            ), memo));
+                            batch_tx_results
+                                .push((tx::BatchTxResult::new(hash.to_string(), true, None), memo));
                         }
                         Some(InnerTxResult::VpsRejected(res)) => {
                             let errors = res
@@ -467,26 +464,31 @@ impl Sdk {
                                 .cloned()
                                 .map(|(_, err)| err)
                                 .collect::<Vec<_>>();
-                            batch_tx_results.push((tx::BatchTxResult::new(
-                                        hash.to_string(),
-                                        false,
-                                        Some(errors.join(" ")),
-                            ), memo));
+                            batch_tx_results.push((
+                                tx::BatchTxResult::new(
+                                    hash.to_string(),
+                                    false,
+                                    Some(errors.join(" ")),
+                                ),
+                                memo,
+                            ));
                         }
 
                         Some(InnerTxResult::OtherFailure(res)) => {
-                            batch_tx_results.push(( tx::BatchTxResult::new(
-                                        hash.to_string(),
-                                        false,
-                                        Some(res.to_string()),
-                            ),memo ));
+                            batch_tx_results.push((
+                                tx::BatchTxResult::new(
+                                    hash.to_string(),
+                                    false,
+                                    Some(res.to_string()),
+                                ),
+                                memo,
+                            ));
                         }
                         None => {
-                            batch_tx_results.push((tx::BatchTxResult::new(
-                                        hash.to_string(),
-                                        false,
-                                        None,
-                            ), memo));
+                            batch_tx_results.push((
+                                tx::BatchTxResult::new(hash.to_string(), false, None),
+                                memo,
+                            ));
                         }
                     };
                 }
@@ -494,13 +496,6 @@ impl Sdk {
                 let was_nothing_applied = batch_tx_results
                     .iter()
                     .all(|(tx_result, memo)| memo.is_some() || !tx_result.is_applied);
-
-                web_sys::console::log_1(&JsValue::from_str(
-                    &format!(
-                        "was nothing applied: {}, batch tx results: {:?}",
-                        was_nothing_applied, batch_tx_results
-                    ),
-                ));
 
                 // We also return an error if all inner txs were rejected during wasm runtime
                 if tx_response.code != ResultCode::Ok && was_nothing_applied {
@@ -512,12 +507,15 @@ impl Sdk {
                         .map_err(|e| JsValue::from_str(&e.to_string()))?,
                     ));
                 }
-let www = batch_tx_results.into_iter().map(|(res, _)| res).collect::<Vec<_>>();
+                let batch_tx_results = batch_tx_results
+                    .into_iter()
+                    .map(|(res, _)| res)
+                    .collect::<Vec<_>>();
 
                 // If at least some of the inner tx were applied, we return the result
                 let tx_response = tx::TxResponse::new(
                     code,
-                    www,
+                    batch_tx_results,
                     gas_used,
                     wrapper_hash.unwrap().to_string(),
                     height,
@@ -724,7 +722,13 @@ let www = batch_tx_results.into_iter().map(|(res, _)| res).collect::<Vec<_>>();
 
         let ((tx, signing_data), masp_signing_data) = match bparams {
             BuildParams::RngBuildParams(mut bparams) => {
-                let tx = build_unshielding_transfer(&self.namada, &mut args, &mut bparams, skip_fee_check).await?;
+                let tx = build_unshielding_transfer(
+                    &self.namada,
+                    &mut args,
+                    &mut bparams,
+                    skip_fee_check,
+                )
+                .await?;
                 let masp_signing_data = MaspSigningData::new(
                     bparams
                         .to_stored()
@@ -735,19 +739,31 @@ let www = batch_tx_results.into_iter().map(|(res, _)| res).collect::<Vec<_>>();
                 (tx, masp_signing_data)
             }
             BuildParams::StoredBuildParams(mut bparams) => {
-                let tx = build_unshielding_transfer(&self.namada, &mut args, &mut bparams, skip_fee_check).await?;
+                let tx = build_unshielding_transfer(
+                    &self.namada,
+                    &mut args,
+                    &mut bparams,
+                    skip_fee_check,
+                )
+                .await?;
                 let masp_signing_data = MaspSigningData::new(bparams, xfvks);
 
                 (tx, masp_signing_data)
             }
         };
 
-    let masp_section = tx
-        .sections
-        .iter()
-        .find_map(|section| section.masp_tx()).unwrap();
+        let masp_section = tx
+            .sections
+            .iter()
+            .find_map(|section| section.masp_tx())
+            .ok_or_err_msg("Could not find masp_tx section")?;
 
-        self.namada.shielded_mut().await.pre_cache_transaction(&masp_section).await.unwrap();
+        self.namada
+            .shielded_mut()
+            .await
+            .pre_cache_transaction(&masp_section)
+            .await
+            .map_err(|e| JsError::new(&e.to_string()))?;
 
         self.serialize_tx_result(tx, wrapper_tx_msg, signing_data, Some(masp_signing_data))
     }

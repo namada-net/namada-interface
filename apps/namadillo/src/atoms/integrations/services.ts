@@ -206,20 +206,6 @@ const updateTxWithSuccess = <
   };
 };
 
-const updateTxWithPartialSuccess = <
-  T extends TransferTransactionData | IbcTransferTransactionData,
->(
-  tx: T,
-  resultTxHash?: string
-): T => {
-  return {
-    ...tx,
-    status: "partialSuccess",
-    currentStep: TransferStep.Complete,
-    ...(resultTxHash && { resultTxHash }),
-  };
-};
-
 const updateTxWithError = <
   T extends TransferTransactionData | IbcTransferTransactionData,
 >(
@@ -323,17 +309,6 @@ export const handleStandardTransfer = async (
 
     if (isRejectedTx) {
       return updateTxWithError(tx, "Transaction rejected");
-    }
-
-    const isPartiallySuccessful =
-      txResponse.innerTransactions.some(
-        ({ exitCode }) => exitCode === WrapperTransactionExitCodeEnum.Applied
-      ) &&
-      txResponse.innerTransactions.some(
-        ({ exitCode }) => exitCode === WrapperTransactionExitCodeEnum.Rejected
-      );
-    if (isPartiallySuccessful) {
-      return updateTxWithPartialSuccess(tx);
     }
 
     return updateTxWithSuccess(tx);

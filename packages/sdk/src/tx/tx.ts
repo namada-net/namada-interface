@@ -3,7 +3,7 @@ import {
   Sdk as SdkWasm,
   TxType,
   deserialize_tx,
-  get_inner_tx_hashes,
+  get_inner_tx_meta,
 } from "@namada/shared";
 import {
   BondMsgValue,
@@ -525,9 +525,9 @@ export class Tx {
   /**
    * Return the inner tx hashes from the provided tx bytes
    * @param bytes - Uint8Array
-   * @returns array of inner Tx hashes
+   * @returns array of tuple of [inner Tx hashes, utf8 bytes memo]
    */
-  getInnerTxHashes(bytes: Uint8Array): [string, number[] | null][] {
-    return get_inner_tx_hashes(bytes);
+  getInnerTxMeta(bytes: Uint8Array): [string, number[] | null][] {
+    return get_inner_tx_meta(bytes);
   }
 }

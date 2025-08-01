@@ -753,7 +753,7 @@ pub fn unshielding_transfer_tx_args(
         data,
         gas_spending_key,
         bparams: bparams_msg,
-        skip_fee_check: _
+        skip_fee_check: _,
     } = unshielding_transfer_msg;
     let source = PseudoExtendedKey::decode(source)?.0;
     let gas_spending_key = gas_spending_key
