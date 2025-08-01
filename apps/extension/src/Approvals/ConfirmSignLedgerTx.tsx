@@ -14,7 +14,7 @@ import { LedgerError, ResponseSign } from "@zondax/ledger-namada";
 
 import { fromBase64, toBase64 } from "@cosmjs/encoding";
 import { chains } from "@namada/chains";
-import { TransferProps } from "@namada/types";
+import { CommitmentDetailProps, TransferProps } from "@namada/types";
 import { PageHeader } from "App/Common";
 import { ApprovalDetails } from "Approvals/Approvals";
 import {
@@ -267,8 +267,10 @@ export const ConfirmSignLedgerTx: React.FC<Props> = ({ details }) => {
             )
             .map((cmt) =>
               cmt.txType === TxType.Transfer ?
-                parseTransferType(cmt as TransferProps, details.wrapperFeePayer)
-                  .type
+                parseTransferType(
+                  cmt as CommitmentDetailProps<TransferProps>,
+                  details.wrapperFeePayer
+                ).type
               : cmt.maspTxIn && cmt.maspTxOut ? "IbcUnshieldTransfer"
               : "IbcTransfer"
             )

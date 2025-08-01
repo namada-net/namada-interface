@@ -69,7 +69,9 @@ export type SupportedTxProps =
   | TransferDetailsProps
   | RevealPkProps;
 
-export type CommitmentDetailProps = SupportedTxProps & {
+export type CommitmentDetailProps<
+  T extends SupportedTxProps | unknown = unknown,
+> = T & {
   txType: unknown;
   hash: string;
   memo?: string;

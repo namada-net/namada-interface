@@ -1,6 +1,7 @@
 import { fromBase64, toBase64 } from "@cosmjs/encoding";
 import {
   AccountType,
+  CommitmentDetailProps,
   DerivedAccount,
   NamadaKeychainAccount,
   Path,
@@ -146,7 +147,7 @@ export const isShieldedPool = (address: string): boolean => {
  * @returns string label
  */
 export const parseTransferType = (
-  tx: TransferProps,
+  tx: CommitmentDetailProps<TransferProps>,
   wrapperFeePayer: string
 ): { source: string; target: string; type: TransferType } => {
   const { sources, targets } = tx;
@@ -171,12 +172,16 @@ export const parseTransferType = (
       // Otherwise, we should have no targets and no sources, as everything is in the shielded pool
     : targets.length === 0 && sources.length === 0;
 
+  const isUnshieldingFeePayment = tx.memo === "MASP_FEE_PAYMENT";
+
   let type: TransferType = "Transparent";
   const txHasShieldedSection = hasShieldedSection(tx);
 
   if (txHasShieldedSection) {
     if (isShieldedPool(source)) {
-      if (isShieldedTransfer) {
+      if (isUnshieldingFeePayment) {
+        type = "MASPFeePayment";
+      } else if (isShieldedTransfer) {
         type = "Shielded";
       } else if (isUnshielding) {
         type = "Unshielding";
