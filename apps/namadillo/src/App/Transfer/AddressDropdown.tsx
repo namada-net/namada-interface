@@ -1,5 +1,6 @@
 import { Keplr, Window as KeplrWindow, Key } from "@keplr-wallet/types";
 import { AccountType } from "@namada/types";
+import { shortenAddress } from "@namada/utils";
 import { routes } from "App/routes";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { connectedWalletsAtom } from "atoms/integrations";
@@ -243,8 +244,18 @@ export const AddressDropdown = ({
                   : "text-neutral-300"
                 )}
               >
-                {option.alias ?? "Keplr"}
+                {option.alias}
               </div>
+              {option.id !== "keplr" && (
+                <div
+                  className={clsx(
+                    "text-xs mt-0.5",
+                    isSelected ? "text-yellow-300/70" : "text-neutral-400"
+                  )}
+                >
+                  {shortenAddress(option.address, 10)}
+                </div>
+              )}
             </div>
           </button>
         );
