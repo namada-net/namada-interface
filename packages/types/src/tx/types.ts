@@ -28,6 +28,7 @@ import {
 } from "./schema";
 import { RevealPkMsgValue } from "./schema/revealPk";
 
+export type PropsWithMemo<T> = T & { memo: string };
 export type BatchTxResultProps = BatchTxResultMsgValue;
 export type BondProps = BondMsgValue;
 export type EthBridgeTransferProps = EthBridgeTransferMsgValue;

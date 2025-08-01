@@ -442,7 +442,6 @@ export const useTransactionNotifications = (): void => {
   const onTransferSuccess = ({
     detail: tx,
   }: CustomEvent<TransferTransactionData>): void => {
-    console.log("onTransferSuccess", tx);
     if (!tx.hash) return;
     const id = createNotificationId([tx.hash]);
     const storedTx = searchAllStoredTxByHash(tx.hash);
@@ -467,17 +466,6 @@ export const useTransactionNotifications = (): void => {
   useTransactionEventListener("ShieldedTransfer.Success", onTransferSuccess);
   useTransactionEventListener("ShieldingTransfer.Success", onTransferSuccess);
   useTransactionEventListener("UnshieldingTransfer.Success", onTransferSuccess);
-
-  useTransactionEventListener("UnshieldingTransfer.PartialSuccess", (e) => {
-    const id = createNotificationId(e.detail.tx.map((t) => t.hash));
-    dispatchNotification({
-      id,
-      title: "Some unshielding were not successful",
-      description: <>Your redelegate </>,
-      details: <>asd</>,
-      type: "error",
-    });
-  });
 
   useTransactionEventListener(
     [

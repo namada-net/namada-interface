@@ -23,6 +23,7 @@ use wasm_bindgen::{prelude::wasm_bindgen, JsError, JsValue};
 use super::args::WrapperTxMsg;
 use crate::sdk::transaction;
 use crate::types::query::WasmHash;
+use crate::utils::to_js_result;
 
 #[wasm_bindgen]
 #[derive(BorshSerialize, BorshDeserialize, Copy, Clone, Debug)]
@@ -217,18 +218,19 @@ impl Tx {
 
 // Given the bytes of a Namada Tx, return all inner Tx hashes
 #[wasm_bindgen]
-pub fn get_inner_tx_hashes(tx_bytes: &[u8]) -> Result<Vec<String>, JsError> {
+pub fn get_inner_tx_hashes(tx_bytes: &[u8]) -> Result<JsValue, JsError> {
     let nam_tx: tx::Tx = borsh::from_slice(tx_bytes)?;
     let hash = nam_tx.wrapper_hash();
     let cmts = nam_tx.commitments();
-    let mut inner_tx_hashes: Vec<String> = vec![];
+    let mut inner_tx_hashes: Vec<(String, Option<Vec<u8>>)> = vec![];
+
 
     for cmt in cmts {
         let inner_tx_hash = compute_inner_tx_hash(hash.as_ref(), Either::Right(cmt));
-        inner_tx_hashes.push(inner_tx_hash.to_string());
+        inner_tx_hashes.push((inner_tx_hash.to_string(), nam_tx.memo(cmt)));
     }
 
-    Ok(inner_tx_hashes)
+    to_js_result(inner_tx_hashes)
 }
 
 pub fn wasm_hash_to_tx_type(wasm_hash: &str, wasm_hashes: &Vec<WasmHash>) -> Option<TxType> {

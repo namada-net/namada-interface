@@ -527,7 +527,7 @@ export class Tx {
    * @param bytes - Uint8Array
    * @returns array of inner Tx hashes
    */
-  getInnerTxHashes(bytes: Uint8Array): string[] {
+  getInnerTxHashes(bytes: Uint8Array): [string, number[] | null][] {
     return get_inner_tx_hashes(bytes);
   }
 }

@@ -29,6 +29,7 @@ export type EncodedTxData<T> = {
   type: string;
   txs: (TxProps & {
     innerTxHashes: string[];
+    memos: (number[] | null)[];
   })[];
   wrapperTxProps: WrapperTxProps;
   meta?: {
@@ -93,15 +94,15 @@ export const buildTx = async <T>(
   account: Account,
   gasConfig: GasConfig,
   chain: ChainSettings,
-  queryProps: T[],
+  queryProps: (T & { memo?: string })[],
   txFn: (wrapperTxProps: WrapperTxProps, props: T) => Promise<TxMsgValue>,
   memo?: string,
   shouldRevealPk: boolean = true
 ): Promise<EncodedTxData<T>> => {
-  const wrapperTxProps = getTxProps(account, gasConfig, chain, memo);
   const txs: TxMsgValue[] = [];
   const txProps: TxProps[] = [];
 
+  const wrapperTxProps = getTxProps(account, gasConfig, chain, memo);
   // Determine if RevealPK is needed:
   if (shouldRevealPk) {
     const publicKeyRevealed = await isPublicKeyRevealed(account.address);
@@ -112,6 +113,7 @@ export const buildTx = async <T>(
   }
 
   for (const props of queryProps) {
+    const wrapperTxProps = getTxProps(account, gasConfig, chain, props.memo);
     const tx = await txFn.apply(sdk.tx, [wrapperTxProps, props]);
     txs.push(tx);
   }
@@ -130,7 +132,8 @@ export const buildTx = async <T>(
         hash,
         bytes,
         signingData,
-        innerTxHashes,
+        innerTxHashes: innerTxHashes.map(([hash]) => hash),
+        memos: innerTxHashes.map(([, memo]) => memo),
       };
     }),
     wrapperTxProps,
@@ -264,7 +267,6 @@ export const broadcastTxWithEvents = async <T>(
       data!
     );
 
-    console.log("dispatching event", eventType, status);
     // Notification
     !isTransferEventType(eventType) &&
       window.dispatchEvent(
@@ -337,7 +339,6 @@ const parseTxAppliedErrors = <T>(
     });
 
     if (successData?.length) {
-      console.log("partial success");
       return {
         status: "PartialSuccess",
         successData,
@@ -347,7 +348,6 @@ const parseTxAppliedErrors = <T>(
       return { status: "Error", failedData };
     }
   }
-  console.log("success");
 
   return { status: "Success" };
 };

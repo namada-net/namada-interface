@@ -254,6 +254,11 @@ export const createUnshieldingTransferTx = async (
         bparams,
         skipFeeCheck: true,
       });
+      const feePaymentMsgValueWithMemo = {
+        ...feePaymentMsgValue,
+        memo: "MASP_FEE_PAYMENT",
+      };
+
       const msgValue = new UnshieldingTransferMsgValue({
         source,
         data: [{ target: destination, token, amount }],
@@ -268,7 +273,7 @@ export const createUnshieldingTransferTx = async (
             publicKey: signerPublicKey,
           },
           gasConfig,
-          props: [feePaymentMsgValue, msgValue],
+          props: [feePaymentMsgValueWithMemo, msgValue],
           chain,
           memo,
         },

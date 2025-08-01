@@ -312,7 +312,13 @@ export const handleStandardTransfer = async (
     const txResponse = await fetchTx(tx.hash ?? "");
     // We consider tx as rejected if every inner transaction has an exit code of Rejected
     const isRejectedTx = txResponse.innerTransactions.every(
-      ({ exitCode }) => exitCode === WrapperTransactionExitCodeEnum.Rejected
+      ({ exitCode, memo }) => {
+        const memoStr = memo && Buffer.from(memo, "hex").toString("utf8");
+        return (
+          memoStr === "MASP_FEE_PAYMENT" ||
+          exitCode === WrapperTransactionExitCodeEnum.Rejected
+        );
+      }
     );
 
     if (isRejectedTx) {
@@ -387,7 +393,6 @@ export const dispatchTransferEvent = (
   eventType: string,
   tx: TransferTransactionData
 ): void => {
-  console.log("dispatching event", eventType, tx.status);
   if (tx.status === "success") {
     window.dispatchEvent(
       new CustomEvent(`${eventType}.Success`, {
