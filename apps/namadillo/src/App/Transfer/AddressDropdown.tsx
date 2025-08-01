@@ -47,7 +47,12 @@ export const AddressDropdown = ({
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
-
+  const transparentAccount = accounts?.find(
+    (account) => account.type !== AccountType.ShieldedKeys
+  );
+  const shieldedAccount = accounts?.find(
+    (account) => account.type === AccountType.ShieldedKeys
+  );
   // Helper function to fetch Keplr address for the appropriate chain
   const fetchKeplrAddressForChain = async (
     keplrInstance: Keplr
@@ -75,6 +80,11 @@ export const AddressDropdown = ({
       setKeplrAlias(key.name);
     }
   };
+
+  // Set the default address to the transparent account if no address is selected
+  useEffect(() => {
+    if (!selectedAddress) onSelectAddress?.(transparentAccount?.address ?? "");
+  }, [selectedAddress, , onSelectAddress]);
 
   // Fetch Keplr address when connected - use the correct chain based on selectedAddress
   useEffect(() => {
@@ -106,13 +116,6 @@ export const AddressDropdown = ({
 
   // Add Namada accounts
   if (accounts) {
-    const transparentAccount = accounts.find(
-      (account) => account.type !== AccountType.ShieldedKeys
-    );
-    const shieldedAccount = accounts.find(
-      (account) => account.type === AccountType.ShieldedKeys
-    );
-
     if (transparentAccount) {
       addressOptions.push({
         id: "namada-transparent",
