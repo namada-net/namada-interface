@@ -221,7 +221,8 @@ export const createUnshieldingTransferTx = async (
   disposableSigner: GenDisposableSignerResponse,
   memo?: string
 ): Promise<EncodedTxData<UnshieldingTransferProps> | undefined> => {
-  const { publicKey: signerPublicKey } = disposableSigner;
+  const { publicKey: signerPublicKey, address: signerAddress } =
+    disposableSigner;
 
   const source = props[0]?.source;
   const destination = props[0]?.data[0]?.target;
@@ -229,24 +230,53 @@ export const createUnshieldingTransferTx = async (
   const amount = props[0]?.data[0]?.amount;
 
   let bparams: BparamsMsgValue[] | undefined;
+  const isLedgerAccount = account.type === AccountType.Ledger;
 
-  if (account.type === AccountType.Ledger) {
+  if (isLedgerAccount) {
     const sdk = await getSdkInstance();
     const ledger = await sdk.initLedger();
     bparams = await ledger.getBparams();
     ledger.closeTransport();
   }
 
+  const getProps = (): UnshieldingTransferProps[] => {
+    const msgValue = new UnshieldingTransferMsgValue({
+      source,
+      data: [{ target: destination, token, amount }],
+      bparams,
+    });
+
+    if (isLedgerAccount) {
+      // If the account is a Ledger account, we only need the unshielding transfer message as we can't batch
+      // with fee payment
+      return [msgValue];
+    } else {
+      // For non-ledger accounts, we need to include the fee payment message
+      msgValue.skipFeeCheck = true;
+      const feePaymentMsgValue = new UnshieldingTransferMsgValue({
+        source,
+        data: [
+          {
+            target: signerAddress,
+            token,
+            amount: gasConfig.gasPriceInMinDenom.times(gasConfig.gasLimit),
+          },
+        ],
+        bparams,
+        skipFeeCheck: true,
+      });
+      const feePaymentMsgValueWithMemo = {
+        ...feePaymentMsgValue,
+        memo: "MASP_FEE_PAYMENT",
+      };
+      return [feePaymentMsgValueWithMemo, msgValue];
+    }
+  };
+
   return await workerBuildTxPair({
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue = new UnshieldingTransferMsgValue({
-        source,
-        gasSpendingKey: source,
-        data: [{ target: destination, token, amount }],
-        bparams,
-      });
       const msg: Unshield = {
         type: "unshield",
         payload: {
@@ -255,7 +285,7 @@ export const createUnshieldingTransferTx = async (
             publicKey: signerPublicKey,
           },
           gasConfig,
-          props: [msgValue],
+          props: getProps(),
           chain,
           memo,
         },

@@ -29,6 +29,7 @@ export type EncodedTxData<T> = {
   type: string;
   txs: (TxProps & {
     innerTxHashes: string[];
+    memos: (number[] | null)[];
   })[];
   wrapperTxProps: WrapperTxProps;
   meta?: {
@@ -93,15 +94,15 @@ export const buildTx = async <T>(
   account: Account,
   gasConfig: GasConfig,
   chain: ChainSettings,
-  queryProps: T[],
+  queryProps: (T & { memo?: string })[],
   txFn: (wrapperTxProps: WrapperTxProps, props: T) => Promise<TxMsgValue>,
   memo?: string,
   shouldRevealPk: boolean = true
 ): Promise<EncodedTxData<T>> => {
-  const wrapperTxProps = getTxProps(account, gasConfig, chain, memo);
   const txs: TxMsgValue[] = [];
   const txProps: TxProps[] = [];
 
+  const wrapperTxProps = getTxProps(account, gasConfig, chain, memo);
   // Determine if RevealPK is needed:
   if (shouldRevealPk) {
     const publicKeyRevealed = await isPublicKeyRevealed(account.address);
@@ -111,11 +112,11 @@ export const buildTx = async <T>(
     }
   }
 
-  const encodedTxs = await Promise.all(
-    queryProps.map((props) => txFn.apply(sdk.tx, [wrapperTxProps, props]))
-  );
-
-  txs.push(...encodedTxs);
+  for (const props of queryProps) {
+    const wrapperTxProps = getTxProps(account, gasConfig, chain, props.memo);
+    const tx = await txFn.apply(sdk.tx, [wrapperTxProps, props]);
+    txs.push(tx);
+  }
 
   if (account.type === AccountType.Ledger) {
     txProps.push(...txs);
@@ -125,13 +126,14 @@ export const buildTx = async <T>(
 
   return {
     txs: txProps.map(({ args, hash, bytes, signingData }) => {
-      const innerTxHashes = sdk.tx.getInnerTxHashes(bytes);
+      const innerTxHashes = sdk.tx.getInnerTxMeta(bytes);
       return {
         args,
         hash,
         bytes,
         signingData,
-        innerTxHashes,
+        innerTxHashes: innerTxHashes.map(([hash]) => hash),
+        memos: innerTxHashes.map(([, memo]) => memo),
       };
     }),
     wrapperTxProps,

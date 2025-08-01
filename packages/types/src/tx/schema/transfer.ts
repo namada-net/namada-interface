@@ -173,11 +173,15 @@ export class UnshieldingTransferMsgValue {
   @field({ type: option(vec(BparamsMsgValue)) })
   bparams?: BparamsMsgValue[];
 
+  @field({ type: option("bool") })
+  skipFeeCheck?: boolean;
+
   constructor({
     source,
     data,
     gasSpendingKey,
     bparams,
+    skipFeeCheck,
   }: UnshieldingTransferProps) {
     Object.assign(this, {
       source,
@@ -193,6 +197,7 @@ export class UnshieldingTransferMsgValue {
           convert: new BparamsConvertMsgValue(bparam.convert),
         });
       }),
+      skipFeeCheck,
     });
   }
 }
