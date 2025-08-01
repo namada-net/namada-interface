@@ -100,7 +100,7 @@ export const TransferSource = ({
               <img
                 src={getWalletIcon(sourceAddress, selectedTokenType)}
                 alt="Wallet icon"
-                className="w-6 h-6"
+                className="w-7 h-7"
               />
               <Tooltip position="top" className="z-50">
                 {sourceAddress}
