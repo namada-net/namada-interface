@@ -1,7 +1,12 @@
 import { ActionButton, GapPatterns, Stack } from "@namada/components";
 import { useSanitizedParams } from "@namada/hooks";
 import { TxType, TxTypeLabel } from "@namada/sdk/web";
-import { AccountType, NamadaChains, TransferProps } from "@namada/types";
+import {
+  AccountType,
+  CommitmentDetailProps,
+  NamadaChains,
+  TransferProps,
+} from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { PageHeader } from "App/Common/PageHeader";
 import { ApprovalDetails } from "Approvals/Approvals";
@@ -52,7 +57,7 @@ export const ApproveSignTx: React.FC<Props> = ({ details, setDetails }) => {
           .map((commitment) => {
             if (commitment.txType === TxType.Transfer) {
               const { type } = parseTransferType(
-                commitment as TransferProps,
+                commitment as unknown as CommitmentDetailProps<TransferProps>,
                 commitment.wrapperFeePayer
               );
               return type;
@@ -150,13 +155,15 @@ export const ApproveSignTx: React.FC<Props> = ({ details, setDetails }) => {
               {details?.txDetails?.map(
                 ({ commitments, wrapperFeePayer }) =>
                   commitments?.length &&
-                  commitments.map((tx, i) => (
-                    <Commitment
-                      key={`${tx.hash}-${i}`}
-                      commitment={tx}
-                      wrapperFeePayer={wrapperFeePayer}
-                    />
-                  ))
+                  commitments
+                    .filter((tx) => tx.memo !== "MASP_FEE_PAYMENT")
+                    .map((tx, i) => (
+                      <Commitment
+                        key={`${tx.hash}-${i}`}
+                        commitment={tx}
+                        wrapperFeePayer={wrapperFeePayer}
+                      />
+                    ))
               )}
             </Stack>
           )}

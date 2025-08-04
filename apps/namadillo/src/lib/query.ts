@@ -5,6 +5,7 @@ import {
   TxMsgValue,
   TxProps,
   TxResponseMsgValue,
+  UnshieldingTransferProps,
   WrapperTxProps,
 } from "@namada/types";
 import { getIndexerApi } from "atoms/api";
@@ -29,6 +30,7 @@ export type EncodedTxData<T> = {
   type: string;
   txs: (TxProps & {
     innerTxHashes: string[];
+    memos: (number[] | null)[];
   })[];
   wrapperTxProps: WrapperTxProps;
   meta?: {
@@ -96,12 +98,13 @@ export const buildTx = async <T>(
   queryProps: T[],
   txFn: (wrapperTxProps: WrapperTxProps, props: T) => Promise<TxMsgValue>,
   memo?: string,
-  shouldRevealPk: boolean = true
+  shouldRevealPk: boolean = true,
+  maspFeePaymentProps?: UnshieldingTransferProps & { memo: string } // Optional masp fee payment properties
 ): Promise<EncodedTxData<T>> => {
-  const wrapperTxProps = getTxProps(account, gasConfig, chain, memo);
   const txs: TxMsgValue[] = [];
   const txProps: TxProps[] = [];
 
+  const wrapperTxProps = getTxProps(account, gasConfig, chain, memo);
   // Determine if RevealPK is needed:
   if (shouldRevealPk) {
     const publicKeyRevealed = await isPublicKeyRevealed(account.address);
@@ -111,11 +114,24 @@ export const buildTx = async <T>(
     }
   }
 
-  const encodedTxs = await Promise.all(
-    queryProps.map((props) => txFn.apply(sdk.tx, [wrapperTxProps, props]))
-  );
+  if (maspFeePaymentProps) {
+    const wrapperTxProps = getTxProps(
+      account,
+      gasConfig,
+      chain,
+      maspFeePaymentProps.memo
+    );
+    const maspFeePaymentTx = await sdk.tx.buildUnshieldingTransfer(
+      wrapperTxProps,
+      maspFeePaymentProps
+    );
+    txs.push(maspFeePaymentTx);
+  }
 
-  txs.push(...encodedTxs);
+  for (const props of queryProps) {
+    const tx = await txFn.apply(sdk.tx, [wrapperTxProps, props]);
+    txs.push(tx);
+  }
 
   if (account.type === AccountType.Ledger) {
     txProps.push(...txs);
@@ -125,13 +141,14 @@ export const buildTx = async <T>(
 
   return {
     txs: txProps.map(({ args, hash, bytes, signingData }) => {
-      const innerTxHashes = sdk.tx.getInnerTxHashes(bytes);
+      const innerTxHashes = sdk.tx.getInnerTxMeta(bytes);
       return {
         args,
         hash,
         bytes,
         signingData,
-        innerTxHashes,
+        innerTxHashes: innerTxHashes.map(([hash]) => hash),
+        memos: innerTxHashes.map(([, memo]) => memo),
       };
     }),
     wrapperTxProps,
