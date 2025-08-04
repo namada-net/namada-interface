@@ -5,6 +5,7 @@ import {
   TxMsgValue,
   TxProps,
   TxResponseMsgValue,
+  UnshieldingTransferProps,
   WrapperTxProps,
 } from "@namada/types";
 import { getIndexerApi } from "atoms/api";
@@ -94,10 +95,11 @@ export const buildTx = async <T>(
   account: Account,
   gasConfig: GasConfig,
   chain: ChainSettings,
-  queryProps: (T & { memo?: string })[],
+  queryProps: T[],
   txFn: (wrapperTxProps: WrapperTxProps, props: T) => Promise<TxMsgValue>,
   memo?: string,
-  shouldRevealPk: boolean = true
+  shouldRevealPk: boolean = true,
+  maspFeePaymentProps?: UnshieldingTransferProps & { memo: string } // Optional masp fee payment properties
 ): Promise<EncodedTxData<T>> => {
   const txs: TxMsgValue[] = [];
   const txProps: TxProps[] = [];
@@ -112,8 +114,21 @@ export const buildTx = async <T>(
     }
   }
 
+  if (maspFeePaymentProps) {
+    const wrapperTxProps = getTxProps(
+      account,
+      gasConfig,
+      chain,
+      maspFeePaymentProps.memo
+    );
+    const maspFeePaymentTx = await sdk.tx.buildUnshieldingTransfer(
+      wrapperTxProps,
+      maspFeePaymentProps
+    );
+    txs.push(maspFeePaymentTx);
+  }
+
   for (const props of queryProps) {
-    const wrapperTxProps = getTxProps(account, gasConfig, chain, props.memo);
     const tx = await txFn.apply(sdk.tx, [wrapperTxProps, props]);
     txs.push(tx);
   }

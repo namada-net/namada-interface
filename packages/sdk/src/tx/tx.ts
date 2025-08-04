@@ -100,7 +100,8 @@ export class Tx {
 
     const serializedTx = await this.sdk.build_shielded_transfer(
       encodedTransfer,
-      encodedWrapperArgs
+      encodedWrapperArgs,
+      shieldedTransferProps.skipFeeCheck || false
     );
     return deserialize(Buffer.from(serializedTx), TxMsgValue);
   }

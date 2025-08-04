@@ -84,7 +84,15 @@ export class ShieldedTransferMsgValue {
   @field({ type: option(vec(BparamsMsgValue)) })
   bparams?: BparamsMsgValue[];
 
-  constructor({ data, gasSpendingKey, bparams }: ShieldedTransferProps) {
+  @field({ type: option("bool") })
+  skipFeeCheck?: boolean;
+
+  constructor({
+    data,
+    gasSpendingKey,
+    bparams,
+    skipFeeCheck,
+  }: ShieldedTransferProps) {
     Object.assign(this, {
       data: data.map(
         (shieldedTransferDataProps) =>
@@ -99,6 +107,8 @@ export class ShieldedTransferMsgValue {
           convert: new BparamsConvertMsgValue(bparam.convert),
         });
       }),
+
+      skipFeeCheck,
     });
   }
 }

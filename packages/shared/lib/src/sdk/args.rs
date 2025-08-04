@@ -571,6 +571,7 @@ pub struct ShieldedTransferMsg {
     data: Vec<ShieldedTransferDataMsg>,
     gas_spending_key: Option<String>,
     bparams: Option<Vec<BparamsMsg>>,
+    skip_fee_check: Option<bool>,
 }
 
 /// Maps serialized tx_msg into TxShieldedTransfer args.
@@ -593,6 +594,7 @@ pub fn shielded_transfer_tx_args(
         data,
         gas_spending_key,
         bparams: bparams_msg,
+        skip_fee_check: _,
     } = shielded_transfer_msg;
 
     let gas_spending_key = gas_spending_key

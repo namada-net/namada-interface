@@ -172,16 +172,12 @@ export const parseTransferType = (
       // Otherwise, we should have no targets and no sources, as everything is in the shielded pool
     : targets.length === 0 && sources.length === 0;
 
-  const isUnshieldingFeePayment = tx.memo === "MASP_FEE_PAYMENT";
-
   let type: TransferType = "Transparent";
   const txHasShieldedSection = hasShieldedSection(tx);
 
   if (txHasShieldedSection) {
     if (isShieldedPool(source)) {
-      if (isUnshieldingFeePayment) {
-        type = "MASPFeePayment";
-      } else if (isShieldedTransfer) {
+      if (isShieldedTransfer) {
         type = "Shielded";
       } else if (isUnshielding) {
         type = "Unshielding";

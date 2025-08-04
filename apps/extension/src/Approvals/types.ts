@@ -28,7 +28,6 @@ export type ApproveMsg = new (
 ) => unknown & Message<void>;
 
 export type TransferType =
-  | "MASPFeePayment"
   | "Transparent"
   | "Shielding"
   | "Shielded"

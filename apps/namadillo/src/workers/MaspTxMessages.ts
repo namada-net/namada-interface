@@ -40,6 +40,7 @@ type UnshieldPayload = {
   props: UnshieldingTransferMsgValue[];
   chain: ChainSettings;
   memo?: string;
+  maspFeePaymentProps?: UnshieldingTransferMsgValue & { memo: string }; // Optional masp fee payment properties
 };
 export type Unshield = WebWorkerMessage<"unshield", UnshieldPayload>;
 export type UnshieldDone = WebWorkerMessage<
@@ -53,6 +54,7 @@ type ShieldedTransferPayload = {
   props: ShieldedTransferMsgValue[];
   chain: ChainSettings;
   memo?: string;
+  maspFeePaymentProps?: UnshieldingTransferMsgValue & { memo: string }; // Optional masp fee payment properties
 };
 export type ShieldedTransfer = WebWorkerMessage<
   "shielded-transfer",

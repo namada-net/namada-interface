@@ -155,13 +155,15 @@ export const ApproveSignTx: React.FC<Props> = ({ details, setDetails }) => {
               {details?.txDetails?.map(
                 ({ commitments, wrapperFeePayer }) =>
                   commitments?.length &&
-                  commitments.map((tx, i) => (
-                    <Commitment
-                      key={`${tx.hash}-${i}`}
-                      commitment={tx}
-                      wrapperFeePayer={wrapperFeePayer}
-                    />
-                  ))
+                  commitments
+                    .filter((tx) => tx.memo !== "MASP_FEE_PAYMENT")
+                    .map((tx, i) => (
+                      <Commitment
+                        key={`${tx.hash}-${i}`}
+                        commitment={tx}
+                        wrapperFeePayer={wrapperFeePayer}
+                      />
+                    ))
               )}
             </Stack>
           )}
