@@ -13,7 +13,7 @@ import { useAssetsWithAmounts } from "hooks/useAssetsWithAmounts";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
 import { useUrlState } from "hooks/useUrlState";
 import { useAtomValue } from "jotai";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AssetWithAmount } from "types";
@@ -45,8 +45,9 @@ export const TransferModule = ({
   ibcChannels,
   requiresIbcChannels,
   keplrWalletManager,
+  assetSelectorModalOpen = false,
+  setAssetSelectorModalOpen = () => {},
 }: TransferModuleProps): JSX.Element => {
-  const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
   const { data: usersAssets, isLoading: isLoadingUsersAssets } = useAtomValue(
     isShieldedAddress(source.address ?? "") ?
       namadaShieldedAssetsAtom

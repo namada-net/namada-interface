@@ -22,6 +22,8 @@ interface MaspShieldProps {
   setSourceAddress: (address: string | undefined) => void;
   destinationAddress: string | undefined;
   setDestinationAddress: (address: string | undefined) => void;
+  assetSelectorModalOpen?: boolean;
+  setAssetSelectorModalOpen?: (open: boolean) => void;
 }
 
 export const MaspShield = ({
@@ -29,6 +31,8 @@ export const MaspShield = ({
   setSourceAddress,
   destinationAddress,
   setDestinationAddress,
+  assetSelectorModalOpen,
+  setAssetSelectorModalOpen,
 }: MaspShieldProps): JSX.Element => {
   //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
@@ -175,6 +179,8 @@ export const MaspShield = ({
         onSubmitTransfer={onSubmitTransfer}
         completedAt={completedAt}
         onComplete={redirectToTransactionPage}
+        assetSelectorModalOpen={assetSelectorModalOpen}
+        setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
     </Panel>
   );
