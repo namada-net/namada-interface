@@ -182,7 +182,14 @@ export const getChainRegistryByChainId = (
 export const getChainRegistryByChainName = (
   chainName: string
 ): ChainRegistryEntry | undefined => {
-  return SUPPORTED_IBC_CHAINS_MAP.get(chainName);
+  // Search in IBC chains first
+  const ibcChain = SUPPORTED_IBC_CHAINS_MAP.get(chainName);
+  if (ibcChain) {
+    return ibcChain;
+  }
+
+  // If not found in IBC chains, search in Namada chains
+  return SUPPORTED_NAM_CHAINS_MAP.get(chainName);
 };
 
 export const getAvailableChains = (): Chain[] => {
