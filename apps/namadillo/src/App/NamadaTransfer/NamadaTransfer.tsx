@@ -24,6 +24,8 @@ interface NamadaTransferProps {
   setSourceAddress: (address: string | undefined) => void;
   destinationAddress: string | undefined;
   setDestinationAddress: (address: string | undefined) => void;
+  assetSelectorModalOpen?: boolean;
+  setAssetSelectorModalOpen?: (open: boolean) => void;
 }
 
 export const NamadaTransfer = ({
@@ -31,6 +33,8 @@ export const NamadaTransfer = ({
   setSourceAddress,
   destinationAddress,
   setDestinationAddress,
+  assetSelectorModalOpen,
+  setAssetSelectorModalOpen,
 }: NamadaTransferProps): JSX.Element => {
   //  URL STATE
   const [searchParams, setSearchParams] = useSearchParams();
@@ -209,6 +213,8 @@ export const NamadaTransfer = ({
         onSubmitTransfer={onSubmitTransfer}
         completedAt={completedAt}
         onComplete={redirectToTransactionPage}
+        assetSelectorModalOpen={assetSelectorModalOpen}
+        setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
     </Panel>
   );

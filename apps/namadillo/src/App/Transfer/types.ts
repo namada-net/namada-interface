@@ -64,6 +64,8 @@ export type TransferModuleProps = {
   completedAt?: Date;
   onComplete: () => void;
   keplrWalletManager?: KeplrWalletManager;
+  assetSelectorModalOpen?: boolean;
+  setAssetSelectorModalOpen?: (open: boolean) => void;
 };
 
 export type TransferModuleConfig = {

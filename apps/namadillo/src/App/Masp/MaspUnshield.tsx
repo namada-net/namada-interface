@@ -21,6 +21,8 @@ interface MaspUnshieldProps {
   setSourceAddress: (address: string | undefined) => void;
   destinationAddress: string | undefined;
   setDestinationAddress: (address: string | undefined) => void;
+  assetSelectorModalOpen?: boolean;
+  setAssetSelectorModalOpen?: (open: boolean) => void;
 }
 
 export const MaspUnshield = ({
@@ -28,6 +30,8 @@ export const MaspUnshield = ({
   setSourceAddress,
   destinationAddress,
   setDestinationAddress,
+  assetSelectorModalOpen,
+  setAssetSelectorModalOpen,
 }: MaspUnshieldProps): JSX.Element => {
   //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
@@ -158,6 +162,8 @@ export const MaspUnshield = ({
         onSubmitTransfer={onSubmitTransfer}
         completedAt={completedAt}
         onComplete={redirectToTransactionPage}
+        assetSelectorModalOpen={assetSelectorModalOpen}
+        setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
       {requiresNewSync && <MaspSyncCover longSync={lastSync === undefined} />}
     </Panel>

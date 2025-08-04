@@ -11,7 +11,6 @@ import { MaspShield } from "App/Masp/MaspShield";
 import { MaspUnshield } from "App/Masp/MaspUnshield";
 import { LearnAboutTransfer } from "App/NamadaTransfer/LearnAboutTransfer";
 import { NamadaTransfer } from "App/NamadaTransfer/NamadaTransfer";
-import { routes } from "App/routes";
 import { MaspAssetRewards } from "App/Sidebars/MaspAssetRewards";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance";
@@ -20,9 +19,8 @@ import { useUserHasAccount } from "hooks/useIsAuthenticated";
 import { useUrlState } from "hooks/useUrlState";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtomValue } from "jotai";
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { isShieldedAddress, isTransparentAddress } from ".";
+import { useEffect, useState } from "react";
+import { isTransparentAddress } from ".";
 import { determineTransferType } from "./utils";
 
 export const TransferLayout: React.FC = () => {
@@ -32,9 +30,7 @@ export const TransferLayout: React.FC = () => {
   const [sourceAddress, setSourceAddress] = useUrlState("source");
   const [destinationAddress, setDestinationAddress] =
     useUrlState("destination");
-
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
 
   const { refetch: refetchShieldedBalance } = useAtomValue(shieldedBalanceAtom);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
@@ -47,22 +43,12 @@ export const TransferLayout: React.FC = () => {
   const transparentAddress =
     accounts?.find((acc) => isTransparentAddress(acc.address))?.address ?? "";
 
-  const shieldedAddress =
-    accounts?.find((acc) => isShieldedAddress(acc.address))?.address ?? "";
-
   // Initialize source address
   useEffect(() => {
     if (!sourceAddress && transparentAddress) {
       setSourceAddress(transparentAddress);
     }
   }, [transparentAddress]);
-
-  // Set destination address to shielded address when on Shield tab
-  useEffect(() => {
-    if (transferType === "shield" && shieldedAddress) {
-      setDestinationAddress(shieldedAddress);
-    }
-  }, [transferType, shieldedAddress, setDestinationAddress]);
 
   // Refetch shielded balance for MASP operations
   useEffect(() => {
@@ -71,51 +57,18 @@ export const TransferLayout: React.FC = () => {
     }
   }, [transferType, refetchShieldedBalance]);
 
-  // Avoid *any* automatic redirection *from* or *to* /masp/shield
-  useEffect(() => {
-    const { pathname, search } = location;
-
-    // 2. Decide where the current transfer type would normally send us
-    const targetRoute = (() => {
-      switch (transferType) {
-        case "ibc-deposit":
-          return routes.ibc;
-        case "ibc-withdraw":
-          return routes.ibcWithdraw;
-        case "shield":
-          return routes.maspShield; // handled in step 3
-        case "unshield":
-          return routes.maspUnshield;
-        default:
-          return routes.transfer; // "namada-transfer" and fallback
-      }
-    })();
-
-    if (pathname === routes.maspShield && targetRoute !== routes.ibc) return;
-
-    // 3. Never auto‑navigate *to* /masp/shield
-    if (targetRoute === routes.maspShield) return;
-
-    // 4. Navigate only when we’re not already on the desired page
-    if (pathname !== targetRoute) {
-      const params = new URLSearchParams(search).toString();
-      navigate(`${targetRoute}?${params}`, { replace: true });
-    }
-  }, [transferType, location.pathname, location.search, navigate]);
-
   if (!userHasAccount) {
-    const actionText = (() => {
-      switch (transferType) {
-        case "shield":
-        case "unshield":
-          return "To shield assets";
-        case "ibc-deposit":
-        case "ibc-withdraw":
-          return "To IBC Transfer";
-        default:
-          return "To transfer assets";
-      }
-    })();
+    let actionText = "To transfer assets";
+    switch (transferType) {
+      case "shield":
+      case "unshield":
+        actionText = "To shield assets";
+        break;
+      case "ibc-deposit":
+      case "ibc-withdraw":
+        actionText = "To IBC Transfer";
+        break;
+    }
     return <ConnectPanel actionText={actionText} />;
   }
 
@@ -129,6 +82,8 @@ export const TransferLayout: React.FC = () => {
             destinationAddress={destinationAddress}
             setDestinationAddress={setDestinationAddress}
             keplrWalletManager={keplrWalletManager}
+            assetSelectorModalOpen={assetSelectorModalOpen}
+            setAssetSelectorModalOpen={setAssetSelectorModalOpen}
           />
         </Panel>
       );
@@ -143,6 +98,8 @@ export const TransferLayout: React.FC = () => {
             destinationAddress={destinationAddress}
             setDestinationAddress={setDestinationAddress}
             keplrWalletManager={keplrWalletManager}
+            assetSelectorModalOpen={assetSelectorModalOpen}
+            setAssetSelectorModalOpen={setAssetSelectorModalOpen}
           />
         </Panel>
       );
@@ -156,6 +113,8 @@ export const TransferLayout: React.FC = () => {
             setSourceAddress={setSourceAddress}
             destinationAddress={destinationAddress}
             setDestinationAddress={setDestinationAddress}
+            assetSelectorModalOpen={assetSelectorModalOpen}
+            setAssetSelectorModalOpen={setAssetSelectorModalOpen}
           />
         </div>
       );
@@ -169,6 +128,8 @@ export const TransferLayout: React.FC = () => {
             setSourceAddress={setSourceAddress}
             destinationAddress={destinationAddress}
             setDestinationAddress={setDestinationAddress}
+            assetSelectorModalOpen={assetSelectorModalOpen}
+            setAssetSelectorModalOpen={setAssetSelectorModalOpen}
           />
         </div>
       );
@@ -181,6 +142,8 @@ export const TransferLayout: React.FC = () => {
           setSourceAddress={setSourceAddress}
           destinationAddress={destinationAddress}
           setDestinationAddress={setDestinationAddress}
+          assetSelectorModalOpen={assetSelectorModalOpen}
+          setAssetSelectorModalOpen={setAssetSelectorModalOpen}
         />
       </div>
     );
