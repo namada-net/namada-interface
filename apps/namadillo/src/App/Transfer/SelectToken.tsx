@@ -30,7 +30,9 @@ type SelectTokenProps = {
   destinationAddress: string;
   isOpen: boolean;
   onClose: () => void;
-  onSelect: ((selectedAsset: AssetWithAmount) => void) | undefined;
+  onSelect:
+    | ((selectedAsset: AssetWithAmount, newSourceAddress?: string) => void)
+    | undefined;
   keplrWalletManager?: KeplrWalletManager | undefined;
   assetsWithAmounts: AssetWithAmount[];
 };
@@ -124,7 +126,7 @@ export const SelectToken = ({
   const handleTokenSelect = async (token: AssetWithAmount): Promise<void> => {
     // Check if current address is Keplr and if we need to connect to specific chain for this token
     const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
-
+    let newSourceAddress: string | undefined;
     try {
       if (isIbcOrKeplrToken) {
         setIsConnectingKeplr(true);
@@ -151,7 +153,7 @@ export const SelectToken = ({
             [keplrWallet.key]: true,
           }));
           const key = await keplrInstance.getKey(chainId);
-          setSourceAddress(key.bech32Address);
+          newSourceAddress = key.bech32Address;
         } catch (error) {
           console.error(
             "Failed to connect to Keplr for token:",
@@ -164,12 +166,12 @@ export const SelectToken = ({
         }
       }
 
-      onSelect?.(token);
+      onSelect?.(token, newSourceAddress);
       onClose();
     } catch (error) {
       console.error("Error in token selection:", error);
       setIsConnectingKeplr(false);
-      onSelect?.(token);
+      onSelect?.(token, newSourceAddress);
       onClose();
     }
   };
