@@ -1,4 +1,5 @@
-import { Chain, IBCInfo } from "@chain-registry/types";
+import { Asset, Chain, IBCInfo } from "@chain-registry/types";
+import { NamadaAsset } from "types";
 import {
   getAvailableChains,
   getChainRegistryByChainId,
@@ -281,6 +282,8 @@ describe("functions", () => {
           {
             chain_1: { channel_id: "channel-0", port_id: "transfer" },
             chain_2: { channel_id: "channel-1", port_id: "transfer" },
+            ordering: "ordered",
+            version: "ics20-1",
           },
         ],
       };
@@ -308,6 +311,8 @@ describe("functions", () => {
           {
             chain_1: { channel_id: "channel-1", port_id: "transfer" },
             chain_2: { channel_id: "channel-0", port_id: "transfer" },
+            ordering: "ordered",
+            version: "ics20-1",
           },
         ],
       };
@@ -384,6 +389,10 @@ describe("functions", () => {
       const namadaAsset = {
         symbol: "NAM",
         base: "unam",
+        name: "Namada",
+        display: "NAM",
+        denom_units: [{ denom: "unam", exponent: 0 }],
+        type_asset: "sdk.coin" as const,
         traces: [
           {
             type: "ibc" as const,
@@ -400,7 +409,10 @@ describe("functions", () => {
         },
       ];
 
-      const result = getIbcAssetByNamadaAsset(namadaAsset, ibcAssets);
+      const result = getIbcAssetByNamadaAsset(
+        namadaAsset as unknown as NamadaAsset,
+        ibcAssets as unknown as Asset[]
+      );
       expect(result).toBeDefined();
       expect(result?.base).toBe("uosmo");
     });
@@ -430,7 +442,10 @@ describe("functions", () => {
         },
       ];
 
-      const result = getIbcAssetByNamadaAsset(namadaAsset, ibcAssets);
+      const result = getIbcAssetByNamadaAsset(
+        namadaAsset as unknown as NamadaAsset,
+        ibcAssets as unknown as Asset[]
+      );
       expect(result).toBeDefined();
       expect(result?.symbol).toBe("stOSMO");
     });
@@ -455,7 +470,10 @@ describe("functions", () => {
         },
       ];
 
-      const result = getIbcAssetByNamadaAsset(namadaAsset, ibcAssets);
+      const result = getIbcAssetByNamadaAsset(
+        namadaAsset as unknown as NamadaAsset,
+        ibcAssets as unknown as Asset[]
+      );
       expect(result).toBeUndefined();
     });
   });
