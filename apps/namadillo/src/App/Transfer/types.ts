@@ -1,4 +1,3 @@
-import { Chain } from "@chain-registry/types";
 import { NamadaKeychainAccount } from "@namada/types";
 import BigNumber from "bignumber.js";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
@@ -15,6 +14,7 @@ import {
 } from "types";
 
 export type ValidateTransferFormSource = {
+  assetAddress: string | undefined;
   address: string | undefined;
   isShieldedAddress: boolean;
   amount: BigNumber | undefined;
@@ -25,7 +25,6 @@ export type ValidateTransferFormSource = {
 export type ValidateTransferFormDestination = {
   address: string | undefined;
   isShieldedAddress: boolean;
-  chain: Chain | undefined;
 };
 
 export type TransferModuleProps = {
