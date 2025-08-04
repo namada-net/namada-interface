@@ -151,47 +151,54 @@ export const parseTransferType = (
   wrapperFeePayer: string
 ): { source: string; target: string; type: TransferType } => {
   const { sources, targets } = tx;
-  const source = sources[0].owner;
-  const target = targets[0].owner;
-  const fromMasp = isShieldedPool(source);
+  const maspTxInLen = tx.maspTxIn?.length || 0;
+  const maspTxOutLen = tx.maspTxOut?.length || 0;
 
-  const unshieldingToPayFees = Boolean(
-    fromMasp && targets.find((t) => t.owner === wrapperFeePayer)
-  );
-  const isUnshielding =
-    fromMasp && unshieldingToPayFees ?
-      // If we're unshielding to pay fees, we should have one more target
-      targets.length > 1 && targets.length >= sources.length
-      // Otherwise, we should have the same number of targets as sources
-    : targets.length === sources.length;
+  // We unnshield to pay fees if transparent target is a wrapperFeePayer
+  const unshieldingToPayFees =
+    maspTxInLen > 0 &&
+    Boolean(targets.find((t) => t.owner === wrapperFeePayer));
+
+  const isUnshieldingTransfer =
+    unshieldingToPayFees ?
+      targets.length > 1
+    : maspTxInLen > 0 && targets.length === 1;
 
   const isShieldedTransfer =
-    fromMasp && unshieldingToPayFees ?
-      // If we're unshielding to pay fees, we should have exactly one source and one target
-      targets.length === 1 && sources.length === 1
-      // Otherwise, we should have no targets and no sources, as everything is in the shielded pool
-    : targets.length === 0 && sources.length === 0;
+    unshieldingToPayFees ?
+      targets.length === 1
+    : maspTxInLen > 0 && targets.length === 0;
+
+  const isShieldingTransfer =
+    maspTxOutLen > 0 && maspTxInLen === 0 && sources.length > 0;
 
   let type: TransferType = "Transparent";
   const txHasShieldedSection = hasShieldedSection(tx);
 
   if (txHasShieldedSection) {
-    if (isShieldedPool(source)) {
-      if (isShieldedTransfer) {
-        type = "Shielded";
-      } else if (isUnshielding) {
-        type = "Unshielding";
-      } else {
-        type = "Unknown";
-      }
-    } else if (isShieldedPool(target)) {
+    if (isShieldedTransfer) {
+      type = "Shielded";
+    } else if (isUnshieldingTransfer) {
+      type = "Unshielding";
+    } else if (isShieldingTransfer) {
       type = "Shielding";
+    } else {
+      type = "Unknown";
     }
   }
+  const displaySource =
+    isShieldedTransfer || isUnshieldingTransfer ?
+      tx.maspTxIn?.at(0)?.owner
+    : sources.at(0)?.owner;
+
+  const displayTarget =
+    isShieldedTransfer || isShieldingTransfer ?
+      tx.maspTxOut?.at(maspTxOutLen - 1)?.address
+    : targets.at(0)?.owner;
 
   return {
-    source,
-    target,
+    source: displaySource || "",
+    target: displayTarget || "",
     type,
   };
 };
