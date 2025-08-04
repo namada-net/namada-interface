@@ -58,6 +58,8 @@ interface IbcWithdrawProps {
   destinationAddress: string | undefined;
   setDestinationAddress: (address: string | undefined) => void;
   keplrWalletManager: KeplrWalletManager;
+  assetSelectorModalOpen?: boolean;
+  setAssetSelectorModalOpen?: (open: boolean) => void;
 }
 
 export const IbcWithdraw = ({
@@ -66,6 +68,8 @@ export const IbcWithdraw = ({
   destinationAddress,
   setDestinationAddress,
   keplrWalletManager,
+  assetSelectorModalOpen,
+  setAssetSelectorModalOpen,
 }: IbcWithdrawProps): JSX.Element => {
   //  COMPONENT STATE
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
@@ -407,6 +411,8 @@ export const IbcWithdraw = ({
         onComplete={redirectToTimeline}
         completedAt={completedAt}
         keplrWalletManager={keplrWalletManager}
+        assetSelectorModalOpen={assetSelectorModalOpen}
+        setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
     </div>
   );

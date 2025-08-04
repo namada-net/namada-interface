@@ -26,6 +26,8 @@ interface IbcTransferProps {
   destinationAddress: string | undefined;
   setDestinationAddress: (address: string | undefined) => void;
   keplrWalletManager: KeplrWalletManager;
+  assetSelectorModalOpen?: boolean;
+  setAssetSelectorModalOpen?: (open: boolean) => void;
 }
 
 export const IbcTransfer = ({
@@ -34,6 +36,8 @@ export const IbcTransfer = ({
   destinationAddress,
   setDestinationAddress,
   keplrWalletManager,
+  assetSelectorModalOpen,
+  setAssetSelectorModalOpen,
 }: IbcTransferProps): JSX.Element => {
   //  COMPONENT STATE
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
@@ -183,6 +187,8 @@ export const IbcTransfer = ({
             navigate(generatePath(routes.transaction, { hash: txHash }));
         }}
         keplrWalletManager={keplrWalletManager}
+        assetSelectorModalOpen={assetSelectorModalOpen}
+        setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
     </div>
   );
