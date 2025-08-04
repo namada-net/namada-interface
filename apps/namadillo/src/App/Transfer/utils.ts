@@ -1,9 +1,13 @@
-import { Chain } from "@chain-registry/types";
 import {
   isIbcAddress,
+  isNamadaAddress,
   isShieldedAddress,
   isTransparentAddress,
 } from "App/Transfer/common";
+import {
+  getChainRegistryByChainName,
+  getNamadaChainAssetsMap,
+} from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import { AssetWithAmount, GasConfig } from "types";
 import { checkKeychainCompatibleWithMasp } from "utils/compatibility";
@@ -15,26 +19,23 @@ import {
   ValidationResult,
 } from "./types";
 
-// Check if the provided address is valid for the destination chain and transaction type
+// This function only used to make sure users aren't sending Nam OSMO to IBC Cosmos etc.
 export const isValidDestinationAddress = ({
-  customAddress,
-  chain,
+  assetAddress,
+  destinationAddress,
 }: {
-  customAddress: string;
-  chain: Chain | undefined;
+  assetAddress: string;
+  destinationAddress: string;
 }): boolean => {
-  // Skip validation if no custom address or chain provided
-  if (!customAddress || !chain) return true;
-
-  // Check shielded/transparent address requirements for Namada
-  if (chain.bech32_prefix === "nam") {
-    return (
-      isTransparentAddress(customAddress) || isShieldedAddress(customAddress)
-    );
-  }
-
+  // Skip validation if it's not an IBC destination address
+  if (isNamadaAddress(destinationAddress)) return true;
+  const chainAssets = getNamadaChainAssetsMap(false);
+  const asset = chainAssets[assetAddress];
+  const ibcTrace = asset?.traces?.find((trace) => trace.type === "ibc");
+  const chainName = ibcTrace?.counterparty.chain_name;
+  const chain = getChainRegistryByChainName(chainName ?? "")?.chain;
   // For non-Namada chains, validate using prefix
-  return customAddress.startsWith(chain.bech32_prefix ?? "");
+  return destinationAddress.startsWith(chain?.bech32_prefix ?? "");
 };
 
 // Check if there's enough balance to pay for transaction fees
@@ -90,8 +91,8 @@ export const validateTransferForm = ({
     return "TheSameAddress";
   } else if (
     !isValidDestinationAddress({
-      customAddress: destination.address ?? "",
-      chain: destination.chain,
+      assetAddress: source.assetAddress ?? "",
+      destinationAddress: destination.address ?? "",
     })
   ) {
     return "CustomAddressNotMatchingChain";
