@@ -11,11 +11,15 @@ import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { useAssetsWithAmounts } from "hooks/useAssetsWithAmounts";
 import { useKeychainVersion } from "hooks/useKeychainVersion";
-import { useUrlState } from "hooks/useUrlState";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { AssetWithAmount } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
@@ -53,7 +57,8 @@ export const TransferModule = ({
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
-  const [asset, setAsset] = useUrlState(params.asset);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const asset = searchParams.get(params.asset) || "";
   const assetsWithAmounts = useAssetsWithAmounts(source.address ?? "");
   const selectedAsset =
     source.selectedAssetWithAmount ??
@@ -311,8 +316,22 @@ export const TransferModule = ({
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}
         assetsWithAmounts={assetsWithAmounts}
-        onSelect={(selectedAssetWithAmount: AssetWithAmount) => {
-          setAsset(selectedAssetWithAmount.asset.address);
+        onSelect={(
+          selectedAssetWithAmount: AssetWithAmount,
+          newSourceAddress?: string
+        ) => {
+          // Batch both URL updates together
+          setSearchParams((prev) => {
+            const newParams = new URLSearchParams(prev);
+            if (newSourceAddress) {
+              newParams.set("source", newSourceAddress);
+            }
+            newParams.set(
+              params.asset,
+              selectedAssetWithAmount.asset.address || ""
+            );
+            return newParams;
+          });
           source.onChangeAmount(undefined);
           source.onChangeSelectedAsset(selectedAssetWithAmount);
           setAssetSelectorModalOpen(false);
