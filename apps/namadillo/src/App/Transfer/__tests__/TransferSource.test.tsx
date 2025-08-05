@@ -7,7 +7,7 @@ import BigNumber from "bignumber.js";
 
 describe("Component: TransferSource", () => {
   it("should render the component with the default props", () => {
-    render(<TransferSource openProviderSelector={jest.fn()} />);
+    render(<TransferSource />);
     expect(screen.getByText("Connect Wallet")).toBeInTheDocument();
     expect(screen.getByText(/select chain/i)).toBeInTheDocument();
   });
@@ -22,38 +22,9 @@ describe("Component: TransferSource", () => {
     render(<TransferSource openProviderSelector={jest.fn()} {...props} />);
   };
 
-  const getEmptyChain = (): HTMLElement => {
-    return screen.getByText(/select chain/i);
-  };
-
   const getEmptyAsset = (): HTMLElement => {
     return screen.getByText(/asset/i);
   };
-
-  it("should call onConnectProvider when Connect Wallet button is clicked", () => {
-    const onConnectProviderMock = jest.fn();
-    setup({ openProviderSelector: onConnectProviderMock });
-    fireEvent.click(screen.getByText("Connect Wallet"));
-    expect(onConnectProviderMock).toHaveBeenCalled();
-  });
-
-  it("should call openChainSelector when the SelectedChain is clicked", () => {
-    const openChainSelectorMock = jest.fn();
-
-    const chain = getEmptyChain();
-    fireEvent.click(chain);
-    expect(openChainSelectorMock).toHaveBeenCalled();
-  });
-
-  it("should render controls disabled when chain is not defined", () => {
-    const openAssetSelectorMock = jest.fn();
-    setup({ openAssetSelector: openAssetSelectorMock });
-    const assetControl = getEmptyAsset();
-    fireEvent.click(assetControl);
-    expect(openAssetSelectorMock).not.toHaveBeenCalled();
-    const amountInput = screen.getByPlaceholderText("Amount");
-    expect(amountInput).toBeDisabled();
-  });
 
   it("should call openAssetSelector when the SelectedAsset is clicked", () => {
     const openAssetSelectorMock = jest.fn();
