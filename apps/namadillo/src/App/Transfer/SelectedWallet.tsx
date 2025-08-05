@@ -2,7 +2,7 @@ import { WalletAddress } from "App/Common/WalletAddress";
 import clsx from "clsx";
 import { wallets } from "integrations";
 import { twMerge } from "tailwind-merge";
-import { isNamadaAddress } from "./common";
+import { isIbcAddress, isNamadaAddress } from "./common";
 
 type SelectedWalletProps = {
   address?: string;
@@ -22,7 +22,10 @@ export const SelectedWallet = ({
   if (!address) return <></>;
 
   const wallet =
-    isNamadaAddress(address || "") ? wallets.namada : wallets.keplr;
+    isNamadaAddress(address || "") ? wallets.namada
+    : isIbcAddress(address || "") ? wallets.keplr
+    : wallets.namada;
+
   return (
     <div
       role="button"
