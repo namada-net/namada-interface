@@ -106,7 +106,7 @@ export const IbcWithdraw = ({
   );
   const alias = shieldedAccount?.alias ?? transparentAccount.data?.alias;
   const shielded = isShieldedAddress(sourceAddress ?? "");
-  const { data: availableAssets, isLoading: isLoadingAssets } = useAtomValue(
+  const { data: availableAssets } = useAtomValue(
     shielded ? namadaShieldedAssetsAtom : namadaTransparentAssetsAtom
   );
   const ledgerAccountInfo = ledgerStatus && {
