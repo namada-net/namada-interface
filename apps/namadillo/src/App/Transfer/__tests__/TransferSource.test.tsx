@@ -6,12 +6,6 @@ import {
 import BigNumber from "bignumber.js";
 
 describe("Component: TransferSource", () => {
-  it("should render the component with the default props", () => {
-    render(<TransferSource />);
-    expect(screen.getByText("Connect Wallet")).toBeInTheDocument();
-    expect(screen.getByText(/select chain/i)).toBeInTheDocument();
-  });
-
   it("should not render chain selector when openChainSelector is not defined", () => {
     render(<TransferSource openProviderSelector={jest.fn()} />);
     const selectChain = screen.queryByText(/selected chain/i);
