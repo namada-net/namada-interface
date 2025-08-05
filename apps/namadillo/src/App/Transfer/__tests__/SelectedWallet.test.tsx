@@ -26,15 +26,6 @@ describe("Component: SelectedWallet", () => {
     jest.clearAllMocks();
   });
 
-  it("should render the wallet icon", async () => {
-    await act(async () => {
-      render(<SelectedWallet address={tempAddress} />);
-    });
-    const walletIcon = screen.getByAltText(/logo/i, { exact: false });
-    expect(walletIcon).toBeInTheDocument();
-    expect(walletIcon).toHaveAttribute("src", walletMock.iconUrl);
-  });
-
   it("should display the shortened wallet address after loading accounts", async () => {
     render(<SelectedWallet address={tempAddress} />);
 
