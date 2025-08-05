@@ -4,7 +4,6 @@ import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHea
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
-import { namadaTransparentAssetsAtom } from "atoms/balance";
 import { chainParametersAtom } from "atoms/chain/atoms";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
@@ -48,7 +47,6 @@ export const MaspShield = ({
   const rpcUrl = useAtomValue(rpcUrlAtom);
   const chainParameters = useAtomValue(chainParametersAtom);
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
-  const { data: transparentAssets } = useAtomValue(namadaTransparentAssetsAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
   // DERIVED VALUES
   const transparentAddress = defaultAccounts.data?.find(

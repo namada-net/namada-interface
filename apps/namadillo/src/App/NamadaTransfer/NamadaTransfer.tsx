@@ -37,11 +37,11 @@ export const NamadaTransfer = ({
   setAssetSelectorModalOpen,
 }: NamadaTransferProps): JSX.Element => {
   //  URL STATE
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const shieldedParam = searchParams.get(params.shielded);
   //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
-  const [customAddress, setCustomAddress] = useState<string>("");
+  const [customAddress] = useState<string>("");
   const [memo, setMemo] = useState<string>("");
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmount | undefined
