@@ -5,7 +5,11 @@ import { shortenAddress } from "@namada/utils";
 import { TransactionFee } from "App/Common/TransactionFee";
 import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
 import { routes } from "App/routes";
-import { isNamadaAddress, isTransparentAddress } from "App/Transfer/common";
+import {
+  isIbcAddress,
+  isNamadaAddress,
+  isTransparentAddress,
+} from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { getAddressLabel } from "atoms/transactions";
 import BigNumber from "bignumber.js";
@@ -67,9 +71,7 @@ export const TransferDestination = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
 
-  const isIbcTransfer =
-    !isNamadaAddress(destinationAddress ?? "") ||
-    !isNamadaAddress(sourceAddress ?? "");
+  const isIbcTransfer = isIbcAddress(sourceAddress ?? "");
   const changeFeeEnabled = !isIbcTransfer;
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
@@ -107,9 +109,6 @@ export const TransferDestination = ({
 
   const isShieldingTransaction =
     routes.maspShield === location.pathname || routes.ibc === location.pathname;
-  const isIbcAddress = (address: string): boolean => {
-    return !isShieldedAddress && !isTransparentAddress(address);
-  };
 
   // Make sure destination address is pre-filled if it's a shielding transaction
   useEffect(() => {
