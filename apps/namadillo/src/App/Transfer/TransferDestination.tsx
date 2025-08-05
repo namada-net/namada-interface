@@ -7,6 +7,7 @@ import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
 import { routes } from "App/routes";
 import { isNamadaAddress, isTransparentAddress } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
+import { getAddressLabel } from "atoms/transactions";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
@@ -19,7 +20,6 @@ import { useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { useLocation } from "react-router-dom";
 import { Address } from "types";
-import { SelectedChain } from ".";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 import shieldedEye from "./assets/shielded-eye.svg";
@@ -136,7 +136,10 @@ export const TransferDestination = ({
 
   const sourceWallet =
     isNamadaAddress(destinationAddress || "") ? wallets.namada : wallets.keplr;
-  const chain = getChainFromAddress(destinationAddress ?? "");
+  const addressType =
+    isShieldedAddress ? "shielded"
+    : isTransparentAddress(destinationAddress ?? "") ? "transparent"
+    : "ibc";
   return (
     <>
       <div
@@ -246,13 +249,24 @@ export const TransferDestination = ({
           <footer>
             <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
             <div className="flex justify-between items-center gap-4">
-              {chain && (
-                <SelectedChain
-                  chain={chain}
-                  wallet={sourceWallet}
-                  iconSize="36px"
+              <div className="flex items-center gap-2">
+                <img
+                  src={
+                    sourceWallet === wallets.keplr ?
+                      getChainImageUrl(
+                        getChainFromAddress(destinationAddress ?? "")
+                      )
+                    : isTransparentAddress(destinationAddress ?? "") ?
+                      namadaTransparentIcon
+                    : namadaShieldedIcon
+                  }
+                  alt={sourceWallet.name}
+                  className="w-8"
                 />
-              )}
+                <span className="max-w-[200px] font-normal">
+                  {getAddressLabel(destinationAddress ?? "", addressType)}
+                </span>
+              </div>
               {destinationAddress && (
                 <SelectedWallet
                   address={customAddress ? customAddress : destinationAddress}
