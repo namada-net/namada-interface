@@ -60,7 +60,7 @@ export const IbcTransfer = ({
     isError: unknownIbcChannels,
     isLoading: isLoadingIbcChannels,
   } = useAtomValue(ibcChannelsFamily(registry?.chain.chain_name));
-  const { data: userAssets, isLoading: isLoadingBalances } = useAtomValue(
+  const { data: userAssets } = useAtomValue(
     assetBalanceAtomFamily({
       chain: registry?.chain,
       walletAddress: sourceAddress,
