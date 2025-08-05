@@ -1,4 +1,4 @@
-import { Panel } from "@namada/components";
+import { Alert, Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { MaspSyncCover } from "App/Common/MaspSyncCover";
 import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
@@ -10,6 +10,7 @@ import {
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
   lastCompletedShieldedSyncAtom,
+  maspNotesAtom,
   namadaShieldedAssetsAtom,
 } from "atoms/balance/atoms";
 import { chainParametersAtom } from "atoms/chain/atoms";
@@ -25,7 +26,8 @@ import { wallets } from "integrations";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toDisplayAmount } from "utils";
 
 export const MaspUnshield: React.FC = () => {
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
@@ -54,6 +56,9 @@ export const MaspUnshield: React.FC = () => {
   const account = defaultAccounts.data?.find(
     (account) => account.type === AccountType.ShieldedKeys
   );
+  const isLedgerAccount = defaultAccounts.data?.some(
+    (account) => account.type === AccountType.Ledger
+  );
   const sourceAddress = account?.address;
   const destinationAddress = defaultAccounts.data?.find(
     (account) => account.type !== AccountType.ShieldedKeys
@@ -65,6 +70,10 @@ export const MaspUnshield: React.FC = () => {
   const lastSync = useAtomValue(lastCompletedShieldedSyncAtom);
   const selectedAsset =
     selectedAssetAddress ? availableAssets?.[selectedAssetAddress] : undefined;
+
+  const notesAtom = useAtomValue(maspNotesAtom);
+  const [notes, setNotes] = useState([] as [string, BigNumber][]);
+  const [availableToSpend, setAvailableToSpend] = useState<BigNumber | null>();
 
   const {
     execute: performTransfer,
@@ -140,6 +149,41 @@ export const MaspUnshield: React.FC = () => {
       }
     }
   };
+
+  useEffect(() => {
+    if (
+      !isLedgerAccount ||
+      !selectedAsset ||
+      !notesAtom.isSuccess ||
+      !feeProps
+    ) {
+      setNotes([]);
+      return;
+    }
+
+    const www = notesAtom.data
+      .filter(([token]) => token === selectedAsset.asset.address)
+      .map(
+        ([token, balance]) =>
+          [token, toDisplayAmount(selectedAsset.asset, BigNumber(balance))] as [
+            string,
+            BigNumber,
+          ]
+      )
+      .sort((a, b) => b[1].minus(a[1]).toNumber());
+
+    const kappa = www.slice(0, 4).reduce((acc, [_, amount]) => {
+      return acc.plus(amount);
+    }, BigNumber(0));
+    const gas = feeProps.gasConfig.gasLimit.times(
+      feeProps.gasConfig.gasPriceInMinDenom
+    );
+
+    setNotes(www);
+    setAvailableToSpend(kappa.minus(gas));
+    // TODO: Check if not called to often
+  }, [selectedAsset, notesAtom.data, account, feeProps]);
+
   // We stop the ledger status check when the transfer is in progress
   setLedgerStatusStop(isPerformingTransfer);
 
@@ -151,6 +195,20 @@ export const MaspUnshield: React.FC = () => {
           isDestinationShielded={false}
         />
       </header>
+      {notes.length > 4 && (
+        <Alert
+          type="warning"
+          title="Info!"
+          className="max-w-[480px] mx-auto mb-4"
+        >
+          <p>
+            Due to ledger BS we have to limit the amount that you can unshield
+            at this time to <b>{availableToSpend?.toString()}</b>
+            <br />
+            After tx is successful, you will be able to unshield more
+          </p>
+        </Alert>
+      )}
       <TransferModule
         source={{
           isLoadingAssets: isLoadingAssets,

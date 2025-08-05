@@ -18,7 +18,7 @@ use namada_sdk::masp::{IndexerMaspClient, LedgerMaspClient, LinearBackoffSleepMa
 use namada_sdk::masp::{ShieldedContext, ShieldedSyncConfig};
 use namada_sdk::masp_primitives::asset_type::AssetType;
 use namada_sdk::masp_primitives::sapling::ViewingKey;
-use namada_sdk::masp_primitives::transaction::components::ValueSum;
+use namada_sdk::masp_primitives::transaction::components::{I128Sum, ValueSum};
 use namada_sdk::masp_primitives::zip32::ExtendedFullViewingKey;
 use namada_sdk::parameters::storage;
 use namada_sdk::proof_of_stake::Epoch;
@@ -29,7 +29,7 @@ use namada_sdk::rpc::{
     query_proposal_votes, query_storage_value,
 };
 use namada_sdk::state::Key;
-use namada_sdk::token;
+use namada_sdk::token::{self, Change};
 use namada_sdk::tx::{
     TX_BOND_WASM, TX_CLAIM_REWARDS_WASM, TX_IBC_WASM, TX_REDELEGATE_WASM, TX_REVEAL_PK,
     TX_TRANSFER_WASM, TX_UNBOND_WASM, TX_VOTE_PROPOSAL, TX_WITHDRAW_WASM,
@@ -235,11 +235,11 @@ impl Query {
     }
 
     fn get_decoded_balance(
-        decoded_balance: (ValueSum<Address, I256>, ValueSum<AssetType, i128>),
+        decoded_balance: ValueSum<Address, I256>,
     ) -> Vec<(Address, token::Amount)> {
         let mut result = Vec::new();
 
-        for (token_addr, amount) in decoded_balance.0.components() {
+        for (token_addr, amount) in decoded_balance.components() {
             let amount = token::Amount::from_change(*amount);
             result.push((token_addr.clone(), amount));
         }
@@ -395,6 +395,76 @@ impl Query {
         Ok(())
     }
 
+    pub async fn query_notes_to_spend(
+        &self,
+        owner: String,
+        tokens: Box<[JsValue]>,
+        chain_id: String,
+    ) -> Result<JsValue, JsError> {
+        let tokens: Vec<Address> = tokens
+            .iter()
+            .map(|address| {
+                let address_str = address.as_string().unwrap();
+                Address::from_str(&address_str).unwrap()
+            })
+            .collect();
+        let xvk = ExtendedViewingKey::from_str(&owner)?;
+        let viewing_key = ExtendedFullViewingKey::from(xvk).fvk.vk;
+
+        // We are recreating shielded context to avoid multiple mutable borrows
+        let mut shielded: ShieldedContext<JSShieldedUtils> = ShieldedContext::default();
+        shielded.utils.chain_id = chain_id.clone();
+        shielded.try_load(async |_| {}).await;
+        shielded
+            .precompute_asset_types(&self.client, tokens.iter().collect())
+            .await
+            .map_err(|e| JsError::new(&format!("{:?}", e)))?;
+        let _ = shielded.save().await;
+
+        let epoch = query_masp_epoch(&self.client).await?;
+
+        let mut notes = vec![];
+        // Retrieve the notes that can be spent by this key
+        if let Some(avail_notes) = shielded.pos_map.get(&viewing_key) {
+            for note_idx in avail_notes {
+                // Spent notes cannot contribute a new transaction's pool
+                if shielded.spents.contains(note_idx) {
+                    continue;
+                }
+                // Get note associated with this ID
+                let note = shielded.note_map.get(note_idx).unwrap();
+                // Finally add value to multi-asset accumulator
+                notes.push(
+                    I128Sum::from_nonnegative(note.asset_type, i128::from(note.value)).unwrap(),
+                );
+            }
+        }
+        let mut dupa = vec![];
+
+        for note in notes.iter() {
+            for (asset_type, val) in note.components() {
+                let decoded = shielded.decode_asset_type(&self.client, *asset_type).await;
+                match decoded {
+                    Some(pre_asset_type) if pre_asset_type.epoch.is_none_or(|e| e <= epoch) => {
+                        let decoded_change =
+                            Change::from_masp_denominated(*val, pre_asset_type.position)
+                                .expect("expected this to fit");
+                        let www = ValueSum::from_pair(pre_asset_type.token, decoded_change);
+
+                        let www = Self::get_decoded_balance(www);
+
+                        dupa.push(www);
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        let flat = dupa.into_iter().flatten().collect::<Vec<_>>();
+
+        to_js_result(flat)
+    }
+
     /// Queries shielded balance for a given extended viewing key
     ///
     /// # Arguments
@@ -431,7 +501,7 @@ impl Query {
                     .decode_combine_sum_to_epoch(&self.client, balance, epoch)
                     .await;
 
-                Self::get_decoded_balance(decoded_balance)
+                Self::get_decoded_balance(decoded_balance.0)
             }
             None => vec![],
         };
