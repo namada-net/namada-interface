@@ -38,10 +38,11 @@ export const addTimestamps = async (
 ): Promise<TransactionHistory[]> => {
   return Promise.all(
     history.map(async (item) => {
-      if (item.blockHeight) {
+      // hacky fix until types get fixed
+      if ((item as unknown as { blockHeight: string }).blockHeight) {
         const timestamp = await fetchBlockTimestampByHeight(
           api,
-          parseInt(item.blockHeight, 10)
+          parseInt((item as unknown as { blockHeight: string }).blockHeight, 10)
         );
         return { ...item, timestamp };
       }
