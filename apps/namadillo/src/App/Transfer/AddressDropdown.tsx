@@ -223,7 +223,7 @@ export const AddressDropdown = ({
             key={option.id}
             type="button"
             className={clsx(
-              "w-full p-1.5 text-left flex items-center gap-3 rounded-lg",
+              "w-[240px] p-1.5 text-left flex items-center gap-3 rounded-lg",
               "transition-all duration-200",
               {
                 "opacity-40 cursor-not-allowed": disabled,
