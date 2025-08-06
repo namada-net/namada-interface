@@ -14,7 +14,9 @@ use namada_sdk::hash::Hash;
 use namada_sdk::masp::shielded_wallet::ShieldedApi;
 use namada_sdk::masp::utils::MaspClient as NamadaMaspClient;
 use namada_sdk::masp::utils::RetryStrategy;
-use namada_sdk::masp::{IndexerMaspClient, LedgerMaspClient, LinearBackoffSleepMaspClient};
+use namada_sdk::masp::{
+    Conversions, IndexerMaspClient, LedgerMaspClient, LinearBackoffSleepMaspClient,
+};
 use namada_sdk::masp::{ShieldedContext, ShieldedSyncConfig};
 use namada_sdk::masp_primitives::asset_type::AssetType;
 use namada_sdk::masp_primitives::sapling::ViewingKey;
@@ -424,6 +426,7 @@ impl Query {
         let epoch = query_masp_epoch(&self.client).await?;
 
         let mut notes = vec![];
+        let mut conv = Conversions::new();
         // Retrieve the notes that can be spent by this key
         if let Some(avail_notes) = shielded.pos_map.get(&viewing_key) {
             for note_idx in avail_notes {
@@ -439,21 +442,58 @@ impl Query {
                 );
             }
         }
+
+        for n in &notes {
+            for (asset_type, _) in n.components() {
+                shielded
+                    .query_allowed_conversion(&self.client, *asset_type, &mut conv)
+                    .await
+                    .map_err(|e| JsError::new(&format!("{:?}", e)))?;
+            }
+        }
+
         let mut dupa = vec![];
 
         for note in notes.iter() {
             for (asset_type, val) in note.components() {
                 let decoded = shielded.decode_asset_type(&self.client, *asset_type).await;
+                let conv = conv.get(asset_type);
                 match decoded {
                     Some(pre_asset_type) if pre_asset_type.epoch.is_none_or(|e| e <= epoch) => {
                         let decoded_change =
                             Change::from_masp_denominated(*val, pre_asset_type.position)
                                 .expect("expected this to fit");
-                        let www = ValueSum::from_pair(pre_asset_type.token, decoded_change);
+                        let www = ValueSum::from_pair(pre_asset_type.token.clone(), decoded_change);
 
                         let www = Self::get_decoded_balance(www);
+                        let zzz = www
+                            .into_iter()
+                            .map(|(token, amount)| (token, amount, conv.is_some()))
+                            .collect::<Vec<_>>();
 
-                        dupa.push(www);
+                        if conv.is_some() {
+                            web_sys::console::log_1(
+                                &format!("Adding conversion for entry {:?} ", zzz)
+                                    .into(),
+                            );
+                            for (_, val) in
+                                I128Sum::from(conv.unwrap().0.clone()).components()
+                            {
+
+                                let decoded_change =
+                                    Change::from_masp_denominated(*val, pre_asset_type.position)
+                                        .expect("expected this to fit");
+                                let www = ValueSum::from_pair(
+                                    pre_asset_type.token.clone(),
+                                    decoded_change,
+                                );
+
+                                let www = Self::get_decoded_balance(www);
+                                web_sys::console::log_1(&format!("Conversion {:?}", www).into());
+                            }
+                        }
+
+                        dupa.push(zzz);
                     }
                     _ => {}
                 }

@@ -72,7 +72,7 @@ export const MaspUnshield: React.FC = () => {
     selectedAssetAddress ? availableAssets?.[selectedAssetAddress] : undefined;
 
   const notesAtom = useAtomValue(maspNotesAtom);
-  const [notes, setNotes] = useState([] as [string, BigNumber][]);
+  const [notes, setNotes] = useState<[string, BigNumber][] | null>();
   const [availableToSpend, setAvailableToSpend] = useState<BigNumber | null>();
 
   const {
@@ -152,14 +152,22 @@ export const MaspUnshield: React.FC = () => {
 
   useEffect(() => {
     if (
-      !isLedgerAccount ||
+      // !isLedgerAccount ||
       !selectedAsset ||
       !notesAtom.isSuccess ||
       !feeProps
     ) {
-      setNotes([]);
+      // notes !== null && setNotes(null);
       return;
     }
+    const notes = notesAtom.data.filter(
+      ([token]) => token === selectedAsset.asset.address
+    );
+    // const conversions = notesAtom.data[1].filter(
+    //   ([token]) => token === selectedAsset.asset.address
+    // );
+    console.log("notes", notes);
+    // console.log("conversions", conversions);
 
     const www = notesAtom.data
       .filter(([token]) => token === selectedAsset.asset.address)
@@ -179,8 +187,8 @@ export const MaspUnshield: React.FC = () => {
       feeProps.gasConfig.gasPriceInMinDenom
     );
 
-    setNotes(www);
-    setAvailableToSpend(kappa.minus(gas));
+    // setNotes(www);
+    // setAvailableToSpend(kappa.minus(gas));
     // TODO: Check if not called to often
   }, [selectedAsset, notesAtom.data, account, feeProps]);
 
@@ -195,7 +203,7 @@ export const MaspUnshield: React.FC = () => {
           isDestinationShielded={false}
         />
       </header>
-      {notes.length > 4 && (
+      {notes && notes.length > 4 && (
         <Alert
           type="warning"
           title="Info!"
