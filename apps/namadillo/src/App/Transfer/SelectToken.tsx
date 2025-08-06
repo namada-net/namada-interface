@@ -184,7 +184,7 @@ export const SelectToken = ({
           <div className="flex rounded-xl border border-neutral-700 overflow-hidden h-[500px]">
             {/* Left panel */}
             <div className="w-[300px] bg-neutral-900 p-6 flex flex-col overflow-auto">
-              <h5 className="text-neutral-500 text-sm mb-0">Your account</h5>
+              <h5 className="text-neutral-500 text-sm mb-2">Your account</h5>
               <div className="mb-4">
                 <AddressDropdown
                   destinationAddress={destinationAddress}
