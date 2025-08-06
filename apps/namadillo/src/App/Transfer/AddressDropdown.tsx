@@ -223,10 +223,12 @@ export const AddressDropdown = ({
             key={option.id}
             type="button"
             className={clsx(
-              "w-full p-2 text-left flex items-center gap-3",
+              "w-full p-1.5 text-left flex items-center gap-3 rounded-lg",
               "transition-all duration-200",
               {
                 "opacity-40 cursor-not-allowed": disabled,
+                "bg-yellow/20 border border-yellow": isSelected && !disabled,
+                "hover:bg-neutral-800": !isSelected && !disabled,
               }
             )}
             onClick={() => handleSelectOption(option)}
@@ -239,26 +241,36 @@ export const AddressDropdown = ({
               />
             </div>
             <div className="flex-1 min-w-0">
-              <div
-                className={clsx(
-                  "text-sm truncate",
-                  isSelected ?
-                    "text-yellow-300 font-medium"
-                  : "text-neutral-300"
-                )}
-              >
-                {option.alias}
-              </div>
-              {option.id !== "keplr" && (
+              {option.id === "keplr" ?
                 <div
                   className={clsx(
-                    "text-xs mt-0.5",
-                    isSelected ? "text-yellow-300/70" : "text-neutral-400"
+                    "text-sm truncate flex items-center h-10",
+                    isSelected ? "text-yellow font-medium" : "text-neutral-300"
                   )}
                 >
-                  {shortenAddress(option.address, 10)}
+                  {option.alias}
                 </div>
-              )}
+              : <>
+                  <div
+                    className={clsx(
+                      "text-sm truncate",
+                      isSelected ?
+                        "text-yellow font-medium"
+                      : "text-neutral-300"
+                    )}
+                  >
+                    {option.alias}
+                  </div>
+                  <div
+                    className={clsx(
+                      "text-xs mt-0.5",
+                      isSelected ? "text-yellow/70" : "text-neutral-400"
+                    )}
+                  >
+                    {shortenAddress(option.address, 10)}
+                  </div>
+                </>
+              }
             </div>
           </button>
         );
