@@ -160,10 +160,10 @@ export const DestinationAddressModal = ({
     <SelectModal
       title="Destination address"
       onClose={onClose}
-      className="max-w-[500px] bg-neutral-800"
+      className="max-w-[500px] bg-neutral-800 h-[80vh] min-h-[400px] flex flex-col"
     >
-      <Stack gap={6}>
-        <div>
+      <div className="flex flex-col gap-6 h-full overflow-hidden">
+        <div className="flex-shrink-0">
           <Input
             label=""
             placeholder="Paste destination address"
@@ -179,80 +179,84 @@ export const DestinationAddressModal = ({
           )}
         </div>
 
-        {recentAddressOptions.length > 0 && (
-          <div>
-            <h3 className="text-sm font-medium text-neutral-500 mb-3">
-              Recent addresses
-            </h3>
-            <Stack gap={2}>
-              {recentAddressOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleAddressClick(option.address)}
-                  className={clsx(
-                    "flex items-center justify-between w-full p-3 rounded-sm text-left transition-colors",
-                    "bg-neutral-900 hover:border-yellow border border-transparent"
-                  )}
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <img
-                      src={option.icon}
-                      alt={option.label}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-white">
-                        {shortenAddress(option.address, 8, 8)}
-                      </span>
-                    </div>
-                  </div>
-                </button>
-              ))}
-            </Stack>
-          </div>
-        )}
+        <div className="flex flex-col gap-6 flex-1 overflow-hidden">
+          {recentAddressOptions.length > 0 && (
+            <div className="flex flex-col min-h-0">
+              <h3 className="text-sm font-medium text-neutral-500 mb-3 flex-shrink-0">
+                Recent addresses
+              </h3>
+              <div className="overflow-y-auto flex-1 min-h-0">
+                <Stack gap={2}>
+                  {recentAddressOptions.map((option) => (
+                    <button
+                      key={option.id}
+                      onClick={() => handleAddressClick(option.address)}
+                      className={clsx(
+                        "flex items-center justify-between w-full p-3 rounded-sm text-left transition-colors",
+                        "bg-neutral-900 hover:border-yellow border border-transparent"
+                      )}
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <img
+                          src={option.icon}
+                          alt={option.label}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-white">
+                            {shortenAddress(option.address, 8, 8)}
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </Stack>
+              </div>
+            </div>
+          )}
 
-        {addressOptions.length > 0 && (
-          <div>
-            <h3 className="text-sm font-medium text-neutral-500 mb-3">
-              Your addresses
-            </h3>
-            <Stack gap={2}>
-              {addressOptions.map((option) => (
-                <button
-                  key={option.id}
-                  onClick={() => handleAddressClick(option.address)}
-                  className={clsx(
-                    "flex items-center justify-between w-full p-3 rounded-sm text-left transition-colors",
-                    "bg-neutral-900 hover:border-yellow border border-transparent"
-                  )}
-                >
-                  <div className="flex items-center gap-3 flex-1">
-                    <img
-                      src={option.icon}
-                      alt={option.label}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-white">
-                        {shortenAddress(option.address, 8, 8)}
+          {addressOptions.length > 0 && (
+            <div className="flex-shrink-0">
+              <h3 className="text-sm font-medium text-neutral-500 mb-3">
+                Your addresses
+              </h3>
+              <Stack gap={2}>
+                {addressOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => handleAddressClick(option.address)}
+                    className={clsx(
+                      "flex items-center justify-between w-full p-3 rounded-sm text-left transition-colors",
+                      "bg-neutral-900 hover:border-yellow border border-transparent"
+                    )}
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <img
+                        src={option.icon}
+                        alt={option.label}
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-white">
+                          {shortenAddress(option.address, 8, 8)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs text-neutral-500">
+                        {option.type === "transparent" &&
+                          transparentAccount?.alias}
+                        {option.type === "shielded" && shieldedAccount?.alias}
+                        {option.type === "ibc" && "IBC"}
                       </span>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-xs text-neutral-500">
-                      {option.type === "transparent" &&
-                        transparentAccount?.alias}
-                      {option.type === "shielded" && shieldedAccount?.alias}
-                      {option.type === "ibc" && "IBC"}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </Stack>
-          </div>
-        )}
-      </Stack>
+                  </button>
+                ))}
+              </Stack>
+            </div>
+          )}
+        </div>
+      </div>
     </SelectModal>
   );
 };
