@@ -31,9 +31,14 @@ export const isValidDestinationAddress = ({
   if (isNamadaAddress(destinationAddress)) return true;
   const chainAssets = getNamadaChainAssetsMap(false);
   const asset = chainAssets[assetAddress];
+  // Allow for sending NAM to Osmosis
+  const isNamadaAsset = asset?.symbol === "NAM";
+  if (isNamadaAsset && destinationAddress.startsWith("osmo")) return true;
+
   const ibcTrace = asset?.traces?.find((trace) => trace.type === "ibc");
   const chainName = ibcTrace?.counterparty.chain_name;
   const chain = getChainRegistryByChainName(chainName ?? "")?.chain;
+  if (!chain || !destinationAddress) return false;
   // For non-Namada chains, validate using prefix
   return destinationAddress.startsWith(chain?.bech32_prefix ?? "");
 };
