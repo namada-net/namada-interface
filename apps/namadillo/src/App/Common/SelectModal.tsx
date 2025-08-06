@@ -31,7 +31,7 @@ export const SelectModal = ({
           )}
           {...props}
         >
-          <header className="flex w-full justify-center items-center relative mb-6 text-light leading-8">
+          <header className="flex w-full justify-center items-center relative mb-6 text-light leading-8 flex-shrink-0">
             {title}
             <i
               className="cursor-pointer text-white absolute -right-2.5 text-xl p-1.5 hover:text-yellow z-50"
@@ -40,7 +40,7 @@ export const SelectModal = ({
               <IoClose />
             </i>
           </header>
-          {children}
+          <div className="flex-1 overflow-hidden">{children}</div>
         </div>
       </ModalTransition>
     </Modal>
