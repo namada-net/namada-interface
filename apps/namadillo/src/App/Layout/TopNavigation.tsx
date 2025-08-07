@@ -1,14 +1,10 @@
-import { ActionButton } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { ConnectExtensionButton } from "App/Common/ConnectExtensionButton";
 import { TransactionInProgressSpinner } from "App/Common/TransactionInProgressSpinner";
 import { UnshieldAssetsModal } from "App/Common/UnshieldAssetsModal";
 import { routes } from "App/routes";
 import { defaultAccountAtom } from "atoms/accounts";
-import {
-  applicationFeaturesAtom,
-  signArbitraryEnabledAtom,
-} from "atoms/settings";
+import { signArbitraryEnabledAtom } from "atoms/settings";
 import { useUserHasAccount } from "hooks/useIsAuthenticated";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
@@ -24,9 +20,6 @@ export const TopNavigation = (): JSX.Element => {
 
   const userHasAccount = useUserHasAccount();
   const signArbitraryEnabled = useAtomValue(signArbitraryEnabledAtom);
-  const { maspEnabled, namTransfersEnabled } = useAtomValue(
-    applicationFeaturesAtom
-  );
   const defaultAccount = useAtomValue(defaultAccountAtom);
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,44 +46,7 @@ export const TopNavigation = (): JSX.Element => {
 
   return (
     <div className="flex-1 flex items-center gap-4 sm:gap-6">
-      <div className="hidden lg:grid lg:grid-cols-3 gap-2">
-        {maspEnabled && (
-          <ActionButton
-            className="py-2"
-            size="xs"
-            onClick={() =>
-              navigate(routes.shieldAssets, {
-                state: { backgroundLocation: location },
-              })
-            }
-          >
-            Shield Assets
-          </ActionButton>
-        )}
-        {maspEnabled && (
-          <ActionButton
-            className="py-2"
-            outlineColor="yellow"
-            size="xs"
-            onClick={() => setUnshieldingModalOpen(true)}
-          >
-            Unshield
-          </ActionButton>
-        )}
-        {(maspEnabled || namTransfersEnabled) && (
-          <ActionButton
-            href={routes.transfer}
-            className="py-2"
-            size="xs"
-            backgroundColor="white"
-          >
-            Transfer
-          </ActionButton>
-        )}
-      </div>
-
       <div className="flex-1" />
-
       {defaultAccount.data?.type !== AccountType.Ledger &&
         signArbitraryEnabled && (
           <button
