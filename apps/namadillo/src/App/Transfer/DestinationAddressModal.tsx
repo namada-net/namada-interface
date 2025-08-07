@@ -11,10 +11,12 @@ import {
   type ValidationResult,
 } from "atoms/transactions";
 import clsx from "clsx";
+import { useKeplrAddressForAsset } from "hooks/useKeplrAddressForAsset";
+import { wallets } from "integrations";
 import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { useState } from "react";
-import { Address } from "types";
+import { Address, Asset } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 
@@ -23,17 +25,17 @@ type AddressOption = {
   label: string;
   address: string;
   icon: string;
-  type: "transparent" | "shielded" | "ibc";
+  type: "transparent" | "shielded" | "ibc" | "keplr";
 };
 
 type DestinationAddressModalProps = {
   onClose: () => void;
   onSelectAddress: (address: Address) => void;
-  selectedAddress?: string;
-  isShieldedTx?: boolean;
+  sourceAsset?: Asset;
 };
 
 export const DestinationAddressModal = ({
+  sourceAsset,
   onClose,
   onSelectAddress,
 }: DestinationAddressModalProps): JSX.Element => {
@@ -42,6 +44,7 @@ export const DestinationAddressModal = ({
     useState<ValidationResult | null>(null);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [recentAddresses, setRecentAddresses] = useAtom(recentAddressesAtom);
+  const keplrAddress = useKeplrAddressForAsset(sourceAsset);
 
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
@@ -76,6 +79,17 @@ export const DestinationAddressModal = ({
       });
     }
   }
+
+  addressOptions.push({
+    id: "keplr",
+    label: "Keplr Address",
+    address: keplrAddress ?? "",
+    icon:
+      !keplrAddress ?
+        wallets.keplr.iconUrl
+      : getChainImageUrl(getChainFromAddress(keplrAddress ?? "")),
+    type: "keplr",
+  });
 
   // Build recent addresses options
   const recentAddressOptions: AddressOption[] = recentAddresses.map(
@@ -214,6 +228,7 @@ export const DestinationAddressModal = ({
                             transparentAccount?.alias}
                           {option.type === "shielded" && shieldedAccount?.alias}
                           {option.type === "ibc" && "IBC"}
+                          {option.type === "keplr" && "Keplr"}
                         </span>
                       </div>
                     </button>
