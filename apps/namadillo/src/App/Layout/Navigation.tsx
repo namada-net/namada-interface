@@ -99,6 +99,10 @@ export const Navigation = (): JSX.Element => {
                   shouldHighlight={
                     !!highlightTransferItem || !!highlightShieldItem
                   }
+                  preventNavigationOnSameRoute={
+                    (item.label === "Shield" && highlightShieldItem) ||
+                    (item.label === "Transfer" && highlightTransferItem)
+                  }
                 >
                   {item.icon}
                   {item.label}

@@ -88,8 +88,11 @@ export const TransferSource = ({
   return (
     <div
       className={clsx(
-        "relative bg-neutral-800 rounded-lg px-4 py-5 border-2",
-        selectedTokenType === "shielded" ? "border-yellow-400" : "border-white"
+        "relative bg-neutral-800 rounded-lg px-4 py-5",
+        asset && "border",
+        asset && selectedTokenType === "shielded" ?
+          "border-yellow-400"
+        : asset && "border-white"
       )}
     >
       <header className="relative flex justify-between">
