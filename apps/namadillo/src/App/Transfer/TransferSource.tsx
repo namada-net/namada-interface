@@ -86,7 +86,12 @@ export const TransferSource = ({
     : "keplr";
 
   return (
-    <div className="relative bg-neutral-800 rounded-lg px-4 py-5">
+    <div
+      className={clsx(
+        "relative bg-neutral-800 rounded-lg px-4 py-5 border-2",
+        selectedTokenType === "shielded" ? "border-yellow-400" : "border-white"
+      )}
+    >
       <header className="relative flex justify-between">
         <SelectedAsset
           asset={asset}
