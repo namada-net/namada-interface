@@ -47,6 +47,7 @@ type TransferDestinationProps = {
   destinationAddress?: string;
   sourceAddress?: string;
   memo?: string;
+  sourceAsset: Asset | undefined;
   onChangeAddress?: (address: Address) => void;
   onChangeMemo?: (address: string) => void;
   setDestinationAddress?: (address: string) => void;
@@ -64,6 +65,7 @@ export const TransferDestination = ({
   destinationAddress,
   sourceAddress,
   memo,
+  sourceAsset,
   setDestinationAddress,
   onChangeMemo,
 }: TransferDestinationProps): JSX.Element => {
@@ -170,7 +172,9 @@ export const TransferDestination = ({
             <div className="mt-3">
               <button
                 type="button"
-                disabled={isShieldingTransaction || isSubmitting}
+                disabled={
+                  isShieldingTransaction || isSubmitting || !sourceAsset
+                }
                 onClick={handleOpenModal}
                 className={clsx(
                   "flex justify-between items-center bg-neutral-900 p-2 rounded-sm w-full",
@@ -217,7 +221,10 @@ export const TransferDestination = ({
                 </div>
                 {!destinationAddress ?
                   <>
-                    <ConnectProviderButton onClick={handleOpenModal} />
+                    <ConnectProviderButton
+                      onClick={handleOpenModal}
+                      disabled={!sourceAsset}
+                    />
                   </>
                 : !isShieldingTransaction && (
                     <GoChevronDown
@@ -299,10 +306,9 @@ export const TransferDestination = ({
 
       {isModalOpen && (
         <DestinationAddressModal
-          isShieldedTx={isShieldedTx}
           onClose={handleCloseModal}
           onSelectAddress={handleSelectAddress}
-          selectedAddress={destinationAddress}
+          sourceAsset={sourceAsset}
         />
       )}
     </>
