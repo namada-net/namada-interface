@@ -20,7 +20,6 @@ type SelectChainModalProps = {
 export const SelectChainModal = ({
   onClose,
   onSelect,
-  wallet,
   walletAddress,
   chains,
 }: SelectChainModalProps): JSX.Element => {
@@ -36,9 +35,7 @@ export const SelectChainModal = ({
 
   return (
     <SelectModal title="Select Source Chain" onClose={onClose}>
-      {walletAddress && (
-        <ConnectedWalletInfo wallet={wallet} walletAddress={walletAddress} />
-      )}
+      {walletAddress && <ConnectedWalletInfo walletAddress={walletAddress} />}
       <div className="my-4">
         <Search placeholder="Search chain" onChange={setFilter} />
       </div>
