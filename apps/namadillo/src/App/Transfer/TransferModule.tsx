@@ -222,6 +222,7 @@ export const TransferModule = ({
             isShieldedAddress={isShieldedAddress(destination.address ?? "")}
             isShieldedTx={isShieldedTx}
             destinationAddress={destination.address}
+            sourceAsset={selectedAsset?.asset}
             sourceAddress={source.address}
             onChangeAddress={destination.onChangeAddress}
             memo={destination.memo}

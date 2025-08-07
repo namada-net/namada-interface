@@ -9,7 +9,8 @@ import {
   getNamadaChainAssetsMap,
 } from "atoms/integrations";
 import BigNumber from "bignumber.js";
-import { AssetWithAmount, GasConfig } from "types";
+import { KeplrWalletManager } from "integrations/Keplr";
+import { Asset, AssetWithAmount, GasConfig } from "types";
 import { checkKeychainCompatibleWithMasp } from "utils/compatibility";
 import {
   OnSubmitTransferParams,
@@ -94,6 +95,8 @@ export const validateTransferForm = ({
 }): ValidationResult => {
   if (source.address === destination.address) {
     return "TheSameAddress";
+  } else if (!source.selectedAssetAddress) {
+    return "NoSelectedAsset";
   } else if (
     !isValidDestinationAddress({
       assetAddress: source.assetAddress ?? "",
@@ -107,8 +110,6 @@ export const validateTransferForm = ({
     !checkKeychainCompatibleWithMasp(keychainVersion)
   ) {
     return "KeychainNotCompatibleWithMasp";
-  } else if (!source.selectedAssetAddress) {
-    return "NoSelectedAsset";
   } else if (
     !hasEnoughBalanceForFees({
       isIbcToken: isIbcAddress(source.address ?? ""),
@@ -174,12 +175,12 @@ export const getButtonText = ({
     getButtonTextError(validationResult, defaultText, buttonTextErrors);
 
   switch (validationResult) {
+    case "NoSelectedAsset":
+      return getText("Select Source Asset");
     case "NoSourceWallet":
       return getText("Select Wallet");
     case "TheSameAddress":
       return getText("Source and destination addresses are the same");
-    case "NoSelectedAsset":
-      return getText("Select Asset");
     case "NoDestinationWallet":
       return getText("Select Destination Wallet");
     case "NoAmount":
@@ -229,4 +230,30 @@ export const determineTransferType = (
   if (shielding) return "shield";
   if (unshielding) return "unshield";
   return "namada-transfer";
+};
+
+export const getKeplrAddressForAsset = async (
+  sourceAsset: Asset
+): Promise<string | null> => {
+  const keplr = new KeplrWalletManager();
+  const keplrInstance = await keplr.get();
+
+  if (!keplrInstance) return null;
+
+  // Determine chain name from asset
+  const chainName =
+    sourceAsset.base === "unam" ?
+      "osmosis"
+    : sourceAsset.traces?.[0]?.counterparty?.chain_name;
+
+  if (!chainName) return null;
+
+  // Get chain ID and fetch address
+  const chainRegistry = getChainRegistryByChainName(chainName);
+  const chainId = chainRegistry?.chain.chain_id;
+
+  if (!chainId) return null;
+
+  const key = await keplrInstance.getKey(chainId);
+  return key.bech32Address;
 };
