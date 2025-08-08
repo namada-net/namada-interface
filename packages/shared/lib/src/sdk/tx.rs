@@ -414,6 +414,7 @@ fn get_masp_details(
             let conversions = masp_builder.builder.sapling_converts().iter().map(|conv| {
                 I128Sum::from(conv.conversion().clone())
             }).collect::<Vec<_>>();
+
             web_sys::console::log_1(&JsValue::from_str(&format!(
                 "Masp conversions: {:?}",
                 conversions

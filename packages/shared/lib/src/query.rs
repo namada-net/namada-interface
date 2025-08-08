@@ -425,84 +425,99 @@ impl Query {
 
         let epoch = query_masp_epoch(&self.client).await?;
 
-        let mut notes = vec![];
-        let mut conv = Conversions::new();
-        // Retrieve the notes that can be spent by this key
-        if let Some(avail_notes) = shielded.pos_map.get(&viewing_key) {
-            for note_idx in avail_notes {
-                // Spent notes cannot contribute a new transaction's pool
-                if shielded.spents.contains(note_idx) {
-                    continue;
-                }
-                // Get note associated with this ID
-                let note = shielded.note_map.get(note_idx).unwrap();
-                // Finally add value to multi-asset accumulator
-                notes.push(
-                    I128Sum::from_nonnegative(note.asset_type, i128::from(note.value)).unwrap(),
-                );
-            }
-        }
+        // let mut pos: BTreeMap<Address, Vec<I256>> = BTreeMap::new();
+        // let mut burn: BTreeMap<Address, I256> = BTreeMap::new();
+        let mut res: Vec<(Address, String)> = vec![];
 
-        for n in &notes {
-            for (asset_type, _) in n.components() {
-                shielded
-                    .query_allowed_conversion(&self.client, *asset_type, &mut conv)
-                    .await
-                    .map_err(|e| JsError::new(&format!("{:?}", e)))?;
-            }
-        }
+        if let Some(balance) = shielded
+            .compute_shielded_balance(&viewing_key)
+            .await
+            .unwrap()
+        {
+            let exchanged_amount = shielded
+                .compute_exchanged_amount(
+                    &self.client,
+                    &WebIo,
+                    balance.clone(),
+                    &mut Conversions::new(),
+                )
+                .await
+                .unwrap()
+                .0;
 
-        let mut dupa = vec![];
+            let conversions = exchanged_amount - balance.clone();
 
-        for note in notes.iter() {
-            for (asset_type, val) in note.components() {
+            for (asset_type, val) in conversions.components() {
                 let decoded = shielded.decode_asset_type(&self.client, *asset_type).await;
-                let conv = conv.get(asset_type);
+
                 match decoded {
                     Some(pre_asset_type) if pre_asset_type.epoch.is_none_or(|e| e <= epoch) => {
                         let decoded_change =
                             Change::from_masp_denominated(*val, pre_asset_type.position)
                                 .expect("expected this to fit");
-                        let www = ValueSum::from_pair(pre_asset_type.token.clone(), decoded_change);
 
-                        let www = Self::get_decoded_balance(www);
-                        let zzz = www
-                            .into_iter()
-                            .map(|(token, amount)| (token, amount, conv.is_some()))
-                            .collect::<Vec<_>>();
-
-                        if conv.is_some() {
-                            web_sys::console::log_1(
-                                &format!("Adding conversion for entry {:?} ", zzz)
-                                    .into(),
-                            );
-                            for (_, val) in
-                                I128Sum::from(conv.unwrap().0.clone()).components()
-                            {
-
-                                let decoded_change =
-                                    Change::from_masp_denominated(*val, pre_asset_type.position)
-                                        .expect("expected this to fit");
-                                let www = ValueSum::from_pair(
-                                    pre_asset_type.token.clone(),
-                                    decoded_change,
-                                );
-
-                                let www = Self::get_decoded_balance(www);
-                                web_sys::console::log_1(&format!("Conversion {:?}", www).into());
-                            }
-                        }
-
-                        dupa.push(zzz);
+                        res.push((
+                            pre_asset_type.token.clone(),
+                            decoded_change.to_string(),
+                        ));
                     }
                     _ => {}
                 }
             }
-        }
 
-        let flat = dupa.into_iter().flatten().collect::<Vec<_>>();
+            // for (asset_type, val) in conversions.components() {
+            //     let decoded = shielded.decode_asset_type(&self.client, *asset_type).await;
+            //     // web_sys::console::info_1(&format!("Decoded {:?}", decoded).into());
 
-        to_js_result(flat)
+            //     match decoded {
+            //         Some(pre_asset_type) if pre_asset_type.epoch.is_none_or(|e| e <= epoch) => {
+            //             let decoded_change =
+            //                 Change::from_masp_denominated(*val, pre_asset_type.position)
+            //                     .expect("expected this to fit");
+            //             // web_sys::console::info_1(
+            //             //     &format!("Decoded change {:?}", decoded_change).into(),
+            //             // );
+
+            //             if decoded_change < Change::zero() {
+            //                 burn.insert(pre_asset_type.token.clone(), decoded_change);
+            //             } else {
+            //                 let www = pos.get_mut(&pre_asset_type.token.clone());
+            //                 if let Some(www) = www {
+            //                     www.push(decoded_change);
+            //                 } else {
+            //                     pos.insert(pre_asset_type.token.clone(), vec![decoded_change]);
+            //                 }
+            //             }
+            //         }
+            //         _ => {}
+            //     }
+            // }
+        } 
+
+
+        // for (token, amounts) in pos {
+        //     let burns = burn.get(&token);
+
+        //     if let Some(burn) = burns {
+        //         for amount in amounts {
+        //             if amount.checked_add(*burn).unwrap() != I256::zero() {
+        //                 res.push((token.clone(), token::Amount::from_change(amount)));
+        //             }
+        //         }
+        //     } else {
+
+        //         for amount in amounts {
+        //             res.push((
+        //                     token.clone(),
+        //                     token::Amount::from_change(amount),
+        //             ));
+        //         }
+        //     }
+        // }
+
+        web_sys::console::info_1(&format!("Result {:?}", res).into());
+
+        to_js_result(res)
     }
 
     /// Queries shielded balance for a given extended viewing key
