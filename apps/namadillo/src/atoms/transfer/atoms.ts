@@ -1,6 +1,7 @@
 import {
   DatedViewingKey,
   IbcTransferMsgValue,
+  OsmosisSwapMsgValue,
   ShieldedTransferMsgValue,
   ShieldingTransferMsgValue,
   TransparentTransferMsgValue,
@@ -21,6 +22,7 @@ import { atomWithMutation } from "jotai-tanstack-query";
 import { BuildTxAtomParams } from "types";
 import {
   createIbcTx,
+  createOsmosisSwapTx,
   createShieldedTransferTx,
   createShieldingTransferTx,
   createTransparentTransferTx,
@@ -225,6 +227,41 @@ export const createIbcTxAtom = atomWithMutation((get) => {
       invariant(params.length !== 0, "No params");
 
       return await createIbcTx(
+        chain.data!,
+        account,
+        params,
+        gasConfig,
+        rpcUrl,
+        signer?.publicKey,
+        memo
+      );
+    },
+  };
+});
+
+export const createOsmosisSwapTxAtom = atomWithMutation((get) => {
+  const account = get(defaultAccountAtom);
+  const chain = get(chainAtom);
+  const rpcUrl = get(rpcUrlAtom);
+
+  return {
+    enabled: account.isSuccess && chain.isSuccess,
+    mutationKey: ["create-ibc-tx"],
+    mutationFn: async ({
+      params,
+      gasConfig,
+      account,
+      signer,
+      memo,
+    }: BuildTxAtomParams<OsmosisSwapMsgValue>) => {
+      invariant(
+        signer,
+        "We always expect signer to be passed explicitly, because we might also need to unshield"
+      );
+      invariant(account, "No account");
+      invariant(params.length !== 0, "No params");
+
+      return await createOsmosisSwapTx(
         chain.data!,
         account,
         params,

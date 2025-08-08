@@ -2,6 +2,7 @@ import { initMulticore } from "@namada/sdk/inline-init";
 import { getSdk, Sdk } from "@namada/sdk/web";
 import {
   IbcTransferMsgValue,
+  OsmosisSwapMsgValue,
   ShieldedTransferMsgValue,
   ShieldingTransferMsgValue,
   TxResponseMsgValue,
@@ -20,6 +21,8 @@ import {
   IbcTransferDone,
   Init,
   InitDone,
+  OsmosisSwap,
+  OsmosisSwapDone,
   Shield,
   ShieldDone,
   ShieldedRewards,
@@ -116,6 +119,17 @@ export class Worker {
     return {
       type: "shielded-rewards-per-token-done",
       payload: await shieldedRewardsPerToken(this.sdk, m.payload),
+    };
+  }
+
+  async osmosisSwap(m: OsmosisSwap): Promise<OsmosisSwapDone> {
+    if (!this.sdk) {
+      throw new Error("SDK is not initialized");
+    }
+
+    return {
+      type: "osmosis-swap-done",
+      payload: await osmosisSwap(this.sdk, m.payload),
     };
   }
 
@@ -219,6 +233,27 @@ async function ibcTransfer(
   return encodedTxData;
 }
 
+async function osmosisSwap(
+  sdk: Sdk,
+  payload: OsmosisSwap["payload"]
+): Promise<EncodedTxData<OsmosisSwapMsgValue>> {
+  const { account, gasConfig, chain, props } = payload;
+
+  await sdk.masp.loadMaspParams("", chain.chainId);
+  const encodedTxData = await buildTx<OsmosisSwapMsgValue>(
+    sdk,
+    account,
+    gasConfig,
+    chain,
+    props,
+    sdk.tx.buildOsmosisSwap,
+    undefined,
+    false
+  );
+
+  return encodedTxData;
+}
+
 async function generateIbcShieldingMemo(
   sdk: Sdk,
   payload: GenerateIbcShieldingMemo["payload"]
@@ -303,6 +338,8 @@ export const registerTransferHandlers = (): void => {
   registerBNTransferHandler<UnshieldDone>("unshield-done");
   registerBNTransferHandler<IbcTransfer>("ibc-transfer");
   registerBNTransferHandler<IbcTransferDone>("ibc-transfer-done");
+  registerBNTransferHandler<OsmosisSwap>("osmosis-swap");
+  registerBNTransferHandler<OsmosisSwapDone>("osmosis-swap-done");
   registerBNTransferHandler<Unshield>("unshield");
   registerBNTransferHandler<GenerateIbcShieldingMemo>(
     "generate-ibc-shielding-memo"
