@@ -34,6 +34,7 @@ import {
   mapNamadaAssetsToTokenBalances,
 } from "./functions";
 import {
+  fetchNotes,
   fetchShieldedBalance,
   fetchShieldedRewards,
   fetchShieldedRewardsPerToken,
@@ -121,6 +122,26 @@ export const lastCompletedShieldedSyncAtom = atomWithStorage<
 
 export const isShieldedSyncCompleteAtom = atom((get) => {
   return get(shieldedSyncProgress) === 1;
+});
+
+export const maspNotesAtom = atomWithQuery((get) => {
+  const viewingKeysQuery = get(viewingKeysAtom);
+  const chainTokensQuery = get(chainTokensAtom);
+  const chainParametersQuery = get(chainParametersAtom);
+
+  const [viewingKey] = viewingKeysQuery.data ?? [];
+  const chainTokens = chainTokensQuery.data?.map((t) => t.address);
+  const chainId = chainParametersQuery.data?.chainId;
+
+  return {
+    queryKey: ["masp-notes", viewingKey, chainTokens, chainId],
+    ...queryDependentFn(async () => {
+      if (!viewingKey || !chainTokens || !chainId) {
+        return [];
+      }
+      return await fetchNotes(viewingKey, chainTokens, chainId);
+    }, [viewingKeysQuery, chainTokensQuery, chainParametersQuery]),
+  };
 });
 
 export const shieldedBalanceAtom = atomWithQuery((get) => {
