@@ -1,10 +1,14 @@
-import { Asset, IBCTrace } from "@chain-registry/types";
+import { Asset } from "@chain-registry/types";
+import { IbcTransition } from "@chain-registry/types/assetlist.schema";
 import { Stack } from "@namada/components";
 import { AccountType, BparamsMsgValue } from "@namada/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaShieldedAssetsAtom } from "atoms/balance";
-import { chainParametersAtom } from "atoms/chain";
-import { findAssetsByChainId, ibcChannelsFamily } from "atoms/integrations";
+import {
+  getChainRegistryByChainId,
+  ibcChannelsFamily,
+  namadaRegistryChainAssetsMapAtom,
+} from "atoms/integrations";
 import { SwapResponse, SwapResponseError, SwapResponseOk } from "atoms/swaps";
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
@@ -13,7 +17,7 @@ import invariant from "invariant";
 import { useAtomValue } from "jotai";
 import { broadcastTransaction, signTx } from "lib/query";
 import { useCallback, useEffect, useState } from "react";
-import { AddressWithAssetAndAmount } from "types";
+import { NamadaAssetWithAmount } from "types";
 import { getSdkInstance } from "utils/sdk";
 
 const SLIPPAGE = 0.005;
@@ -28,15 +32,14 @@ export const OsmosisSwap: React.FC = () => {
     namadaShieldedAssetsAtom
   );
 
-  const chainParameters = useAtomValue(chainParametersAtom);
+  const chainAssetsMapAtom = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const namadaAssets =
-    chainParameters.data ?
-      findAssetsByChainId(chainParameters.data.chainId)
-    : [];
-  const osmosisAssets =
-    chainParameters.data ? findAssetsByChainId("osmosis-1") : [];
+    chainAssetsMapAtom.isSuccess ? Object.values(chainAssetsMapAtom.data) : [];
 
-  const [from, setFrom] = useState<AddressWithAssetAndAmount | undefined>();
+  const osmosisAssets =
+    getChainRegistryByChainId("osmosis-1")?.assets.assets || [];
+
+  const [from, setFrom] = useState<NamadaAssetWithAmount | undefined>();
   const [to, setTo] = useState<Asset | undefined>();
   const [amount, setAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>(
@@ -91,7 +94,7 @@ export const OsmosisSwap: React.FC = () => {
     if (from && to && amount) {
       call();
     }
-  }, [from?.originalAddress, to?.address, amount]);
+  }, [from?.asset.address, to?.address, amount]);
 
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const shieldedAccount = defaultAccounts.data?.find(
@@ -111,7 +114,7 @@ export const OsmosisSwap: React.FC = () => {
     invariant(localRecoveryAddr, "No local recovery address");
     invariant(recipient, "No recipient");
 
-    const toTrace = to.traces?.find((t): t is IBCTrace => t.type === "ibc")
+    const toTrace = to.traces?.find((t): t is IbcTransition => t.type === "ibc")
       ?.chain.path;
     invariant(toTrace, "No IBC trace found for the to asset");
     invariant(quote.route[0], "No route found in the quote");
@@ -133,7 +136,7 @@ export const OsmosisSwap: React.FC = () => {
       // osmosis channel
       channelId: "channel-7",
       portId: "transfer",
-      token: from.originalAddress,
+      token: from.asset.address,
       source: shieldedAccount.pseudoExtendedKey!,
       gasSpendingKey: shieldedAccount.pseudoExtendedKey!,
       receiver: SWAP_CONTRACT_ADDRESS,
@@ -194,7 +197,7 @@ export const OsmosisSwap: React.FC = () => {
         >
           <option value=""></option>
           {Object.values(availableAssets || {}).map((al, idx) => (
-            <option key={`${al.asset.base}_${idx}`} value={al.originalAddress}>
+            <option key={`${al.asset.base}_${idx}`} value={al.asset.address}>
               {al.asset.symbol}
             </option>
           ))}
