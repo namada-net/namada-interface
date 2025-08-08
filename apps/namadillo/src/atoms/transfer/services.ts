@@ -340,7 +340,7 @@ export const createOsmosisSwapTx = async (
 
   return await workerBuildTxPair({
     rpcUrl,
-    token: transfer.token,
+    nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
       const msgValue = new OsmosisSwapMsgValue({
         ...props[0],

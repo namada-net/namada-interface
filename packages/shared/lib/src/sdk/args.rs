@@ -7,6 +7,7 @@ use namada_sdk::args::{
 };
 use namada_sdk::borsh::{BorshDeserialize, BorshSerialize, BorshSerializeExt};
 use namada_sdk::collections::HashMap;
+use namada_sdk::dec::Dec;
 use namada_sdk::ibc::core::host::types::identifiers::{ChannelId, PortId};
 use namada_sdk::ibc::IbcShieldingData;
 use namada_sdk::masp::partial_deauthorize;
@@ -342,9 +343,6 @@ pub enum Slippage {
         /// actual trade price. This must be a decimal number in the range
         /// `[0, 100]`.
         slippage_percentage: String,
-        /// The time period (in seconds) over which the average price is
-        /// calculated
-        window_seconds: u64,
     },
 }
 
@@ -358,11 +356,14 @@ impl From<Slippage> for args::Slippage {
             }
             Slippage::Twap {
                 slippage_percentage,
-                window_seconds,
-            } => args::Slippage::Twap {
-                slippage_percentage,
-                window_seconds,
-            },
+            } => {
+                let slippage_percentage = Dec::from_str(&slippage_percentage)
+                    .expect("Slippage percentage to be valid decimal.");
+
+                args::Slippage::Twap {
+                    slippage_percentage,
+                }
+            }
         }
     }
 }
@@ -386,12 +387,13 @@ pub struct OsmosisSwapMsg {
     pub route: Option<Vec<OsmosisPoolHop>>,
     /// The route to take through Osmosis pools
     /// A REST rpc endpoint to Osmosis
-    pub osmosis_rest_rpc: String,
+    pub osmosis_lcd_rpc: String,
 }
 
 pub fn osmosis_swap_tx_args(
     osmosis_swap_msg: &[u8],
     tx_msg: &[u8],
+    native_token: Address,
 ) -> Result<(args::TxOsmosisSwap, Option<StoredBuildParams>), JsError> {
     let osmosis_swap_msg = OsmosisSwapMsg::try_from_slice(osmosis_swap_msg)?;
 
@@ -403,10 +405,11 @@ pub fn osmosis_swap_tx_args(
         slippage,
         local_recovery_addr,
         route,
-        osmosis_rest_rpc,
+        osmosis_lcd_rpc,
     } = osmosis_swap_msg;
 
-    let (ibc_transfer_args, bparams) = ibc_transfer_tx_args(&transfer.serialize_to_vec(), tx_msg)?;
+    let (ibc_transfer_args, bparams) =
+        ibc_transfer_tx_args(&transfer.serialize_to_vec(), tx_msg, native_token)?;
 
     let recipient = match Address::from_str(&recipient) {
         Ok(address) => Ok(Either::Left(address)),
@@ -428,10 +431,12 @@ pub fn osmosis_swap_tx_args(
         output_denom,
         recipient,
         overflow: Some(overflow),
-        slippage: slippage.into(),
+        slippage: Some(slippage.into()),
         local_recovery_addr,
         route,
-        osmosis_rest_rpc,
+        osmosis_lcd_rpc: Some(osmosis_lcd_rpc),
+        // TODO: not sure if needed
+        osmosis_sqs_rpc: None,
     };
 
     Ok((tx_osmosis_swap_args, bparams))

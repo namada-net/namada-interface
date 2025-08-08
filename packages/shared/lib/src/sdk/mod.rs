@@ -902,17 +902,29 @@ impl Sdk {
         osmosis_swap_msg: &[u8],
         wrapper_tx_msg: &[u8],
     ) -> Result<JsValue, JsError> {
-        let (args, bparams) = args::osmosis_swap_tx_args(osmosis_swap_msg, wrapper_tx_msg)?;
+        let (args, bparams) = args::osmosis_swap_tx_args(
+            osmosis_swap_msg,
+            wrapper_tx_msg,
+            self.namada.native_token(),
+        )?;
 
-        let _ = &self.namada.shielded_mut().await.load().await?;
-        let tx = args.into_ibc_transfer(&self.namada).await?;
+        let _ = &self
+            .namada
+            .shielded_mut()
+            .await
+            .try_load(async |_| {})
+            .await;
+
+        // TODO: check if returning true is correct here
+        let tx = args
+            .into_ibc_transfer(&self.namada, |_route, _min_amount, _quote_amount| true)
+            .await?;
 
         let bparams = if let Some(bparams) = bparams {
             BuildParams::StoredBuildParams(bparams)
         } else {
             generate_rng_build_params()
         };
-
 
         let xfvks = match tx.source {
             TransferSource::Address(_) => vec![],
@@ -921,7 +933,8 @@ impl Sdk {
 
         let ((tx, signing_data, _), masp_signing_data) = match bparams {
             BuildParams::RngBuildParams(mut bparams) => {
-                let tx = build_ibc_transfer(&self.namada, &tx, &mut bparams).await?;
+                // TODO: replace flase
+                let tx = build_ibc_transfer(&self.namada, &tx, &mut bparams, false).await?;
                 let masp_signing_data = MaspSigningData::new(
                     bparams
                         .to_stored()
@@ -932,7 +945,8 @@ impl Sdk {
                 (tx, masp_signing_data)
             }
             BuildParams::StoredBuildParams(mut bparams) => {
-                let tx = build_ibc_transfer(&self.namada, &tx, &mut bparams).await?;
+                // TODO: replace flase
+                let tx = build_ibc_transfer(&self.namada, &tx, &mut bparams, false).await?;
                 let masp_signing_data = MaspSigningData::new(bparams, xfvks);
 
                 (tx, masp_signing_data)
