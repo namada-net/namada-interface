@@ -35,15 +35,13 @@ export const TotalBalanceBanner = (): JSX.Element => {
           <header className="text-sm mb-3">
             <div className="flex items-center">
               Total Balance in Namada
-              {shouldWaitForShieldedSync && (
-                <span className="relative px-1.5 text-yellow group/tooltip">
-                  <GoInfo />
-                  <Tooltip className="z-40 w-74" position="right">
-                    The total amount of your shielded assets will be available
-                    once Shielded Sync is complete.
-                  </Tooltip>
-                </span>
-              )}
+              <span className="relative px-1.5 text-yellow group/tooltip">
+                <GoInfo />
+                <Tooltip className="z-40 w-74 mt-4" position="right">
+                  This includes the transparent balance, shielded balance, total
+                  staked, total unbonding and total withdrawable NAM
+                </Tooltip>
+              </span>
             </div>
             {!namTransfersEnabled && (
               <small className="block text-xxs text-neutral-400">
