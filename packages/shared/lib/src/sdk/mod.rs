@@ -908,6 +908,11 @@ impl Sdk {
             self.namada.native_token(),
         )?;
 
+        web_sys::console::log_1(&format!(
+            "Building osmosis swap with args: {:?}",
+            args
+        ).into());
+
         let _ = &self
             .namada
             .shielded_mut()
@@ -919,6 +924,7 @@ impl Sdk {
         let tx = args
             .into_ibc_transfer(&self.namada, |_route, _min_amount, _quote_amount| true)
             .await?;
+        web_sys::console::log_1(&format!("Built osmosis swap tx: {:?}", tx).into());
 
         let bparams = if let Some(bparams) = bparams {
             BuildParams::StoredBuildParams(bparams)
