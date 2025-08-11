@@ -22,7 +22,7 @@ import { getSdkInstance } from "utils/sdk";
 
 const SLIPPAGE = 0.005;
 const SWAP_CONTRACT_ADDRESS =
-  "osmo1lrlqeq38ephw8mz0c3uzfdpt4fh3fr0s2atur5n33md90m4wx3mqmz7fq6";
+  "osmo14q5zmg3fp774kpz2j8c52q7gqjn0dnm3vcj3guqpj4p9xylqpc7s2ezh0h";
 
 export const OsmosisSwap: React.FC = () => {
   const { mutateAsync: performOsmosisSwap } = useAtomValue(
@@ -134,7 +134,7 @@ export const OsmosisSwap: React.FC = () => {
     const transfer = {
       amountInBaseDenom: BigNumber(amount),
       // osmosis channel
-      channelId: "channel-7",
+      channelId: "channel-1",
       portId: "transfer",
       token: from.asset.address,
       source: shieldedAccount.pseudoExtendedKey!,
@@ -179,6 +179,7 @@ export const OsmosisSwap: React.FC = () => {
         transparentAccount.address!
       );
       const wwww = await broadcastTransaction(encodedTxData, signedTxs);
+      //eslint-disable-next-line no-console
       console.log("Transaction broadcasted:", wwww);
       alert("Transaction sent 🚀");
     } catch (error) {
