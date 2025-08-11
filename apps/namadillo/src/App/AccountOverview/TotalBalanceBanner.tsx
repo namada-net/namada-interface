@@ -1,7 +1,11 @@
 import { Panel, SkeletonLoading, Stack, Tooltip } from "@namada/components";
 import { FiatCurrency } from "App/Common/FiatCurrency";
 import { MaspSyncIndicator } from "App/Layout/MaspSyncIndicator";
-import { shieldedBalanceAtom } from "atoms/balance";
+import {
+  shieldedBalanceAtom,
+  shieldedTokensAtom,
+  transparentTokensAtom,
+} from "atoms/balance";
 import { applicationFeaturesAtom } from "atoms/settings";
 import clsx from "clsx";
 import { useAmountsInFiat } from "hooks/useAmountsInFiat";
@@ -14,14 +18,10 @@ export const TotalBalanceBanner = (): JSX.Element => {
   const { isFetching: isShieldSyncing } = useAtomValue(shieldedBalanceAtom);
   const requiresNewShieldedSync = useRequiresNewShieldedSync();
   const shouldWaitForShieldedSync = requiresNewShieldedSync && isShieldSyncing;
-  const {
-    shieldedQuery,
-    unshieldedQuery,
-    stakingQuery,
-    totalAmountInFiat,
-    hasAnyAssets,
-  } = useAmountsInFiat();
-
+  const { shieldedQuery, unshieldedQuery, stakingQuery, totalAmountInFiat } =
+    useAmountsInFiat();
+  const transparentTokensQuery = useAtomValue(transparentTokensAtom);
+  const shieldedTokensQuery = useAtomValue(shieldedTokensAtom);
   const balancesHaveLoaded =
     shieldedQuery.isSuccess &&
     unshieldedQuery.isSuccess &&
@@ -30,6 +30,11 @@ export const TotalBalanceBanner = (): JSX.Element => {
     shieldedQuery.isError && unshieldedQuery.isError && stakingQuery.isError;
   const balanceIsLoading = !balancesHaveLoaded && !hasErrors;
 
+  const hasUnshieldedAssets =
+    transparentTokensQuery.data?.some((token) => token.amount.gt(0)) ?? false;
+  const hasShieldedAssets =
+    shieldedTokensQuery.data?.some((token) => token.amount.gt(0)) ?? false;
+  const hasAnyAssets = hasUnshieldedAssets || hasShieldedAssets;
   // Hide banner if totalAmountInFiat is 0 but we have assets (means pricing is unavailable)
   const shouldHideBanner =
     balancesHaveLoaded && hasAnyAssets && totalAmountInFiat.eq(0);
