@@ -28,7 +28,7 @@ export const UnshieldedAssetsOverview = (): JSX.Element => {
   return (
     <Panel className="relative px-6 rounded-t-none h-full">
       <div className="flex justify-between items-center gap-16 mt-4">
-        {!shouldHideBalanceCard && (
+        {!shouldHideBalanceCard ?
           <TotalBalanceCard
             balanceInFiat={unshieldedAmountInFiat}
             footerButtons={
@@ -43,7 +43,7 @@ export const UnshieldedAssetsOverview = (): JSX.Element => {
               </>
             }
           />
-        )}
+        : <div />}
         <UnclaimedRewardsCard />
       </div>
       {transparentTokensQuery.isSuccess && (
