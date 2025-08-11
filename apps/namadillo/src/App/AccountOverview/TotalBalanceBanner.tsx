@@ -14,8 +14,13 @@ export const TotalBalanceBanner = (): JSX.Element => {
   const { isFetching: isShieldSyncing } = useAtomValue(shieldedBalanceAtom);
   const requiresNewShieldedSync = useRequiresNewShieldedSync();
   const shouldWaitForShieldedSync = requiresNewShieldedSync && isShieldSyncing;
-  const { shieldedQuery, unshieldedQuery, stakingQuery, totalAmountInFiat } =
-    useAmountsInFiat();
+  const {
+    shieldedQuery,
+    unshieldedQuery,
+    stakingQuery,
+    totalAmountInFiat,
+    hasAnyAssets,
+  } = useAmountsInFiat();
 
   const balancesHaveLoaded =
     shieldedQuery.isSuccess &&
@@ -24,6 +29,12 @@ export const TotalBalanceBanner = (): JSX.Element => {
   const hasErrors =
     shieldedQuery.isError && unshieldedQuery.isError && stakingQuery.isError;
   const balanceIsLoading = !balancesHaveLoaded && !hasErrors;
+
+  // Hide banner if totalAmountInFiat is 0 but we have assets (means pricing is unavailable)
+  const shouldHideBanner =
+    balancesHaveLoaded && hasAnyAssets && totalAmountInFiat.eq(0);
+
+  if (shouldHideBanner) return <></>;
 
   return (
     <Panel className="py-4">

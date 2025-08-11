@@ -17,6 +17,10 @@ type AmountsInFiatOutput = {
   unshieldedQuery: AtomWithQueryResult;
   stakingQuery: AtomWithQueryResult;
   isLoading: boolean;
+  hasAnyAssets: boolean;
+  hasShieldedAssets: boolean;
+  hasUnshieldedAssets: boolean;
+  hasStakingAssets: boolean;
 };
 
 export const useAmountsInFiat = (): AmountsInFiatOutput => {
@@ -61,6 +65,38 @@ export const useAmountsInFiat = (): AmountsInFiatOutput => {
     .plus(unshieldedDollars)
     .plus(stakingDollars);
 
+  const assetFlags = useMemo(() => {
+    // Check if there are any shielded assets with non-zero balance
+    const hasShieldedAssets = (shieldedTokensQuery.data ?? []).some((token) =>
+      token.amount.gt(0)
+    );
+
+    // Check if there are any transparent assets with non-zero balance
+    const hasUnshieldedAssets = (unshieldedTokensQuery.data ?? []).some(
+      (token) => token.amount.gt(0)
+    );
+
+    // Check if there are any staking amounts
+    const hasStakingAssets =
+      stakingTotalsQuery.data ?
+        stakingTotalsQuery.data.totalBonded.gt(0) ||
+        stakingTotalsQuery.data.totalUnbonded.gt(0) ||
+        stakingTotalsQuery.data.totalWithdrawable.gt(0)
+      : false;
+
+    return {
+      hasShieldedAssets,
+      hasUnshieldedAssets,
+      hasStakingAssets,
+      hasAnyAssets:
+        hasShieldedAssets || hasUnshieldedAssets || hasStakingAssets,
+    };
+  }, [
+    shieldedTokensQuery.data,
+    unshieldedTokensQuery.data,
+    stakingTotalsQuery.data,
+  ]);
+
   return {
     shieldedQuery: shieldedTokensQuery,
     unshieldedQuery: unshieldedTokensQuery,
@@ -69,6 +105,7 @@ export const useAmountsInFiat = (): AmountsInFiatOutput => {
     shieldedAmountInFiat: shieldedDollars,
     unshieldedAmountInFiat: unshieldedDollars,
     stakingAmountInFiat: stakingDollars,
+    ...assetFlags,
     isLoading:
       shieldedTokensQuery.isLoading ||
       unshieldedTokensQuery.isLoading ||

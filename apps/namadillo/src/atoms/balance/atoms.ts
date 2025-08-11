@@ -263,9 +263,9 @@ export const shieldedTokensAtom = atomWithQuery<TokenBalance[]>((get) => {
       async () =>
         mapNamadaAssetsToTokenBalances(
           shieldedAssets.data ?? {},
-          tokenPrices.data ?? {}
+          tokenPrices.isSuccess ? (tokenPrices.data ?? {}) : {}
         ),
-      [shieldedAssets, tokenPrices]
+      [shieldedAssets]
     ),
   };
 });
@@ -320,10 +320,10 @@ export const transparentTokensAtom = atomWithQuery<TokenBalance[]>((get) => {
         Promise.resolve(
           mapNamadaAssetsToTokenBalances(
             transparentAssets.data ?? {},
-            tokenPrices.data ?? {}
+            tokenPrices.isSuccess ? (tokenPrices.data ?? {}) : {}
           )
         ),
-      [transparentAssets, tokenPrices]
+      [transparentAssets]
     ),
   };
 });
