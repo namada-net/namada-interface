@@ -206,7 +206,6 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
 
         const token = await new Promise<string>((resolve, reject) => {
           if (window.turnstile) {
-            window.turnstile.reset("turnstile-widget");
             window.turnstile.execute("turnstile-widget", {
               sitekey: process.env.NAMADA_INTERFACE_TURNSTILE_SITEKEY || "", // Replace with actual sitekey
               callback: (t: string) => resolve(t),
