@@ -198,6 +198,12 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
       setStatusText(undefined);
 
       try {
+        const { challenge, tag } = await api.challenge().catch(({ message, code }) => {
+          throw new Error(`Unable to request challenge: ${code} - ${message}`);
+        });
+
+        const solution = await postPowChallenge({ challenge, difficulty });
+
         const token = await new Promise<string>((resolve, reject) => {
           if (window.turnstile) {
             window.turnstile.reset("turnstile-widget");
@@ -210,6 +216,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
             reject(new Error("Turnstile not loaded"));
           }
         });
+
         const submitData: Data = {
           solution,
           tag,
