@@ -4,10 +4,8 @@ import { FiatCurrency } from "App/Common/FiatCurrency";
 import { TokenCurrency } from "App/Common/TokenCurrency";
 import { AssetImage } from "App/Transfer/AssetImage";
 import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
-import {
-  getNamadaAssetByIbcAsset,
-  namadaRegistryChainAssetsMapAtom,
-} from "atoms/integrations";
+import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
+
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
@@ -36,14 +34,17 @@ export const LocalStorageTransactionCard = ({
   transaction,
 }: TransactionCardProps): JSX.Element => {
   const namadaAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
-
-  // For IBC transactions, we need to find the corresponding Namada asset
   const namadaAsset =
     namadaAssetsMap.data ?
-      getNamadaAssetByIbcAsset(
-        transaction.asset,
-        Object.values(namadaAssetsMap.data)
-      )
+      Object.values(namadaAssetsMap.data).find((namadaAsset) => {
+        // If the transaction asset has an address, try to match it directly
+        if (
+          transaction.asset.symbol &&
+          namadaAsset.symbol === transaction.asset.symbol
+        ) {
+          return true;
+        }
+      })
     : undefined;
 
   // Use the Namada asset address if available, otherwise try the original asset address
