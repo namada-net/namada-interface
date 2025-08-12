@@ -202,7 +202,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
           if (window.turnstile) {
             window.turnstile.reset("turnstile-widget");
             window.turnstile.execute("turnstile-widget", {
-              sitekey: "YOUR_TURNSTILE_SITEKEY_HERE", // Replace with actual sitekey
+              sitekey: process.env.NAMADA_INTERFACE_TURNSTILE_SITEKEY || "", // Replace with actual sitekey
               callback: (t: string) => resolve(t),
               "error-callback": (errorCode: string) => reject(new Error(`Turnstile error: ${errorCode}`)),
             });
