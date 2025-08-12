@@ -16,6 +16,8 @@ type AmountsInFiatOutput = {
   shieldedQuery: AtomWithQueryResult;
   unshieldedQuery: AtomWithQueryResult;
   stakingQuery: AtomWithQueryResult;
+  hasShieldedAssets: boolean;
+  hasUnshieldedAssets: boolean;
   isLoading: boolean;
 };
 
@@ -61,6 +63,11 @@ export const useAmountsInFiat = (): AmountsInFiatOutput => {
     .plus(unshieldedDollars)
     .plus(stakingDollars);
 
+  const hasShieldedAssets =
+    shieldedTokensQuery.data?.some((token) => token.amount.gt(0)) ?? false;
+  const hasUnshieldedAssets =
+    unshieldedTokensQuery.data?.some((token) => token.amount.gt(0)) ?? false;
+
   return {
     shieldedQuery: shieldedTokensQuery,
     unshieldedQuery: unshieldedTokensQuery,
@@ -69,6 +76,8 @@ export const useAmountsInFiat = (): AmountsInFiatOutput => {
     shieldedAmountInFiat: shieldedDollars,
     unshieldedAmountInFiat: unshieldedDollars,
     stakingAmountInFiat: stakingDollars,
+    hasShieldedAssets,
+    hasUnshieldedAssets,
     isLoading:
       shieldedTokensQuery.isLoading ||
       unshieldedTokensQuery.isLoading ||

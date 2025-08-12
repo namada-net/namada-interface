@@ -11,14 +11,12 @@ import { UnshieldedAssetTable } from "./UnshieldedAssetTable";
 export const UnshieldedAssetsOverview = (): JSX.Element => {
   const navigate = useNavigate();
   const transparentTokensQuery = useAtomValue(transparentTokensAtom);
-  const { unshieldedAmountInFiat } = useAmountsInFiat();
+  const { unshieldedAmountInFiat, hasUnshieldedAssets } = useAmountsInFiat();
   const isLoading =
     transparentTokensQuery.isLoading ||
     (transparentTokensQuery.fetchStatus === "idle" &&
       !transparentTokensQuery.isFetched);
 
-  const hasUnshieldedAssets =
-    transparentTokensQuery.data?.some((token) => token.amount.gt(0)) ?? false;
   // Hide TotalBalanceCard if unshielded fiat amount is 0 but unshielded assets exist
   const shouldHideBalanceCard =
     transparentTokensQuery.isSuccess &&
