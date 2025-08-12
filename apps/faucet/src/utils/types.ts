@@ -27,6 +27,7 @@ export type Data = {
   tag: string;
   challenge: unknown;
   transfer: TransferDetails;
+  captcha_token: string;
 };
 
 export type TransferResponse = {

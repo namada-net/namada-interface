@@ -29,6 +29,16 @@ import {
   PreFormatted,
 } from "./Faucet.components";
 
+declare global {
+  interface Window {
+    turnstile: {
+      ready: (cb: () => void) => void;
+      execute: (container: string, params: { sitekey: string; callback: (token: string) => void; "error-callback": (errorCode: string) => void }) => void;
+      reset: (container: string) => void;
+    };
+  }
+}
+
 enum Status {
   PendingPowSolution,
   PendingTransfer,
@@ -188,15 +198,18 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
       setStatusText(undefined);
 
       try {
-        const { challenge, tag } = await api
-          .challenge()
-          .catch(({ message, code }) => {
-            throw new Error(
-              `Unable to request challenge: ${code} - ${message}`
-            );
-          });
-
-        const solution = await postPowChallenge({ challenge, difficulty });
+        const token = await new Promise<string>((resolve, reject) => {
+          if (window.turnstile) {
+            window.turnstile.reset("turnstile-widget");
+            window.turnstile.execute("turnstile-widget", {
+              sitekey: "YOUR_TURNSTILE_SITEKEY_HERE", // Replace with actual sitekey
+              callback: (t: string) => resolve(t),
+              "error-callback": (errorCode: string) => reject(new Error(`Turnstile error: ${errorCode}`)),
+            });
+          } else {
+            reject(new Error("Turnstile not loaded"));
+          }
+        });
         const submitData: Data = {
           solution,
           tag,
@@ -206,6 +219,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
             token: sanitizedToken,
             amount: amount * 1_000_000,
           },
+          captcha_token: token,
         };
 
         await submitFaucetTransfer(submitData);
@@ -316,7 +330,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
           error={
             amount && amount > withdrawLimit ?
               `Amount must be less than or equal to ${withdrawLimit}`
-            : ""
+              : ""
           }
         />
       </InputContainer>
@@ -363,6 +377,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
           Get Testnet Tokens
         </ActionButton>
       </ButtonContainer>
+      <div id="turnstile-widget"></div>
     </FaucetFormContainer>
   );
 };
