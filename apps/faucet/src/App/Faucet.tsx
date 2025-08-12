@@ -204,17 +204,23 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
 
         const solution = await postPowChallenge({ challenge, difficulty });
 
-        const token = await new Promise<string>((resolve, reject) => {
-          if (window.turnstile) {
-            window.turnstile.execute("#turnstile-widget", {
-              sitekey: process.env.NAMADA_INTERFACE_TURNSTILE_SITEKEY || "", // Replace with actual sitekey
-              callback: (t: string) => resolve(t),
-              "error-callback": (errorCode: string) => reject(new Error(`Turnstile error: ${errorCode}`)),
-            });
-          } else {
-            reject(new Error("Turnstile not loaded"));
-          }
-        });
+        // Only attempt captcha if sitekey is configured
+        const sitekey = process.env.NAMADA_INTERFACE_TURNSTILE_SITEKEY;
+        let captcha_token: string | undefined;
+
+        if (sitekey && sitekey.trim() !== "") {
+          captcha_token = await new Promise<string>((resolve, reject) => {
+            if (window.turnstile) {
+              window.turnstile.execute("#turnstile-widget", {
+                sitekey,
+                callback: (t: string) => resolve(t),
+                "error-callback": (errorCode: string) => reject(new Error(`Turnstile error: ${errorCode}`)),
+              });
+            } else {
+              reject(new Error("Turnstile not loaded but sitekey is configured"));
+            }
+          });
+        }
 
         const submitData: Data = {
           solution,
@@ -225,7 +231,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
             token: sanitizedToken,
             amount: amount * 1_000_000,
           },
-          captcha_token: token,
+          ...(captcha_token && { captcha_token }),
         };
 
         await submitFaucetTransfer(submitData);
@@ -383,7 +389,9 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
           Get Testnet Tokens
         </ActionButton>
       </ButtonContainer>
-      <div id="turnstile-widget"></div>
+      {process.env.NAMADA_INTERFACE_TURNSTILE_SITEKEY && (
+        <div id="turnstile-widget"></div>
+      )}
     </FaucetFormContainer>
   );
 };
