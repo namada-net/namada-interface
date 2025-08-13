@@ -56,6 +56,22 @@ export class Rpc {
   }
 
   /**
+   * Query MASP notes
+   * @async
+   * @param owner - Owner address
+   * @param tokens - Array of token addresses
+   * @param chainId - Chain id needed to load specific context
+   * @returns [[tokenAddress, amount]]
+   */
+  async queryMASPNotes(
+    owner: string,
+    tokens: string[],
+    chainId: string
+  ): Promise<Balance> {
+    return await this.query.query_notes_to_spend(owner, tokens, chainId);
+  }
+
+  /**
    * Query native token from chain
    * @async
    * @returns Address of native token
