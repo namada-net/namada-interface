@@ -28,8 +28,16 @@ export const useTransactionWatcher = (): void => {
             case "TransparentToShielded":
             case "ShieldedToTransparent":
             case "ShieldedToShielded": {
-              const newTx = await handleStandardTransfer(tx, fetchTransaction);
-              dispatchTransferEvent(transactionTypeToEventName(tx), newTx);
+              try {
+                const newTx = await handleStandardTransfer(tx, fetchTransaction);
+                dispatchTransferEvent(transactionTypeToEventName(tx), newTx);
+              } catch (error: unknown) {
+                console.warn("Transaction fetch failed (likely pruned):", error);
+                dispatchTransferEvent(transactionTypeToEventName(tx), {
+                  ...tx,
+                  status: "error",
+                });
+              }
               break;
             }
 
