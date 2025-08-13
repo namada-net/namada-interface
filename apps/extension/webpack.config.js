@@ -18,6 +18,7 @@ const { NODE_ENV, TARGET, BUNDLE_ANALYZE, BETA_RELEASE: isBeta } = process.env;
 const OUTPUT_PATH = resolve(__dirname, `./build/${TARGET}`);
 const MANIFEST_VERSION = TARGET === "firefox" ? "v2" : "v3";
 const MANIFEST_BASE_PATH = `./src/manifest/_base.json`;
+const MANIFEST_BLACKLIST_PATH = `./src/manifest/_blacklist.json`;
 const MANIFEST_BASE_VERSION_PATH = `./src/manifest/${MANIFEST_VERSION}/_base.json`;
 const MANIFEST_PATH = `./src/manifest/${MANIFEST_VERSION}/${TARGET}.json`;
 const MANIFEST_V2_DEV_ONLY_PATH = `./src/manifest/v2/_devOnly.json`;
@@ -92,6 +93,7 @@ const plugins = [
       ...(NODE_ENV === "development" && TARGET === "firefox" ?
         [MANIFEST_V2_DEV_ONLY_PATH]
       : []),
+      MANIFEST_BLACKLIST_PATH,
     ],
     output: {
       fileName: "./manifest.json",
