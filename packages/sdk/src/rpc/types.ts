@@ -84,3 +84,24 @@ export type WasmHash = {
   path: string;
   hash: string;
 };
+
+
+
+/**
+ * Next epoch information
+ */
+export type NextEpochInfo = {
+  nextEpoch: bigint;
+  minBlockHeight: number;
+  minTimeUntilNextEpoch: number; // in seconds
+};
+
+/**
+ * Block header information
+ */
+export type BlockHeader = {
+  height: number;
+  time: string;
+  hash: string;
+  proposerAddress: string;
+};

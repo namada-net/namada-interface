@@ -802,6 +802,73 @@ impl Query {
             None
         }
     }
+
+    /// Gets next epoch information including timing and block details
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the RPC call fails
+    pub async fn query_next_epoch_info(&self) -> Result<JsValue, JsError> {
+        // TODO: This needs to be implemented in the Namada SDK RPC module
+        // For now, we'll return a placeholder structure
+
+        // The actual implementation should look something like:
+        let current_epoch = query_epoch(&self.client).await?;
+        let (this_epoch_first_height, epoch_duration) =
+            rpc::query_next_epoch_info(&self.client).await?;
+        let this_epoch_first_height_header =
+            rpc::query_block_header(&self.client, this_epoch_first_height)
+                .await?
+                .unwrap();
+
+        let first_block_time = this_epoch_first_height_header.time;
+        let next_epoch_time = first_block_time + epoch_duration.min_duration;
+        let next_epoch_block = this_epoch_first_height.0 + epoch_duration.min_num_of_blocks;
+        let next_epoch = current_epoch.next();
+
+        let result: (Epoch, u64, String) =
+            (next_epoch, next_epoch_block, next_epoch_time.to_rfc3339());
+
+        // For now, return an error indicating this needs to be implemented
+        // Err(JsError::new("query_next_epoch_info is not yet implemented in the Namada SDK. Please implement rpc::query_next_epoch_info first."))
+
+        // Expected return structure when implemented:
+        // let result = json!({
+        //     "next_epoch": next_epoch_info.next_epoch,
+        //     "min_block_height": next_epoch_info.min_block_height,
+        //     "next_epoch_time": next_epoch_info.next_epoch_time.to_rfc3339(),
+        // });
+        to_js_result(result)
+    }
+
+    /// Gets block header information for a specific height
+    ///
+    /// # Arguments
+    ///
+    /// * `height` - Block height to query (optional, defaults to latest)
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the RPC call fails
+    pub async fn query_block_header(&self, height: Option<u64>) -> Result<JsValue, JsError> {
+        // TODO: This needs to be implemented in the Namada SDK RPC module
+        // For now, we'll return a placeholder structure
+
+        // The actual implementation should look something like:
+        // let block_header = rpc::query_block_header(&self.client, height).await?;
+
+        // For now, return an error indicating this needs to be implemented
+        Err(JsError::new("query_block_header is not yet implemented in the Namada SDK. Please implement rpc::query_block_header first."))
+
+        // Expected return structure when implemented:
+        // let result = json!({
+        //     "height": block_header.height,
+        //     "time": block_header.time.to_rfc3339(),
+        //     "hash": block_header.hash.to_string(),
+        //     "proposer_address": block_header.proposer_address.to_string(),
+        // });
+        // to_js_result(result)
+    }
 }
 
 //TODO: remove after moving this fn from apps to shared

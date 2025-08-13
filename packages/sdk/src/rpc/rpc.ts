@@ -14,11 +14,13 @@ import {
 
 import {
   Balance,
+  BlockHeader,
   BondsResponse,
   DelegationTotals,
   DelegatorsVotes,
   GasCosts,
   MaspTokenRewards,
+  NextEpochInfo,
   StakingPositions,
   StakingTotals,
   StakingTotalsResponse,
@@ -37,7 +39,7 @@ export class Rpc {
   constructor(
     protected readonly sdk: SdkWasm,
     protected readonly query: QueryWasm
-  ) {}
+  ) { }
 
   /**
    * Query balances from chain
@@ -217,6 +219,94 @@ export class Rpc {
     );
 
     return checksums;
+  }
+
+  /**
+   * Query block header information
+   * @async
+   * @param height - Block height to query (optional, defaults to latest)
+   * @returns Block header information
+   * @throws Error when Rust WASM method is not yet implemented
+   */
+  async queryBlockHeader(height?: number): Promise<BlockHeader> {
+    // Check if the method exists (will be available once Rust implementation is added)
+    if (!(this.query as any).query_block_header) {
+      throw new Error("query_block_header is not yet implemented in the Rust WASM layer");
+    }
+
+    const blockHeader = await (this.query as any).query_block_header(height || null) as any;
+
+    // Type-safe parsing of the response
+    if (!blockHeader || typeof blockHeader !== 'object') {
+      throw new Error("Invalid block header response from Rust SDK");
+    }
+
+    return {
+      height: Number(blockHeader.height),
+      time: String(blockHeader.time),
+      hash: String(blockHeader.hash),
+      proposerAddress: String(blockHeader.proposer_address),
+    };
+  }
+
+  /**
+   * Get next epoch information including epoch number, min block height, and time until next epoch
+   * @async
+   * @returns Next epoch information with timing details
+   * @throws Error when Rust WASM methods are not yet implemented
+   */
+  async getNextEpoch(): Promise<NextEpochInfo> {
+    try {
+      // Check if the methods exist (will be available once Rust implementation is added)
+      if (!(this.query as any).query_next_epoch_info) {
+        throw new Error("query_next_epoch_info is not yet implemented in the Rust WASM layer");
+      }
+      if (!(this.query as any).query_block_header) {
+        throw new Error("query_block_header is not yet implemented in the Rust WASM layer");
+      }
+
+      // Get next epoch info from Rust SDK
+      const nextEpochInfo = await (this.query as any).query_next_epoch_info() as any;
+
+      // Get current block header to calculate timing
+      const currentBlockHeader = await (this.query as any).query_block_header(null) as any;
+
+      // Type-safe parsing of the responses
+      if (!nextEpochInfo || typeof nextEpochInfo !== 'object') {
+        throw new Error("Invalid next epoch info response from Rust SDK");
+      }
+      if (!currentBlockHeader || typeof currentBlockHeader !== 'object') {
+        throw new Error("Invalid block header response from Rust SDK");
+      }
+
+      // Parse the response (structure will depend on Rust implementation)
+      const nextEpoch = BigInt(nextEpochInfo.next_epoch);
+      const minBlockHeight = Number(nextEpochInfo.min_block_height);
+      const nextEpochTime = new Date(nextEpochInfo.next_epoch_time);
+      const currentTime = new Date(currentBlockHeader.time);
+
+      // Validate parsed data
+      if (isNaN(minBlockHeight)) {
+        throw new Error("Invalid min_block_height in next epoch info");
+      }
+      if (isNaN(nextEpochTime.getTime())) {
+        throw new Error("Invalid next_epoch_time in next epoch info");
+      }
+      if (isNaN(currentTime.getTime())) {
+        throw new Error("Invalid time in current block header");
+      }
+
+      // Calculate time until next epoch in seconds
+      const minTimeUntilNextEpoch = Math.max(0, Math.floor((nextEpochTime.getTime() - currentTime.getTime()) / 1000));
+
+      return {
+        nextEpoch,
+        minBlockHeight,
+        minTimeUntilNextEpoch,
+      };
+    } catch (error) {
+      throw new Error(`Failed to get next epoch information: ${error}`);
+    }
   }
 
   /**
