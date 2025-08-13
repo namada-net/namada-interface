@@ -1,119 +1,88 @@
-import { Chain } from "@chain-registry/types";
 import { AccountType } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
-import { params, routes } from "App/routes";
-import {
-  OnSubmitTransferParams,
-  TransferModule,
-} from "App/Transfer/TransferModule";
+import { routes } from "App/routes";
+import { isShieldedAddress } from "App/Transfer/common";
+import { TransferModule } from "App/Transfer/TransferModule";
+import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
-import {
-  assetBalanceAtomFamily,
-  getAvailableChains,
-  ibcChannelsFamily,
-  namadaChainRegistryAtom,
-  SUPPORTED_ASSETS_MAP,
-} from "atoms/integrations";
+import { assetBalanceAtomFamily, ibcChannelsFamily } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import { useFathomTracker } from "hooks/useFathomTracker";
 import { useIbcTransaction } from "hooks/useIbcTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
-import { useUrlState } from "hooks/useUrlState";
 import { useWalletManager } from "hooks/useWalletManager";
-import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
-import { AssetWithAmount, BaseDenom } from "types";
+import { AssetWithAmount } from "types";
 import { useTransactionEventListener } from "utils";
-import { IbcTabNavigation } from "./IbcTabNavigation";
 import { IbcTopHeader } from "./IbcTopHeader";
 
-const keplr = new KeplrWalletManager();
-const defaultChainId = "cosmoshub-4";
+interface IbcTransferProps {
+  sourceAddress: string | undefined;
+  setSourceAddress: (address: string | undefined) => void;
+  destinationAddress: string | undefined;
+  setDestinationAddress: (address: string | undefined) => void;
+  keplrWalletManager: KeplrWalletManager;
+  assetSelectorModalOpen?: boolean;
+  setAssetSelectorModalOpen?: (open: boolean) => void;
+}
 
-export const IbcTransfer = (): JSX.Element => {
-  const navigate = useNavigate();
+export const IbcTransfer = ({
+  sourceAddress,
+  setSourceAddress,
+  destinationAddress,
+  setDestinationAddress,
+  keplrWalletManager,
+  assetSelectorModalOpen,
+  setAssetSelectorModalOpen,
+}: IbcTransferProps): JSX.Element => {
+  //  COMPONENT STATE
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
-
-  const availableChains = useMemo(getAvailableChains, []);
-
-  // Global & Atom states
+  const [sourceChannel, setSourceChannel] = useState("");
+  const [destinationChannel, setDestinationChannel] = useState("");
+  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
+    AssetWithAmount | undefined
+  >();
+  const [amount, setAmount] = useState<BigNumber | undefined>();
+  const [txHash, setTxHash] = useState<string | undefined>();
+  //  ERROR & STATUS STATE
+  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
+  const [currentStatus, setCurrentStatus] = useState<string>();
+  //  GLOBAL STATE
+  const navigate = useNavigate();
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
-
-  // Wallet & Registry
-  const {
-    registry,
-    walletAddress: sourceAddress,
-    connectToChainId,
-  } = useWalletManager(keplr);
-  const namadaChainRegistry = useAtomValue(namadaChainRegistryAtom);
-  const chainRegistry = namadaChainRegistry.data;
-
-  // IBC Channels & Balances
+  const { registry } = useWalletManager(keplrWalletManager);
   const {
     data: ibcChannels,
     isError: unknownIbcChannels,
     isLoading: isLoadingIbcChannels,
   } = useAtomValue(ibcChannelsFamily(registry?.chain.chain_name));
-
-  const { data: userAssets, isLoading: isLoadingBalances } = useAtomValue(
+  const { data: userAssets } = useAtomValue(
     assetBalanceAtomFamily({
       chain: registry?.chain,
       walletAddress: sourceAddress,
     })
   );
-
   const { trackEvent } = useFathomTracker();
-  const [shielded, setShielded] = useState<boolean>(true);
-  const [selectedAssetBase, setSelectedAssetBase] = useUrlState(params.asset);
-  const [amount, setAmount] = useState<BigNumber | undefined>();
-  const [generalErrorMessage, setGeneralErrorMessage] = useState("");
-  const [sourceChannel, setSourceChannel] = useState("");
-  const [destinationChannel, setDestinationChannel] = useState("");
-  const [currentProgress, setCurrentProgress] = useState<string>();
-  const [txHash, setTxHash] = useState<string | undefined>();
-
-  const availableDisplayAmount = mapUndefined((baseDenom) => {
-    return userAssets ? userAssets[baseDenom]?.amount : undefined;
-  }, selectedAssetBase);
-
-  const selectedAsset =
-    selectedAssetBase ? userAssets?.[selectedAssetBase]?.asset : undefined;
-
-  const availableAssets = useMemo(() => {
-    if (!userAssets || !registry) return undefined;
-
-    const output: Record<BaseDenom, AssetWithAmount> = {};
-
-    Object.entries(userAssets).forEach(([key, { asset }]) => {
-      if (
-        SUPPORTED_ASSETS_MAP.get(registry.chain.chain_name)?.includes(
-          asset.symbol
-        )
-      ) {
-        output[key] = { ...userAssets[key] };
-      }
-    });
-
-    return output;
-  }, [Object.keys(userAssets || {}).join(""), registry?.chain.chain_name]);
-
-  // Manage the history of transactions
   const { storeTransaction } = useTransactionActions();
 
-  // Utils for IBC transfers
   const { transferToNamada, gasConfig } = useIbcTransaction({
     registry,
     sourceAddress,
     sourceChannel,
     destinationChannel,
-    shielded,
-    selectedAsset,
+    shielded: isShieldedAddress(destinationAddress ?? ""),
+    selectedAsset: selectedAssetWithAmount?.asset,
   });
 
+  // DERIVED VALUES
+  const shielded = isShieldedAddress(destinationAddress ?? "");
+  const availableDisplayAmount = mapUndefined((baseDenom) => {
+    return userAssets ? userAssets[baseDenom]?.amount : undefined;
+  }, selectedAssetWithAmount?.asset?.address);
   const namadaAddress = useMemo(() => {
     return (
       defaultAccounts.data?.find(
@@ -121,14 +90,11 @@ export const IbcTransfer = (): JSX.Element => {
       )?.address || ""
     );
   }, [defaultAccounts, shielded]);
-
   const requiresIbcChannels = Boolean(
     !isLoadingIbcChannels &&
       (unknownIbcChannels ||
         (shielded && ibcChannels && !ibcChannels?.namadaChannel))
   );
-
-  useEffect(() => setSelectedAssetBase(undefined), [registry]);
 
   // Set source and destination channels based on IBC channels data
   useEffect(() => {
@@ -159,12 +125,12 @@ export const IbcTransfer = (): JSX.Element => {
     try {
       invariant(registry?.chain, "Error: Chain not selected");
       setGeneralErrorMessage("");
-      setCurrentProgress("Submitting...");
+      setCurrentStatus("Submitting...");
       const result = await transferToNamada.mutateAsync({
-        destinationAddress,
-        displayAmount,
+        destinationAddress: destinationAddress ?? "",
+        displayAmount: new BigNumber(displayAmount ?? "0"),
         memo,
-        onUpdateStatus: setCurrentProgress,
+        onUpdateStatus: setCurrentStatus,
       });
       storeTransaction(result);
       setTxHash(result.hash);
@@ -173,20 +139,8 @@ export const IbcTransfer = (): JSX.Element => {
       );
     } catch (err) {
       setGeneralErrorMessage(err + "");
-      setCurrentProgress(undefined);
+      setCurrentStatus(undefined);
     }
-  };
-
-  const onChangeWallet = (): void => {
-    if (registry) {
-      connectToChainId(registry.chain.chain_id);
-      return;
-    }
-    connectToChainId(defaultChainId);
-  };
-
-  const onChangeChain = (chain: Chain): void => {
-    connectToChainId(chain.chain_id);
   };
 
   return (
@@ -194,34 +148,22 @@ export const IbcTransfer = (): JSX.Element => {
       <header className="flex flex-col items-center text-center mb-8 gap-6">
         <IbcTopHeader type="ibcToNam" isShielded={shielded} />
       </header>
-      <div className="mb-6">{!completedAt && <IbcTabNavigation />}</div>
       <TransferModule
         source={{
-          isLoadingAssets: isLoadingBalances,
-          availableAssets,
-          selectedAssetAddress: selectedAssetBase,
+          selectedAssetWithAmount,
           availableAmount: availableDisplayAmount,
-          availableChains,
-          onChangeChain,
-          chain: registry?.chain,
-          availableWallets: [wallets.keplr],
-          wallet: wallets.keplr,
-          walletAddress: sourceAddress,
-          onChangeWallet,
-          onChangeSelectedAsset: setSelectedAssetBase,
+          address: sourceAddress,
           amount,
+          onChangeSelectedAsset: setSelectedAssetWithAmount,
+          onChangeAddress: setSourceAddress,
           onChangeAmount: setAmount,
         }}
         destination={{
-          chain: chainRegistry?.chain,
-          availableWallets: [wallets.namada],
-          wallet: wallets.namada,
-          walletAddress: namadaAddress,
+          address: namadaAddress,
           isShieldedAddress: shielded,
-          onChangeShielded: setShielded,
+          onChangeAddress: setDestinationAddress,
         }}
         gasConfig={gasConfig.data}
-        changeFeeEnabled={false}
         isSubmitting={
           transferToNamada.isPending ||
           /* isSuccess means that the transaction has been broadcasted, but doesn't take
@@ -230,13 +172,12 @@ export const IbcTransfer = (): JSX.Element => {
           transferToNamada.isSuccess
         }
         completedAt={completedAt}
-        ibcTransfer={"deposit"}
-        currentStatus={currentProgress}
+        currentStatus={currentStatus ?? ""}
         requiresIbcChannels={requiresIbcChannels}
-        ibcOptions={{
+        ibcChannels={{
           sourceChannel,
-          onChangeSourceChannel: setSourceChannel,
           destinationChannel,
+          onChangeSourceChannel: setSourceChannel,
           onChangeDestinationChannel: setDestinationChannel,
         }}
         errorMessage={generalErrorMessage || transferToNamada.error?.message}
@@ -245,6 +186,9 @@ export const IbcTransfer = (): JSX.Element => {
           txHash &&
             navigate(generatePath(routes.transaction, { hash: txHash }));
         }}
+        keplrWalletManager={keplrWalletManager}
+        assetSelectorModalOpen={assetSelectorModalOpen}
+        setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
     </div>
   );

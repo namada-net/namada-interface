@@ -15,9 +15,12 @@ export const routes = {
   governanceSubmitVote: "/governance/submit-vote/:proposalId",
   governanceJson: "/governance/json/:proposalId",
 
-  // Masp
+  // Shield
   shield: "/shield",
-  unshield: "/unshield",
+
+  // Masp
+  maspShield: "/masp/shield",
+  maspUnshield: "/masp/unshield",
   shieldAssets: "/shield-assets",
 
   // Ibc
@@ -48,4 +51,6 @@ export const routes = {
 export const params = {
   asset: "asset",
   shielded: "shielded",
+  source: "source",
+  destination: "destination",
 } as const;

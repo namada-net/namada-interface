@@ -17,11 +17,9 @@ export const CurrentStatus = ({
       >
         <span className="animate-pulseFast">{status}</span>
       </div>
-      {explanation && (
-        <div className="text-center text-sm leading-tight text-yellow my-3 max-w-[80%] mx-auto">
-          {explanation}
-        </div>
-      )}
+      <div className="text-center text-sm leading-tight text-yellow my-3 max-w-[80%] mx-auto min-h-[1.25rem]">
+        {explanation}
+      </div>
     </>
   );
 };
