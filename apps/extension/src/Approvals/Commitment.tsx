@@ -65,7 +65,7 @@ const renderContent = (
 ): ReactNode => {
   switch (tx.txType) {
     case TxType.Bond:
-      const bondTx = tx as BondProps;
+      const bondTx = tx as CommitmentDetailProps<BondProps>;
       return (
         <>
           Stake <NamCurrency amount={bondTx.amount} /> to{" "}
@@ -74,7 +74,7 @@ const renderContent = (
       );
 
     case TxType.Unbond:
-      const unbondTx = tx as UnbondProps;
+      const unbondTx = tx as CommitmentDetailProps<UnbondProps>;
       return (
         <>
           Unstake <NamCurrency amount={unbondTx.amount} /> from{" "}
@@ -83,7 +83,7 @@ const renderContent = (
       );
 
     case TxType.Redelegate:
-      const redelegateTx = tx as RedelegateProps;
+      const redelegateTx = tx as CommitmentDetailProps<RedelegateProps>;
       return (
         <>
           Redelegate <NamCurrency amount={redelegateTx.amount} /> from{" "}
@@ -93,14 +93,14 @@ const renderContent = (
       );
 
     case TxType.Withdraw:
-      const withdrawTx = tx as WithdrawProps;
+      const withdrawTx = tx as CommitmentDetailProps<WithdrawProps>;
       return (
         <>Withdraw staked amounts of {formatAddress(withdrawTx.validator)}</>
       );
 
     case TxType.VoteProposal:
       // TODO: On Chrome, this cast is wrong because tx.proposalId is a string
-      const voteTx = tx as VoteProposalProps;
+      const voteTx = tx as CommitmentDetailProps<VoteProposalProps>;
       return (
         <>
           Vote {voteTx.vote} on proposal #{voteTx.proposalId.toString()}
@@ -108,17 +108,17 @@ const renderContent = (
       );
 
     case TxType.RevealPK:
-      const revealTx = tx as RevealPkProps;
+      const revealTx = tx as CommitmentDetailProps<RevealPkProps>;
       return (
         <>Reveal public key for address {formatAddress(revealTx.publicKey)}</>
       );
 
     case TxType.ClaimRewards:
-      const claimTx = tx as ClaimRewardsProps;
+      const claimTx = tx as CommitmentDetailProps<ClaimRewardsProps>;
       return <>Claiming rewards from {formatAddress(claimTx.validator)}</>;
 
     case TxType.Transfer:
-      const transferTx = tx as TransferProps;
+      const transferTx = tx as CommitmentDetailProps<TransferProps>;
       const { source, target } = parseTransferType(transferTx, wrapperFeePayer);
       return (
         <>
@@ -143,7 +143,7 @@ export const Commitment = ({
   if (commitment.txType === TxType.Transfer) {
     // Determine specific transfer type
     const { type } = parseTransferType(
-      commitment as TransferProps,
+      commitment as CommitmentDetailProps<TransferProps>,
       wrapperFeePayer
     );
     title = `${type} ${title}`;
