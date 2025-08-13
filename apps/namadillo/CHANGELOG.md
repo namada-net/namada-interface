@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.31.4](https://github.com/namada-net/namada-interface/compare/namadillo@v1.31.3...namadillo@v1.31.4) (2025-08-12)
+
+
+### Bug Fixes
+
+* Add staking amount to Total Balance banner ([#2261](https://github.com/namada-net/namada-interface/issues/2261)) ([d86f8aa](https://github.com/namada-net/namada-interface/commit/d86f8aaa861e62baccb1277d99903ad66c044914))
+* Namada repository in package json ([#2268](https://github.com/namada-net/namada-interface/issues/2268)) ([70d0f42](https://github.com/namada-net/namada-interface/commit/70d0f4255390e715900071005a9e5d48909fcc74))
+
 ## [1.31.4](https://github.com/namada-net/namada-interface/compare/namadillo@v1.31.3...namadillo@v1.31.4) (2025-07-30)
 
 
