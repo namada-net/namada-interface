@@ -101,13 +101,13 @@ impl Sdk {
     }
 
     pub async fn has_masp_params() -> Result<JsValue, JsValue> {
-        let has = has_masp_params().await?;
+        let has = masp::has_masp_params().await?;
 
         Ok(js_sys::Boolean::from(has.as_bool().unwrap()).into())
     }
 
     pub async fn fetch_and_store_masp_params(url: Option<String>) -> Result<(), JsValue> {
-        fetch_and_store_masp_params(url).await?;
+        masp::fetch_and_store_masp_params(url).await?;
         Ok(())
     }
 
@@ -118,7 +118,7 @@ impl Sdk {
         chain_id: String,
     ) -> Result<(), JsValue> {
         // _dn_name is not used in the web version for a time being
-        let params = get_masp_params().await?;
+        let params = masp::get_masp_params().await?;
         let params_iter = js_sys::try_iter(&params)?.ok_or("Can't iterate over JsValue")?;
         let mut params_bytes = params_iter.map(|p| to_bytes(p.unwrap()));
 
@@ -1147,13 +1147,13 @@ impl Sdk {
         to_js_result(borsh::to_vec(&tx)?)
     }
 }
-
-#[wasm_bindgen(module = "/src/sdk/mod.js")]
-extern "C" {
-    #[wasm_bindgen(catch, js_name = "getMaspParams")]
-    async fn get_masp_params() -> Result<JsValue, JsValue>;
-    #[wasm_bindgen(catch, js_name = "hasMaspParams")]
-    async fn has_masp_params() -> Result<JsValue, JsValue>;
-    #[wasm_bindgen(catch, js_name = "fetchAndStoreMaspParams")]
-    async fn fetch_and_store_masp_params(url: Option<String>) -> Result<JsValue, JsValue>;
-}
+//
+// #[wasm_bindgen(module = "/src/sdk/mod.js")]
+// extern "C" {
+//     #[wasm_bindgen(catch, js_name = "getMaspParams")]
+//     async fn get_masp_params() -> Result<JsValue, JsValue>;
+//     #[wasm_bindgen(catch, js_name = "hasMaspParams")]
+//     async fn has_masp_params() -> Result<JsValue, JsValue>;
+//     #[wasm_bindgen(catch, js_name = "fetchAndStoreMaspParams")]
+//     async fn fetch_and_store_masp_params(url: Option<String>) -> Result<JsValue, JsValue>;
+// }

@@ -191,6 +191,22 @@ fn file_exists(path: PathBuf) -> bool {
         .unwrap()
 }
 
+pub async fn has_masp_params() -> Result<JsValue, JsValue> {
+    let has = js_has_masp_params().await?;
+
+    Ok(js_sys::Boolean::from(has.as_bool().unwrap()).into())
+}
+
+pub async fn fetch_and_store_masp_params(url: Option<String>) -> Result<(), JsValue> {
+    js_fetch_and_store_masp_params(url).await?;
+    Ok(())
+}
+
+pub async fn get_masp_params() -> Result<JsValue, JsValue> {
+    let params = js_get_masp_params().await?;
+    Ok(params)
+}
+
 #[wasm_bindgen(module = "/src/sdk/masp/masp.node.js")]
 extern "C" {
     #[wasm_bindgen(catch, js_name = "writeFileSync")]
@@ -207,4 +223,12 @@ extern "C" {
 
     #[wasm_bindgen(catch, js_name = "existsSync")]
     fn exists_sync(path: JsValue) -> Result<JsValue, JsValue>;
+
+    // MASP Param methods
+    #[wasm_bindgen(catch, js_name = "getMaspParams")]
+    async fn js_get_masp_params() -> Result<JsValue, JsValue>;
+    #[wasm_bindgen(catch, js_name = "hasMaspParams")]
+    async fn js_has_masp_params() -> Result<JsValue, JsValue>;
+    #[wasm_bindgen(catch, js_name = "fetchAndStoreMaspParams")]
+    async fn js_fetch_and_store_masp_params(url: Option<String>) -> Result<JsValue, JsValue>;
 }
