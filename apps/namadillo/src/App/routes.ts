@@ -42,6 +42,7 @@ export const routes = {
   // Other
   switchAccount: "/switch-account",
   signMessages: "/sign-messages",
+  faq: "/faq",
   bugReport: "/bug-report",
 } as const;
 

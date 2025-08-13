@@ -4,7 +4,7 @@ import { applicationFeaturesAtom } from "atoms/settings";
 import { useAtomValue } from "jotai";
 import { AiFillHome } from "react-icons/ai";
 import { BsDiscord, BsTwitterX } from "react-icons/bs";
-import { FaVoteYea } from "react-icons/fa";
+import { FaQuestionCircle, FaVoteYea } from "react-icons/fa";
 import { FaBug } from "react-icons/fa6";
 import { GoHistory, GoStack } from "react-icons/go";
 import { IoSwapHorizontal } from "react-icons/io5";
@@ -68,6 +68,15 @@ export const Navigation = (): JSX.Element => {
       </ul>
       <footer className="flex flex-col gap-10">
         <ul className="flex flex-col gap-1 text-neutral-300 text-sm">
+          <li>
+            <Link
+              to={routes.faq}
+              className="inline-flex items-center gap-2 hover:text-cyan"
+            >
+              <FaQuestionCircle />
+              FAQ
+            </Link>
+          </li>
           <li>
             <Link
               to={routes.bugReport}

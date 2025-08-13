@@ -12,6 +12,7 @@ import {
 import { AccountOverview } from "./AccountOverview";
 import { App } from "./App";
 import { BugReport } from "./Common/BugReport";
+import { FAQ } from "./Common/FAQ";
 import { NotFound } from "./Common/NotFound";
 import { RouteErrorBoundary } from "./Common/RouteErrorBoundary";
 import { ShieldAssetsModal } from "./Common/ShieldAssetsModal";
@@ -132,6 +133,7 @@ export const MainRoutes = (): JSX.Element => {
           )}
 
           {/* Other */}
+          <Route path={routes.faq} element={<FAQ />} />
           <Route path={routes.bugReport} element={<BugReport />} />
           <Route path="*" element={<NotFound />} />
         </Route>
