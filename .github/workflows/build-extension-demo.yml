@@ -62,7 +62,7 @@ jobs:
           SHA: ${{ github.sha }}
         run: NAMADA_INTERFACE_REVISION=$SHA yarn build:chrome
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: namada-keychain-chrome
           path: ./apps/extension/build/chrome/namada_keychain-*.zip
@@ -97,7 +97,7 @@ jobs:
           SHA: ${{ github.sha }}
         run: NAMADA_INTERFACE_REVISION=$SHA yarn build:firefox
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: namada-keychain-firefox
           path: ./apps/extension/build/firefox/namada_keychain-*.zip
@@ -107,13 +107,13 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Download Chrome extension build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: namada-keychain-chrome
           path: ./namada-keychain-chrome
 
       - name: Download Firefox extension build
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: namada-keychain-firefox
           path: ./namada-keychain-firefox
