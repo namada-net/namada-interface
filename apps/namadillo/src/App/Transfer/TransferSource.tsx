@@ -1,5 +1,5 @@
 import { Chain } from "@chain-registry/types";
-import { AmountInput } from "@namada/components";
+import { AmountInput, Text } from "@namada/components";
 import { TabSelector } from "App/Common/TabSelector";
 import { MaspSyncIndicator } from "App/Layout/MaspSyncIndicator";
 import BigNumber from "bignumber.js";
@@ -30,6 +30,8 @@ export type TransferSourceProps = {
   onChangeAmount?: (amount: BigNumber | undefined) => void;
   isShieldedAddress?: boolean;
   onChangeShielded?: (isShielded: boolean) => void;
+  hideChainSelector?: boolean;
+  label?: string;
 };
 
 const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
@@ -60,6 +62,8 @@ export const TransferSource = ({
   isSyncingMasp,
   onChangeShielded,
   isSubmitting,
+  hideChainSelector,
+  label,
 }: TransferSourceProps): JSX.Element => {
   return (
     <div className="relative bg-neutral-800 rounded-lg px-4 py-5">
@@ -112,26 +116,33 @@ export const TransferSource = ({
           />
         </nav>
       )}
+      {label && (
+        <Text className="text-neutral-500 font-light mt-0 mb-2">{label}</Text>
+      )}
 
       {/** Chain selector / chain indicator */}
-      <header className="relative flex justify-between">
-        <SelectedChain
-          onClick={openChainSelector}
-          chain={chain}
-          wallet={wallet}
-        />
-        {!walletAddress && (
-          <ConnectProviderButton onClick={openProviderSelector} />
-        )}
-        {walletAddress && wallet && (
-          <SelectedWallet
-            wallet={wallet}
-            address={walletAddress}
-            onClick={openProviderSelector}
-          />
-        )}
-      </header>
-      <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
+      {!hideChainSelector && (
+        <>
+          <header className="relative flex justify-between">
+            <SelectedChain
+              onClick={openChainSelector}
+              chain={chain}
+              wallet={wallet}
+            />
+            {!walletAddress && (
+              <ConnectProviderButton onClick={openProviderSelector} />
+            )}
+            {walletAddress && wallet && (
+              <SelectedWallet
+                wallet={wallet}
+                address={walletAddress}
+                onClick={openProviderSelector}
+              />
+            )}
+          </header>
+          <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
+        </>
+      )}
 
       {/** Asset selector */}
       {!isSubmitting && (
