@@ -1,4 +1,4 @@
-import { initSdk, Sdk } from "@namada/sdk-multicore";
+import { Sdk } from "@namada/sdk-multicore";
 import {
   IbcTransferMsgValue,
   ShieldedTransferMsgValue,
@@ -10,6 +10,7 @@ import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { buildTx, EncodedTxData } from "lib/query";
 import { namadaAsset, toDisplayAmount } from "utils";
+import { initSdk } from "../../../../node_modules/@namada/sdk-multicore/dist/sdk-multicore/src/initInline";
 import {
   Broadcast,
   BroadcastDone,
@@ -36,7 +37,10 @@ export class Worker {
   private sdk: Sdk | undefined;
 
   async init(m: Init): Promise<InitDone> {
-    this.sdk = await initSdk({ ...m.payload });
+    this.sdk = await initSdk({
+      ...m.payload,
+      maspIndexerUrl: m.payload.maspIndexerUrl || undefined,
+    });
     return { type: "init-done", payload: null };
   }
 
