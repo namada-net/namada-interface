@@ -1,4 +1,5 @@
 /* eslint-disable */
+import { sdkMulticoreWorkerHelpers } from "@namada/vite-esbuild-plugin";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import checker from "vite-plugin-checker";
@@ -50,6 +51,7 @@ export default defineConfig(() => {
         define: {
           global: "globalThis",
         },
+        plugins: [sdkMulticoreWorkerHelpers()],
       },
     },
     build: {

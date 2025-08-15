@@ -3851,6 +3851,8 @@ __metadata:
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.3.0"
     "@namada/indexer-client": "npm:3.3.2"
+    "@namada/sdk-multicore": "npm:^0.20.2"
+    "@namada/vite-esbuild-plugin": "npm:^1.0.1"
     "@playwright/test": "npm:^1.24.1"
     "@svgr/webpack": "npm:^6.5.1"
     "@tailwindcss/container-queries": "npm:^0.1.1"
@@ -3934,6 +3936,23 @@ __metadata:
     wonka: "npm:^6.3.4"
   languageName: unknown
   linkType: soft
+
+"@namada/sdk-multicore@npm:^0.20.2":
+  version: 0.20.2
+  resolution: "@namada/sdk-multicore@npm:0.20.2"
+  dependencies:
+    "@cosmjs/encoding": "npm:^0.29.0"
+    "@dao-xyz/borsh": "npm:^5.1.5"
+    "@ledgerhq/hw-transport": "npm:^6.31.4"
+    "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
+    "@zondax/ledger-namada": "npm:^2.0.0"
+    bignumber.js: "npm:^9.1.1"
+    buffer: "npm:^6.0.3"
+    semver: "npm:^7.7.2"
+    slip44: "npm:^3.0.18"
+  checksum: 10c0/82cec10fc6974a1ad8ed88282bf8dd9a4e1d462a572d79abb22671835dc1cb5a7b1f049fcc3ed7ddb70d97996e5fbec5eabe8611554457aad745d98d914db355
+  languageName: node
+  linkType: hard
 
 "@namada/sdk@workspace:packages/sdk":
   version: 0.0.0-use.local
@@ -4086,6 +4105,13 @@ __metadata:
     typescript: "npm:5.5.4"
   languageName: unknown
   linkType: soft
+
+"@namada/vite-esbuild-plugin@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@namada/vite-esbuild-plugin@npm:1.0.1"
+  checksum: 10c0/46ba6b6b6cbd5c06b7d996e7e0ab70b67b0d295e8497d29d885fc3de296ed003fdadcf8e3e4acbc71c13fbe499dcc6878ce7b8726782a6d1ab6667e0ea6ce52f
+  languageName: node
+  linkType: hard
 
 "@nicolo-ribaudo/chokidar-2@npm:2.1.8-no-fsevents.3":
   version: 2.1.8-no-fsevents.3
@@ -18417,6 +18443,15 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: 10c0/88f33e148b210c153873cb08cfe1e281d518aaa9a666d4d148add6560db5cd3c582f3a08ccb91f38d5f379ead256da9931234ed122057f40bb5766e65e58adaf
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.7.2":
+  version: 7.7.2
+  resolution: "semver@npm:7.7.2"
+  bin:
+    semver: bin/semver.js
+  checksum: 10c0/aca305edfbf2383c22571cb7714f48cadc7ac95371b4b52362fb8eeffdfbc0de0669368b82b2b15978f8848f01d7114da65697e56cd8c37b0dab8c58e543f9ea
   languageName: node
   linkType: hard
 

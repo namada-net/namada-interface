@@ -1,3 +1,4 @@
+import { SdkWasmOptions } from "@namada/sdk-multicore";
 import {
   Account,
   IbcTransferMsgValue,
@@ -11,13 +12,7 @@ import { EncodedTxData, TransactionPair } from "lib/query";
 import { ChainSettings, GasConfig } from "types";
 import { WebWorkerMessage } from "./utils";
 
-type InitPayload = {
-  rpcUrl: string;
-  maspIndexerUrl: string;
-  token: string;
-};
-
-export type Init = WebWorkerMessage<"init", InitPayload>;
+export type Init = WebWorkerMessage<"init", SdkWasmOptions>;
 export type InitDone = WebWorkerMessage<"init-done", null>;
 
 type ShieldPayload = {
