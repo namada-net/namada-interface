@@ -1,4 +1,4 @@
-import { Sdk } from "@namada/sdk/web";
+import { Sdk } from "@namada/sdk-multicore";
 import { QueryStatus, useQuery } from "@tanstack/react-query";
 import { PageLoader } from "App/Common/PageLoader";
 import { chainParametersAtom, nativeTokenAddressAtom } from "atoms/chain";

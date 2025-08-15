@@ -1,18 +1,16 @@
 import {
+  BparamsMsgValue,
+  IbcTransferProps,
+  ShieldedTransferProps,
+  ShieldingTransferProps,
+  TransparentTransferProps,
+  UnshieldingTransferProps,
+} from "@namada/sdk-multicore";
+
+import {
   Account,
   AccountType,
-  BparamsMsgValue,
   GenDisposableSignerResponse,
-  IbcTransferMsgValue,
-  IbcTransferProps,
-  ShieldedTransferMsgValue,
-  ShieldedTransferProps,
-  ShieldingTransferMsgValue,
-  ShieldingTransferProps,
-  TransparentTransferMsgValue,
-  TransparentTransferProps,
-  UnshieldingTransferMsgValue,
-  UnshieldingTransferProps,
 } from "@namada/types";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
@@ -88,7 +86,7 @@ export const clearDisposableSigner = async (address: string): Promise<void> => {
 export const createTransparentTransferTx = async (
   chain: ChainSettings,
   account: Account,
-  props: TransparentTransferMsgValue[],
+  props: TransparentTransferProps[],
   gasConfig: GasConfig,
   memo?: string
 ): Promise<EncodedTxData<TransparentTransferProps> | undefined> => {
@@ -110,7 +108,7 @@ export const createTransparentTransferTx = async (
 export const createShieldedTransferTx = async (
   chain: ChainSettings,
   account: Account,
-  props: ShieldedTransferMsgValue[],
+  props: ShieldedTransferProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
   disposableSigner: GenDisposableSignerResponse,
@@ -135,11 +133,11 @@ export const createShieldedTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue = new ShieldedTransferMsgValue({
+      const msgValue: ShieldedTransferProps = {
         gasSpendingKey: source,
         data: [{ source, target: destination, token, amount }],
         bparams,
-      });
+      };
       const msg: ShieldedTransfer = {
         type: "shielded-transfer",
         payload: {
@@ -164,7 +162,7 @@ export const createShieldedTransferTx = async (
 export const createShieldingTransferTx = async (
   chain: ChainSettings,
   account: Account,
-  props: ShieldingTransferMsgValue[],
+  props: ShieldingTransferProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
   memo?: string
@@ -188,11 +186,11 @@ export const createShieldingTransferTx = async (
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
       const publicKeyRevealed = await isPublicKeyRevealed(account.address);
-      const msgValue = new ShieldingTransferMsgValue({
+      const msgValue: ShieldingTransferProps = {
         target: destination,
         data: [{ source, token, amount }],
         bparams,
-      });
+      };
       const msg: Shield = {
         type: "shield",
         payload: {
@@ -215,7 +213,7 @@ export const createShieldingTransferTx = async (
 export const createUnshieldingTransferTx = async (
   chain: ChainSettings,
   account: Account,
-  props: UnshieldingTransferMsgValue[],
+  props: UnshieldingTransferProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
   disposableSigner: GenDisposableSignerResponse,
@@ -241,12 +239,12 @@ export const createUnshieldingTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue = new UnshieldingTransferMsgValue({
+      const msgValue: UnshieldingTransferProps = {
         source,
         gasSpendingKey: source,
         data: [{ target: destination, token, amount }],
         bparams,
-      });
+      };
       const msg: Unshield = {
         type: "unshield",
         payload: {
@@ -286,11 +284,11 @@ export const createIbcTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue = new IbcTransferMsgValue({
+      const msgValue: IbcTransferProps = {
         ...props[0],
         gasSpendingKey: props[0].gasSpendingKey,
         bparams,
-      });
+      };
 
       // We only check if we need to reveal the public key if the gas spending key is not provided
       const publicKeyRevealed =
