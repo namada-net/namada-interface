@@ -10,10 +10,12 @@ import { SelectedChain } from "App/Transfer/SelectedChain";
 import { SelectedWallet } from "App/Transfer/SelectedWallet";
 import { TokenAmountCard } from "App/Transfer/TokenAmountCard";
 import { TransferArrow } from "App/Transfer/TransferArrow";
+import { accountsAtom } from "atoms/accounts";
 import { getChainRegistryByChainId } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { wallets } from "integrations";
+import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { GoHourglass, GoXCircle } from "react-icons/go";
@@ -40,12 +42,25 @@ const stepDescription: Record<TransferStep, string> = {
 const TransferTransactionReceipt = ({
   transaction,
 }: TransactionReceiptProps): JSX.Element => {
+  const accounts = useAtomValue(accountsAtom);
+
+  const shieldedAddress = accounts.data?.find((acc) =>
+    isShieldedAddress(acc.address)
+  )?.address;
+
   const getChain = (chainId: string, address: string): Chain | undefined => {
     const chain = getChainRegistryByChainId(chainId)?.chain;
     if (isNamadaAddress(address) && chain) {
       return parseChainInfo(chain, isShieldedAddress(address || ""));
     }
     return chain;
+  };
+
+  const getShieldedDisplayContent = (address: string): React.ReactNode => {
+    const alias = accounts.data?.find(
+      (account) => account.address === address
+    )?.alias;
+    return alias ? `${alias} - Shielded` : "Shielded";
   };
 
   const sourceChain = useMemo(() => {
@@ -61,8 +76,10 @@ const TransferTransactionReceipt = ({
     );
   }, [transaction]);
 
+  // Used whenever the source funds are coming from the shielded pool
+  const isGasSpendingKey = transaction.sourceAddress?.length === 470;
   const sourceWallet =
-    isNamadaAddress(transaction.sourceAddress || "") ?
+    isNamadaAddress(transaction.sourceAddress || "") || isGasSpendingKey ?
       wallets.namada
     : wallets.keplr;
 
@@ -81,13 +98,27 @@ const TransferTransactionReceipt = ({
               wallet={sourceChain ? sourceWallet : undefined}
             />
           )}
-          {sourceWallet && (
-            <SelectedWallet
-              wallet={sourceWallet}
-              address={transaction.sourceAddress}
-              displayTooltip={!transaction.sourceAddress?.includes("shielded")}
-            />
-          )}
+          {sourceWallet &&
+            ((
+              isShieldedAddress(transaction.sourceAddress || "") ||
+              isGasSpendingKey
+            ) ?
+              <div className="flex justify-between items-center gap-2.5 text-sm text-neutral-500 font-light text-right">
+                <span>
+                  {getShieldedDisplayContent(
+                    isGasSpendingKey ?
+                      shieldedAddress || ""
+                    : transaction.sourceAddress || ""
+                  )}
+                </span>
+              </div>
+            : <SelectedWallet
+                wallet={sourceWallet}
+                address={transaction.sourceAddress}
+                displayTooltip={
+                  !transaction.sourceAddress?.includes("shielded")
+                }
+              />)}
         </header>
         <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
         <TokenAmountCard
