@@ -1,6 +1,5 @@
-import { SdkEvents } from "@namada/sdk-multicore";
-import { initMulticore } from "@namada/sdk/inline-init";
-import { getSdk, Sdk } from "@namada/sdk/web";
+import { Sdk, SdkEvents } from "@namada/sdk-multicore";
+import { initSdk } from "@namada/sdk-multicore/inline";
 import * as Comlink from "comlink";
 import { Init, InitDone, Sync, SyncDone } from "./ShieldedSyncMessages";
 
@@ -28,8 +27,10 @@ export class Worker {
   private sdk: Sdk | undefined;
 
   async init(m: Init): Promise<InitDone> {
-    const { cryptoMemory } = await initMulticore();
-    this.sdk = newSdk(cryptoMemory, m.payload);
+    this.sdk = await initSdk({
+      ...m.payload,
+      maspIndexerUrl: m.payload.maspIndexerUrl || undefined,
+    });
 
     // TODO: this can be reduced to one event listener
     addEventListener(SdkEvents.ProgressBarStarted, (e) => {
@@ -61,14 +62,6 @@ export class Worker {
     await shieldedSync(this.sdk, m.payload);
     return { type: "sync-done", payload: null };
   }
-}
-
-function newSdk(
-  cryptoMemory: WebAssembly.Memory,
-  payload: Init["payload"]
-): Sdk {
-  const { rpcUrl, token, maspIndexerUrl } = payload;
-  return getSdk(cryptoMemory, rpcUrl, maspIndexerUrl || "", "", token);
 }
 
 async function shieldedSync(sdk: Sdk, payload: Sync["payload"]): Promise<void> {
