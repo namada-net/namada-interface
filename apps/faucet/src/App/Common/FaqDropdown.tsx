@@ -12,7 +12,7 @@ type Props = {
   title: string;
   children: React.ReactNode;
 };
-export const FaqDropdown: React.FC<Props> = ({ children, title }) => {
+export const FaqDropdown = ({ children, title }: Props): JSX.Element => {
   const [isOpen, setIsOpen] = useState<boolean | null>(null);
 
   const handleToggle = (): void => {

@@ -1,4 +1,4 @@
-import React, { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 import { GoGear } from "react-icons/go";
 import { ThemeProvider } from "styled-components";
 
@@ -78,7 +78,7 @@ const START_TIME_TEXT = new Date(START_TIME_UTC * 1000).toLocaleString(
 
 export const AppContext = createContext<AppContext | null>(null);
 
-export const App: React.FC = () => {
+export const App = (): JSX.Element => {
   const initialColorMode = "dark";
 
   const [colorMode, _] = useState<ColorMode>(initialColorMode);

@@ -1,13 +1,12 @@
-FROM rust:1.85.1 AS builder
+FROM ubuntu:24.04 AS builder
 WORKDIR /app
 
-RUN apt update && apt install -y nodejs npm clang pkg-config libssl-dev protobuf-compiler curl
+RUN apt update && apt install -y nodejs npm
 RUN npm install -g yarn
 
 COPY .yarnrc.yml tsconfig.base.json package.json yarn.lock .
 COPY ./.yarn ./.yarn
 COPY ./packages ./packages
-COPY ./scripts ./scripts
 COPY ./apps/faucet/package.json ./apps/faucet/package.json
 
 RUN yarn 

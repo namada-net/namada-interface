@@ -1,5 +1,4 @@
 import { Text } from "@namada/components";
-import React from "react";
 import { FaqContainer, FaqUrl } from "./Faq.components";
 import { FaqDropdown } from "./FaqDropdown";
 
@@ -7,7 +6,7 @@ const namadaDiscord = "https://discord.com/invite/namada";
 const becomeValidatorUrl =
   "https://docs.namada.net/operators/validators/post-genesis-validator-setup";
 
-export const Faq: React.FC = () => {
+export const Faq = (): JSX.Element => {
   return (
     <FaqContainer>
       <Text className="text-black text-5xl my-0">FAQs</Text>
