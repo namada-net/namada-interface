@@ -1,13 +1,12 @@
-import { Sdk } from "@namada/sdk/web";
 import {
-  Account,
-  AccountType,
+  Sdk,
   TxMsgValue,
   TxProps,
   TxResponseMsgValue,
   UnshieldingTransferProps,
   WrapperTxProps,
-} from "@namada/types";
+} from "@namada/sdk-multicore";
+import { Account, AccountType } from "@namada/types";
 import { getIndexerApi } from "atoms/api";
 import { chainParametersAtom } from "atoms/chain";
 import { NamadaKeychain } from "hooks/useNamadaKeychain";
