@@ -1,5 +1,6 @@
+import { SdkEvents } from "@namada/sdk-multicore";
 import { initMulticore } from "@namada/sdk/inline-init";
-import { getSdk, Sdk, SdkEvents } from "@namada/sdk/web";
+import { getSdk, Sdk } from "@namada/sdk/web";
 import * as Comlink from "comlink";
 import { Init, InitDone, Sync, SyncDone } from "./ShieldedSyncMessages";
 
