@@ -122,7 +122,7 @@ const getMaspFeePaymentProps = (
     ],
     bparams,
     skipFeeCheck: true,
-  });
+  };
   const feePaymentMsgValueWithMemo = {
     ...feePaymentMsgValue,
     memo: "MASP_FEE_PAYMENT",
@@ -163,7 +163,7 @@ export const createShieldedTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue: ShieldedTransferProps ={
+      const msgValue: ShieldedTransferProps = {
         data: [{ source, target: destination, token, amount }],
         bparams,
       };
@@ -230,7 +230,7 @@ export const createShieldingTransferTx = async (
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
       const publicKeyRevealed = await isPublicKeyRevealed(account.address);
-      const msgValue: ShieldingTransferProps ={
+      const msgValue: ShieldingTransferProps = {
         target: destination,
         data: [{ source, token, amount }],
         bparams,
@@ -285,7 +285,7 @@ export const createUnshieldingTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue: UnshieldingTransferProps ={
+      const msgValue: UnshieldingTransferProps = {
         source,
         data: [{ target: destination, token, amount }],
         bparams,
@@ -344,7 +344,7 @@ export const createIbcTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue: IbcTransferProps ={
+      const msgValue: IbcTransferProps = {
         ...props[0],
         gasSpendingKey: props[0].gasSpendingKey,
         bparams,
