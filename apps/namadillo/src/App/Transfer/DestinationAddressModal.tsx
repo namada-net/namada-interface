@@ -31,11 +31,13 @@ type AddressOption = {
 type DestinationAddressModalProps = {
   onClose: () => void;
   onSelectAddress: (address: Address) => void;
+  sourceAddress: string;
   sourceAsset?: Asset;
 };
 
 export const DestinationAddressModal = ({
   sourceAsset,
+  sourceAddress,
   onClose,
   onSelectAddress,
 }: DestinationAddressModalProps): JSX.Element => {
@@ -53,6 +55,10 @@ export const DestinationAddressModal = ({
     (account) => account.type === AccountType.ShieldedKeys
   );
 
+  // Dont display an address if it matches the source address
+  const isSourceAddressMatch = (address: string): boolean =>
+    address === sourceAddress;
+
   // Build your addresses options
   const addressOptions: AddressOption[] = [];
   if (accounts) {
@@ -60,7 +66,10 @@ export const DestinationAddressModal = ({
       (account) => account.type !== AccountType.ShieldedKeys
     );
 
-    if (transparentAccount) {
+    if (
+      transparentAccount &&
+      !isSourceAddressMatch(transparentAccount.address)
+    ) {
       addressOptions.push({
         id: "transparent",
         label: "Transparent Address",
@@ -69,7 +78,7 @@ export const DestinationAddressModal = ({
         type: "transparent",
       });
     }
-    if (shieldedAccount) {
+    if (shieldedAccount && !isSourceAddressMatch(shieldedAccount.address)) {
       addressOptions.push({
         id: "shielded",
         label: "Shielded Address",
