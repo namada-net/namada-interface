@@ -8,6 +8,13 @@
 
 - enable panic hook in Rust SDK ([6393b82](https://github.com/anoma/namada-interface/commit/6393b8263320e0f6d137f4e015b982f17f7e497e))
 
+## [0.20.0](https://github.com/namada-net/namada-interface/compare/sdk@v0.19.1...sdk@v0.20.0) (2025-08-18)
+
+
+### Features
+
+* Batch tx to pay fees when unshielding ([#2218](https://github.com/namada-net/namada-interface/issues/2218)) ([aba1977](https://github.com/namada-net/namada-interface/commit/aba19775816796b59e466bc45c9e06da902865c7))
+
 ## [0.19.1](https://github.com/anoma/namada-interface/compare/sdk@v0.19.0...sdk@v0.19.1) (2025-06-20)
 
 
