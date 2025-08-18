@@ -309,6 +309,7 @@ export const TransferDestination = ({
           onClose={handleCloseModal}
           onSelectAddress={handleSelectAddress}
           sourceAsset={sourceAsset}
+          sourceAddress={sourceAddress ?? ""}
         />
       )}
     </>
