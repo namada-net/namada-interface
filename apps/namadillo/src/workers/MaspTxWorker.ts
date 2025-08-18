@@ -1,4 +1,5 @@
 import { Sdk } from "@namada/sdk-multicore";
+import { initSdk } from "@namada/sdk-multicore/inline";
 import {
   IbcTransferMsgValue,
   ShieldedTransferMsgValue,
@@ -10,7 +11,6 @@ import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { buildTx, EncodedTxData } from "lib/query";
 import { namadaAsset, toDisplayAmount } from "utils";
-import { initSdk } from "../../../../node_modules/@namada/sdk-multicore/dist/sdk-multicore/src/initInline";
 import {
   Broadcast,
   BroadcastDone,
