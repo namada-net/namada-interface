@@ -39,27 +39,6 @@ jobs:
           bundle_filename: ${{ needs.release-please.outputs.namadillo_tag }}.zip
           working_dir: ./apps/namadillo
 
-  build-sdk:
-    needs: [release-please]
-    if: ${{ needs.release-please.outputs.sdk_tag }}
-    name: Release SDK
-    runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ github.token }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Build and Release SDK
-        uses: ./.github/actions/release-project
-        with:
-          tag: ${{ needs.release-please.outputs.sdk_tag }}
-          bundle_filename: namada-${{ needs.release-please.outputs.sdk_tag }}.zip
-          working_dir: ./packages/sdk
-      - name: Publish to NPM repository
-        run: cd ./packages/sdk && yarn npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
-
   build-types:
     needs: [release-please]
     if: ${{ needs.release-please.outputs.types_tag }}

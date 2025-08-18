@@ -6,7 +6,6 @@
   "packages": {
     "apps/namadillo": {},
     "apps/extension": {},
-    "packages/sdk": {},
     "packages/types": {}
   },
   "plugins": [{ "type": "node-workspace" }, { "type": "sentence-case" }]
