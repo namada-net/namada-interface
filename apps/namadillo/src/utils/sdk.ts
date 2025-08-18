@@ -1,11 +1,8 @@
 import { Sdk } from "@namada/sdk-multicore";
-// TODO: The following should work! moduleResolution: "node" prevents this from working.
-// import { initSdk } from "@namada/sdk-multicore/inline";
-// TODO: Remove the following work-around once the above is fixed!
+import { initSdk } from "@namada/sdk-multicore/inline";
 import { nativeTokenAddressAtom } from "atoms/chain";
 import { maspIndexerUrlAtom, rpcUrlAtom } from "atoms/settings";
 import { getDefaultStore } from "jotai";
-import { initSdk } from "../../../../node_modules/@namada/sdk-multicore/dist/sdk-multicore/src/initInline";
 
 const initializeSdk = async (): Promise<Sdk> => {
   const store = getDefaultStore();
