@@ -106,7 +106,6 @@ export const createTransparentTransferTx = async (
 
 const getMaspFeePaymentProps = (
   source: string,
-  token: string,
   signerAddress: string,
   gasConfig: GasConfig,
   bparams?: BparamsMsgValue[]
@@ -118,7 +117,7 @@ const getMaspFeePaymentProps = (
     data: [
       {
         target: signerAddress,
-        token,
+        token: gasConfig.gasToken,
         amount: gasConfig.gasPriceInMinDenom.times(gasConfig.gasLimit),
       },
     ],
@@ -175,7 +174,6 @@ export const createShieldedTransferTx = async (
           msgValue.skipFeeCheck = true;
           return getMaspFeePaymentProps(
             source,
-            token,
             signerAddress,
             gasConfig,
             bparams
@@ -298,7 +296,6 @@ export const createUnshieldingTransferTx = async (
           msgValue.skipFeeCheck = true;
           return getMaspFeePaymentProps(
             source,
-            token,
             signerAddress,
             gasConfig,
             bparams
