@@ -1,5 +1,9 @@
 import { Stack } from "@namada/components";
-import { ClaimRewardsProps, RedelegateMsgValue, TxProps } from "@namada/types";
+import {
+  ClaimRewardsProps,
+  RedelegateProps,
+  TxProps,
+} from "@namada/sdk-multicore";
 import { mapUndefined, shortenAddress } from "@namada/utils";
 import { NamCurrency } from "App/Common/NamCurrency";
 import { TokenCurrency } from "App/Common/TokenCurrency";
@@ -89,9 +93,7 @@ const getAmountByValidatorListWithErr = <T extends AmountByValidator>(
   );
 };
 
-const getReDelegateDetailList = (
-  data: RedelegateMsgValue[]
-): React.ReactNode => {
+const getReDelegateDetailList = (data: RedelegateProps[]): React.ReactNode => {
   return (
     <Stack as="ul" gap={1}>
       {data.map((entry, idx) => (
@@ -109,7 +111,7 @@ const getReDelegateDetailList = (
 };
 
 const getReDelegateDetailListWithErr = (
-  data: { value: RedelegateMsgValue; error?: string }[]
+  data: { value: RedelegateProps; error?: string }[]
 ): React.ReactNode => {
   return (
     <Stack gap={2}>

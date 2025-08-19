@@ -207,7 +207,7 @@ export const SettingsMain = (): JSX.Element => {
         <div>
           SDK Version:{" "}
           <a
-            href="https://www.npmjs.com/package/@namada/sdk"
+            href="https://www.npmjs.com/package/@namada/sdk-multicore"
             target="_blank"
             rel="noreferrer"
             className="underline"

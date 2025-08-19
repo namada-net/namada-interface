@@ -1,12 +1,12 @@
-import { Sdk } from "@namada/sdk-multicore";
-import { initSdk } from "@namada/sdk-multicore/inline";
 import {
-  IbcTransferMsgValue,
-  ShieldedTransferMsgValue,
-  ShieldingTransferMsgValue,
-  TxResponseMsgValue,
-  UnshieldingTransferMsgValue,
-} from "@namada/types";
+  IbcTransferProps,
+  Sdk,
+  ShieldedTransferProps,
+  ShieldingTransferProps,
+  TxResponseProps,
+  UnshieldingTransferProps,
+} from "@namada/sdk-multicore";
+import { initSdk } from "@namada/sdk-multicore/inline";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { buildTx, EncodedTxData } from "lib/query";
@@ -135,7 +135,7 @@ export class Worker {
 async function shield(
   sdk: Sdk,
   payload: Shield["payload"]
-): Promise<EncodedTxData<ShieldingTransferMsgValue>> {
+): Promise<EncodedTxData<ShieldingTransferProps>> {
   const {
     publicKeyRevealed,
     account,
@@ -146,7 +146,7 @@ async function shield(
   } = payload;
 
   await sdk.masp.loadMaspParams("", chain.chainId);
-  const encodedTxData = await buildTx<ShieldingTransferMsgValue>(
+  const encodedTxData = await buildTx<ShieldingTransferProps>(
     sdk,
     account,
     gasConfig,
@@ -163,10 +163,10 @@ async function shield(
 async function unshield(
   sdk: Sdk,
   payload: Unshield["payload"]
-): Promise<EncodedTxData<UnshieldingTransferMsgValue>> {
+): Promise<EncodedTxData<UnshieldingTransferProps>> {
   const { account, gasConfig, chain, props, maspFeePaymentProps } = payload;
   await sdk.masp.loadMaspParams("", chain.chainId);
-  const encodedTxData = await buildTx<UnshieldingTransferMsgValue>(
+  const encodedTxData = await buildTx<UnshieldingTransferProps>(
     sdk,
     account,
     gasConfig,
@@ -184,10 +184,10 @@ async function unshield(
 async function shieldedTransfer(
   sdk: Sdk,
   payload: ShieldedTransfer["payload"]
-): Promise<EncodedTxData<ShieldedTransferMsgValue>> {
+): Promise<EncodedTxData<ShieldedTransferProps>> {
   const { account, gasConfig, chain, props, maspFeePaymentProps } = payload;
   await sdk.masp.loadMaspParams("", chain.chainId);
-  const encodedTxData = await buildTx<ShieldedTransferMsgValue>(
+  const encodedTxData = await buildTx<ShieldedTransferProps>(
     sdk,
     account,
     gasConfig,
@@ -205,11 +205,11 @@ async function shieldedTransfer(
 async function ibcTransfer(
   sdk: Sdk,
   payload: IbcTransfer["payload"]
-): Promise<EncodedTxData<IbcTransferMsgValue>> {
+): Promise<EncodedTxData<IbcTransferProps>> {
   const { account, gasConfig, chain, props, publicKeyRevealed } = payload;
 
   await sdk.masp.loadMaspParams("", chain.chainId);
-  const encodedTxData = await buildTx<IbcTransferMsgValue>(
+  const encodedTxData = await buildTx<IbcTransferProps>(
     sdk,
     account,
     gasConfig,
@@ -277,10 +277,10 @@ async function shieldedRewards(
 async function broadcast(
   sdk: Sdk,
   payload: Broadcast["payload"]
-): Promise<TxResponseMsgValue[]> {
+): Promise<TxResponseProps[]> {
   const { encodedTxData, signedTxs } = payload;
 
-  const result: TxResponseMsgValue[] = [];
+  const result: TxResponseProps[] = [];
 
   for await (const signedTx of signedTxs) {
     for await (const _ of encodedTxData.txs) {

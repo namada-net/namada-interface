@@ -1,5 +1,5 @@
 import { ActionButton, Alert, Modal, Panel } from "@namada/components";
-import { BondMsgValue } from "@namada/types";
+import { BondProps } from "@namada/sdk-multicore";
 import { AtomErrorBoundary } from "App/Common/AtomErrorBoundary";
 import { Info } from "App/Common/Info";
 import { ModalContainer } from "App/Common/ModalContainer";
@@ -56,7 +56,7 @@ const IncrementBonding = (): JSX.Element => {
     onChangeValidatorAmount,
   } = useStakeModule({ account });
 
-  const parseUpdatedAmounts = (): BondMsgValue[] => {
+  const parseUpdatedAmounts = (): BondProps[] => {
     if (!account?.address) return [];
     return Object.keys(updatedAmountByAddress)
       .map((validatorAddress) => ({

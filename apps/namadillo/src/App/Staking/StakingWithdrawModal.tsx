@@ -4,7 +4,7 @@ import {
   SkeletonLoading,
   Stack,
 } from "@namada/components";
-import { WithdrawMsgValue } from "@namada/types";
+import { WithdrawProps } from "@namada/sdk-multicore";
 import { InlineError } from "App/Common/InlineError";
 import { ModalContainer } from "App/Common/ModalContainer";
 import { NamCurrency } from "App/Common/NamCurrency";
@@ -38,7 +38,7 @@ export const StakingWithdrawModal = (): JSX.Element => {
     );
   };
 
-  const parseWithdrawParams = (): WithdrawMsgValue[] => {
+  const parseWithdrawParams = (): WithdrawProps[] => {
     if (!account?.address) return [];
 
     const withdrawableValidators = filterWithdrawableValidators();

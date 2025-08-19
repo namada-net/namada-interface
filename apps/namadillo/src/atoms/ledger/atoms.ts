@@ -1,4 +1,4 @@
-import { ledgerUSBList } from "@namada/sdk/web";
+import { ledgerUSBList } from "@namada/sdk-multicore";
 import { LedgerError } from "@zondax/ledger-namada";
 import { isLedgerAccountAtom } from "atoms/accounts";
 import { atom } from "jotai";

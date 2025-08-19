@@ -5,12 +5,8 @@ import {
   IBCInfo,
 } from "@chain-registry/types";
 import { ValidatorStatus } from "@namada/indexer-client";
-import {
-  Account,
-  ChainKey,
-  ClaimRewardsMsgValue,
-  ExtensionKey,
-} from "@namada/types";
+import { ClaimRewardsMsgValue } from "@namada/sdk-multicore";
+import { Account, ChainKey, ExtensionKey } from "@namada/types";
 import { MutationStatus } from "@tanstack/query-core";
 import BigNumber from "bignumber.js";
 import { TxKind } from "types/txKind";

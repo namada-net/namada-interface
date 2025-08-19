@@ -1,17 +1,14 @@
 import { DefaultApi, Reward } from "@namada/indexer-client";
 import {
-  Account,
-  BondMsgValue,
   BondProps,
-  ClaimRewardsMsgValue,
   ClaimRewardsProps,
-  RedelegateMsgValue,
-  TxMsgValue,
-  UnbondMsgValue,
-  WithdrawMsgValue,
+  RedelegateProps,
+  TxProps,
+  UnbondProps,
   WithdrawProps,
   WrapperTxProps,
-} from "@namada/types";
+} from "@namada/sdk-multicore";
+import { Account } from "@namada/types";
 import { queryClient } from "App/Common/QueryProvider";
 import { EncodedTxData, buildTx } from "lib/query";
 import { Address, AddressBalance, ChainSettings, GasConfig } from "types";
@@ -28,7 +25,7 @@ export const fetchClaimableRewards = async (
 export const createBondTx = async (
   chain: ChainSettings,
   account: Account,
-  bondProps: BondMsgValue[],
+  bondProps: BondProps[],
   gasConfig: GasConfig
 ): Promise<EncodedTxData<BondProps> | undefined> => {
   const sdk = await getSdkInstance();
@@ -45,9 +42,9 @@ export const createBondTx = async (
 export const createUnbondTx = async (
   chain: ChainSettings,
   account: Account,
-  unbondProps: UnbondMsgValue[],
+  unbondProps: UnbondProps[],
   gasConfig: GasConfig
-): Promise<EncodedTxData<UnbondMsgValue>> => {
+): Promise<EncodedTxData<UnbondProps>> => {
   const sdk = await getSdkInstance();
   return await buildTx(
     sdk,
@@ -62,9 +59,9 @@ export const createUnbondTx = async (
 export const createReDelegateTx = async (
   chain: ChainSettings,
   account: Account,
-  redelegateProps: RedelegateMsgValue[],
+  redelegateProps: RedelegateProps[],
   gasConfig: GasConfig
-): Promise<EncodedTxData<RedelegateMsgValue>> => {
+): Promise<EncodedTxData<RedelegateProps>> => {
   const sdk = await getSdkInstance();
   return await buildTx(
     sdk,
@@ -79,7 +76,7 @@ export const createReDelegateTx = async (
 export const createWithdrawTx = async (
   chain: ChainSettings,
   account: Account,
-  withdrawProps: WithdrawMsgValue[],
+  withdrawProps: WithdrawProps[],
   gasConfig: GasConfig
 ): Promise<EncodedTxData<WithdrawProps>> => {
   const sdk = await getSdkInstance();
@@ -96,9 +93,9 @@ export const createWithdrawTx = async (
 export const createClaimTx = async (
   chain: ChainSettings,
   account: Account,
-  params: ClaimRewardsMsgValue[],
+  params: ClaimRewardsProps[],
   gasConfig: GasConfig
-): Promise<EncodedTxData<ClaimRewardsMsgValue>> => {
+): Promise<EncodedTxData<ClaimRewardsProps>> => {
   const sdk = await getSdkInstance();
   return await buildTx(
     sdk,
@@ -113,17 +110,17 @@ export const createClaimTx = async (
 export const createClaimAndStakeTx = async (
   chain: ChainSettings,
   account: Account,
-  params: ClaimRewardsMsgValue[],
+  params: ClaimRewardsProps[],
   claimableRewardsByValidator: AddressBalance,
   gasConfig: GasConfig
-): Promise<EncodedTxData<ClaimRewardsMsgValue>> => {
+): Promise<EncodedTxData<ClaimRewardsProps>> => {
   const sdk = await getSdkInstance();
 
   // BuildTx wrapper to handle different commitment types
   const buildClaimRewardsAndStake = async (
     wrapperTxProps: WrapperTxProps,
     props: ClaimRewardsProps | BondProps
-  ): Promise<TxMsgValue> => {
+  ): Promise<TxProps> => {
     if ("amount" in props) {
       // We have to force it in case: current balance < rewards to claim
       // This will still log the error msg in the terminal, unfortunately we can't do much about it
@@ -139,7 +136,7 @@ export const createClaimAndStakeTx = async (
 
   // Adding bonding commitments after the claiming ones. Order is strictly
   // important in this case
-  const claimAndStakingParams: (ClaimRewardsMsgValue | BondMsgValue)[] =
+  const claimAndStakingParams: (ClaimRewardsProps | BondProps)[] =
     Array.from(params);
 
   params.forEach((claimParam) => {
@@ -149,7 +146,7 @@ export const createClaimAndStakeTx = async (
         amount: claimableRewardsByValidator[validator],
         source,
         validator,
-      } as BondMsgValue);
+      } as BondProps);
     }
   });
 

@@ -1,4 +1,4 @@
-import init from "@namada/sdk/inline-init";
+import init from "@namada/sdk-multicore/inline";
 import { QueryProvider } from "App/Common/QueryProvider";
 import { SdkProvider } from "hooks/useSdk";
 import React from "react";

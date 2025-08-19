@@ -1,5 +1,5 @@
 import { ActionButton, Stack } from "@namada/components";
-import { ClaimRewardsMsgValue } from "@namada/types";
+import { ClaimRewardsProps } from "@namada/sdk-multicore";
 import { InlineError } from "App/Common/InlineError";
 import { NamCurrency } from "App/Common/NamCurrency";
 import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
@@ -15,7 +15,7 @@ import { ValidatorCard } from "./ValidatorCard";
 
 type ClaimRewardsPanelProps = {
   rewards: AddressBalance;
-  rewardsToClaim: ClaimRewardsMsgValue[];
+  rewardsToClaim: ClaimRewardsProps[];
   isClaimAndStake: boolean;
   feeProps: TransactionFeeProps;
   onClaim: () => Promise<void>;

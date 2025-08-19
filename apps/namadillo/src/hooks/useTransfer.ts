@@ -1,10 +1,10 @@
 import {
-  AccountType,
-  ShieldedTransferMsgValue,
-  ShieldingTransferMsgValue,
-  TransparentTransferMsgValue,
-  UnshieldingTransferMsgValue,
-} from "@namada/types";
+  ShieldedTransferProps,
+  ShieldingTransferProps,
+  TransparentTransferProps,
+  UnshieldingTransferProps,
+} from "@namada/sdk-multicore";
+import { AccountType } from "@namada/types";
 import { routes } from "App/routes";
 import { isShieldedAddress } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -38,10 +38,10 @@ type useTransferParams = {
 } & UseTransactionPropsEvents<unknown>;
 
 type useTransferOutput = (
-  | UseTransactionOutput<TransparentTransferMsgValue>
-  | UseTransactionOutput<ShieldedTransferMsgValue>
-  | UseTransactionOutput<ShieldingTransferMsgValue>
-  | UseTransactionOutput<UnshieldingTransferMsgValue>
+  | UseTransactionOutput<TransparentTransferProps>
+  | UseTransactionOutput<ShieldedTransferProps>
+  | UseTransactionOutput<ShieldingTransferProps>
+  | UseTransactionOutput<UnshieldingTransferProps>
 ) & {
   txKind: NamadaTransferTxKind;
   txHash?: string;

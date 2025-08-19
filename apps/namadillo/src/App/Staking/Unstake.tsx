@@ -1,5 +1,5 @@
 import { ActionButton, Alert, Modal, Panel, Stack } from "@namada/components";
-import { UnbondMsgValue } from "@namada/types";
+import { UnbondProps } from "@namada/sdk-multicore";
 import { AtomErrorBoundary } from "App/Common/AtomErrorBoundary";
 import { Info } from "App/Common/Info";
 import { ModalContainer } from "App/Common/ModalContainer";
@@ -36,7 +36,7 @@ export const Unstake = (): JSX.Element => {
     onChangeValidatorAmount,
   } = useStakeModule({ account });
 
-  const parseUnstakeParams = (): UnbondMsgValue[] => {
+  const parseUnstakeParams = (): UnbondProps[] => {
     if (!account?.address) return [];
     return Object.keys(updatedAmountByAddress)
       .map((validatorAddress) => ({

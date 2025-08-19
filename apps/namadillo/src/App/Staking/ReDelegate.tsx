@@ -1,5 +1,5 @@
 import { ActionButton, Alert, Modal, Panel } from "@namada/components";
-import { RedelegateMsgValue } from "@namada/types";
+import { RedelegateProps } from "@namada/sdk-multicore";
 import { Info } from "App/Common/Info";
 import { ModalContainer } from "App/Common/ModalContainer";
 import { routes } from "App/routes";
@@ -37,7 +37,7 @@ export const ReDelegate = (): JSX.Element => {
     myValidators,
   } = useStakeModule({ account });
 
-  const parseRedelegateParams = (): RedelegateMsgValue[] => {
+  const parseRedelegateParams = (): RedelegateProps[] => {
     if (!account?.address) return [];
     return getAmountDistribution(
       amountsRemovedByAddress,
@@ -47,7 +47,7 @@ export const ReDelegate = (): JSX.Element => {
         ({
           ...distribution,
           owner: account?.address,
-        }) as RedelegateMsgValue
+        }) as RedelegateProps
     );
   };
 

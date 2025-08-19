@@ -1,6 +1,11 @@
 import * as Comlink from "comlink";
 
-import { Balance, ProgressBarNames, SdkEvents } from "@namada/sdk/web";
+import {
+  Balance,
+  DatedViewingKey,
+  ProgressBarNames,
+  SdkEvents,
+} from "@namada/sdk-multicore";
 import { getSdkInstance } from "utils/sdk";
 import {
   Events,
@@ -11,7 +16,6 @@ import {
 } from "workers/ShieldedSyncWorker";
 import ShieldedSyncWorker from "workers/ShieldedSyncWorker?worker";
 // TODO: move to @namada/types?
-import { DatedViewingKey } from "@namada/types";
 import BigNumber from "bignumber.js";
 import {
   Worker as MaspTxWorkerApi,

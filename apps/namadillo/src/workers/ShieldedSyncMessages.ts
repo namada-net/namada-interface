@@ -1,4 +1,4 @@
-import { DatedViewingKey } from "@namada/types";
+import { DatedViewingKey } from "@namada/sdk-multicore";
 import { WebWorkerMessage } from "./utils";
 
 type InitPayload = {

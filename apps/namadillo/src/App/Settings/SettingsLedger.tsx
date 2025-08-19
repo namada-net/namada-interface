@@ -1,5 +1,5 @@
 import { ActionButton, Stack } from "@namada/components";
-import { requestLedgerDevice } from "@namada/sdk/web";
+import { requestLedgerDevice } from "@namada/sdk-multicore";
 
 export const SettingsLedger = (): JSX.Element => {
   const onInvalidateShieldedContext = async (): Promise<void> => {

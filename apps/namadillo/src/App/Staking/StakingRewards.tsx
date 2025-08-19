@@ -1,5 +1,5 @@
 import { Modal } from "@namada/components";
-import { ClaimRewardsMsgValue } from "@namada/types";
+import { ClaimRewardsProps } from "@namada/sdk-multicore";
 import { BackButton } from "App/Common/BackButton";
 import { ModalContainer } from "App/Common/ModalContainer";
 import { defaultAccountAtom } from "atoms/accounts";
@@ -18,9 +18,7 @@ import { ClaimRewardsSubmitModalStage } from "./ClaimRewardsSubmitModalStage";
 
 export const StakingRewards = (): JSX.Element => {
   const { data: account } = useAtomValue(defaultAccountAtom);
-  const [rewardsToClaim, setRewardsToClaim] = useState<ClaimRewardsMsgValue[]>(
-    []
-  );
+  const [rewardsToClaim, setRewardsToClaim] = useState<ClaimRewardsProps[]>([]);
 
   const [shouldClaimAndStake, setShouldClaimAndStake] = useState(false);
   const {
@@ -32,7 +30,7 @@ export const StakingRewards = (): JSX.Element => {
 
   const parseStakingRewardsParams = (
     rewards: AddressBalance
-  ): ClaimRewardsMsgValue[] => {
+  ): ClaimRewardsProps[] => {
     if (!rewards || Object.values(rewards).length === 0 || !account) return [];
     return Object.keys(rewards).map((validatorAddress) => {
       return {

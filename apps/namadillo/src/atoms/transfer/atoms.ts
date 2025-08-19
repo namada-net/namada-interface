@@ -1,11 +1,11 @@
 import {
   DatedViewingKey,
-  IbcTransferMsgValue,
-  ShieldedTransferMsgValue,
-  ShieldingTransferMsgValue,
-  TransparentTransferMsgValue,
-  UnshieldingTransferMsgValue,
-} from "@namada/types";
+  IbcTransferProps,
+  ShieldedTransferProps,
+  ShieldingTransferProps,
+  TransparentTransferProps,
+  UnshieldingTransferProps,
+} from "@namada/sdk-multicore";
 import { defaultAccountAtom } from "atoms/accounts";
 import { shieldedSyncProgress, viewingKeysAtom } from "atoms/balance";
 import { shieldedSync } from "atoms/balance/services";
@@ -37,7 +37,7 @@ export const createTransparentTransferAtom = atomWithMutation((get) => {
       gasConfig,
       account,
       memo,
-    }: BuildTxAtomParams<TransparentTransferMsgValue>) => {
+    }: BuildTxAtomParams<TransparentTransferProps>) => {
       return createTransparentTransferTx(
         chain.data!,
         account,
@@ -63,7 +63,7 @@ export const createShieldedTransferAtom = atomWithMutation((get) => {
       account,
       memo,
       signer,
-    }: BuildTxAtomParams<ShieldedTransferMsgValue>) => {
+    }: BuildTxAtomParams<ShieldedTransferProps>) => {
       invariant(signer, "Disposable signer is required for shielded transfers");
 
       await sync(
@@ -98,7 +98,7 @@ export const createShieldingTransferAtom = atomWithMutation((get) => {
       gasConfig,
       account,
       memo,
-    }: BuildTxAtomParams<ShieldingTransferMsgValue>) =>
+    }: BuildTxAtomParams<ShieldingTransferProps>) =>
       createShieldingTransferTx(
         chain.data!,
         account,
@@ -124,7 +124,7 @@ export const createUnshieldingTransferAtom = atomWithMutation((get) => {
       account,
       signer,
       memo,
-    }: BuildTxAtomParams<UnshieldingTransferMsgValue>) => {
+    }: BuildTxAtomParams<UnshieldingTransferProps>) => {
       invariant(
         signer,
         "Disposable signer is required for unshielding transfers"
@@ -216,7 +216,7 @@ export const createIbcTxAtom = atomWithMutation((get) => {
       account,
       signer,
       memo,
-    }: BuildTxAtomParams<IbcTransferMsgValue>) => {
+    }: BuildTxAtomParams<IbcTransferProps>) => {
       invariant(
         signer,
         "We always expect signer to be passed explicitly, because we might also need to unshield"

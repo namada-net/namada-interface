@@ -1,12 +1,12 @@
-import { SdkWasmOptions } from "@namada/sdk-multicore";
 import {
-  Account,
-  IbcTransferMsgValue,
-  ShieldedTransferMsgValue,
-  ShieldingTransferMsgValue,
-  TxResponseMsgValue,
-  UnshieldingTransferMsgValue,
-} from "@namada/types";
+  IbcTransferProps,
+  SdkWasmOptions,
+  ShieldedTransferProps,
+  ShieldingTransferProps,
+  TxResponseProps,
+  UnshieldingTransferProps,
+} from "@namada/sdk-multicore";
+import { Account } from "@namada/types";
 import BigNumber from "bignumber.js";
 import { EncodedTxData, TransactionPair } from "lib/query";
 import { ChainSettings, GasConfig } from "types";
@@ -18,7 +18,7 @@ export type InitDone = WebWorkerMessage<"init-done", null>;
 type ShieldPayload = {
   account: Account;
   gasConfig: GasConfig;
-  props: ShieldingTransferMsgValue[];
+  props: ShieldingTransferProps[];
   chain: ChainSettings;
   publicKeyRevealed: boolean;
   memo?: string;
@@ -26,30 +26,30 @@ type ShieldPayload = {
 export type Shield = WebWorkerMessage<"shield", ShieldPayload>;
 export type ShieldDone = WebWorkerMessage<
   "shield-done",
-  EncodedTxData<ShieldingTransferMsgValue>
+  EncodedTxData<ShieldingTransferProps>
 >;
 
 type UnshieldPayload = {
   account: Account;
   gasConfig: GasConfig;
-  props: UnshieldingTransferMsgValue[];
+  props: UnshieldingTransferProps[];
   chain: ChainSettings;
   memo?: string;
-  maspFeePaymentProps?: UnshieldingTransferMsgValue & { memo: string }; // Optional masp fee payment properties
+  maspFeePaymentProps?: UnshieldingTransferProps & { memo: string }; // Optional masp fee payment properties
 };
 export type Unshield = WebWorkerMessage<"unshield", UnshieldPayload>;
 export type UnshieldDone = WebWorkerMessage<
   "unshield-done",
-  EncodedTxData<UnshieldingTransferMsgValue>
+  EncodedTxData<UnshieldingTransferProps>
 >;
 
 type ShieldedTransferPayload = {
   account: Account;
   gasConfig: GasConfig;
-  props: ShieldedTransferMsgValue[];
+  props: ShieldedTransferProps[];
   chain: ChainSettings;
   memo?: string;
-  maspFeePaymentProps?: UnshieldingTransferMsgValue & { memo: string }; // Optional masp fee payment properties
+  maspFeePaymentProps?: UnshieldingTransferProps & { memo: string }; // Optional masp fee payment properties
 };
 export type ShieldedTransfer = WebWorkerMessage<
   "shielded-transfer",
@@ -57,13 +57,13 @@ export type ShieldedTransfer = WebWorkerMessage<
 >;
 export type ShieldedTransferDone = WebWorkerMessage<
   "shielded-transfer-done",
-  EncodedTxData<ShieldedTransferMsgValue>
+  EncodedTxData<ShieldedTransferProps>
 >;
 
 type IbcTransferPayload = {
   account: Account;
   gasConfig: GasConfig;
-  props: IbcTransferMsgValue[];
+  props: IbcTransferProps[];
   chain: ChainSettings;
   memo?: string;
   publicKeyRevealed: boolean;
@@ -71,7 +71,7 @@ type IbcTransferPayload = {
 export type IbcTransfer = WebWorkerMessage<"ibc-transfer", IbcTransferPayload>;
 export type IbcTransferDone = WebWorkerMessage<
   "ibc-transfer-done",
-  EncodedTxData<IbcTransferMsgValue>
+  EncodedTxData<IbcTransferProps>
 >;
 
 type GenerateIbcShieldingMemoPayload = {
@@ -122,5 +122,5 @@ type BroadcastPayload = TransactionPair<unknown>;
 export type Broadcast = WebWorkerMessage<"broadcast", BroadcastPayload>;
 export type BroadcastDone = WebWorkerMessage<
   "broadcast-done",
-  TxResponseMsgValue[]
+  TxResponseProps[]
 >;

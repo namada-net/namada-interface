@@ -1,11 +1,11 @@
 import { Reward } from "@namada/indexer-client";
 import {
-  BondMsgValue,
-  ClaimRewardsMsgValue,
-  RedelegateMsgValue,
-  UnbondMsgValue,
-  WithdrawMsgValue,
-} from "@namada/types";
+  BondProps,
+  ClaimRewardsProps,
+  RedelegateProps,
+  UnbondProps,
+  WithdrawProps,
+} from "@namada/sdk-multicore";
 import { defaultAccountAtom } from "atoms/accounts";
 import { indexerApiAtom } from "atoms/api";
 import { chainAtom, chainParametersAtom } from "atoms/chain";
@@ -47,7 +47,7 @@ export const createBondTxAtom = atomWithMutation((get) => {
       params,
       gasConfig,
       account,
-    }: BuildTxAtomParams<BondMsgValue>) =>
+    }: BuildTxAtomParams<BondProps>) =>
       createBondTx(chain.data!, account, params, gasConfig),
   };
 });
@@ -61,7 +61,7 @@ export const createUnbondTxAtom = atomWithMutation((get) => {
       params,
       gasConfig,
       account,
-    }: BuildTxAtomParams<UnbondMsgValue>) =>
+    }: BuildTxAtomParams<UnbondProps>) =>
       createUnbondTx(chain.data!, account, params, gasConfig),
   };
 });
@@ -75,7 +75,7 @@ export const createReDelegateTxAtom = atomWithMutation((get) => {
       params,
       gasConfig,
       account,
-    }: BuildTxAtomParams<RedelegateMsgValue>) =>
+    }: BuildTxAtomParams<RedelegateProps>) =>
       createReDelegateTx(chain.data!, account, params, gasConfig),
   };
 });
@@ -89,7 +89,7 @@ export const createWithdrawTxAtom = atomWithMutation((get) => {
       params,
       gasConfig,
       account,
-    }: BuildTxAtomParams<WithdrawMsgValue>) =>
+    }: BuildTxAtomParams<WithdrawProps>) =>
       createWithdrawTx(chain.data!, account, params, gasConfig),
   };
 });
@@ -129,7 +129,7 @@ export const claimRewardsAtom = atomWithMutation((get) => {
       params,
       gasConfig,
       account,
-    }: BuildTxAtomParams<ClaimRewardsMsgValue>) => {
+    }: BuildTxAtomParams<ClaimRewardsProps>) => {
       return createClaimTx(chain.data!, account, params, gasConfig);
     },
   };
@@ -145,7 +145,7 @@ export const claimAndStakeRewardsAtom = atomWithMutation((get) => {
       params,
       gasConfig,
       account,
-    }: BuildTxAtomParams<ClaimRewardsMsgValue>) => {
+    }: BuildTxAtomParams<ClaimRewardsProps>) => {
       return createClaimAndStakeTx(
         chain.data!,
         account,

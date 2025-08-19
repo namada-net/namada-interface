@@ -6,11 +6,11 @@ import {
 } from "@cosmjs/stargate";
 import namada from "@namada/chains/chains/namada";
 import {
-  ShieldedTransferMsgValue,
-  ShieldingTransferMsgValue,
-  TransparentTransferMsgValue,
-  UnshieldingTransferMsgValue,
-} from "@namada/types";
+  ShieldedTransferProps,
+  ShieldingTransferProps,
+  TransparentTransferProps,
+  UnshieldingTransferProps,
+} from "@namada/sdk-multicore";
 import BigNumber from "bignumber.js";
 import { Asset } from "types";
 
@@ -195,10 +195,10 @@ export const createTransferDataFromNamada = (
   rpcUrl: string,
   isShieldedTx: boolean,
   txResponse?:
-    | TransactionPair<TransparentTransferMsgValue>
-    | TransactionPair<ShieldedTransferMsgValue>
-    | TransactionPair<ShieldingTransferMsgValue>
-    | TransactionPair<UnshieldingTransferMsgValue>,
+    | TransactionPair<TransparentTransferProps>
+    | TransactionPair<ShieldedTransferProps>
+    | TransactionPair<ShieldingTransferProps>
+    | TransactionPair<UnshieldingTransferProps>,
   memo?: string
 ): TransferTransactionData[] => {
   if (!txResponse?.encodedTxData?.txs?.length) {

@@ -1,4 +1,5 @@
 import {
+  BparamsMsgValue,
   IbcTransferProps,
   ShieldedTransferProps,
   ShieldingTransferProps,
@@ -9,7 +10,6 @@ import {
 import {
   Account,
   AccountType,
-  BparamsMsgValue,
   GenDisposableSignerResponse,
 } from "@namada/types";
 import BigNumber from "bignumber.js";

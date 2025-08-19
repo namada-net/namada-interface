@@ -1,8 +1,7 @@
 import {
   Sdk,
-  TxMsgValue,
   TxProps,
-  TxResponseMsgValue,
+  TxResponseProps,
   UnshieldingTransferProps,
   WrapperTxProps,
 } from "@namada/sdk-multicore";
@@ -87,7 +86,7 @@ export const isPublicKeyRevealed = async (
  * Builds an batch  transactions based on the provided query properties.
  * Each transaction is built through the provided transaction function `txFn`.
  * @param {T[]} queryProps - An array of properties used to build transactions.
- * @param {(WrapperTxProps, T) => Promise<TxMsgValue>} txFn - Function to build each transaction.
+ * @param {(WrapperTxProps, T) => Promise<TxProps>} txFn - Function to build each transaction.
  */
 export const buildTx = async <T>(
   sdk: Sdk,
@@ -95,12 +94,12 @@ export const buildTx = async <T>(
   gasConfig: GasConfig,
   chain: ChainSettings,
   queryProps: T[],
-  txFn: (wrapperTxProps: WrapperTxProps, props: T) => Promise<TxMsgValue>,
+  txFn: (wrapperTxProps: WrapperTxProps, props: T) => Promise<TxProps>,
   memo?: string,
   shouldRevealPk: boolean = true,
   maspFeePaymentProps?: UnshieldingTransferProps & { memo: string } // Optional masp fee payment properties
 ): Promise<EncodedTxData<T>> => {
-  const txs: TxMsgValue[] = [];
+  const txs: TxProps[] = [];
   const txProps: TxProps[] = [];
 
   const wrapperTxProps = getTxProps(account, gasConfig, chain, memo);
@@ -213,15 +212,13 @@ export const signEncodedTx = async <T>(
 export const broadcastTransaction = async <T>(
   encodedTx: EncodedTxData<T>,
   signedTxs: Uint8Array[]
-): Promise<PromiseSettledResult<[EncodedTxData<T>, TxResponseMsgValue]>[]> => {
+): Promise<PromiseSettledResult<[EncodedTxData<T>, TxResponseProps]>[]> => {
   const { rpc } = await getSdkInstance();
   const response = await Promise.allSettled(
     encodedTx.txs.map((_, i) =>
       rpc
         .broadcastTx(signedTxs[i])
-        .then(
-          (res) => [encodedTx, res] as [EncodedTxData<T>, TxResponseMsgValue]
-        )
+        .then((res) => [encodedTx, res] as [EncodedTxData<T>, TxResponseProps])
     )
   );
 
@@ -319,7 +316,7 @@ type Error = string | undefined;
 // Given an array of broadcasted Tx results,
 // collect any errors
 const parseTxAppliedErrors = <T>(
-  results: [EncodedTxData<T>, TxResponseMsgValue][],
+  results: [EncodedTxData<T>, TxResponseProps][],
   txHashes: Hash[],
   data: T[]
 ): TxAppliedResults<T> => {

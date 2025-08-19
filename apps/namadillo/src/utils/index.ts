@@ -1,10 +1,10 @@
 import { DenomUnit } from "@chain-registry/types";
+import { TxProps } from "@namada/sdk-multicore";
 import {
   BroadcastTxError,
   ProposalStatus,
   ProposalTypeString,
   ResultCode,
-  TxMsgValue,
 } from "@namada/types";
 import { getNamadaChainAssetsMap } from "atoms/integrations/functions";
 import BigNumber from "bignumber.js";
@@ -120,7 +120,7 @@ export const toGasMsg = (gasLimit: BigNumber): string => {
  * Returns formatted error message based on tx props and error code
  */
 export const toErrorDetail = (
-  tx: TxMsgValue[],
+  tx: TxProps[],
   error: BroadcastTxError
 ): string => {
   try {
@@ -144,7 +144,7 @@ export const toErrorDetail = (
   }
 };
 
-export const textToErrorDetail = (text: string, tx: TxMsgValue): string => {
+export const textToErrorDetail = (text: string, tx: TxProps): string => {
   const { args } = tx;
 
   if (text.includes("Gas error:")) {

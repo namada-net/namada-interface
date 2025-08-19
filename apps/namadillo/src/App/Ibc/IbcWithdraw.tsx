@@ -1,5 +1,6 @@
 import { Chain } from "@chain-registry/types";
-import { AccountType, IbcTransferMsgValue } from "@namada/types";
+import { IbcTransferProps } from "@namada/sdk-multicore";
+import { AccountType } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
 import { params, routes } from "App/routes";
 import {
@@ -275,7 +276,7 @@ export const IbcWithdraw = (): JSX.Element => {
   });
 
   const storeTransferTransaction = (
-    tx: TransactionPair<IbcTransferMsgValue>,
+    tx: TransactionPair<IbcTransferProps>,
     displayAmount: BigNumber,
     destinationChainId: string,
     asset: Asset
