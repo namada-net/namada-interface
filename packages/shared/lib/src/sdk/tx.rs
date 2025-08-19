@@ -105,7 +105,7 @@ impl SigningData {
             None => None,
         };
 
-        let mut public_keys: HashSet<PublicKey> = HashSet::new();
+        let mut public_keys = HashSet::new();
         for pk in self.public_keys.clone() {
             let pk = PublicKey::from_str(&pk)?;
             public_keys.insert(pk);

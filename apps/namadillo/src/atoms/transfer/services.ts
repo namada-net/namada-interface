@@ -5,6 +5,8 @@ import {
   GenDisposableSignerResponse,
   IbcTransferMsgValue,
   IbcTransferProps,
+  OsmosisSwapMsgValue,
+  OsmosisSwapProps,
   ShieldedTransferMsgValue,
   ShieldedTransferProps,
   ShieldingTransferMsgValue,
@@ -22,6 +24,7 @@ import { Address, ChainSettings, GasConfig } from "types";
 import { getSdkInstance } from "utils/sdk";
 import {
   IbcTransfer,
+  OsmosisSwap,
   Shield,
   ShieldedTransfer,
   Unshield,
@@ -373,6 +376,55 @@ export const createIbcTx = async (
       };
 
       return (await workerLink.ibcTransfer(msg)).payload;
+    },
+  });
+};
+
+export const createOsmosisSwapTx = async (
+  chain: ChainSettings,
+  account: Account,
+  props: OsmosisSwapProps[],
+  gasConfig: GasConfig,
+  rpcUrl: string,
+  signerPublicKey: string,
+  memo?: string
+): Promise<EncodedTxData<OsmosisSwapProps>> => {
+  let bparams: BparamsMsgValue[] | undefined;
+  if (account.type === AccountType.Ledger) {
+    const sdk = await getSdkInstance();
+    const ledger = await sdk.initLedger();
+    bparams = await ledger.getBparams();
+    ledger.closeTransport();
+  }
+  const { transfer } = props[0];
+
+  return await workerBuildTxPair({
+    rpcUrl,
+    nativeToken: chain.nativeTokenAddress,
+    buildTxFn: async (workerLink) => {
+      const msgValue = new OsmosisSwapMsgValue({
+        ...props[0],
+        transfer: {
+          ...transfer,
+          gasSpendingKey: transfer.gasSpendingKey,
+          bparams,
+        },
+      });
+      const msg: OsmosisSwap = {
+        type: "osmosis-swap",
+        payload: {
+          account: {
+            ...account,
+            publicKey: signerPublicKey,
+          },
+          gasConfig,
+          props: [msgValue],
+          chain,
+          memo,
+        },
+      };
+
+      return (await workerLink.osmosisSwap(msg)).payload;
     },
   });
 };

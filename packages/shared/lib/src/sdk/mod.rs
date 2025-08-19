@@ -929,6 +929,71 @@ impl Sdk {
         self.serialize_tx_result(tx, wrapper_tx_msg, signing_data, None)
     }
 
+    pub async fn build_osmosis_swap(
+        &self,
+        osmosis_swap_msg: &[u8],
+        wrapper_tx_msg: &[u8],
+    ) -> Result<JsValue, JsError> {
+        let (args, bparams) = args::osmosis_swap_tx_args(
+            osmosis_swap_msg,
+            wrapper_tx_msg,
+            self.namada.native_token(),
+        )?;
+
+        web_sys::console::log_1(&format!(
+            "Building osmosis swap with args: {:?}",
+            args
+        ).into());
+
+        let _ = &self
+            .namada
+            .shielded_mut()
+            .await
+            .try_load(async |_| {})
+            .await;
+
+        // TODO: check if returning true is correct here
+        let tx = args
+            .into_ibc_transfer(&self.namada, |_route, _min_amount, _quote_amount| true)
+            .await?;
+        web_sys::console::log_1(&format!("Built osmosis swap tx: {:?}", tx).into());
+
+        let bparams = if let Some(bparams) = bparams {
+            BuildParams::StoredBuildParams(bparams)
+        } else {
+            generate_rng_build_params()
+        };
+
+        let xfvks = match tx.source {
+            TransferSource::Address(_) => vec![],
+            TransferSource::ExtendedKey(pek) => vec![pek.to_viewing_key()],
+        };
+
+        let ((tx, signing_data, _), masp_signing_data) = match bparams {
+            BuildParams::RngBuildParams(mut bparams) => {
+                // TODO: replace flase
+                let tx = build_ibc_transfer(&self.namada, &tx, &mut bparams, false).await?;
+                let masp_signing_data = MaspSigningData::new(
+                    bparams
+                        .to_stored()
+                        .ok_or_err_msg("Cannot convert bparams to stored")?,
+                    xfvks,
+                );
+
+                (tx, masp_signing_data)
+            }
+            BuildParams::StoredBuildParams(mut bparams) => {
+                // TODO: replace flase
+                let tx = build_ibc_transfer(&self.namada, &tx, &mut bparams, false).await?;
+                let masp_signing_data = MaspSigningData::new(bparams, xfvks);
+
+                (tx, masp_signing_data)
+            }
+        };
+
+        self.serialize_tx_result(tx, wrapper_tx_msg, signing_data, Some(masp_signing_data))
+    }
+
     pub async fn build_reveal_pk(&self, wrapper_tx_msg: &[u8]) -> Result<JsValue, JsError> {
         let args = args::tx_args_from_slice(wrapper_tx_msg)?;
         let public_key = args.signing_keys[0].clone();

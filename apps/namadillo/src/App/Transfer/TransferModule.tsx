@@ -64,6 +64,8 @@ export type TransferSourceProps = TransferModuleConfig & {
   onChangeSelectedAsset?: (address: Address | undefined) => void;
   amount?: BigNumber;
   onChangeAmount?: (amount: BigNumber | undefined) => void;
+  hideChainSelector?: boolean;
+  label?: string;
 };
 
 export type IbcOptions = {
@@ -509,6 +511,8 @@ export const TransferModule = ({
             isShieldedAddress={source.isShieldedAddress}
             onChangeShielded={source.onChangeShielded}
             isSubmitting={isSubmitting}
+            hideChainSelector={source.hideChainSelector}
+            label={source.label}
           />
           <i className="flex items-center justify-center w-11 mx-auto -my-8 relative z-10">
             <TransferArrow

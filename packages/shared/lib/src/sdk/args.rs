@@ -5,8 +5,9 @@ use namada_sdk::address::DecodeError;
 use namada_sdk::args::{
     TxShieldedSource, TxShieldedTarget, TxTransparentSource, TxTransparentTarget,
 };
-use namada_sdk::borsh::{BorshDeserialize, BorshSerialize};
+use namada_sdk::borsh::{BorshDeserialize, BorshSerialize, BorshSerializeExt};
 use namada_sdk::collections::HashMap;
+use namada_sdk::dec::Dec;
 use namada_sdk::ibc::core::host::types::identifiers::{ChannelId, PortId};
 use namada_sdk::ibc::IbcShieldingData;
 use namada_sdk::masp::partial_deauthorize;
@@ -22,6 +23,7 @@ use namada_sdk::masp_primitives::zip32;
 use namada_sdk::signing::SigningTxData;
 use namada_sdk::time::DateTimeUtc;
 use namada_sdk::tx::data::GasLimit;
+use namada_sdk::tx::either::Either;
 use namada_sdk::tx::{Section, Tx};
 use namada_sdk::{
     address::Address,
@@ -309,6 +311,135 @@ pub fn redelegate_tx_args(
     };
 
     Ok(args)
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[borsh(crate = "namada_sdk::borsh")]
+pub struct OsmosisPoolHop {
+    /// The id of the pool to use on Osmosis.
+    pub pool_id: String,
+    /// The output denomination expected from the
+    /// pool on Osmosis.
+    pub token_out_denom: String,
+}
+
+impl From<OsmosisPoolHop> for args::OsmosisPoolHop {
+    fn from(hop: OsmosisPoolHop) -> Self {
+        args::OsmosisPoolHop {
+            pool_id: hop.pool_id,
+            token_out_denom: hop.token_out_denom,
+        }
+    }
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[borsh(crate = "namada_sdk::borsh")]
+pub enum Slippage {
+    /// Specifies the minimum amount to be received
+    MinOutputAmount(String),
+    /// A time-weighted average price
+    Twap {
+        /// The maximum percentage difference allowed between the estimated and
+        /// actual trade price. This must be a decimal number in the range
+        /// `[0, 100]`.
+        slippage_percentage: String,
+    },
+}
+
+impl From<Slippage> for args::Slippage {
+    fn from(slippage: Slippage) -> Self {
+        match slippage {
+            Slippage::MinOutputAmount(min_output_amount) => {
+                let min_output_amount =
+                    Amount::from_str(&min_output_amount, 0u8).expect("Amount to be valid.");
+                args::Slippage::MinOutputAmount(min_output_amount)
+            }
+            Slippage::Twap {
+                slippage_percentage,
+            } => {
+                let slippage_percentage = Dec::from_str(&slippage_percentage)
+                    .expect("Slippage percentage to be valid decimal.");
+
+                args::Slippage::Twap {
+                    slippage_percentage,
+                }
+            }
+        }
+    }
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+#[borsh(crate = "namada_sdk::borsh")]
+pub struct OsmosisSwapMsg {
+    pub transfer: IbcTransferMsg,
+    /// The token we wish to receive (on Namada)
+    pub output_denom: String,
+    /// Address of the recipient on Namada
+    pub recipient: String,
+    /// Address to receive funds exceeding the minimum amount,
+    /// in case of IBC shieldings
+    pub overflow: String,
+    ///  Constraints on the  osmosis swap
+    pub slippage: Slippage,
+    /// Recovery address (on Osmosis) in case of failure
+    pub local_recovery_addr: String,
+    /// The route to take through Osmosis pools
+    pub route: Option<Vec<OsmosisPoolHop>>,
+    /// The route to take through Osmosis pools
+    /// A REST rpc endpoint to Osmosis
+    pub osmosis_lcd_rpc: String,
+}
+
+pub fn osmosis_swap_tx_args(
+    osmosis_swap_msg: &[u8],
+    tx_msg: &[u8],
+    native_token: Address,
+) -> Result<(args::TxOsmosisSwap, Option<StoredBuildParams>), JsError> {
+    let osmosis_swap_msg = OsmosisSwapMsg::try_from_slice(osmosis_swap_msg)?;
+
+    let OsmosisSwapMsg {
+        transfer,
+        output_denom,
+        recipient,
+        overflow,
+        slippage,
+        local_recovery_addr,
+        route,
+        osmosis_lcd_rpc,
+    } = osmosis_swap_msg;
+
+    let (ibc_transfer_args, bparams) =
+        ibc_transfer_tx_args(&transfer.serialize_to_vec(), tx_msg, native_token)?;
+
+    let recipient = match Address::from_str(&recipient) {
+        Ok(address) => Ok(Either::Left(address)),
+        Err(_) => match PaymentAddress::from_str(&recipient) {
+            Ok(pa) => Ok(Either::Right(pa)),
+            Err(_) => Err(JsError::new("Invalid recipient address")),
+        },
+    }?;
+
+    let overflow = Address::from_str(&overflow)?;
+    let route = route.map(|r| {
+        r.into_iter()
+            .map(args::OsmosisPoolHop::from)
+            .collect::<Vec<_>>()
+    });
+
+    let tx_osmosis_swap_args = args::TxOsmosisSwap {
+        transfer: ibc_transfer_args,
+        output_denom,
+        recipient,
+        overflow: Some(overflow),
+        slippage: Some(slippage.into()),
+        local_recovery_addr,
+        route,
+        osmosis_lcd_rpc: Some(osmosis_lcd_rpc),
+        // TODO: not sure if needed
+        osmosis_sqs_rpc: None,
+    };
+
+    Ok((tx_osmosis_swap_args, bparams))
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]

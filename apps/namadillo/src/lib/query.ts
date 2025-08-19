@@ -171,6 +171,7 @@ export const signTx = async <T>(
 
   const store = getDefaultStore();
   const { data: chainParameters } = store.get(chainParametersAtom);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const checksums = chainParameters?.checksums;
 
   try {
