@@ -17,7 +17,5 @@ jest.mock("atoms/integrations/atoms", () => ({
 // Because we run tests in node environment, we need to mock inline-init as node-init
 jest.mock(
   "@namada/sdk-multicore/inline",
-  () => () =>
-    // TODO: Update to `@namada/sdk-node` once it is published
-    Promise.resolve(jest.requireActual("@namada/sdk/node-init").default())
+  () => () => Promise.resolve(jest.requireActual("@namada/sdk-node").default())
 );
