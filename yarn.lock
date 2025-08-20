@@ -3768,6 +3768,7 @@ __metadata:
     style-loader: "npm:^4.0.0"
     styled-components: "npm:^6.1.19"
     tailwindcss: "npm:^3.4.1"
+    toml: "npm:^3.0.0"
     ts-loader: "npm:^9.3.1"
     ts-node: "npm:^10.9.1"
     tsconfig-paths-webpack-plugin: "npm:^4.1.0"

@@ -24,7 +24,8 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-router-dom": "^6.0.0",
-    "styled-components": "^6.1.19"
+    "styled-components": "^6.1.19",
+    "toml": "^3.0.0"
   },
   "devDependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.20.11",

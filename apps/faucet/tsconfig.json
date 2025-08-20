@@ -21,6 +21,6 @@
     "target": "es2015"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "./scripts"],
   "typeRoots": ["./node_modules/@types"]
 }

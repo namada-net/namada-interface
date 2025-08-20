@@ -17,7 +17,6 @@ import { chains } from "@namada/chains";
 import { useUntil } from "@namada/hooks";
 import { Namada } from "@namada/integrations";
 import { Data, PowChallenge, TransferResponse } from "../utils";
-import { AppContext } from "./App";
 import {
   ButtonContainer,
   InfoContainer,
@@ -28,12 +27,20 @@ import {
   FormStatus,
   PreFormatted,
 } from "./Faucet.components";
+import { FaucetAppContext } from "./FaucetApp";
 
 declare global {
   interface Window {
     turnstile: {
       ready: (cb: () => void) => void;
-      execute: (container: string, params: { sitekey: string; callback: (token: string) => void; "error-callback": (errorCode: string) => void }) => void;
+      execute: (
+        container: string,
+        params: {
+          sitekey: string;
+          callback: (token: string) => void;
+          "error-callback": (errorCode: string) => void;
+        }
+      ) => void;
       reset: (container: string) => void;
     };
   }
@@ -62,7 +69,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
   const {
     api,
     settings: { difficulty, tokens, withdrawLimit },
-  } = useContext(AppContext)!;
+  } = useContext(FaucetAppContext)!;
   const [extensionAttachStatus, setExtensionAttachStatus] = useState(
     ExtensionAttachStatus.PendingDetection
   );
@@ -198,9 +205,13 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
       setStatusText(undefined);
 
       try {
-        const { challenge, tag } = await api.challenge().catch(({ message, code }) => {
-          throw new Error(`Unable to request challenge: ${code} - ${message}`);
-        });
+        const { challenge, tag } = await api
+          .challenge()
+          .catch(({ message, code }) => {
+            throw new Error(
+              `Unable to request challenge: ${code} - ${message}`
+            );
+          });
 
         const solution = await postPowChallenge({ challenge, difficulty });
 
@@ -214,10 +225,13 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
               window.turnstile.execute("#turnstile-widget", {
                 sitekey,
                 callback: (t: string) => resolve(t),
-                "error-callback": (errorCode: string) => reject(new Error(`Turnstile error: ${errorCode}`)),
+                "error-callback": (errorCode: string) =>
+                  reject(new Error(`Turnstile error: ${errorCode}`)),
               });
             } else {
-              reject(new Error("Turnstile not loaded but sitekey is configured"));
+              reject(
+                new Error("Turnstile not loaded but sitekey is configured")
+              );
             }
           });
         }
@@ -342,7 +356,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
           error={
             amount && amount > withdrawLimit ?
               `Amount must be less than or equal to ${withdrawLimit}`
-              : ""
+            : ""
           }
         />
       </InputContainer>
