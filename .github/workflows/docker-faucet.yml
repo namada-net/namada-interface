@@ -6,6 +6,13 @@ on:
       - faucet@v*
     branches:
       - main
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docker/faucet/**'
+      - '.github/workflows/docker-faucet.yml'
+      - apps/faucet/**
 
 env:
   GIT_LFS_SKIP_SMUDGE: 1
@@ -63,7 +70,7 @@ jobs:
         with:
           context: .
           file: ${{ matrix.images.path }}
-          push: true
+          push: ${{ github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
