@@ -118,8 +118,7 @@ impl PseudoExtendedKey {
     }
 
     pub fn to_viewing_key(&self) -> Result<ExtendedViewingKey, String> {
-        let xfvk = self.0.to_viewing_key();
-        ExtendedViewingKey::new(&borsh::to_vec(&xfvk).map_err(|e| e.to_string())?)
+        Ok(ExtendedViewingKey(NamadaExtendedViewingKey::from(xfvk)))
     }
 }
 
