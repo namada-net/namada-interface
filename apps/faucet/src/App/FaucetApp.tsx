@@ -103,8 +103,6 @@ export const FaucetApp = ({ config }: Props): JSX.Element => {
   };
 
   useEffect(() => {
-    // Sync url to localStorage
-    localStorage.setItem("baseUrl", url);
     const api = new API(url);
     setApi(api);
     const { startsAt } = settings;

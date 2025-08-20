@@ -29,7 +29,9 @@ export const SettingsForm: React.FC = () => {
 
   const handleSetUrl = (url: string): void => {
     // Strip endpoint from URL if it was provided
-    setUrl(url.replace(endpoint, "").replace(/\/$/, ""));
+    const updatedUrl = url.replace(endpoint, "").replace(/\/$/, "");
+    setUrl(updatedUrl);
+    localStorage.setItem("baseUrl", updatedUrl);
     setIsModalOpen(false);
   };
 
