@@ -1,5 +1,6 @@
 import { deserialize } from "@dao-xyz/borsh";
 import {
+  DatedViewingKey,
   DatedViewingKey as DatedViewingKeyWasm,
   Query as QueryWasm,
   Sdk as SdkWasm,
@@ -7,7 +8,6 @@ import {
 } from "@namada/shared";
 import {
   BroadcastTxError,
-  DatedViewingKey,
   TxResponseMsgValue,
   TxResponseProps,
 } from "@namada/types";

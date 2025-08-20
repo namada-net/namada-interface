@@ -25,10 +25,10 @@ export function getSdk(
   const maspIndexerUrlOpt =
     maspIndexerUrl.length === 0 ? undefined : maspIndexerUrl;
   // Instantiate QueryWasm
-  const query = new QueryWasm(url, maspIndexerUrlOpt);
+  const query = new QueryWasm();
 
   // Instantiate SdkWasm
-  const sdk = new SdkWasm(url, token, dbName);
+  const sdk = new SdkWasm();
   return new Sdk(sdk, query, cryptoMemory, url, token);
 }
 
@@ -39,5 +39,5 @@ export function getSdk(
  * @returns
  */
 export async function getNativeToken(rpc: string): Promise<string> {
-  return await new QueryWasm(rpc).query_native_token();
+  return await new QueryWasm().query_native_token();
 }

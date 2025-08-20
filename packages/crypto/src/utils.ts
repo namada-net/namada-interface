@@ -1,4 +1,8 @@
-import { StringPointer, VecStringPointer, VecU8Pointer } from ".";
+import {
+  StringPointer,
+  VecStringPointer,
+  VecU8Pointer,
+} from "./crypto/crypto.js";
 
 const decoder = new TextDecoder("utf-8", { ignoreBOM: true, fatal: true });
 
@@ -21,8 +25,15 @@ const readVecStringPointer = (
 ): string[] => {
   const memoryBuffer = getUint8Memory(memory);
   return Array.from(pointers).map((p, i) =>
-    decoder.decode(memoryBuffer.subarray(p, p + lengths[i]))
+    decoder.decode(memoryBuffer.subarray(p, (p + lengths[i]) as number))
   );
 };
 
 export { readStringPointer, readVecStringPointer, readVecU8Pointer };
+
+// Re-export the pointer types for backwards compatibility
+export type {
+  StringPointer,
+  VecStringPointer,
+  VecU8Pointer,
+} from "./crypto/crypto.js";
