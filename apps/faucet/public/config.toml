@@ -1,4 +1,4 @@
-# Override any of the following with custom values. Defaults are shown:
+# Override any of the following with custom values:
 
 #base_url = "http://127.0.0.1:5000"
 #endpoint = "/api/v1/faucet"
