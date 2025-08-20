@@ -97,7 +97,7 @@ impl PseudoExtendedKey {
         hex::encode(borsh::to_vec(&self.0).expect("Serializing PseudoExtendedKey should not fail!"))
     }
 
-    pub fn can_decode(encoded: String) -> Result<bool, JsError> {
+    pub fn can_decode(encoded: String) -> bool {
         let decoded = hex::decode(encoded);
         Ok(decoded.is_ok())
     }
