@@ -49,10 +49,8 @@ const TransferTransactionReceipt = ({
     return chain;
   };
 
-  const isExtendedKey = (address: string): boolean => {
-    if (!address) return false;
-    return PseudoExtendedKey.can_decode(address);
-  };
+  const isExtendedKey = (address: string): boolean =>
+    PseudoExtendedKey.can_decode(address);
 
   const sourceChain = useMemo(() => {
     return getChain(transaction.chainId, transaction.sourceAddress || "");
