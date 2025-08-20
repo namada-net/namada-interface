@@ -17,7 +17,6 @@
     "wasm:build:node:dev": "./scripts/build-node.sh",
     "test": "yarn wasm:build:node && yarn jest",
     "test:watch": "yarn wasm:build:node && yarn test --watch",
-    "test:ci": "jest",
     "test-wasm:ci": "cd ./lib && wasm-pack test --node -- --profile dev"
   },
   "devDependencies": {

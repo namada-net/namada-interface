@@ -54,8 +54,7 @@
     "test": "yarn wasm:build:node:dev && yarn jest",
     "test:only": "yarn jest",
     "test:cov": "yarn wasm:build:node:dev && yarn jest --coverage",
-    "test:watch": "yarn wasm:build:node:dev && yarn jest --watchAll=true",
-    "test:ci": "jest"
+    "test:watch": "yarn wasm:build:node:dev && yarn jest --watchAll=true"
   },
   "dependencies": {
     "@cosmjs/encoding": "^0.29.0",
