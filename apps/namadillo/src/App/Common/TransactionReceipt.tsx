@@ -1,5 +1,6 @@
 import { Chain } from "@chain-registry/types";
 import { CopyToClipboardControl, Stack } from "@namada/components";
+import { PseudoExtendedKey } from "@namada/sdk/web";
 import { shortenAddress } from "@namada/utils";
 import {
   isNamadaAddress,
@@ -56,11 +57,15 @@ const TransferTransactionReceipt = ({
     return chain;
   };
 
-  const getShieldedDisplayContent = (address: string): React.ReactNode => {
-    const alias = accounts.data?.find(
-      (account) => account.address === address
-    )?.alias;
-    return alias ? `${alias} - Shielded` : "Shielded";
+  const isExtendedKey = (address: string) => {
+    if (!address) return false;
+
+    try {
+      const pseudoKey = PseudoExtendedKey.decode(address);
+      return true;
+    } catch {
+      return false; // Not a valid PseudoExtendedKey
+    }
   };
 
   const sourceChain = useMemo(() => {
@@ -75,11 +80,17 @@ const TransferTransactionReceipt = ({
       transaction.destinationAddress || ""
     );
   }, [transaction]);
+  const decodedPseudokey = PseudoExtendedKey.decode(
+    transaction.sourceAddress || ""
+  );
+  const encodedViewingKey = decodedPseudokey.to_viewing_key().encode();
 
   // Used whenever the source funds are coming from the shielded pool
-  const isGasSpendingKey = transaction.sourceAddress?.length === 470;
   const sourceWallet =
-    isNamadaAddress(transaction.sourceAddress || "") || isGasSpendingKey ?
+    (
+      isNamadaAddress(transaction.sourceAddress || "") ||
+      isExtendedKey(transaction.sourceAddress || "")
+    ) ?
       wallets.namada
     : wallets.keplr;
 
@@ -98,27 +109,17 @@ const TransferTransactionReceipt = ({
               wallet={sourceChain ? sourceWallet : undefined}
             />
           )}
-          {sourceWallet &&
-            ((
-              isShieldedAddress(transaction.sourceAddress || "") ||
-              isGasSpendingKey
-            ) ?
-              <div className="flex justify-between items-center gap-2.5 text-sm text-neutral-500 font-light text-right">
-                <span>
-                  {getShieldedDisplayContent(
-                    isGasSpendingKey ?
-                      shieldedAddress || ""
-                    : transaction.sourceAddress || ""
-                  )}
-                </span>
-              </div>
-            : <SelectedWallet
-                wallet={sourceWallet}
-                address={transaction.sourceAddress}
-                displayTooltip={
-                  !transaction.sourceAddress?.includes("shielded")
-                }
-              />)}
+          {sourceWallet && (
+            <SelectedWallet
+              wallet={sourceWallet}
+              address={
+                isExtendedKey(transaction.sourceAddress || "") ?
+                  encodedViewingKey
+                : transaction.sourceAddress
+              }
+              displayTooltip={!isExtendedKey(transaction.sourceAddress || "")}
+            />
+          )}
         </header>
         <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
         <TokenAmountCard
