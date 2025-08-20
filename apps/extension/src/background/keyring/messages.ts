@@ -1,4 +1,4 @@
-import { PhraseSize } from "@namada/sdk/web";
+import { PhraseSize } from "@namada/sdk";
 import {
   AccountType,
   Bip44Path,

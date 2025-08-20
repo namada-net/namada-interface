@@ -1,4 +1,4 @@
-import { CryptoRecord } from "@namada/sdk/web";
+import { CryptoRecord } from "@namada/sdk";
 import { KVStore } from "@namada/storage";
 import { Result } from "@namada/utils";
 import { SdkService } from "background/sdk";

@@ -57,7 +57,7 @@
     "lint:fix": "yarn lint -- --fix",
     "lint:ci": "yarn lint --max-warnings 0",
     "lint:version": "eslint --version",
-    "test": "yarn jest",
+    "test": "yarn jest --runInBand",
     "test:watch": "yarn jest --watchAll=true",
     "test:coverage": "yarn test --coverage",
     "test:ci": "jest",

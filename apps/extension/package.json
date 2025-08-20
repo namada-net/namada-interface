@@ -41,6 +41,7 @@
     "@dao-xyz/borsh": "^5.1.5",
     "@ledgerhq/hw-transport": "^6.31.4",
     "@ledgerhq/hw-transport-webusb": "^6.29.4",
+    "@namada/sdk": "^0.20.6",
     "@zondax/ledger-namada": "^2.0.0",
     "bignumber.js": "^9.1.1",
     "buffer": "^6.0.3",
@@ -59,6 +60,7 @@
   },
   "devDependencies": {
     "@babel/plugin-transform-modules-commonjs": "^7.20.11",
+    "@namada/sdk-node": "^0.20.5",
     "@svgr/webpack": "^6.3.1",
     "@types/chrome": "^0.0.237",
     "@types/firefox-webext-browser": "^94.0.1",

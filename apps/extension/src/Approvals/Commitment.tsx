@@ -1,4 +1,4 @@
-import { TxType } from "@namada/sdk/web";
+import { TxType } from "@namada/sdk";
 import {
   BondProps,
   ClaimRewardsProps,

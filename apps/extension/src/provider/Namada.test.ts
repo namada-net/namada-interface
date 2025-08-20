@@ -13,13 +13,6 @@ import { ACTIVE_ACCOUNT, keyStore, password } from "./data.mock";
 // Needed for now as utils import webextension-polyfill directly
 jest.mock("webextension-polyfill", () => ({}));
 
-// Because we run tests in node environment, we need to mock web-init as node-init
-jest.mock(
-  "@namada/sdk/web-init",
-  () => () =>
-    Promise.resolve(jest.requireActual("@namada/sdk/node-init").default())
-);
-
 jest.mock("webextension-polyfill", () => ({
   tabs: {
     onRemoved: {

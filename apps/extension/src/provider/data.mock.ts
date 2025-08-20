@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { KdfType } from "@namada/sdk/web";
+import { KdfType } from "@namada/sdk";
 import { AccountType, BridgeType, Chain, Extensions } from "@namada/types";
 import { ActiveAccountStore } from "background/keyring";
 import { Vault } from "background/vault";

@@ -1,6 +1,6 @@
 import { ActionButton, GapPatterns, Stack } from "@namada/components";
 import { useSanitizedParams } from "@namada/hooks";
-import { TxType, TxTypeLabel } from "@namada/sdk/web";
+import { TxType, TxTypeLabel } from "@namada/sdk";
 import {
   AccountType,
   CommitmentDetailProps,

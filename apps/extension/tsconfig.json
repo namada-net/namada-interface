@@ -11,7 +11,7 @@
     "jsx": "react-jsx",
     "lib": ["dom", "dom.iterable", "esnext", "webworker"],
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "noEmit": false,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,

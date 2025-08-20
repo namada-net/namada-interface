@@ -1,4 +1,4 @@
-import { CryptoRecord } from "@namada/sdk/web";
+import { CryptoRecord } from "@namada/sdk";
 import { StoredRecord } from "@namada/storage";
 import { AccountType, DerivedAccount, Path } from "@namada/types";
 

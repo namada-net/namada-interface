@@ -1,4 +1,4 @@
-import { sanitize } from "isomorphic-dompurify";
+import dompurify from "isomorphic-dompurify";
 
 import {
   ActionButton,
@@ -37,7 +37,7 @@ export const Network = (): JSX.Element => {
           Ports.Background,
           new GetChainMsg()
         );
-        const santizedChainId = sanitize(chainId);
+        const santizedChainId = dompurify.sanitize(chainId);
         setChainId(santizedChainId);
       } catch (e) {
         setErrorMessage(`${e}`);
@@ -50,7 +50,7 @@ export const Network = (): JSX.Element => {
       e.preventDefault();
       setStatus(Status.Pending);
       setErrorMessage("");
-      const sanitizedChainId = sanitize(chainId);
+      const sanitizedChainId = dompurify.sanitize(chainId);
 
       // Validate sanitized chain ID
       if (!sanitizedChainId) {

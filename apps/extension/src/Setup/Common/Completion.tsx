@@ -3,7 +3,7 @@ import browser from "webextension-polyfill";
 
 import { chains } from "@namada/chains";
 import { ActionButton, Alert, Loading, ViewKeys } from "@namada/components";
-import { makeBip44Path } from "@namada/sdk/web";
+import { makeBip44Path } from "@namada/sdk";
 import { Bip44Path } from "@namada/types";
 import {
   AccountSecret,

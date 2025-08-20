@@ -37,12 +37,8 @@ function generateManifest(buffer) {
 
 const copyPatterns = [
   {
-    from: "../../packages/shared/src/shared/shared_bg.wasm",
-    to: "./shared.namada.wasm",
-  },
-  {
-    from: "../../packages/crypto/src/crypto/crypto_bg.wasm",
-    to: "./crypto.namada.wasm",
+    from: "../../node_modules/@namada/sdk/dist/sdk.namada.wasm",
+    to: "./sdk.namada.wasm",
   },
   {
     from: "./src/public/*.html",

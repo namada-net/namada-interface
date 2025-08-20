@@ -2,14 +2,14 @@ import { chains } from "@namada/chains";
 import { ActionButton, Alert, Image, Stack } from "@namada/components";
 import {
   ExtendedViewingKey,
+  initSdk,
   LEDGER_MIN_VERSION_ZIP32,
   Ledger as LedgerApp,
   makeBip44Path,
   makeSaplingPath,
   ProofGenerationKey,
   PseudoExtendedKey,
-} from "@namada/sdk/web";
-import initWasm from "@namada/sdk/web-init";
+} from "@namada/sdk";
 import { Bip44Path, Zip32Path } from "@namada/types";
 import { LedgerError } from "@zondax/ledger-namada";
 import { LedgerStep } from "Setup/Common";
@@ -80,8 +80,11 @@ export const LedgerConnect: React.FC<Props> = ({
         setCurrentApprovalStep(3);
         const { ak, nsk } = await ledger.getProofGenerationKey(path);
 
-        // SDK wasm init must be called
-        await initWasm();
+        // We only do this to initialize wasm, props don't matter
+        await initSdk({
+          rpcUrl: "",
+          token: "tnam1q9gr66cvu4hrzm0sd5kmlnjje82gs3xlfg3v6nu7",
+        });
 
         const extendedViewingKey = new ExtendedViewingKey(xfvk);
         encodedExtendedViewingKey = extendedViewingKey.encode();

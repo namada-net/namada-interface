@@ -1,4 +1,4 @@
-import { sanitize } from "isomorphic-dompurify";
+import dompurify from "isomorphic-dompurify";
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 
@@ -12,7 +12,7 @@ const toSanitized = (
 ): SanitizedURLSearchParams => ({
   get: (name: string): string | null => {
     const unsanitized = urlSearchParams.get(name);
-    return unsanitized === null ? unsanitized : sanitize(unsanitized);
+    return unsanitized === null ? unsanitized : dompurify.sanitize(unsanitized);
   },
   getAll: (): Record<string, string> => {
     const values: Record<string, string> = {};
@@ -20,7 +20,7 @@ const toSanitized = (
     urlSearchParams.forEach((val, key) => {
       const unsanitized = val;
       if (unsanitized) {
-        values[sanitize(key)] = sanitize(unsanitized);
+        values[dompurify.sanitize(key)] = dompurify.sanitize(unsanitized);
       }
     });
 

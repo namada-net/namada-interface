@@ -4,7 +4,7 @@ import {
   MODIFIED_ZIP32_PATH,
   PhraseSize,
   ShieldedKeys,
-} from "@namada/sdk/web";
+} from "@namada/sdk";
 import { KVStore } from "@namada/storage";
 import {
   AccountType,
