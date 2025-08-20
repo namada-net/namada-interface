@@ -5,7 +5,8 @@ import { useVaultContext } from "context";
 import { FaDiscord, FaXTwitter } from "react-icons/fa6";
 import { GoAlert, GoLinkExternal, GoQuestion } from "react-icons/go";
 import { useNavigate } from "react-router-dom";
-import sdkPackage from "../../../../../packages/sdk/package.json";
+// TODO: use Sdk.version after its changed to static
+import sdkPackage from "../../../../../node_modules/@namada/sdk/package.json";
 import extensionPackage from "../../../package.json";
 
 const { NAMADA_INTERFACE_REVISION: revision = "" } = process.env;

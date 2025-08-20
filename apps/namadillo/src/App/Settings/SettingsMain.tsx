@@ -14,7 +14,8 @@ import {
 import { useAtomValue } from "jotai";
 import { FaInfo } from "react-icons/fa6";
 import { GoLinkExternal } from "react-icons/go";
-import { version as sdkVersion } from "../../../../../packages/sdk/package.json";
+// TODO: use Sdk.version after its changed to static
+import { version as sdkVersion } from "../../../../../node_modules/@namada/sdk/package.json";
 import { version } from "../../../package.json";
 import { SettingsPanelMenuItem } from "./SettingsPanelMenuItem";
 

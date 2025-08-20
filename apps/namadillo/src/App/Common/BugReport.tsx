@@ -16,7 +16,8 @@ import { useAtomValue } from "jotai";
 import { useRef } from "react";
 import { FaBug } from "react-icons/fa6";
 import { bugReportUrl } from "urls";
-import { version as sdkVersion } from "../../../../../packages/sdk/package.json";
+// TODO: use Sdk.version after its changed to static
+import { version as sdkVersion } from "../../../../../node_modules/@namada/sdk/package.json";
 import { version as namadilloVersion } from "../../../package.json";
 
 export const BugReport = (): JSX.Element => {
