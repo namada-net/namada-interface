@@ -49,15 +49,9 @@ const TransferTransactionReceipt = ({
     return chain;
   };
 
-  const isExtendedKey = (address: string) => {
+  const isExtendedKey = (address: string): boolean => {
     if (!address) return false;
-
-    try {
-      const pseudoKey = PseudoExtendedKey.decode(address);
-      return true;
-    } catch {
-      return false; // Not a valid PseudoExtendedKey
-    }
+    return PseudoExtendedKey.can_decode(address);
   };
 
   const sourceChain = useMemo(() => {
@@ -72,10 +66,14 @@ const TransferTransactionReceipt = ({
       transaction.destinationAddress || ""
     );
   }, [transaction]);
-  const decodedPseudokey = PseudoExtendedKey.decode(
-    transaction.sourceAddress || ""
-  );
-  const encodedViewingKey = decodedPseudokey.to_viewing_key().encode();
+
+  const getEncodedViewingKey = (address: string): string => {
+    const canDecode = PseudoExtendedKey.can_decode(address);
+    if (!canDecode) return "";
+    const decodedPseudokey = PseudoExtendedKey.decode(address);
+    const encodedViewingKey = decodedPseudokey.to_viewing_key().encode();
+    return encodedViewingKey;
+  };
 
   // Used whenever the source funds are coming from the shielded pool
   const sourceWallet =
@@ -106,7 +104,7 @@ const TransferTransactionReceipt = ({
               wallet={sourceWallet}
               address={
                 isExtendedKey(transaction.sourceAddress || "") ?
-                  encodedViewingKey
+                  getEncodedViewingKey(transaction.sourceAddress || "")
                 : transaction.sourceAddress
               }
               displayTooltip={!isExtendedKey(transaction.sourceAddress || "")}
