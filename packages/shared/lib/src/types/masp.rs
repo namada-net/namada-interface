@@ -97,6 +97,11 @@ impl PseudoExtendedKey {
         hex::encode(borsh::to_vec(&self.0).expect("Serializing PseudoExtendedKey should not fail!"))
     }
 
+    pub fn can_decode(encoded: String) -> bool {
+        let decoded = hex::decode(encoded);
+        decoded.is_ok()
+    }
+
     pub fn decode(encoded: String) -> Result<PseudoExtendedKey, JsError> {
         let decoded = hex::decode(encoded).map_err(|err| JsError::new(&err.to_string()))?;
         let pek = zip32::PseudoExtendedKey::try_from_slice(decoded.as_slice())
@@ -115,6 +120,11 @@ impl PseudoExtendedKey {
         ));
 
         Self(pxk)
+    }
+
+    pub fn to_viewing_key(&self) -> Result<ExtendedViewingKey, String> {
+        let xfvk = self.0.to_viewing_key();
+        Ok(ExtendedViewingKey(NamadaExtendedViewingKey::from(xfvk)))
     }
 }
 
