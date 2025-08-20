@@ -99,7 +99,7 @@ impl PseudoExtendedKey {
 
     pub fn can_decode(encoded: String) -> bool {
         let decoded = hex::decode(encoded);
-        Ok(decoded.is_ok())
+        decoded.is_ok()
     }
 
     pub fn decode(encoded: String) -> Result<PseudoExtendedKey, JsError> {

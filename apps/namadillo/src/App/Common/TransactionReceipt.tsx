@@ -66,8 +66,6 @@ const TransferTransactionReceipt = ({
   }, [transaction]);
 
   const getEncodedViewingKey = (address: string): string => {
-    const canDecode = PseudoExtendedKey.can_decode(address);
-    if (!canDecode) return "";
     const decodedPseudokey = PseudoExtendedKey.decode(address);
     const encodedViewingKey = decodedPseudokey.to_viewing_key().encode();
     return encodedViewingKey;
