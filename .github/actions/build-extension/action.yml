@@ -16,11 +16,6 @@ runs:
     - name: Install Dependencies
       uses: ./.github/actions/prepare-build
 
-    - name: Build WASM dependencies
-      working-directory: ./apps/extension
-      run: yarn wasm:build
-      shell: bash
-
     - name: Build ${{ inputs.browser }} extension
       working-directory: ./apps/extension
       env:

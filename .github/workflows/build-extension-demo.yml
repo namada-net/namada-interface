@@ -44,18 +44,6 @@ jobs:
       - name: Install yarn dependencies
         uses: ./.github/actions/yarn-cache
 
-      - name: Restore Rust cache
-        uses: ./.github/actions/rust-cache
-        with:
-          cache-name: build
-
-      - name: Install protoc
-        run: sudo apt-get install -y protobuf-compiler
-
-      - name: Build WASM dependencies
-        working-directory: ./apps/extension
-        run: yarn wasm:build
-
       - name: Build the extension
         working-directory: ./apps/extension
         env:
@@ -78,18 +66,6 @@ jobs:
 
       - name: Install yarn dependencies
         uses: ./.github/actions/yarn-cache
-
-      - name: Restore Rust cache
-        uses: ./.github/actions/rust-cache
-        with:
-          cache-name: build
-
-      - name: Install protoc
-        run: sudo apt-get install -y protobuf-compiler
-
-      - name: Build WASM dependencies
-        working-directory: ./apps/extension
-        run: yarn wasm:build
 
       - name: Build the extension
         working-directory: ./apps/extension
