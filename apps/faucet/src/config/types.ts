@@ -1,6 +1,7 @@
 export type Config = {
-  base_url: string;
+  baseUrl: string;
   endpoint: string;
   url: string;
   limit: number;
+  turnstileSitekey?: string;
 };

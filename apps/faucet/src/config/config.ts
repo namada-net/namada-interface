@@ -18,6 +18,7 @@ export const getConfig = async (): Promise<Config> => {
       base_url = DEFAULT_BASE_URL,
       endpoint = DEFAULT_ENDPOINT,
       limit = DEFAULT_LIMIT,
+      turnstile_sitekey: turnstileSitekey,
     } = toml.parse(await response.text());
     const baseUrl = localStorage.getItem("baseUrl") || base_url;
     const url =
@@ -25,14 +26,15 @@ export const getConfig = async (): Promise<Config> => {
         `http://localhost:${proxyPort}/proxy`
       : `${baseUrl}${endpoint}`;
     return {
-      base_url: baseUrl,
+      baseUrl,
       endpoint,
       url,
       limit,
+      turnstileSitekey,
     };
   } else {
     return {
-      base_url: DEFAULT_BASE_URL,
+      baseUrl: DEFAULT_BASE_URL,
       endpoint: DEFAULT_ENDPOINT,
       url: DEFAULT_URL,
       limit: DEFAULT_LIMIT,

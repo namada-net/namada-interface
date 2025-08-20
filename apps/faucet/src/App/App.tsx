@@ -10,10 +10,9 @@ import { FaucetApp } from "./FaucetApp";
 
 export const App = (): JSX.Element => {
   const initialColorMode = "dark";
+  const [config, setConfig] = useState<Config>();
   const [colorMode, _] = useState<ColorMode>(initialColorMode);
   const theme = getTheme(colorMode);
-
-  const [config, setConfig] = useState<Config>();
 
   useEffect(() => {
     getConfig().then((config) => setConfig(config));

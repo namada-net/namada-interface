@@ -70,7 +70,7 @@ type Props = {
 };
 
 export const FaucetApp = ({ config }: Props): JSX.Element => {
-  const { limit, base_url: baseUrl } = config;
+  const { limit, baseUrl } = config;
 
   const [isTestnetLive, setIsTestnetLive] = useState(true);
   const [settings, setSettings] = useState<Settings>({
@@ -163,7 +163,7 @@ export const FaucetApp = ({ config }: Props): JSX.Element => {
               </InfoContainer>
             )}
 
-            <FaucetForm isTestnetLive={isTestnetLive} />
+            <FaucetForm config={config} isTestnetLive={isTestnetLive} />
           </FaucetContainer>
           {isModalOpen && (
             <Modal onClose={() => setIsModalOpen(false)}>

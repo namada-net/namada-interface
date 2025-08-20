@@ -3,4 +3,4 @@
 #base_url = "http://127.0.0.1:5000"
 #endpoint = "/api/v1/faucet"
 #limit = 1_000_000_000
-
+#turnstile_sitekey = "0x4AAAAAAASomePublicSiteKey"

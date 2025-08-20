@@ -16,6 +16,7 @@ import { bech32mValidation, shortenAddress } from "@namada/utils";
 import { chains } from "@namada/chains";
 import { useUntil } from "@namada/hooks";
 import { Namada } from "@namada/integrations";
+import { Config } from "config";
 import { Data, PowChallenge, TransferResponse } from "../utils";
 import {
   ButtonContainer,
@@ -55,6 +56,7 @@ enum Status {
 
 type Props = {
   isTestnetLive: boolean;
+  config: Config;
 };
 
 const bech32mPrefix = "tnam";
@@ -65,7 +67,7 @@ enum ExtensionAttachStatus {
   Installed,
 }
 
-export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
+export const FaucetForm: React.FC<Props> = ({ config, isTestnetLive }) => {
   const {
     api,
     settings: { difficulty, tokens, withdrawLimit },
@@ -216,7 +218,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
         const solution = await postPowChallenge({ challenge, difficulty });
 
         // Only attempt captcha if sitekey is configured
-        const sitekey = process.env.NAMADA_INTERFACE_TURNSTILE_SITEKEY;
+        const sitekey = config.turnstileSitekey;
         let captcha_token: string | undefined;
 
         if (sitekey && sitekey.trim() !== "") {
@@ -403,9 +405,7 @@ export const FaucetForm: React.FC<Props> = ({ isTestnetLive }) => {
           Get Testnet Tokens
         </ActionButton>
       </ButtonContainer>
-      {process.env.NAMADA_INTERFACE_TURNSTILE_SITEKEY && (
-        <div id="turnstile-widget"></div>
-      )}
+      {config.turnstileSitekey && <div id="turnstile-widget"></div>}
     </FaucetFormContainer>
   );
 };
