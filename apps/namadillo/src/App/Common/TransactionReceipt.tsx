@@ -11,12 +11,10 @@ import { SelectedChain } from "App/Transfer/SelectedChain";
 import { SelectedWallet } from "App/Transfer/SelectedWallet";
 import { TokenAmountCard } from "App/Transfer/TokenAmountCard";
 import { TransferArrow } from "App/Transfer/TransferArrow";
-import { accountsAtom } from "atoms/accounts";
 import { getChainRegistryByChainId } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { wallets } from "integrations";
-import { useAtomValue } from "jotai";
 import { useMemo } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { GoHourglass, GoXCircle } from "react-icons/go";
@@ -43,12 +41,6 @@ const stepDescription: Record<TransferStep, string> = {
 const TransferTransactionReceipt = ({
   transaction,
 }: TransactionReceiptProps): JSX.Element => {
-  const accounts = useAtomValue(accountsAtom);
-
-  const shieldedAddress = accounts.data?.find((acc) =>
-    isShieldedAddress(acc.address)
-  )?.address;
-
   const getChain = (chainId: string, address: string): Chain | undefined => {
     const chain = getChainRegistryByChainId(chainId)?.chain;
     if (isNamadaAddress(address) && chain) {
