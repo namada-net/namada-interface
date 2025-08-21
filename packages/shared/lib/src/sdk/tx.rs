@@ -5,7 +5,8 @@ use gloo_utils::format::JsValueSerdeExt;
 use namada_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use namada_sdk::collections::HashSet;
 use namada_sdk::masp_primitives::transaction::components::sapling::builder::StoredBuildParams;
-use namada_sdk::masp_primitives::transaction::components::sapling::fees::{InputView, OutputView};
+use namada_sdk::masp_primitives::transaction::components::sapling::fees::{ConvertView, InputView, OutputView};
+use namada_sdk::masp_primitives::transaction::components::I128Sum;
 use namada_sdk::masp_primitives::zip32::ExtendedFullViewingKey;
 use namada_sdk::signing::SigningTxData;
 use namada_sdk::token::{Amount, DenominatedAmount, Transfer};
@@ -411,6 +412,15 @@ fn get_masp_details(
                     }
                 })
                 .collect::<Vec<_>>();
+
+            let conversions = masp_builder.builder.sapling_converts().iter().map(|conv| {
+                I128Sum::from(conv.conversion().clone())
+            }).collect::<Vec<_>>();
+
+            web_sys::console::log_1(&JsValue::from_str(&format!(
+                "Masp conversions: {:?}",
+                conversions
+            )));
 
             let outputs = masp_builder
                 .builder

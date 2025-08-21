@@ -105,6 +105,15 @@ export const fetchShieldedBalance = async (
   return await sdk.rpc.queryBalance(viewingKey.key, addresses, chainId);
 };
 
+export const fetchNotes = async (
+  viewingKey: DatedViewingKey,
+  addresses: string[],
+  chainId: string
+): Promise<Balance> => {
+  const sdk = await getSdkInstance();
+  return await sdk.rpc.queryMASPNotes(viewingKey.key, addresses, chainId);
+};
+
 export const fetchShieldedRewards = async (
   viewingKey: DatedViewingKey,
   chainId: string,
