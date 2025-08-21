@@ -385,7 +385,7 @@ export const fetchPaginatedProposals = async (
       console.warn("Invalid paginated proposals response format", proposalResponse);
       return {
         proposals: [],
-        pagination: { total: 0, page: 1, limit: 20 },
+        pagination: { page: "1" },
       };
     }
 
@@ -395,7 +395,7 @@ export const fetchPaginatedProposals = async (
 
     return {
       proposals,
-      pagination: proposalResponse.data.pagination || { total: proposals.length, page: 1, limit: 20 },
+      pagination: proposalResponse.data.pagination || { page: "1" },
     };
   } catch (error) {
     console.error("Failed to fetch paginated proposals:", error);
@@ -431,17 +431,24 @@ export const fetchVotedProposalsByAccount = async (
 export const fetchProposalVotes = async (
   api: DefaultApi,
   proposalId: bigint
-): Promise<{ proposalId: bigint; votes: Array<{ address: string; vote: VoteType | UnknownVoteType; votingPower?: bigint }> }> => {
+): Promise<{
+  proposalId: bigint;
+  votes: Array<{
+    address: string;
+    vote: VoteType | UnknownVoteType;
+    votingPower?: bigint;
+  }>;
+}> => {
   try {
     // Try the new endpoint pattern first
     const response = await api.apiV1GovProposalIdVotesGet?.(Number(proposalId));
-    if (response?.data) {
+    if (response?.data && Array.isArray(response.data)) {
       return {
         proposalId,
-        votes: response.data.map(({ address, vote, votingPower }) => ({
-          address,
-          vote,
-          votingPower: votingPower ? BigInt(votingPower) : undefined,
+        votes: response.data.map((voteData: Record<string, unknown>) => ({
+          address: (voteData.address as string) || "",
+          vote: (voteData.vote as VoteType | UnknownVoteType) || "unknown",
+          votingPower: voteData.votingPower ? BigInt(voteData.votingPower as string | number) : undefined,
         })),
       };
     }
