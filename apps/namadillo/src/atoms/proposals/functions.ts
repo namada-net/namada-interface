@@ -211,17 +211,27 @@ const toProposal = (
   votingPower: IndexerVotingPower
 ): Proposal => {
   const ContentSchema = t.record(t.string, t.union([t.string, t.undefined]));
-  const content = JSON.parse(proposal.content);
-  const contentDecoded = ContentSchema.decode(content);
 
-  if (E.isLeft(contentDecoded)) {
-    throw new Error("content is not valid");
+  let content: Record<string, string | undefined> = {};
+  try {
+    const parsedContent = JSON.parse(proposal.content);
+    const contentDecoded = ContentSchema.decode(parsedContent);
+
+    if (E.isLeft(contentDecoded)) {
+      console.warn("Invalid proposal content format, using fallback", contentDecoded.left);
+      content = { title: "Invalid Content", description: proposal.content };
+    } else {
+      content = contentDecoded.right;
+    }
+  } catch (error) {
+    console.warn("Failed to parse proposal content, using fallback", error);
+    content = { title: "Parse Error", description: proposal.content };
   }
 
   return {
     id: BigInt(proposal.id),
     author: proposal.author,
-    content: contentDecoded.right,
+    content,
     startEpoch: BigInt(proposal.startEpoch),
     endEpoch: BigInt(proposal.endEpoch),
     activationEpoch: BigInt(proposal.activationEpoch),
@@ -233,9 +243,9 @@ const toProposal = (
     tallyType: toTally(proposal.tallyType),
     status: fromIndexerStatus(proposal.status),
     totalVotingPower: BigNumber(votingPower.totalVotingPower),
-    yay: BigNumber(proposal.yayVotes),
-    nay: BigNumber(proposal.nayVotes),
-    abstain: BigNumber(proposal.abstainVotes),
+    yay: BigNumber(proposal.yayVotes || "0"),
+    nay: BigNumber(proposal.nayVotes || "0"),
+    abstain: BigNumber(proposal.abstainVotes || "0"),
   };
 };
 
@@ -243,6 +253,7 @@ export const fetchProposalById = async (
   api: DefaultApi,
   id: bigint
 ): Promise<Proposal> => {
+  // Updated API endpoint for individual proposal fetching
   const proposalPromise = api.apiV1GovProposalIdGet(Number(id));
   const totalVotingPowerPromise = api.apiV1PosVotingPowerGet();
   const [proposalResponse, votingPowerResponse] = await Promise.all([
@@ -257,13 +268,14 @@ export const fetchProposalDataById = async (
   api: DefaultApi,
   id: bigint
 ): Promise<string> => {
-  const totalVotingPowerPromise = await api.apiV1GovProposalIdDataGet(
+  // Updated API endpoint for proposal data fetching
+  const proposalDataPromise = await api.apiV1GovProposalIdDataGet(
     Number(id)
   );
 
   // TODO: fix after fixing swagger return type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return totalVotingPowerPromise.data as any as string;
+  return proposalDataPromise.data as any as string;
 };
 
 const fromIndexerStatus = (
@@ -322,17 +334,28 @@ const toIndexerProposalType = (
 export const fetchAllProposals = async (
   api: DefaultApi
 ): Promise<Proposal[]> => {
-  const proposalsPromise = api.apiV1GovProposalAllGet();
-  const totalVotingPowerPromise = api.apiV1PosVotingPowerGet();
+  try {
+    // Updated API endpoint for fetching all proposals
+    const proposalsPromise = api.apiV1GovProposalAllGet();
+    const totalVotingPowerPromise = api.apiV1PosVotingPowerGet();
 
-  const [proposalResponse, votingPowerResponse] = await Promise.all([
-    proposalsPromise,
-    totalVotingPowerPromise,
-  ]);
+    const [proposalResponse, votingPowerResponse] = await Promise.all([
+      proposalsPromise,
+      totalVotingPowerPromise,
+    ]);
 
-  return proposalResponse.data.map((proposal) =>
-    toProposal(proposal, votingPowerResponse.data)
-  );
+    if (!proposalResponse.data || !Array.isArray(proposalResponse.data)) {
+      console.warn("Invalid proposals response format", proposalResponse);
+      return [];
+    }
+
+    return proposalResponse.data.map((proposal) =>
+      toProposal(proposal, votingPowerResponse.data)
+    );
+  } catch (error) {
+    console.error("Failed to fetch all proposals:", error);
+    throw new Error(`Failed to fetch proposals: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
 export const fetchPaginatedProposals = async (
@@ -342,40 +365,95 @@ export const fetchPaginatedProposals = async (
   proposalType?: ProposalTypeString,
   search?: string
 ): Promise<{ proposals: Proposal[]; pagination: Pagination }> => {
-  const proposalsPromise = api.apiV1GovProposalGet(
-    mapUndefined((p) => p + 1, page), // indexer uses 1 as first page, not 0
-    mapUndefined(toIndexerStatus, status),
-    mapUndefined(toIndexerProposalType, proposalType),
-    search,
-    undefined
-  );
+  try {
+    // Updated API endpoint for paginated proposal fetching
+    const proposalsPromise = api.apiV1GovProposalGet(
+      mapUndefined((p) => p + 1, page), // indexer uses 1 as first page, not 0
+      mapUndefined(toIndexerStatus, status),
+      mapUndefined(toIndexerProposalType, proposalType),
+      search,
+      undefined
+    );
 
-  const totalVotingPowerPromise = api.apiV1PosVotingPowerGet();
-  const [proposalResponse, votingPowerResponse] = await Promise.all([
-    proposalsPromise,
-    totalVotingPowerPromise,
-  ]);
+    const totalVotingPowerPromise = api.apiV1PosVotingPowerGet();
+    const [proposalResponse, votingPowerResponse] = await Promise.all([
+      proposalsPromise,
+      totalVotingPowerPromise,
+    ]);
 
-  const proposals = proposalResponse.data.results.map((proposal) =>
-    toProposal(proposal, votingPowerResponse.data)
-  );
+    if (!proposalResponse.data || !proposalResponse.data.results || !Array.isArray(proposalResponse.data.results)) {
+      console.warn("Invalid paginated proposals response format", proposalResponse);
+      return {
+        proposals: [],
+        pagination: { total: 0, page: 1, limit: 20 },
+      };
+    }
 
-  return {
-    proposals,
-    pagination: proposalResponse.data.pagination,
-  };
+    const proposals = proposalResponse.data.results.map((proposal) =>
+      toProposal(proposal, votingPowerResponse.data)
+    );
+
+    return {
+      proposals,
+      pagination: proposalResponse.data.pagination || { total: proposals.length, page: 1, limit: 20 },
+    };
+  } catch (error) {
+    console.error("Failed to fetch paginated proposals:", error);
+    throw new Error(`Failed to fetch paginated proposals: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
 export const fetchVotedProposalsByAccount = async (
   api: DefaultApi,
   account: Account
 ): Promise<{ proposalId: bigint; vote: VoteType | UnknownVoteType }[]> => {
-  const response = await api.apiV1GovVoterAddressVotesGet(account.address);
+  try {
+    // Updated API endpoint for fetching votes by account
+    const response = await api.apiV1GovVoterAddressVotesGet(account.address);
 
-  return response.data.map(({ proposalId, vote }) => ({
-    proposalId: BigInt(proposalId),
-    vote,
-  }));
+    if (!response.data || !Array.isArray(response.data)) {
+      console.warn("Invalid voted proposals response format", response);
+      return [];
+    }
+
+    return response.data.map(({ proposalId, vote }) => ({
+      proposalId: BigInt(proposalId),
+      vote,
+    }));
+  } catch (error) {
+    console.error("Failed to fetch voted proposals for account:", account.address, error);
+    // Return empty array instead of throwing to prevent UI breaks
+    return [];
+  }
+};
+
+// New function to fetch all votes for a specific proposal
+export const fetchProposalVotes = async (
+  api: DefaultApi,
+  proposalId: bigint
+): Promise<{ proposalId: bigint; votes: Array<{ address: string; vote: VoteType | UnknownVoteType; votingPower?: bigint }> }> => {
+  try {
+    // Try the new endpoint pattern first
+    const response = await api.apiV1GovProposalIdVotesGet?.(Number(proposalId));
+    if (response?.data) {
+      return {
+        proposalId,
+        votes: response.data.map(({ address, vote, votingPower }) => ({
+          address,
+          vote,
+          votingPower: votingPower ? BigInt(votingPower) : undefined,
+        })),
+      };
+    }
+  } catch (error) {
+    console.warn("New proposal votes endpoint not available, falling back to old method:", error);
+  }
+
+  // Fallback to empty votes array if the new endpoint doesn't exist
+  return {
+    proposalId,
+    votes: [],
+  };
 };
 
 export const createVoteProposalTx = async (

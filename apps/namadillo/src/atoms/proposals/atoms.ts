@@ -19,6 +19,7 @@ import {
   fetchPaginatedProposals,
   fetchProposalById,
   fetchProposalDataById,
+  fetchProposalVotes,
   fetchVotedProposalsByAccount,
 } from "./functions";
 
@@ -64,6 +65,29 @@ export const proposalVoteFamily = atomFamily((id: bigint) =>
           votedProposals.data!.find((v) => v.proposalId === id)?.vote ?? null
         );
       }, [votedProposals]),
+    };
+  })
+);
+
+// New atom for fetching all votes for a specific proposal
+export const proposalVotesFamily = atomFamily((id: bigint) =>
+  atomWithQuery((get) => {
+    const api = get(indexerApiAtom);
+    const enablePolling = get(shouldUpdateProposalAtom);
+
+    return {
+      // TODO: subscribe to indexer events when it's done
+      refetchInterval: enablePolling ? 2000 : false, // Slightly slower polling for votes
+      queryKey: ["proposal-votes", id.toString()],
+      queryFn: () => fetchProposalVotes(api, id),
+      // Handle errors gracefully
+      retry: (failureCount, error) => {
+        // Only retry network errors, not API method not found errors
+        if (error?.message?.includes("not a function")) {
+          return false;
+        }
+        return failureCount < 3;
+      },
     };
   })
 );
