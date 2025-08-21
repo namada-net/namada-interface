@@ -20,10 +20,6 @@ COPY ./apps/extension/package.json ./apps/extension/package.json
 RUN yarn 
 WORKDIR /app/apps/extension
 
-# Building wasm files
-COPY ./apps/extension/scripts ./scripts
-RUN yarn wasm:build
-
 # Building extension dist files
 COPY ./apps/extension .
 RUN yarn

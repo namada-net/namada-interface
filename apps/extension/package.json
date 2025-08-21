@@ -11,7 +11,7 @@
     "clean": "rimraf ./build",
     "clean:chrome": "rimraf ./build/chrome",
     "clean:firefox": "rimraf ./build/firefox",
-    "build": "yarn wasm:build && yarn clean && yarn build:chrome && yarn build:firefox",
+    "build": "yarn clean && yarn build:chrome && yarn build:firefox",
     "build:chrome": "yarn clean:chrome && NODE_ENV=production TARGET=chrome webpack-cli && yarn run web-ext build --s ./build/chrome -a ./build/chrome",
     "build:chrome:revision": "NAMADA_INTERFACE_REVISION=$(git rev-parse HEAD) yarn build:chrome",
     "build:chrome:beta": "yarn clean:chrome && NODE_ENV=production BETA_RELEASE=true TARGET=chrome REVISION=$(git rev-parse HEAD) webpack-cli && yarn run web-ext build --s ./build/chrome -a ./build/chrome",
@@ -27,13 +27,8 @@
     "start:firefox": "yarn clean:firefox && NODE_ENV=development TARGET=firefox NAMADA_INTERFACE_REVISION=$(git rev-parse HEAD) yarn watch",
     "start:firefox:proxy": "NAMADA_INTERFACE_PROXY=true yarn start:firefox",
     "test": "jest --coverage --runInBand",
-    "test:watch": "yarn wasm:build:test && yarn jest --watchAll=true",
-    "test:ci": "jest",
-    "wasm:build": "node ./scripts/build.js --release",
-    "wasm:build:multicore": "node ./scripts/build.js --release --multicore",
-    "wasm:build:dev": "node ./scripts/build.js",
-    "wasm:build:dev:multicore": "node ./scripts/build.js --multicore",
-    "wasm:build:test": "./scripts/build-test.sh"
+    "test:watch": "yarn jest --watchAll=true",
+    "test:ci": "jest"
   },
   "dependencies": {
     "@cosmjs/encoding": "^0.29.0",

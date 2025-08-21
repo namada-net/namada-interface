@@ -11,10 +11,8 @@
   ],
   "scripts": {
     "prepare": "husky install",
-    "wasm:build-test": "./scripts/build-test.sh",
     "test": "wsrun --serial --exclude-missing -c test",
     "test:ci": "wsrun --serial --exclude-missing -c test:ci",
-    "test-wasm:ci": "wsrun --serial --exclude-missing -c test-wasm:ci",
     "lint": "wsrun -l --exclude-missing -c lint",
     "lint:fix": "wsrun -l --exclude-missing -c lint:fix",
     "lint:ci": "wsrun -l --exclude-missing -c lint:ci",
