@@ -1,4 +1,4 @@
-import { TxType } from "./shared/shared.js";
+import { TxType } from "./shared/shared";
 
 export type SupportedTx = Extract<
   TxType,
