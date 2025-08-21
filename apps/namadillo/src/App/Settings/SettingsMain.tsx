@@ -1,4 +1,5 @@
 import { ActionButton, ToggleButton } from "@namada/components";
+import { Sdk } from "@namada/sdk-multicore";
 import { IconTooltip } from "App/Common/IconTooltip";
 import { routes } from "App/routes";
 import { chainParametersAtom } from "atoms/chain";
@@ -14,8 +15,6 @@ import {
 import { useAtomValue } from "jotai";
 import { FaInfo } from "react-icons/fa6";
 import { GoLinkExternal } from "react-icons/go";
-// TODO: use Sdk.version after its changed to static
-import { version as sdkVersion } from "../../../../../node_modules/@namada/sdk/package.json";
 import { version } from "../../../package.json";
 import { SettingsPanelMenuItem } from "./SettingsPanelMenuItem";
 
@@ -213,7 +212,7 @@ export const SettingsMain = (): JSX.Element => {
             rel="noreferrer"
             className="underline"
           >
-            {sdkVersion ?? "-"}{" "}
+            {Sdk.version ?? "-"}{" "}
             <GoLinkExternal className="inline h-2.5 w-2.5 -mt-0.5" />
           </a>
         </div>
