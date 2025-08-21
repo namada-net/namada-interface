@@ -18,6 +18,8 @@ import { allValidatorsAtom } from "atoms/validators";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
+import { AtomWithQueryResult } from "jotai-tanstack-query";
+import { useCallback } from "react";
 import { FaLock } from "react-icons/fa6";
 import {
   IoCheckmarkCircleOutline,
@@ -85,14 +87,23 @@ export function getToken(
   return undefined;
 }
 
-const getVoteTransactionInfo = (
-  tx: Tx["tx"]
-): VoteTransactionInfo | undefined => {
-  if (!tx?.data) return undefined;
-  const parsed = typeof tx.data === "string" ? JSON.parse(tx.data) : tx.data;
+const getVoteTransactionInfo = (tx: Tx["tx"]): VoteTransactionInfo => {
+  if (!tx?.data)
+    return {
+      proposalId: "",
+      vote: "",
+    };
+
+  let parsed;
+  try {
+    parsed = JSON.parse(tx.data);
+  } catch (error) {
+    parsed = tx.data;
+  }
+
   return {
-    proposalId: parsed.id,
-    vote: parsed.vote,
+    proposalId: parsed.id || "",
+    vote: parsed.vote || "",
   };
 };
 
@@ -103,7 +114,7 @@ const getBondOrUnbondTransactionInfo = (
 
   let parsed: BondData;
   try {
-    parsed = typeof tx.data === "string" ? JSON.parse(tx.data) : tx.data;
+    parsed = JSON.parse(tx.data);
   } catch {
     return undefined;
   }
@@ -165,7 +176,7 @@ const useTransactionCardData = (
   asset: NamadaAsset | undefined;
   transparentAddress: string;
   transactionFailed: boolean;
-  validators: ReturnType<typeof useAtomValue<typeof allValidatorsAtom>>;
+  validators: AtomWithQueryResult<Validator[], Error>;
 } => {
   const transaction = tx.tx;
   const nativeToken = useAtomValue(nativeTokenAddressAtom).data;
@@ -434,9 +445,8 @@ const TransactionAmount = ({
   const tokenPrices = useAtomValue(
     tokenPricesFamily(asset?.address ? [asset.address] : [])
   );
-  const tokenPrice =
-    asset?.address ? tokenPrices.data?.[asset.address] : undefined;
-  const dollarAmount = tokenPrice ? amount.multipliedBy(tokenPrice) : undefined;
+  const tokenPrice = asset?.address && tokenPrices.data?.[asset.address];
+  const dollarAmount = tokenPrice && amount.multipliedBy(tokenPrice);
 
   return (
     <div className="flex items-center">
@@ -469,11 +479,11 @@ const BondUnbondTransactionCard = ({ tx }: Props): JSX.Element => {
     (v) => v.address === txnInfo?.receiver
   );
 
-  const getTitle = (): string => {
+  const getTitle = useCallback((): string => {
     if (transaction?.kind === "bond") return "Stake";
     if (transaction?.kind === "unbond") return "Unstake";
     return "Bond/Unbond";
-  };
+  }, [transaction?.kind]);
 
   return (
     <TransactionCardContainer
@@ -581,8 +591,7 @@ const RedelegationTransactionCard = ({ tx }: Props): JSX.Element => {
 const VoteTransactionCard = ({ tx }: Props): JSX.Element => {
   const { transaction, transactionFailed } = useTransactionCardData(tx);
   const voteInfo = getVoteTransactionInfo(transaction);
-  const proposalId =
-    voteInfo?.proposalId ? BigInt(voteInfo.proposalId) : undefined;
+  const proposalId = voteInfo?.proposalId && BigInt(voteInfo.proposalId);
   const proposal = useAtomValue(proposalFamily(proposalId || BigInt(0)));
   const navigate = useNavigate();
 
