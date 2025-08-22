@@ -129,7 +129,13 @@ const getRedelegationTransactionInfo = (
   tx: Tx["tx"]
 ): TransactionInfo | undefined => {
   if (!tx?.data) return undefined;
-  const parsed = typeof tx.data === "string" ? JSON.parse(tx.data) : tx.data;
+  let parsed;
+  try {
+    parsed = JSON.parse(tx.data);
+  } catch (error) {
+    parsed = tx.data;
+  }
+
   return {
     amount: BigNumber(parsed.amount),
     sender: parsed.src_validator,
