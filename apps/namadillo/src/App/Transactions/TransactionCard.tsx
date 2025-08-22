@@ -97,7 +97,7 @@ const getVoteTransactionInfo = (tx: Tx["tx"]): VoteTransactionInfo => {
   let parsed;
   try {
     parsed = JSON.parse(tx.data);
-  } catch (error) {
+  } catch {
     parsed = tx.data;
   }
 
@@ -132,7 +132,7 @@ const getRedelegationTransactionInfo = (
   let parsed;
   try {
     parsed = JSON.parse(tx.data);
-  } catch (error) {
+  } catch {
     parsed = tx.data;
   }
 
