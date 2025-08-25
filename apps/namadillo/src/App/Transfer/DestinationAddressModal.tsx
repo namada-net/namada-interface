@@ -183,7 +183,7 @@ export const DestinationAddressModal = ({
     <SelectModal
       title="Destination address"
       onClose={onClose}
-      className="max-w-[500px] bg-neutral-800 h-[80vh] min-h-[400px] flex flex-col"
+      className="px-4 max-w-[500px] bg-neutral-800 h-[80vh] min-h-[400px] flex flex-col"
     >
       <div className="flex flex-col gap-6 h-full overflow-hidden">
         <div className="flex-shrink-0">
