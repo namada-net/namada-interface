@@ -87,13 +87,8 @@ export function getToken(
   return undefined;
 }
 
-const getVoteTransactionInfo = (tx: Tx["tx"]): VoteTransactionInfo => {
-  if (!tx?.data)
-    return {
-      proposalId: "",
-      vote: "",
-    };
-
+const getVoteTransactionInfo = (tx: Tx["tx"]): VoteTransactionInfo | void => {
+  if (!tx?.data) return;
   let parsed;
   try {
     parsed = JSON.parse(tx.data);
