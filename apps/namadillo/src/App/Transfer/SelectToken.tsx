@@ -13,6 +13,7 @@ import { tokenPricesFamily } from "atoms/prices/atoms";
 import clsx from "clsx";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
+import { getChainFromAsset, getChainImageUrl } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
@@ -171,6 +172,21 @@ export const SelectToken = ({
       onClose();
     }
   };
+
+  const getOverlayChainLogo = (token: AssetWithAmount): JSX.Element => {
+    const chain = getChainFromAsset(token);
+    const chainImageUrl = getChainImageUrl(chain);
+    return (
+      <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-black border-2 border-neutral-600 flex items-center justify-center overflow-hidden z-10">
+        <img
+          src={chainImageUrl}
+          alt={chain?.chain_name || "chain"}
+          className="w-4 h-4 object-cover rounded-full"
+        />
+      </div>
+    );
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -179,7 +195,7 @@ export const SelectToken = ({
         <ModalTransition>
           <div className="flex rounded-xl border border-neutral-700 overflow-hidden h-[500px]">
             {/* Left panel */}
-            <div className="w-[275px] bg-neutral-900 p-5 flex flex-col overflow-auto">
+            <div className="w-[275px] bg-neutral-900 py-5 pl-5 pr-2 flex flex-col overflow-auto">
               <AddressDropdown
                 destinationAddress={destinationAddress}
                 selectedAddress={sourceAddress}
@@ -210,7 +226,9 @@ export const SelectToken = ({
                   <li key={network.chain_name}>
                     <button
                       onClick={() =>
-                        handleNetworkSelect(network.chain_name || "")
+                        handleNetworkSelect(
+                          network.chain_name?.toLowerCase() || ""
+                        )
                       }
                       className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
                         selectedNetwork === network.chain_name ?
@@ -285,23 +303,27 @@ export const SelectToken = ({
                               className="flex items-center justify-between w-full p-3 rounded-lg hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
-                                  {(
-                                    token.asset.logo_URIs?.png ||
-                                    token.asset.logo_URIs?.svg
-                                  ) ?
-                                    <img
-                                      src={
-                                        token.asset.logo_URIs?.png ||
-                                        token.asset.logo_URIs?.svg
-                                      }
-                                      alt={token.asset.symbol}
-                                      className="w-10 h-10"
-                                    />
-                                  : <span className="text-white text-lg">
-                                      {token.asset.symbol.charAt(0)}
-                                    </span>
-                                  }
+                                <div className="relative w-10 h-10 flex items-center justify-center">
+                                  <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center">
+                                    {(
+                                      token.asset.logo_URIs?.png ||
+                                      token.asset.logo_URIs?.svg
+                                    ) ?
+                                      <img
+                                        src={
+                                          token.asset.logo_URIs?.png ||
+                                          token.asset.logo_URIs?.svg
+                                        }
+                                        alt={token.asset.symbol}
+                                        className="w-10 h-10"
+                                      />
+                                    : <span className="text-white text-lg">
+                                        {token.asset.symbol.charAt(0)}
+                                      </span>
+                                    }
+                                  </div>
+                                  {/* Small chain logo overlay */}
+                                  {getOverlayChainLogo(token)}
                                 </div>
                                 <div className="flex flex-col items-start">
                                   <span className="text-white font-medium">
