@@ -88,17 +88,17 @@ export const DestinationAddressModal = ({
       });
     }
   }
-
-  addressOptions.push({
-    id: "keplr",
-    label: "Keplr Address",
-    address: keplrAddress ?? "",
-    icon:
-      !keplrAddress ?
-        wallets.keplr.iconUrl
-      : getChainImageUrl(getChainFromAddress(keplrAddress ?? "")),
-    type: "keplr",
-  });
+  if (keplrAddress)
+    addressOptions.push({
+      id: "keplr",
+      label: "Keplr Address",
+      address: keplrAddress ?? "",
+      icon:
+        !keplrAddress ?
+          wallets.keplr.iconUrl
+        : getChainImageUrl(getChainFromAddress(keplrAddress ?? "")),
+      type: "keplr",
+    });
 
   // Build recent addresses options
   const recentAddressOptions: AddressOption[] = recentAddresses.map(

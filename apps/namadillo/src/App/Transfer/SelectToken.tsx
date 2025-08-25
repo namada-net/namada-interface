@@ -70,7 +70,7 @@ export const SelectToken = ({
     chainAssetsMap.forEach((asset) => {
       if (asset && asset.name) {
         // Map asset address to network name
-        map[asset.address || asset.base] = asset.name;
+        map[asset.address || asset.base] = asset.display;
       }
     });
     return map;
@@ -97,8 +97,7 @@ export const SelectToken = ({
 
         // Filter by selected network (if any)
         const tokenNetworkName =
-          assetToNetworkMap[assetWithAmount.asset.address || ""] ||
-          assetWithAmount.asset.name;
+          assetToNetworkMap[assetWithAmount.asset.address || ""];
         const matchesNetwork =
           selectedNetwork === null || tokenNetworkName === selectedNetwork;
 
