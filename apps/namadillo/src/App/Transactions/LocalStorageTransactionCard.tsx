@@ -36,8 +36,9 @@ export const LocalStorageTransactionCard = ({
   const namadaAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const namadaAsset =
     namadaAssetsMap.data &&
-      Object.values(namadaAssetsMap.data).find((namadaAsset) => transaction.asset.symbol &&
-          namadaAsset.symbol === transaction.asset.symbol);
+    Object.values(namadaAssetsMap.data).find(
+      (namadaAsset) => namadaAsset.symbol === transaction.asset.symbol
+    );
 
   // Use the Namada asset address if available, otherwise try the original asset address
   const assetAddress = namadaAsset?.address || transaction.asset.address;
@@ -45,13 +46,11 @@ export const LocalStorageTransactionCard = ({
   const tokenPrices = useAtomValue(
     tokenPricesFamily(assetAddress ? [assetAddress] : [])
   );
-  const tokenPrice =
-    assetAddress  && tokenPrices.data?.[assetAddress];
+  const tokenPrice = assetAddress && tokenPrices.data?.[assetAddress];
 
   // Ensure displayAmount is a BigNumber before performing calculations
   const displayAmount = BigNumber(transaction.displayAmount);
-  const dollarAmount =
-    tokenPrice && displayAmount.multipliedBy(tokenPrice);
+  const dollarAmount = tokenPrice && displayAmount.multipliedBy(tokenPrice);
 
   const renderKeplrIcon = (address: string): JSX.Element | null => {
     if (isShieldedAddress(address)) return null;
