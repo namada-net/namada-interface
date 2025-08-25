@@ -1,4 +1,5 @@
 import { SidebarMenuItem } from "App/Common/SidebarMenuItem";
+import { ShieldIcon } from "App/Icons/ShieldIcon";
 import { routes } from "App/routes";
 import { applicationFeaturesAtom } from "atoms/settings";
 import { useAtomValue } from "jotai";
@@ -6,11 +7,12 @@ import { AiFillHome } from "react-icons/ai";
 import { BsDiscord, BsTwitterX } from "react-icons/bs";
 import { FaVoteYea } from "react-icons/fa";
 import { FaBug } from "react-icons/fa6";
-import { GoHistory, GoStack } from "react-icons/go";
-import { IoSwapHorizontal } from "react-icons/io5";
-import { TbVectorTriangle } from "react-icons/tb";
+import { GoStack } from "react-icons/go";
+import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 import { DISCORD_URL, TWITTER_URL } from "urls";
+import receiveIcon from "./assets/receive-icon.svg";
+import transferIcon from "./assets/transfer-icon.svg";
 
 export const Navigation = (): JSX.Element => {
   const features = useAtomValue(applicationFeaturesAtom);
@@ -34,12 +36,12 @@ export const Navigation = (): JSX.Element => {
     },
     {
       label: "Shield",
-      icon: <TbVectorTriangle />,
+      icon: <ShieldIcon />,
       url: routes.maspShield,
     },
     {
       label: "Transfer",
-      icon: <IoSwapHorizontal />,
+      icon: <img src={transferIcon} alt="Transfer" />,
       url:
         features.maspEnabled || features.namTransfersEnabled ?
           routes.transfer
@@ -47,12 +49,12 @@ export const Navigation = (): JSX.Element => {
     },
     {
       label: "Receive",
-      icon: <IoSwapHorizontal />,
+      icon: <img src={receiveIcon} alt="Receive" />,
       url: routes.receive,
     },
     {
       label: "History",
-      icon: <GoHistory />,
+      icon: <MdOutlineKeyboardBackspace />,
       url:
         features.namTransfersEnabled || features.ibcTransfersEnabled ?
           routes.history

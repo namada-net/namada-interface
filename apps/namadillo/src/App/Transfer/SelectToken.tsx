@@ -18,11 +18,7 @@ import { useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { AssetWithAmount } from "types";
 import { AddressDropdown } from "./AddressDropdown";
-import {
-  isNamadaAddress,
-  isShieldedAddress,
-  isTransparentAddress,
-} from "./common";
+import { isNamadaAddress } from "./common";
 
 type SelectTokenProps = {
   setSourceAddress: (address: string) => void;
@@ -183,41 +179,31 @@ export const SelectToken = ({
         <ModalTransition>
           <div className="flex rounded-xl border border-neutral-700 overflow-hidden h-[500px]">
             {/* Left panel */}
-            <div className="w-[300px] bg-neutral-900 p-6 flex flex-col overflow-auto">
-              <h5 className="text-neutral-500 text-sm mb-2">Your account</h5>
-              <div className="mb-4">
-                <AddressDropdown
-                  destinationAddress={destinationAddress}
-                  selectedAddress={sourceAddress}
-                  onSelectAddress={handleAddressChange}
-                />
-              </div>
-
-              <h2 className="text-neutral-500 text-sm mb-4">Networks</h2>
+            <div className="w-[275px] bg-neutral-900 p-5 flex flex-col overflow-auto">
+              <AddressDropdown
+                destinationAddress={destinationAddress}
+                selectedAddress={sourceAddress}
+                onSelectAddress={handleAddressChange}
+              />
+              <h2 className="text-neutral-500 text-sm mb-1">From A to Z</h2>
               <Stack
                 as="ul"
-                gap={2}
+                gap={1}
                 className="flex-1 overflow-auto dark-scrollbar"
               >
                 <li>
                   <button
                     onClick={() => setSelectedNetwork(null)}
-                    className={`flex items-center gap-3 p-2 w-full rounded-lg transition-colors ${
+                    className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
                       selectedNetwork === null ?
-                        "bg-yellow/20 border border-yellow"
+                        "bg-white/5 border border-white/20"
                       : "hover:bg-neutral-800"
                     }`}
                   >
-                    <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
+                    <div className="w-7 h-7 overflow-hidden rounded-lg bg-neutral-800 flex items-center justify-center">
                       <span className="text-white">All</span>
                     </div>
-                    <span
-                      className={
-                        selectedNetwork === null ? "text-yellow" : "text-white"
-                      }
-                    >
-                      All Networks
-                    </span>
+                    <span className="text-white">All Networks</span>
                   </button>
                 </li>
                 {allNetworks.map((network) => (
@@ -226,18 +212,19 @@ export const SelectToken = ({
                       onClick={() =>
                         handleNetworkSelect(network.chain_name || "")
                       }
-                      className={`flex items-center gap-3 p-2 w-full rounded-lg transition-colors ${
+                      className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
                         selectedNetwork === network.chain_name ?
-                          "bg-yellow/20 border border-yellow"
+                          "bg-white/5 border border-white/20"
                         : "hover:bg-neutral-800"
                       }`}
                     >
-                      <div className="w-8 h-8 overflow-hidden rounded-full bg-neutral-800 flex items-center justify-center">
+                      <div className="w-7 h-7 rounded-sm flex items-center justify-center overflow-hidden">
                         {network.logo_URIs?.svg ?
                           <img
                             src={network.logo_URIs?.svg}
                             alt={network.chain_name}
-                            className="w-6 h-6"
+                            className="w-full h-full object-contain !rounded-none"
+                            draggable={false}
                           />
                         : <span className="text-white">
                             {network.chain_name?.charAt(0)}
@@ -245,12 +232,7 @@ export const SelectToken = ({
                         }
                       </div>
                       <span
-                        className={clsx(
-                          selectedNetwork === network.chain_name ?
-                            "text-yellow"
-                          : "text-white",
-                          "capitalize"
-                        )}
+                        className={clsx("capitalize font-normal text-white")}
                       >
                         {network.chain_name}
                       </span>
@@ -282,19 +264,8 @@ export const SelectToken = ({
               <div className="mb-6">
                 <div className="h-[400px] overflow-auto dark-scrollbar">
                   <Stack as="ul" gap={2} className="pb-15">
-                    <span
-                      className={clsx(
-                        "text-white text-sm",
-                        isShieldedAddress(sourceAddress) ? "text-yellow" : (
-                          "text-white"
-                        )
-                      )}
-                    >
-                      {isShieldedAddress(sourceAddress) ?
-                        "Namada Shielded"
-                      : isTransparentAddress(sourceAddress) ?
-                        "Namada Transparent"
-                      : "Keplr"}
+                    <span className={clsx("text-white text-sm")}>
+                      Your Tokens
                     </span>
                     {filteredTokens.length > 0 ?
                       filteredTokens.map((token) => {
