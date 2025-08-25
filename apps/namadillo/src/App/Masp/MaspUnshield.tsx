@@ -1,70 +1,58 @@
 import { Panel } from "@namada/components";
-import { AccountType } from "@namada/types";
 import { MaspSyncCover } from "App/Common/MaspSyncCover";
 import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
-import { params } from "App/routes";
-import {
-  OnSubmitTransferParams,
-  TransferModule,
-} from "App/Transfer/TransferModule";
-import { allDefaultAccountsAtom } from "atoms/accounts";
-import {
-  lastCompletedShieldedSyncAtom,
-  namadaShieldedAssetsAtom,
-} from "atoms/balance/atoms";
-import { chainParametersAtom } from "atoms/chain/atoms";
-import { namadaChainRegistryAtom } from "atoms/integrations";
+import { TransferModule } from "App/Transfer/TransferModule";
+import { OnSubmitTransferParams } from "App/Transfer/types";
+import { lastCompletedShieldedSyncAtom } from "atoms/balance/atoms";
 import { ledgerStatusDataAtom } from "atoms/ledger/atoms";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
-import { useUrlState } from "hooks/useUrlState";
-import { wallets } from "integrations";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useState } from "react";
+import { AssetWithAmount } from "types";
 
-export const MaspUnshield: React.FC = () => {
+interface MaspUnshieldProps {
+  sourceAddress: string | undefined;
+  setSourceAddress: (address: string | undefined) => void;
+  destinationAddress: string | undefined;
+  setDestinationAddress: (address: string | undefined) => void;
+  assetSelectorModalOpen?: boolean;
+  setAssetSelectorModalOpen?: (open: boolean) => void;
+}
+
+export const MaspUnshield = ({
+  sourceAddress,
+  setSourceAddress,
+  destinationAddress,
+  setDestinationAddress,
+  assetSelectorModalOpen,
+  setAssetSelectorModalOpen,
+}: MaspUnshieldProps): JSX.Element => {
+  //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
+  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
+    AssetWithAmount | undefined
+  >();
+  //  ERROR & STATUS STATE
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
   const [currentStatusExplanation, setCurrentStatusExplanation] = useState("");
+  //  GLOBAL STATE
   const requiresNewSync = useRequiresNewShieldedSync();
-
   const rpcUrl = useAtomValue(rpcUrlAtom);
-  const chainParameters = useAtomValue(chainParametersAtom);
-  const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
-  const { data: availableAssets, isLoading: isLoadingAssets } = useAtomValue(
-    namadaShieldedAssetsAtom
-  );
-  const namadaChainRegistry = useAtomValue(namadaChainRegistryAtom);
-  const chain = namadaChainRegistry.data?.chain;
-
   const { storeTransaction } = useTransactionActions();
-
+  const lastSync = useAtomValue(lastCompletedShieldedSyncAtom);
+  // DERIVED VALUES
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-  const chainId = chainParameters.data?.chainId;
-  const account = defaultAccounts.data?.find(
-    (account) => account.type === AccountType.ShieldedKeys
-  );
-  const sourceAddress = account?.address;
-  const destinationAddress = defaultAccounts.data?.find(
-    (account) => account.type !== AccountType.ShieldedKeys
-  )?.address;
-
-  const [selectedAssetAddress, setSelectedAssetAddress] = useUrlState(
-    params.asset
-  );
-  const lastSync = useAtomValue(lastCompletedShieldedSyncAtom);
-  const selectedAsset =
-    selectedAssetAddress ? availableAssets?.[selectedAssetAddress] : undefined;
 
   const {
     execute: performTransfer,
@@ -77,7 +65,7 @@ export const MaspUnshield: React.FC = () => {
   } = useTransfer({
     source: sourceAddress ?? "",
     target: destinationAddress ?? "",
-    token: selectedAsset?.asset.address ?? "",
+    token: selectedAssetWithAmount?.asset.address ?? "",
     displayAmount: displayAmount ?? new BigNumber(0),
     onBeforeBuildTx: () => {
       setCurrentStatus("Generating MASP Parameters...");
@@ -96,7 +84,7 @@ export const MaspUnshield: React.FC = () => {
       setCurrentStatusExplanation("");
       setGeneralErrorMessage((originalError as Error).message);
     },
-    asset: selectedAsset?.asset,
+    asset: selectedAssetWithAmount?.asset,
   });
 
   const onSubmitTransfer = async ({
@@ -106,15 +94,14 @@ export const MaspUnshield: React.FC = () => {
       setGeneralErrorMessage("");
 
       invariant(sourceAddress, "Source address is not defined");
-      invariant(chainId, "Chain ID is undefined");
-      invariant(selectedAsset, "No asset is selected");
+      invariant(selectedAssetWithAmount, "No asset is selected");
 
       const txResponse = await performTransfer({ memo });
 
       if (txResponse) {
         const txList = createTransferDataFromNamada(
           txKind,
-          selectedAsset.asset,
+          selectedAssetWithAmount.asset,
           rpcUrl,
           false,
           txResponse,
@@ -153,39 +140,30 @@ export const MaspUnshield: React.FC = () => {
       </header>
       <TransferModule
         source={{
-          isLoadingAssets: isLoadingAssets,
-          availableAssets,
-          selectedAssetAddress,
-          availableAmount: selectedAsset?.amount,
-          chain,
-          availableWallets: [wallets.namada],
-          wallet: wallets.namada,
-          walletAddress: sourceAddress,
-          isShieldedAddress: true,
-          onChangeSelectedAsset: setSelectedAssetAddress,
+          address: sourceAddress,
+          selectedAssetWithAmount,
+          availableAmount: selectedAssetWithAmount?.amount,
           amount: displayAmount,
-          onChangeAmount: setDisplayAmount,
           ledgerAccountInfo,
+          onChangeSelectedAsset: setSelectedAssetWithAmount,
+          onChangeAmount: setDisplayAmount,
+          onChangeAddress: setSourceAddress,
         }}
         destination={{
-          chain,
-          availableWallets: [wallets.namada],
-          wallet: wallets.namada,
-          walletAddress: destinationAddress,
+          address: destinationAddress,
           isShieldedAddress: false,
+          onChangeAddress: setDestinationAddress,
         }}
         feeProps={feeProps}
-        isShieldedTx={true}
         isSubmitting={isPerformingTransfer || isSuccess}
         errorMessage={generalErrorMessage}
-        onSubmitTransfer={onSubmitTransfer}
         currentStatus={currentStatus}
         currentStatusExplanation={currentStatusExplanation}
+        onSubmitTransfer={onSubmitTransfer}
         completedAt={completedAt}
         onComplete={redirectToTransactionPage}
-        buttonTextErrors={{
-          NoAmount: "Define an amount to unshield",
-        }}
+        assetSelectorModalOpen={assetSelectorModalOpen}
+        setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
       {requiresNewSync && <MaspSyncCover longSync={lastSync === undefined} />}
     </Panel>

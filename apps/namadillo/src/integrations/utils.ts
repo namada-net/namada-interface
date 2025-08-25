@@ -1,10 +1,24 @@
 import { Chain } from "@chain-registry/types";
 import { FeeToken } from "@chain-registry/types/chain.schema";
 import { Bech32Config, ChainInfo, Currency } from "@keplr-wallet/types";
+import namadaChain from "@namada/chain-registry/namada/chain.json";
 import tokenImage from "App/Common/assets/token.svg";
-import { getRestApiAddressByIndex, getRpcByIndex } from "atoms/integrations";
+import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
+import {
+  getChainRegistryByChainName,
+  getRestApiAddressByIndex,
+  getRpcByIndex,
+} from "atoms/integrations";
 import BigNumber from "bignumber.js";
-import { Asset, ChainId, ChainRegistryEntry, GasConfig } from "types";
+import { chains } from "chain-registry";
+
+import {
+  Asset,
+  AssetWithAmount,
+  ChainId,
+  ChainRegistryEntry,
+  GasConfig,
+} from "types";
 
 type GasPriceStep = {
   low: number;
@@ -28,11 +42,42 @@ export const findRegistryByChainId = (
   return undefined;
 };
 
+export const getChainFromAddress = (address: string): Chain | undefined => {
+  if (isShieldedAddress(address) || isTransparentAddress(address)) {
+    return chains.find((chain) => chain.chain_name === "namada") as Chain;
+  } else {
+    // Connect to IBC chain and then return the registered chain
+    const chain = chains.find(
+      (chain) => chain.bech32_prefix && address.startsWith(chain.bech32_prefix)
+    );
+    return chain as Chain | undefined;
+  }
+};
+
 const getSvgOrPng = (image?: {
   svg?: string;
   png?: string;
 }): string | undefined => {
   return image?.svg || image?.png;
+};
+
+// Helper function to get chain from token
+export const getChainFromAsset = (
+  token: AssetWithAmount
+): Chain | undefined => {
+  // For NAM token, we want to show Osmosis chain logo since it's bridged there
+  if (token.asset.base === "unam") {
+    return getChainRegistryByChainName("osmosis")?.chain;
+  }
+
+  // For other tokens, get chain from traces
+  const chainName = token.asset.traces?.[0]?.counterparty?.chain_name;
+  if (chainName) {
+    return getChainRegistryByChainName(chainName)?.chain;
+  }
+
+  // Fallback to namada chain if no traces
+  return namadaChain as unknown as Chain;
 };
 
 export const getChainImageUrl = (chain?: Chain): string => {

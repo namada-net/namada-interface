@@ -34,6 +34,7 @@ export const StakingOverview = (): JSX.Element => {
             <MyValidatorsTable />
           </Panel>
         )}
+
         {hasWithdrawableAmounts && (
           <Panel title="Unbonded">
             <div className="flex justify-end -mt-15">

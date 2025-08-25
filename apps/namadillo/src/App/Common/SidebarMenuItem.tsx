@@ -1,12 +1,21 @@
 import clsx from "clsx";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 type Props = {
   url?: string;
   children: React.ReactNode;
+  shouldHighlight?: boolean;
+  preventNavigationOnSameRoute?: boolean;
 };
 
-export const SidebarMenuItem = ({ url, children }: Props): JSX.Element => {
+export const SidebarMenuItem = ({
+  url,
+  children,
+  shouldHighlight,
+  preventNavigationOnSameRoute = false,
+}: Props): JSX.Element => {
+  const location = useLocation();
+
   const className = clsx(
     "flex items-center gap-5 text-lg text-white",
     "transition-colors duration-300 ease-out-quad hover:text-cyan",
@@ -19,12 +28,19 @@ export const SidebarMenuItem = ({ url, children }: Props): JSX.Element => {
     return <span className={className}>{children}</span>;
   }
 
+  const handleClick = (e: React.MouseEvent): void => {
+    if (preventNavigationOnSameRoute && location.pathname === url) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <NavLink
       to={url}
+      onClick={handleClick}
       className={({ isActive }) =>
         clsx(className, {
-          "text-yellow font-bold": isActive,
+          "text-yellow font-bold": isActive || shouldHighlight,
         })
       }
     >

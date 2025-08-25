@@ -21,12 +21,12 @@ export const SelectedAsset = ({
   const selectorClassList = clsx(
     `flex items-center gap-4 text-xl text-white font-light cursor-pointer uppercase`
   );
-
   return (
     <button
       type="button"
       className={clsx("block group", {
-        "pointer-events-none opacity-30": isDisabled || isLoading,
+        "opacity-30": isLoading,
+        "pointer-events-none": isDisabled,
       })}
       disabled={isDisabled}
       onClick={onClick}
@@ -36,7 +36,7 @@ export const SelectedAsset = ({
     >
       {!asset && (
         <span className={selectorClassList}>
-          <EmptyResourceIcon className="w-12" />
+          <EmptyResourceIcon className="w-8" />
           {isLoading && (
             <SkeletonLoading
               className="bg-neutral-700"
@@ -44,7 +44,7 @@ export const SelectedAsset = ({
               width="70px"
             />
           )}
-          {!isLoading && (
+          {!isLoading && !isDisabled && (
             <>
               Asset
               <GoChevronDown className="text-sm" />
@@ -56,17 +56,19 @@ export const SelectedAsset = ({
         <span className={selectorClassList}>
           <img
             className={clsx(
-              "w-15 aspect-square object-cover select-none",
+              "w-8 aspect-square object-cover select-none",
               "object-center bg-neutral-800 rounded-full"
             )}
             alt={`${asset.name} image`}
             src={getAssetImageUrl(asset)}
           />
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-1 text-md">
             {asset.symbol}
-            <i className="text-sm">
-              <GoChevronDown />
-            </i>
+            {!isDisabled && (
+              <i className="text-sm">
+                <GoChevronDown />
+              </i>
+            )}
           </span>
         </span>
       )}

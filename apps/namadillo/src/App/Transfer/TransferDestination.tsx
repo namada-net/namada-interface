@@ -1,196 +1,317 @@
-import { Chain } from "@chain-registry/types";
+import { Asset } from "@chain-registry/types";
 import { Stack } from "@namada/components";
-import { TabSelector } from "App/Common/TabSelector";
+import { AccountType } from "@namada/types";
+import { shortenAddress } from "@namada/utils";
 import { TransactionFee } from "App/Common/TransactionFee";
 import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
+import { routes } from "App/routes";
+import {
+  isIbcAddress,
+  isNamadaAddress,
+  isTransparentAddress,
+} from "App/Transfer/common";
+import { allDefaultAccountsAtom } from "atoms/accounts";
+import { getAddressLabel } from "atoms/transactions";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
-import { Address, Asset, WalletProvider } from "types";
+import { useWalletManager } from "hooks/useWalletManager";
+import { wallets } from "integrations";
+import { KeplrWalletManager } from "integrations/Keplr";
+import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
+import { useAtomValue } from "jotai";
+import { useEffect, useState } from "react";
+import { GoChevronDown } from "react-icons/go";
+import { useLocation } from "react-router-dom";
+import { Address } from "types";
+import namadaShieldedIcon from "./assets/namada-shielded.svg";
+import namadaTransparentIcon from "./assets/namada-transparent.svg";
+import shieldedEye from "./assets/shielded-eye.svg";
 import { ConnectProviderButton } from "./ConnectProviderButton";
 import { CustomAddressForm } from "./CustomAddressForm";
-import { SelectedChain } from "./SelectedChain";
+import { DestinationAddressModal } from "./DestinationAddressModal";
 import { SelectedWallet } from "./SelectedWallet";
+import { ShieldedPropertiesTooltip } from "./ShieldedPropertiesTooltip";
 import { TokenAmountCard } from "./TokenAmountCard";
 
 type TransferDestinationProps = {
   isShieldedAddress?: boolean;
   isShieldedTx?: boolean;
-  onChangeShielded?: (isShielded: boolean) => void;
-  chain?: Chain;
-  wallet?: WalletProvider;
+  isSubmitting?: boolean;
   walletAddress?: string;
-  className?: string;
   gasDisplayAmount?: BigNumber;
   gasAsset?: Asset;
   feeProps?: TransactionFeeProps;
-  changeFeeEnabled?: boolean;
-  customAddressActive?: boolean;
-  isSubmitting?: boolean;
   destinationAsset?: Asset;
   amount?: BigNumber;
-  openChainSelector?: () => void;
-  openProviderSelector?: () => void;
-  onToggleCustomAddress?: (isActive: boolean) => void;
-  onChangeAddress?: (address: Address) => void;
-  address?: string;
+  destinationAddress?: string;
+  sourceAddress?: string;
   memo?: string;
+  sourceAsset: Asset | undefined;
+  onChangeAddress?: (address: Address) => void;
   onChangeMemo?: (address: string) => void;
+  setDestinationAddress?: (address: string) => void;
 };
 
 export const TransferDestination = ({
-  chain,
-  wallet,
-  walletAddress,
   isShieldedAddress,
   isShieldedTx = false,
-  onChangeShielded,
+  isSubmitting,
   gasDisplayAmount,
   gasAsset,
-  isSubmitting,
   feeProps,
-  changeFeeEnabled = true,
-  customAddressActive,
-  onToggleCustomAddress,
-  address,
-  amount,
   destinationAsset,
-  onChangeAddress,
+  amount,
+  destinationAddress,
+  sourceAddress,
   memo,
+  sourceAsset,
+  setDestinationAddress,
   onChangeMemo,
-  openChainSelector,
-  openProviderSelector,
 }: TransferDestinationProps): JSX.Element => {
+  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const location = useLocation();
+
+  const isIbcTransfer = isIbcAddress(sourceAddress ?? "");
+  const changeFeeEnabled = !isIbcTransfer;
+  const transparentAccount = accounts?.find(
+    (account) => account.type !== AccountType.ShieldedKeys
+  );
+  const shieldedAccount = accounts?.find(
+    (account) => account.type === AccountType.ShieldedKeys
+  );
+
+  const alias =
+    isShieldedTx && shieldedAccount?.alias ?
+      shieldedAccount?.alias
+    : transparentAccount?.alias;
+
+  const handleOpenModal = (): void => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = (): void => {
+    setIsModalOpen(false);
+  };
+
+  const handleSelectAddress = async (
+    selectedAddress: Address
+  ): Promise<void> => {
+    const isIbcAsset = !isNamadaAddress(selectedAddress);
+    if (isIbcAsset) {
+      const chain = getChainFromAddress(selectedAddress);
+      await connectToChainId(chain?.chain_id ?? "");
+    }
+    setDestinationAddress?.(selectedAddress);
+  };
+  const keplr = new KeplrWalletManager();
+
+  const { connectToChainId } = useWalletManager(keplr);
+
+  const isShieldingTransaction =
+    routes.maspShield === location.pathname || routes.ibc === location.pathname;
+
+  // Make sure destination address is pre-filled if it's a shielding transaction
+  useEffect(() => {
+    if (destinationAddress) return;
+    if (isShieldingTransaction && shieldedAccount?.address) {
+      setDestinationAddress?.(shieldedAccount?.address ?? "");
+    }
+  }, [
+    isShieldingTransaction,
+    shieldedAccount?.address,
+    destinationAddress,
+    setDestinationAddress,
+  ]);
+
+  // Write a customAddress variable that checks if the address doesn't come from our transparent or shielded accounts
+  const customAddress =
+    (
+      [shieldedAccount?.address, transparentAccount?.address].includes(
+        destinationAddress
+      )
+    ) ?
+      undefined
+    : destinationAddress;
+
+  const sourceWallet =
+    isNamadaAddress(destinationAddress || "") ? wallets.namada : wallets.keplr;
+  const addressType =
+    isShieldedAddress ? "shielded"
+    : isTransparentAddress(destinationAddress ?? "") ? "transparent"
+    : "ibc";
   return (
-    <div
-      className={clsx("relative bg-neutral-800 rounded-lg px-4 pt-8 pb-4", {
-        "border border-yellow transition-colors duration-200":
-          isShieldedAddress,
-        "border border-white transition-colors duration-200":
-          chain?.chain_name === "namada" && !isShieldedAddress,
-      })}
-    >
-      {!isSubmitting && (
-        <div>
-          {onChangeShielded && chain?.chain_name.includes("namada") && (
-            <nav className="mb-6">
-              <TabSelector
-                active={isShieldedAddress ? "shielded" : "transparent"}
-                items={[
-                  {
-                    id: "shielded",
-                    text: "Shielded",
-                    className: "text-yellow",
-                  },
-                  {
-                    id: "transparent",
-                    text: "Transparent",
-                    className: "text-white",
-                  },
-                ]}
-                onChange={() => onChangeShielded(!isShieldedAddress)}
-              />
-            </nav>
-          )}
-          {onToggleCustomAddress && (
-            <nav className="mb-6">
-              <TabSelector
-                active={customAddressActive ? "custom" : "my-address"}
-                onChange={() => onToggleCustomAddress(!customAddressActive)}
-                items={[
-                  {
-                    id: "my-address",
-                    text: "My Address",
-                    className: "text-white",
-                  },
-                  {
-                    id: "custom",
-                    text: "Custom Address",
-                    className: "text-white",
-                  },
-                ]}
-              />
-            </nav>
-          )}
-          {!customAddressActive && (
-            <div className="flex justify-between items-center">
-              <SelectedChain
-                chain={chain}
-                wallet={wallet}
-                onClick={openChainSelector}
-                iconSize="42px"
-              />
-              {!walletAddress && (
-                <ConnectProviderButton onClick={openProviderSelector} />
-              )}
-              {wallet && walletAddress && (
-                <SelectedWallet wallet={wallet} address={walletAddress} />
+    <>
+      <div
+        className={clsx("relative bg-neutral-800 rounded-lg px-4 pt-8 pb-4", {
+          "border border-yellow transition-colors duration-200":
+            isShieldedAddress,
+          "border border-white transition-colors duration-200":
+            isNamadaAddress(destinationAddress ?? "") && !isShieldedAddress,
+        })}
+      >
+        {!isSubmitting && (
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <span className="ml-2 text-neutral-500 mb-0.5 font-normal">
+                Destination
+              </span>
+              {isShieldingTransaction && (
+                <div className="relative w-fit group/tooltip">
+                  <img
+                    src={shieldedEye}
+                    alt="Shielded Logo"
+                    className="w-5 mb-2 select-none cursor-pointer"
+                  />
+                  <ShieldedPropertiesTooltip />
+                </div>
               )}
             </div>
-          )}
 
-          {customAddressActive && (
-            <Stack gap={8}>
-              {onToggleCustomAddress && (
-                <SelectedChain
-                  chain={chain}
-                  wallet={wallet}
-                  onClick={openChainSelector}
-                  iconSize="42px"
-                />
-              )}
-              <CustomAddressForm
-                memo={memo}
-                onChangeMemo={onChangeMemo}
-                customAddress={address}
-                onChangeAddress={onChangeAddress}
-              />
-            </Stack>
-          )}
-        </div>
-      )}
+            <div className="mt-3">
+              <button
+                type="button"
+                disabled={
+                  isShieldingTransaction || isSubmitting || !sourceAsset
+                }
+                onClick={handleOpenModal}
+                className={clsx(
+                  "flex justify-between items-center bg-neutral-900 p-2 rounded-sm w-full",
+                  {
+                    "hover:bg-neutral-700 transition-colors":
+                      !isShieldingTransaction,
+                  }
+                )}
+              >
+                <div className="flex">
+                  {destinationAddress && (
+                    <img
+                      src={
+                        isShieldedAddress ? namadaShieldedIcon
+                        : isTransparentAddress(destinationAddress) ?
+                          namadaTransparentIcon
+                        : getChainImageUrl(
+                            getChainFromAddress(destinationAddress ?? "")
+                          )
 
-      {isSubmitting && amount && destinationAsset && (
-        <div>
-          <TokenAmountCard asset={destinationAsset} displayAmount={amount} />
-        </div>
-      )}
+                      }
+                      alt={
+                        getChainFromAddress(destinationAddress ?? "")
+                          ?.pretty_name
+                      }
+                      className="w-7"
+                    />
+                  )}
+                  <div className="flex flex-col ml-4">
+                    {destinationAddress ?
+                      <div className="flex flex-col">
+                        <span className="text-neutral-500 text-left font-normal text-xs">
+                          {isIbcAddress(destinationAddress) ? "Keplr" : alias}
+                        </span>
+                        <span className="text-white text-sm font-normal">
+                          {shortenAddress(destinationAddress, 15, 15)}
+                        </span>
+                      </div>
+                    : <span className="text-neutral-500 font-normal">
+                        Select address
+                      </span>
+                    }
+                  </div>
+                </div>
+                {!destinationAddress ?
+                  <>
+                    <ConnectProviderButton
+                      onClick={handleOpenModal}
+                      disabled={!sourceAsset}
+                    />
+                  </>
+                : !isShieldingTransaction && (
+                    <GoChevronDown
+                      className={clsx(
+                        "mr-3 transition-transform text-neutral-400 text-xs"
+                      )}
+                    />
+                  )
+                }
+              </button>
+            </div>
 
-      {isSubmitting && (
-        <footer>
-          <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
-          <div className="flex justify-between items-center gap-4">
-            <SelectedChain chain={chain} wallet={wallet} iconSize="36px" />
-            {wallet && walletAddress && (
-              <SelectedWallet
-                wallet={wallet}
-                address={customAddressActive ? address : walletAddress}
-                displayFullAddress={false}
-              />
+            {customAddress && (
+              <Stack gap={8}>
+                <CustomAddressForm memo={memo} onChangeMemo={onChangeMemo} />
+              </Stack>
             )}
           </div>
-        </footer>
-      )}
+        )}
 
-      {!isSubmitting && (
-        <footer className="flex items-center mt-10">
-          {changeFeeEnabled ?
-            feeProps && (
-              <TransactionFeeButton
-                feeProps={feeProps}
-                isShieldedTransfer={isShieldedTx}
-              />
-            )
-          : gasDisplayAmount &&
-            gasAsset && (
-              <TransactionFee
-                displayAmount={gasDisplayAmount}
-                symbol={gasAsset.symbol}
-              />
-            )
-          }
-        </footer>
+        {isSubmitting && amount && destinationAsset && (
+          <div>
+            <TokenAmountCard asset={destinationAsset} displayAmount={amount} />
+          </div>
+        )}
+
+        {isSubmitting && (
+          <footer>
+            <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
+            <div className="flex justify-between items-center gap-4">
+              <div className="flex items-center gap-2">
+                <img
+                  src={
+                    sourceWallet === wallets.keplr ?
+                      getChainImageUrl(
+                        getChainFromAddress(destinationAddress ?? "")
+                      )
+                    : isTransparentAddress(destinationAddress ?? "") ?
+                      namadaTransparentIcon
+                    : namadaShieldedIcon
+                  }
+                  alt={sourceWallet.name}
+                  className="w-8"
+                />
+                <span className="max-w-[200px] font-normal">
+                  {getAddressLabel(destinationAddress ?? "", addressType)}
+                </span>
+              </div>
+              {destinationAddress && (
+                <SelectedWallet
+                  address={customAddress ? customAddress : destinationAddress}
+                  displayFullAddress={false}
+                />
+              )}
+            </div>
+          </footer>
+        )}
+
+        {!isSubmitting && (
+          <footer className="flex mt-10">
+            {changeFeeEnabled ?
+              feeProps && (
+                <TransactionFeeButton
+                  feeProps={feeProps}
+                  isShieldedTransfer={isShieldedTx}
+                />
+              )
+            : gasDisplayAmount &&
+              gasAsset && (
+                <TransactionFee
+                  displayAmount={gasDisplayAmount}
+                  symbol={gasAsset.symbol}
+                />
+              )
+            }
+          </footer>
+        )}
+      </div>
+
+      {isModalOpen && (
+        <DestinationAddressModal
+          onClose={handleCloseModal}
+          onSelectAddress={handleSelectAddress}
+          sourceAsset={sourceAsset}
+          sourceAddress={sourceAddress ?? ""}
+        />
       )}
-    </div>
+    </>
   );
 };

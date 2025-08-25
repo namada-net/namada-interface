@@ -1,7 +1,8 @@
 import { Chain } from "@chain-registry/types";
+import { getChainRegistryByChainId } from "atoms/integrations";
+import { getChainFromAddress } from "integrations/utils";
 import namadaShieldedSvg from "./assets/namada-shielded.svg";
 import namadaTransparentSvg from "./assets/namada-transparent.svg";
-
 export const parseChainInfo = (
   chain?: Chain,
   isShielded?: boolean
@@ -39,4 +40,14 @@ export const isTransparentAddress = (address: string): boolean => {
 
 export const isNamadaAddress = (address: string): boolean => {
   return isShieldedAddress(address) || isTransparentAddress(address);
+};
+
+export const isIbcAddress = (address: string): boolean => {
+  if (!address?.trim() || isNamadaAddress(address)) return false;
+  // Check if the address matches a supported IBC chain
+  const chain = getChainFromAddress(address.trim());
+  if (!chain) return false;
+  // Verify the chain is in our supported chains map
+  const registry = getChainRegistryByChainId(chain.chain_id);
+  return !!registry;
 };

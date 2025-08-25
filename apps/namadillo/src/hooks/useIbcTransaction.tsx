@@ -213,15 +213,19 @@ export const useIbcTransaction = ({
               )
             : { memo, receiver: destinationAddress };
         })();
-
+      const assetTrace = selectedAsset.traces?.find(
+        (trace) => trace.type === "ibc"
+      );
       const chainId = registry.chain.chain_id;
+      const denomination =
+        assetTrace?.counterparty?.base_denom || selectedAsset.base;
 
       const transferMsg = createIbcTransferMessage(
         sanitizeChannel(sourceChannel!),
         sanitizeAddress(sourceAddress),
         sanitizeAddress(maspCompatibleReceiver),
         baseAmount,
-        selectedAsset.base,
+        denomination,
         maspCompatibleMemo
       );
 

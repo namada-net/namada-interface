@@ -66,11 +66,6 @@ const TransferTransactionReceipt = ({
       wallets.namada
     : wallets.keplr;
 
-  const destinationWallet =
-    isNamadaAddress(transaction.destinationAddress || "") ?
-      wallets.namada
-    : wallets.keplr;
-
   return (
     <Stack className="max-w-[440px] mx-auto">
       <div className="rounded-md bg-neutral-800 px-4 pb-6">
@@ -81,13 +76,8 @@ const TransferTransactionReceipt = ({
               wallet={sourceChain ? sourceWallet : undefined}
             />
           )}
-          {sourceWallet && (
-            <SelectedWallet
-              wallet={sourceWallet}
-              address={transaction.sourceAddress}
-              displayTooltip={!transaction.sourceAddress?.includes("shielded")}
-            />
-          )}
+
+          <SelectedWallet address={transaction.sourceAddress} />
         </header>
         <hr className="mt-4 mb-2.5 mx-2 border-white opacity-[5%]" />
         <TokenAmountCard
@@ -118,12 +108,7 @@ const TransferTransactionReceipt = ({
                 iconSize="36px"
               />
             )}
-            {destinationWallet && (
-              <SelectedWallet
-                wallet={destinationWallet}
-                address={transaction.destinationAddress}
-              />
-            )}
+            <SelectedWallet address={transaction.destinationAddress} />
           </div>
         </footer>
       </div>

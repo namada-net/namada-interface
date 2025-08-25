@@ -230,7 +230,6 @@ export const TransactionCard = ({
   };
 
   const displayAmount = getDisplayAmount();
-
   return (
     <article
       className={twMerge(
