@@ -17,7 +17,6 @@ import { useBalances } from "hooks/useBalances";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { IoSwapHorizontal } from "react-icons/io5";
-import { TbVectorTriangle } from "react-icons/tb";
 import { Link } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import { TokenBalance } from "types";
@@ -127,12 +126,6 @@ const TransparentTokensTable = ({
                 {
                   url: `${routes.transfer}?${params.asset}=${address}&${params.shielded}=0`,
                   icon: <IoSwapHorizontal className="h-[20px] w-[20px]" />,
-                },
-                {
-                  url: `${routes.ibcWithdraw}?${params.asset}=${address}`,
-                  icon: (
-                    <TbVectorTriangle className="h-[20px] w-[20px] -mt-1" />
-                  ),
                 },
               ].map(({ url, icon }) => (
                 <div key={url} className="relative group/tooltip">

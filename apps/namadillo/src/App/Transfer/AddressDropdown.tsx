@@ -13,8 +13,8 @@ import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
-import namadaShieldedIcon from "./assets/namada-shielded.svg";
-import namadaTransparentIcon from "./assets/namada-transparent.svg";
+import namadaShieldedIcon from "./assets/namada-shielded-square.svg";
+import namadaTransparentIcon from "./assets/namada-transparent-square.svg";
 import { isIbcAddress, isNamadaAddress } from "./common";
 
 type AddressOption = {
@@ -205,55 +205,45 @@ export const AddressDropdown = ({
   if (addressOptions.length === 0 && connectedWallets.keplr) return <></>;
 
   return (
-    <div className={twMerge("space-y-1", className)}>
-      {/* Address Options List */}
-      {addressOptions.map((option) => {
-        const shielded = option.id === "namada-shielded";
-        const keplr = option.id === "keplr";
-        const isShieldingTxn = [routes.maspShield, routes.ibc].includes(
-          location.pathname as "/masp/shield" | "/ibc"
-        );
-        const isIbcDestination = isIbcAddress(destinationAddress ?? "");
-        const disabled =
-          (shielded && isShieldingTxn) || (keplr && isIbcDestination);
-        const isSelected = option.address === selectedAddress;
-        if (disabled) return null;
-        return (
-          <button
-            key={option.id}
-            type="button"
-            className={clsx(
-              "w-[240px] p-1.5 text-left flex items-center gap-3 rounded-lg",
-              "transition-all duration-200",
-              {
-                "opacity-40 cursor-not-allowed": disabled,
-                "bg-yellow/20 border border-yellow": isSelected && !disabled,
-                "hover:bg-neutral-800": !isSelected && !disabled,
-              }
-            )}
-            onClick={() => handleSelectOption(option)}
-          >
-            <div className="flex-shrink-0">
-              <img
-                src={option.iconUrl}
-                alt={option.label}
-                className="w-6 h-6"
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              {option.id === "keplr" ?
-                <div
-                  className={clsx(
-                    "text-sm truncate flex items-center h-10",
-                    isSelected ? "text-yellow font-medium" : "text-neutral-300"
-                  )}
-                >
-                  {option.alias}
-                </div>
-              : <>
+    <div className="mb-4 bg-white/5 rounded-sm p-2 mr-3">
+      <h5 className="text-neutral-500 text-sm mb-2">Your account</h5>
+      <div className={twMerge("space-y-1", className)}>
+        {addressOptions.map((option) => {
+          const shielded = option.id === "namada-shielded";
+          const keplr = option.id === "keplr";
+          const isShieldingTxn = [routes.maspShield, routes.ibc].includes(
+            location.pathname as "/masp/shield" | "/ibc"
+          );
+          const isIbcDestination = isIbcAddress(destinationAddress ?? "");
+          const disabled =
+            (shielded && isShieldingTxn) || (keplr && isIbcDestination);
+          const isSelected = option.address === selectedAddress;
+          if (disabled) return null;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              className={clsx(
+                "w-[240px] px-1.5 pb-1 text-left flex items-center gap-3 rounded-lg",
+                "transition-all duration-200",
+                {
+                  "opacity-40 cursor-not-allowed": disabled,
+                }
+              )}
+              onClick={() => handleSelectOption(option)}
+            >
+              <div className="flex-shrink-0">
+                <img
+                  src={option.iconUrl}
+                  alt={option.label}
+                  className="w-6 h-6"
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                {option.id === "keplr" ?
                   <div
                     className={clsx(
-                      "text-sm truncate",
+                      "text-sm truncate flex items-center h-10",
                       isSelected ?
                         "text-yellow font-medium"
                       : "text-neutral-300"
@@ -261,44 +251,61 @@ export const AddressDropdown = ({
                   >
                     {option.alias}
                   </div>
-                  <div
-                    className={clsx(
-                      "text-xs mt-0.5",
-                      isSelected ? "text-yellow/70" : "text-neutral-400"
-                    )}
-                  >
-                    {shortenAddress(option.address, 10)}
-                  </div>
-                </>
-              }
+                : <>
+                    <div
+                      className={clsx(
+                        "text-sm truncate",
+                        isSelected ?
+                          "text-yellow font-medium"
+                        : "text-neutral-300"
+                      )}
+                    >
+                      {option.alias}
+                    </div>
+                    <div
+                      className={clsx(
+                        "text-xs mt-0",
+                        isSelected ? "text-yellow/70" : "text-neutral-400"
+                      )}
+                    >
+                      {shortenAddress(option.address, 10)}
+                    </div>
+                  </>
+                }
+              </div>
+              {isSelected && (
+                <div className="flex-shrink-0 mr-9">
+                  <div className="w-2 h-2 bg-yellow rounded-full"></div>
+                </div>
+              )}
+            </button>
+          );
+        })}
+
+        {/* Connect Wallet button if Keplr is not connected */}
+        {!connectedWallets.keplr && (
+          <button
+            type="button"
+            className={clsx(
+              "w-full p-2 text-left flex items-center gap-3",
+              "transition-all duration-200",
+              "text-sm font-medium text-neutral-300",
+              isConnectingKeplr && "opacity-50 cursor-not-allowed"
+            )}
+            onClick={handleConnectKeplr}
+            disabled={isConnectingKeplr}
+          >
+            <img
+              src={wallets.keplr.iconUrl}
+              alt="Keplr"
+              className="w-6 h-6 flex-shrink-0 opacity-70"
+            />
+            <div className="flex-1">
+              {isConnectingKeplr ? "Connecting..." : "Connect Wallet"}
             </div>
           </button>
-        );
-      })}
-
-      {/* Connect Wallet button if Keplr is not connected */}
-      {!connectedWallets.keplr && (
-        <button
-          type="button"
-          className={clsx(
-            "w-full p-2 text-left flex items-center gap-3",
-            "transition-all duration-200",
-            "text-sm font-medium text-neutral-300",
-            isConnectingKeplr && "opacity-50 cursor-not-allowed"
-          )}
-          onClick={handleConnectKeplr}
-          disabled={isConnectingKeplr}
-        >
-          <img
-            src={wallets.keplr.iconUrl}
-            alt="Keplr"
-            className="w-6 h-6 flex-shrink-0 opacity-70"
-          />
-          <div className="flex-1">
-            {isConnectingKeplr ? "Connecting..." : "Connect Wallet"}
-          </div>
-        </button>
-      )}
+        )}
+      </div>
     </div>
   );
 };
