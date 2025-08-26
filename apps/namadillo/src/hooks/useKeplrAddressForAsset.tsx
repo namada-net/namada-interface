@@ -1,16 +1,21 @@
-import { getChainRegistryByChainName } from "atoms/integrations";
+import {
+  connectedWalletsAtom,
+  getChainRegistryByChainName,
+} from "atoms/integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
+import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { Asset } from "types";
 
 export const useKeplrAddressForAsset = (sourceAsset?: Asset): string | null => {
   const [keplrAddress, setKeplrAddress] = useState<string | null>(null);
+  const connectedWallets = useAtomValue(connectedWalletsAtom);
 
   useEffect(() => {
     const getKeplrAddressForAsset = async (
       sourceAsset?: Asset
     ): Promise<string | null> => {
-      if (!sourceAsset) return null;
+      if (!sourceAsset || !connectedWallets.keplr) return null;
 
       const keplr = new KeplrWalletManager();
       const keplrInstance = await keplr.get();
