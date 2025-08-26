@@ -11,6 +11,7 @@ import {
   isTransparentAddress,
 } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
+import { connectedWalletsAtom } from "atoms/integrations";
 import { getAddressLabel } from "atoms/transactions";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
@@ -72,6 +73,7 @@ export const TransferDestination = ({
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
+  const connectedWallets = useAtomValue(connectedWalletsAtom);
 
   const isIbcTransfer = isIbcAddress(sourceAddress ?? "");
   const changeFeeEnabled = !isIbcTransfer;
@@ -111,6 +113,12 @@ export const TransferDestination = ({
 
   const isShieldingTransaction =
     routes.maspShield === location.pathname || routes.ibc === location.pathname;
+
+  // Make sure destination address isnt ibc if keplr is not connected
+  useEffect(() => {
+    if (isIbcAddress(destinationAddress ?? "") && !connectedWallets.keplr)
+      setDestinationAddress?.("");
+  }, [connectedWallets.keplr, destinationAddress, setDestinationAddress]);
 
   // Make sure destination address is pre-filled if it's a shielding transaction
   useEffect(() => {
