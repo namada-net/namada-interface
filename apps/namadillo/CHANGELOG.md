@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.32.0](https://github.com/namada-net/namada-interface/compare/namadillo@v1.31.3...namadillo@v1.32.0) (2025-08-26)
+
+
+### Features
+
+* Batch tx to pay fees when unshielding ([#2218](https://github.com/namada-net/namada-interface/issues/2218)) ([aba1977](https://github.com/namada-net/namada-interface/commit/aba19775816796b59e466bc45c9e06da902865c7))
+* Port Namadillo to @namada/sdk-multicore v0.20.5 ([#2279](https://github.com/namada-net/namada-interface/issues/2279)) ([7ce5299](https://github.com/namada-net/namada-interface/commit/7ce52998fa900a243358c24a714317e93c9b5439))
+
+
+### Bug Fixes
+
+* Add alias - shielded for all gas spendnig keys ([#2280](https://github.com/namada-net/namada-interface/issues/2280)) ([aba80b7](https://github.com/namada-net/namada-interface/commit/aba80b7eeb7048e53e6086f6db1712c75df3fe7d))
+* Add staking amount to Total Balance banner ([#2261](https://github.com/namada-net/namada-interface/issues/2261)) ([d86f8aa](https://github.com/namada-net/namada-interface/commit/d86f8aaa861e62baccb1277d99903ad66c044914))
+* Display timed out ibc deposits as failed txs ([#2278](https://github.com/namada-net/namada-interface/issues/2278)) ([4800000](https://github.com/namada-net/namada-interface/commit/48000007422d4418efe3253ff291c2167d7f3f37))
+* Namada repository in package json ([#2268](https://github.com/namada-net/namada-interface/issues/2268)) ([70d0f42](https://github.com/namada-net/namada-interface/commit/70d0f4255390e715900071005a9e5d48909fcc74))
+
 ## [1.31.4](https://github.com/namada-net/namada-interface/compare/namadillo@v1.31.3...namadillo@v1.31.4) (2025-07-30)
 
 
