@@ -16,10 +16,7 @@ import {
   namadaTransparentAssetsAtom,
 } from "atoms/balance";
 import { chainAtom } from "atoms/chain";
-import {
-  getChainRegistryByChainName,
-  ibcChannelsFamily,
-} from "atoms/integrations";
+import { ibcChannelsFamily } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { createIbcTxAtom } from "atoms/transfer/atoms";
 import {
@@ -27,7 +24,6 @@ import {
   persistDisposableSigner,
 } from "atoms/transfer/services";
 import BigNumber from "bignumber.js";
-import * as osmosis from "chain-registry/mainnet/osmosis";
 import { useFathomTracker } from "hooks/useFathomTracker";
 import { useTransaction } from "hooks/useTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
@@ -45,7 +41,6 @@ import {
   TransferStep,
 } from "types";
 import {
-  isNamadaAsset,
   toBaseAmount,
   toDisplayAmount,
   useTransactionEventListener,
@@ -150,19 +145,6 @@ export const IbcWithdraw = ({
     }
   };
 
-  const updateDestinationChainAndAddress = async (
-    chain: Chain | undefined
-  ): Promise<void> => {
-    setDestinationChain(chain);
-    if (customAddress) {
-      setCustomAddress("");
-    }
-    if (chain) {
-      await connectToChainId(chain.chain_id);
-      await loadWalletAddress(chain.chain_id);
-    }
-  };
-
   const {
     data: ibcChannels,
     isError: unknownIbcChannels,
@@ -172,35 +154,6 @@ export const IbcWithdraw = ({
   useEffect(() => {
     setSourceChannel(ibcChannels?.namadaChannel || "");
   }, [ibcChannels]);
-
-  // Search for original chain. We don't want to enable users to transfer Namada assets
-  // to other chains different than the original one. Ex: OSMO should only be withdrew to Osmosis,
-  // ATOM to Cosmoshub, etc.
-  useEffect(() => {
-    (async () => {
-      if (!selectedAsset) {
-        await updateDestinationChainAndAddress(undefined);
-        return;
-      }
-
-      let chain: Chain | undefined;
-
-      if (isNamadaAsset(selectedAsset.asset)) {
-        chain = osmosis.chain; // for now, NAM uses the osmosis chain
-      } else if (selectedAsset.asset.traces) {
-        const trace = selectedAsset.asset.traces.find(
-          (trace) => trace.type === "ibc"
-        );
-
-        if (trace) {
-          const chainName = trace.counterparty.chain_name;
-          chain = getChainRegistryByChainName(chainName)?.chain;
-        }
-      }
-
-      await updateDestinationChainAndAddress(chain);
-    })();
-  }, [selectedAsset]);
 
   const {
     execute: performWithdraw,
