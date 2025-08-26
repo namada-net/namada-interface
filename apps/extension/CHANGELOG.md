@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/namada-net/namada-interface/compare/extension@v0.8.1...extension@v0.9.0) (2025-08-26)
+
+
+### Features
+
+* Batch tx to pay fees when unshielding ([#2218](https://github.com/namada-net/namada-interface/issues/2218)) ([aba1977](https://github.com/namada-net/namada-interface/commit/aba19775816796b59e466bc45c9e06da902865c7))
+
 ## [0.8.1](https://github.com/anoma/namada-interface/compare/extension@v0.8.0...extension@v0.8.1) (2025-06-19)
 
 
