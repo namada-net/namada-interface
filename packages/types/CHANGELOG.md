@@ -34,6 +34,13 @@
 * Move optional value to end of schema, no empty memo ([#1379](https://github.com/anoma/namada-interface/issues/1379)) ([ee49600](https://github.com/anoma/namada-interface/commit/ee496001aad9291e3bb224f91ac5caf31a1143db))
 * Replace tally type with two fifths ([#1252](https://github.com/anoma/namada-interface/issues/1252)) ([785d9ad](https://github.com/anoma/namada-interface/commit/785d9ad5d6cf7d7abab53ae9cf812fbbfa84b0f7))
 
+## [0.8.0](https://github.com/namada-net/namada-interface/compare/types@v0.7.0...types@v0.8.0) (2025-08-26)
+
+
+### Features
+
+* Batch tx to pay fees when unshielding ([#2218](https://github.com/namada-net/namada-interface/issues/2218)) ([aba1977](https://github.com/namada-net/namada-interface/commit/aba19775816796b59e466bc45c9e06da902865c7))
+
 ## [0.7.0](https://github.com/anoma/namada-interface/compare/types@v0.6.0...types@v0.7.0) (2025-06-17)
 
 
