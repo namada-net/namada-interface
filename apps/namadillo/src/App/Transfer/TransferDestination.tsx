@@ -8,6 +8,7 @@ import { routes } from "App/routes";
 import {
   isIbcAddress,
   isNamadaAddress,
+  isShieldedAddress as isShieldedNamAddress,
   isTransparentAddress,
 } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -141,12 +142,19 @@ export const TransferDestination = ({
       undefined
     : destinationAddress;
 
+  const isShieldedTransfer =
+    isShieldedNamAddress(sourceAddress ?? "") && isShieldedAddress;
+  const isShieldingTransfer =
+    !isShieldedNamAddress(sourceAddress ?? "") &&
+    isShieldedNamAddress(destinationAddress ?? "");
+
   const sourceWallet =
     isNamadaAddress(destinationAddress || "") ? wallets.namada : wallets.keplr;
   const addressType =
     isShieldedAddress ? "shielded"
     : isTransparentAddress(destinationAddress ?? "") ? "transparent"
     : "ibc";
+
   return (
     <>
       <div
@@ -163,16 +171,20 @@ export const TransferDestination = ({
               <span className="ml-2 text-neutral-500 mb-0.5 font-normal">
                 Destination
               </span>
-              {isShieldingTransaction && (
-                <div className="relative w-fit group/tooltip">
-                  <img
-                    src={shieldedEye}
-                    alt="Shielded Logo"
-                    className="w-5 mb-2 select-none cursor-pointer"
-                  />
-                  <ShieldedPropertiesTooltip />
-                </div>
-              )}
+              {isShieldedTransfer ||
+                (isShieldingTransfer && (
+                  <div className="relative w-fit group/tooltip">
+                    <img
+                      src={shieldedEye}
+                      alt="Shielded Logo"
+                      className="w-5 mb-2 select-none cursor-pointer"
+                    />
+                    <ShieldedPropertiesTooltip
+                      sourceAddress={sourceAddress}
+                      destinationAddress={destinationAddress}
+                    />
+                  </div>
+                ))}
             </div>
 
             <div className="mt-3">
