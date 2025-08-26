@@ -1,4 +1,4 @@
-import { Keplr, Window as KeplrWindow, Key } from "@keplr-wallet/types";
+import { Keplr, Key } from "@keplr-wallet/types";
 import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { routes } from "App/routes";
@@ -6,6 +6,7 @@ import { allDefaultAccountsAtom } from "atoms/accounts";
 import { connectedWalletsAtom } from "atoms/integrations";
 import { getAvailableChains } from "atoms/integrations/functions";
 import clsx from "clsx";
+import { useWalletManager } from "hooks/useWalletManager";
 import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress } from "integrations/utils";
@@ -46,13 +47,15 @@ export const AddressDropdown = ({
   const [keplrAlias, setKeplrAlias] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
-  const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
+  const { connectAllKeplrChains } = useWalletManager(keplr);
+  const [connectedWallets] = useAtom(connectedWalletsAtom);
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
   );
   const shieldedAccount = accounts?.find(
     (account) => account.type === AccountType.ShieldedKeys
   );
+
   // Helper function to fetch Keplr address for the appropriate chain
   const fetchKeplrAddressForChain = async (
     keplrInstance: Keplr
@@ -87,28 +90,28 @@ export const AddressDropdown = ({
   }, [selectedAddress, , onSelectAddress]);
 
   // Fetch Keplr address when connected - use the correct chain based on selectedAddress
-  useEffect(() => {
-    const fetchKeplrAddress = async (): Promise<void> => {
-      if (connectedWallets.keplr) {
-        try {
-          // Only get Keplr instance if it's already available, don't trigger connection
-          const keplrInstance = (window as KeplrWindow).keplr;
-          if (keplrInstance) {
-            await fetchKeplrAddressForChain(keplrInstance);
-          }
-        } catch (error) {
-          console.error("Failed to fetch Keplr address:", error);
-          setKeplrAddress(null);
-          setKeplrAlias(null);
-        }
-      } else {
-        setKeplrAddress(null);
-        setKeplrAlias(null);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchKeplrAddress = async (): Promise<void> => {
+  //     if (connectedWallets.keplr) {
+  //       try {
+  //         // Only get Keplr instance if it's already available, don't trigger connection
+  //         const keplrInstance = (window as KeplrWindow).keplr;
+  //         if (keplrInstance) {
+  //           await fetchKeplrAddressForChain(keplrInstance);
+  //         }
+  //       } catch (error) {
+  //         console.error("Failed to fetch Keplr address:", error);
+  //         setKeplrAddress(null);
+  //         setKeplrAlias(null);
+  //       }
+  //     } else {
+  //       setKeplrAddress(null);
+  //       setKeplrAlias(null);
+  //     }
+  //   };
 
-    fetchKeplrAddress();
-  }, [connectedWallets.keplr, selectedAddress]);
+  //   fetchKeplrAddress();
+  // }, [connectedWallets.keplr, selectedAddress]);
 
   // Build available address options
   const addressOptions: AddressOption[] = [];
@@ -170,24 +173,7 @@ export const AddressDropdown = ({
         return;
       }
 
-      // Get all available chains
-      const availableChains = getAvailableChains();
-
-      // Enable Keplr for all supported chains
-      const enablePromises = availableChains.map(async (chain) => {
-        try {
-          await keplrInstance.enable(chain.chain_id);
-          return { chainId: chain.chain_id, success: true };
-        } catch (error) {
-          console.warn(`Failed to enable chain ${chain.chain_id}:`, error);
-          return { chainId: chain.chain_id, success: false, error };
-        }
-      });
-
-      await Promise.allSettled(enablePromises);
-
-      // Update connected wallets state
-      setConnectedWallets((obj) => ({ ...obj, [keplr.key]: true }));
+      await connectAllKeplrChains();
 
       // Fetch the Keplr address for the correct chain after successful connection
       try {

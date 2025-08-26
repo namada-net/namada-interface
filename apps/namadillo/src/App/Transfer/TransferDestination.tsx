@@ -74,6 +74,8 @@ export const TransferDestination = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
   const connectedWallets = useAtomValue(connectedWalletsAtom);
+  const keplr = new KeplrWalletManager();
+  const { connectAllKeplrChains } = useWalletManager(keplr);
 
   const isIbcTransfer = isIbcAddress(sourceAddress ?? "");
   const changeFeeEnabled = !isIbcTransfer;
@@ -102,14 +104,10 @@ export const TransferDestination = ({
   ): Promise<void> => {
     const isIbcAsset = !isNamadaAddress(selectedAddress);
     if (isIbcAsset) {
-      const chain = getChainFromAddress(selectedAddress);
-      await connectToChainId(chain?.chain_id ?? "");
+      await connectAllKeplrChains();
     }
     setDestinationAddress?.(selectedAddress);
   };
-  const keplr = new KeplrWalletManager();
-
-  const { connectToChainId } = useWalletManager(keplr);
 
   const isShieldingTransaction =
     routes.maspShield === location.pathname || routes.ibc === location.pathname;
