@@ -1,4 +1,4 @@
-import { Keplr, Key } from "@keplr-wallet/types";
+import { Keplr, Window as KeplrWindow, Key } from "@keplr-wallet/types";
 import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { routes } from "App/routes";
@@ -47,15 +47,14 @@ export const AddressDropdown = ({
   const [keplrAlias, setKeplrAlias] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
-  const { connectAllKeplrChains } = useWalletManager(keplr);
   const [connectedWallets] = useAtom(connectedWalletsAtom);
+  const { connectAllKeplrChains } = useWalletManager(keplr);
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
   );
   const shieldedAccount = accounts?.find(
     (account) => account.type === AccountType.ShieldedKeys
   );
-
   // Helper function to fetch Keplr address for the appropriate chain
   const fetchKeplrAddressForChain = async (
     keplrInstance: Keplr
@@ -90,28 +89,28 @@ export const AddressDropdown = ({
   }, [selectedAddress, , onSelectAddress]);
 
   // Fetch Keplr address when connected - use the correct chain based on selectedAddress
-  // useEffect(() => {
-  //   const fetchKeplrAddress = async (): Promise<void> => {
-  //     if (connectedWallets.keplr) {
-  //       try {
-  //         // Only get Keplr instance if it's already available, don't trigger connection
-  //         const keplrInstance = (window as KeplrWindow).keplr;
-  //         if (keplrInstance) {
-  //           await fetchKeplrAddressForChain(keplrInstance);
-  //         }
-  //       } catch (error) {
-  //         console.error("Failed to fetch Keplr address:", error);
-  //         setKeplrAddress(null);
-  //         setKeplrAlias(null);
-  //       }
-  //     } else {
-  //       setKeplrAddress(null);
-  //       setKeplrAlias(null);
-  //     }
-  //   };
+  useEffect(() => {
+    const fetchKeplrAddress = async (): Promise<void> => {
+      if (connectedWallets.keplr) {
+        try {
+          // Only get Keplr instance if it's already available, don't trigger connection
+          const keplrInstance = (window as KeplrWindow).keplr;
+          if (keplrInstance) {
+            await fetchKeplrAddressForChain(keplrInstance);
+          }
+        } catch (error) {
+          console.error("Failed to fetch Keplr address:", error);
+          setKeplrAddress(null);
+          setKeplrAlias(null);
+        }
+      } else {
+        setKeplrAddress(null);
+        setKeplrAlias(null);
+      }
+    };
 
-  //   fetchKeplrAddress();
-  // }, [connectedWallets.keplr, selectedAddress]);
+    fetchKeplrAddress();
+  }, [connectedWallets.keplr, selectedAddress]);
 
   // Build available address options
   const addressOptions: AddressOption[] = [];
