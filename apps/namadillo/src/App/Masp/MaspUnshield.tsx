@@ -1,4 +1,4 @@
-import { Panel } from "@namada/components";
+import { Alert, Panel, Stack } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { MaspSyncCover } from "App/Common/MaspSyncCover";
 import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
@@ -9,11 +9,15 @@ import {
 } from "App/Transfer/TransferModule";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
+  estimateMaxMaspTxAmountAtom2,
   lastCompletedShieldedSyncAtom,
   namadaShieldedAssetsAtom,
 } from "atoms/balance/atoms";
 import { chainParametersAtom } from "atoms/chain/atoms";
-import { namadaChainRegistryAtom } from "atoms/integrations";
+import {
+  namadaChainRegistryAtom,
+  namadaRegistryChainAssetsMapAtom,
+} from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger/atoms";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
@@ -25,7 +29,10 @@ import { wallets } from "integrations";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { GoCheckCircle } from "react-icons/go";
+import { toDisplayAmount } from "utils";
+import { getDisplayGasFee } from "utils/gas";
 
 export const MaspUnshield: React.FC = () => {
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
@@ -43,6 +50,7 @@ export const MaspUnshield: React.FC = () => {
   );
   const namadaChainRegistry = useAtomValue(namadaChainRegistryAtom);
   const chain = namadaChainRegistry.data?.chain;
+  const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
 
   const { storeTransaction } = useTransactionActions();
 
@@ -140,6 +148,78 @@ export const MaspUnshield: React.FC = () => {
       }
     }
   };
+
+  const maxAmount = useMemo(() => {
+    if (!selectedAsset) {
+      return BigNumber(0);
+    }
+    const { gasToken } = feeProps.gasConfig;
+    const token = selectedAsset.asset.address;
+
+    const displayGas = getDisplayGasFee(
+      feeProps.gasConfig,
+      chainAssetsMap.data || {}
+    );
+    const amount =
+      token === gasToken ?
+        selectedAsset.amount.minus(displayGas.totalDisplayAmount)
+      : selectedAsset.amount;
+
+    return amount;
+  }, [selectedAsset?.asset.address]);
+
+  // const maxMaspTxAmountAtom = useMemo(() => {
+  //   let props: MaxMaspTxAmountProps | null;
+  //   if (!account || !destinationAddress || !selectedAsset) {
+  //     props = null;
+  //   } else {
+  //     props = {
+  //       maxNotes: 6,
+  //       source: account.pseudoExtendedKey!,
+  //       target: destinationAddress,
+  //       token: selectedAsset.asset.address,
+  //       feeToken: feeProps.gasConfig.gasToken,
+  //       amount:
+  //         isNamadaAsset(selectedAsset.asset) ?
+  //           maxAmount.toString()
+  //         : toBaseAmount(selectedAsset.asset, maxAmount).toString(),
+  //       feeAmount: feeProps.gasConfig.gasPriceInMinDenom
+  //         .times(feeProps.gasConfig.gasLimit)
+  //         .toString(),
+  //     };
+  //   }
+
+  //   return estimateMaxMaspTxAmountAtom(props);
+  // }, [
+  //   selectedAsset?.asset.address,
+  //   feeProps.gasConfig.gasToken,
+  //   feeProps?.gasConfig.gasLimit.toString(),
+  //   account?.pseudoExtendedKey,
+  //   destinationAddress,
+  // ]);
+
+  // const maxMaspTxAmountQuery = useAtomValue(maxMaspTxAmountAtom);
+  const maxMaspTxAmountQuery = useAtomValue(
+    estimateMaxMaspTxAmountAtom2({
+      token: selectedAsset?.asset.address,
+      feeToken: feeProps.gasConfig.gasToken,
+    })
+  );
+
+  const [maxMASPAmount, displayWarning] = useMemo(() => {
+    const { data } = maxMaspTxAmountQuery;
+    if (!data || !selectedAsset) {
+      return [BigNumber(0), false];
+    }
+    const max = toDisplayAmount(selectedAsset.asset, data);
+
+    return [max, max.lt(maxAmount)];
+  }, [
+    maxMaspTxAmountQuery.data?.toString(),
+    maxAmount,
+    selectedAsset?.asset.address,
+  ]);
+
   // We stop the ledger status check when the transfer is in progress
   setLedgerStatusStop(isPerformingTransfer);
 
@@ -151,12 +231,49 @@ export const MaspUnshield: React.FC = () => {
           isDestinationShielded={false}
         />
       </header>
+      {maxMaspTxAmountQuery.isPending && (
+        <Alert type="warning" className="w-[480px] mx-auto mb-4">
+          <Stack direction="horizontal" gap={3} className="items-center">
+            <i
+              className={
+                "block w-6 h-6 border-2 border-transparent border-t-yellow rounded-[50%] animate-loadingSpinner"
+              }
+            />
+            <p>Calculating the maximum amount you can unshield this time... </p>
+          </Stack>
+        </Alert>
+      )}
+      {!maxMaspTxAmountQuery.isPending && displayWarning && (
+        <Alert type="warning" className="w-[480px] mx-auto mb-4">
+          <p>
+            Due to ledger BS we have to limit the amount that you can unshield
+            at this time to <b>{maxMASPAmount.toString()}</b>
+            <br />
+            After tx is successful, you will be able to unshield more
+          </p>
+        </Alert>
+      )}
+      {!displayWarning && !maxMaspTxAmountQuery.isPending && (
+        <Alert
+          type="success"
+          className="w-[480px] mx-auto mb-4 text-black bg-success"
+        >
+          <Stack direction="horizontal" gap={3} className="items-center">
+            <GoCheckCircle className="w-6 h-6" />
+            <p>You can unshield all the tokens</p>
+          </Stack>
+        </Alert>
+      )}
       <TransferModule
         source={{
           isLoadingAssets: isLoadingAssets,
           availableAssets,
           selectedAssetAddress,
           availableAmount: selectedAsset?.amount,
+          maxAmount:
+            displayWarning && !maxMaspTxAmountQuery.isFetching ?
+              maxMASPAmount
+            : undefined,
           chain,
           availableWallets: [wallets.namada],
           wallet: wallets.namada,

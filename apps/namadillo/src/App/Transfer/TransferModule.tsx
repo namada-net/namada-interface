@@ -61,6 +61,7 @@ export type TransferSourceProps = TransferModuleConfig & {
   isLoadingAssets?: boolean;
   selectedAssetAddress?: Address;
   availableAmount?: BigNumber;
+  maxAmount?: BigNumber;
   onChangeSelectedAsset?: (address: Address | undefined) => void;
   amount?: BigNumber;
   onChangeAmount?: (amount: BigNumber | undefined) => void;
@@ -259,7 +260,7 @@ export const TransferModule = ({
       return "NoAmount";
     } else if (
       !availableAmountMinusFees ||
-      source.amount.gt(availableAmountMinusFees)
+      source.amount.gt(source.maxAmount || availableAmountMinusFees)
     ) {
       return "NotEnoughBalance";
     } else if (!destination.wallet && !destination.customAddress) {
@@ -492,6 +493,7 @@ export const TransferModule = ({
             isLoadingAssets={source.isLoadingAssets}
             chain={parseChainInfo(source.chain, source.isShieldedAddress)}
             availableAmount={source.availableAmount}
+            maxAmount={source.maxAmount}
             availableAmountMinusFees={availableAmountMinusFees}
             amount={source.amount}
             openProviderSelector={onChangeWallet(source)}

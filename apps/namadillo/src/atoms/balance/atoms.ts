@@ -1,4 +1,5 @@
 import { DefaultApi } from "@namada/indexer-client";
+import { MaxMaspTxAmountProps } from "@namada/sdk-multicore";
 import { Account, AccountType, DatedViewingKey } from "@namada/types";
 import {
   accountsAtom,
@@ -24,9 +25,9 @@ import { sequenceT } from "fp-ts/lib/Apply";
 import { pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/Option";
 import invariant from "invariant";
-import { atom, getDefaultStore } from "jotai";
-import { atomWithQuery } from "jotai-tanstack-query";
-import { atomWithStorage } from "jotai/utils";
+import { Atom, atom, getDefaultStore } from "jotai";
+import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
+import { atomFamily, atomWithStorage } from "jotai/utils";
 import { Address, TokenBalance } from "types";
 import { namadaAsset, toDisplayAmount } from "utils";
 import {
@@ -34,9 +35,11 @@ import {
   mapNamadaAssetsToTokenBalances,
 } from "./functions";
 import {
+  estiamteMaxMaspTxAmountByNotes,
   fetchShieldedBalance,
   fetchShieldedRewards,
   fetchShieldedRewardsPerToken,
+  getNotesAndConversions,
   shieldedSync,
 } from "./services";
 
@@ -201,6 +204,89 @@ export const shieldedBalanceAtom = atomWithQuery((get) => {
     ]),
   };
 });
+
+export const estimateMaxMaspTxAmountAtom = (
+  props: MaxMaspTxAmountProps | null
+): Atom<AtomWithQueryResult<[string, string] | null>> =>
+  atomWithQuery((get) => {
+    const chainParametersQuery = get(chainParametersAtom);
+    const chainId = chainParametersQuery.data?.chainId;
+
+    return {
+      queryKey: ["estimate-max-masp-tx-amount", chainId],
+      ...queryDependentFn(async () => {
+        if (!props || !chainId) {
+          return null;
+        }
+
+        const result = await estiamteMaxMaspTxAmountByNotes(props, chainId);
+        return result;
+      }, [chainParametersQuery]),
+    };
+  });
+
+export const getNotesAndConversionsAtom = atomWithQuery((get) => {
+  const viewingKeysQuery = get(viewingKeysAtom);
+  const chainParametersQuery = get(chainParametersAtom);
+
+  const [viewingKey] = viewingKeysQuery.data ?? [];
+  const chainId = chainParametersQuery.data?.chainId;
+
+  return {
+    queryKey: ["get-notes-and-conversions", viewingKey, chainId],
+    ...queryDependentFn(async () => {
+      if (!viewingKey || !chainId) {
+        return {};
+      }
+
+      const result = await getNotesAndConversions(viewingKey.key, chainId);
+      return result;
+    }, [viewingKeysQuery, chainParametersQuery]),
+  };
+});
+
+export const estimateMaxMaspTxAmountAtom2 = atomFamily(
+  (props: { token?: string; feeToken?: string }) =>
+    atomWithQuery((get) => {
+      const { token, feeToken } = props;
+      const notesAndConversionsQuery = get(getNotesAndConversionsAtom);
+      const notesAndConversions = notesAndConversionsQuery.data;
+
+      return {
+        queryKey: ["estimate-max-masp-tx-amount-2", token, feeToken],
+        ...queryDependentFn(async () => {
+          if (!token || !feeToken || !notesAndConversions) {
+            return BigNumber(0);
+          }
+          const notesAndConvByToken = notesAndConversions[token];
+          // TODO: handle undefiend
+          const sortedNotes = notesAndConvByToken.sort(
+            ([noteA, convA], [noteB, convB]) => {
+              const valA = convA ? BigNumber(convA) : BigNumber(noteA);
+              const valB = convB ? BigNumber(convB) : BigNumber(noteB);
+
+              return valB.comparedTo(valA);
+            }
+          );
+          // TODO: it should depend on device
+          const x = 6;
+          const notesWithConversions = sortedNotes.filter(
+            (n) => typeof n[1] === "string"
+          );
+          const extraOutputNotes = token !== feeToken ? 2 : 1;
+
+          const y = x - notesWithConversions.length - extraOutputNotes;
+          const amount = sortedNotes.slice(0, y).reduce((acc, [note, conv]) => {
+            const val = conv ? BigNumber(conv) : BigNumber(note);
+            return acc.plus(val);
+          }, BigNumber(0));
+
+          return BigNumber(amount);
+        }, [notesAndConversionsQuery]),
+      };
+    }),
+  (a, b) => a.token === b.token && a.feeToken === b.feeToken
+);
 
 export const namadaShieldedAssetsAtom = atomWithQuery((get) => {
   const storageShieldedBalance = get(storageShieldedBalanceAtom);
