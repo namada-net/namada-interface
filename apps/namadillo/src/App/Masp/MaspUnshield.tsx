@@ -149,24 +149,24 @@ export const MaspUnshield: React.FC = () => {
     }
   };
 
-  const maxAmount = useMemo(() => {
-    if (!selectedAsset) {
-      return BigNumber(0);
-    }
-    const { gasToken } = feeProps.gasConfig;
-    const token = selectedAsset.asset.address;
+  // const maxAmount = useMemo(() => {
+  //   if (!selectedAsset) {
+  //     return BigNumber(0);
+  //   }
+  //   const { gasToken } = feeProps.gasConfig;
+  //   const token = selectedAsset.asset.address;
 
-    const displayGas = getDisplayGasFee(
-      feeProps.gasConfig,
-      chainAssetsMap.data || {}
-    );
-    const amount =
-      token === gasToken ?
-        selectedAsset.amount.minus(displayGas.totalDisplayAmount)
-      : selectedAsset.amount;
+  //   const displayGas = getDisplayGasFee(
+  //     feeProps.gasConfig,
+  //     chainAssetsMap.data || {}
+  //   );
+  //   const amount =
+  //     token === gasToken ?
+  //       selectedAsset.amount.minus(displayGas.totalDisplayAmount)
+  //     : selectedAsset.amount;
 
-    return amount;
-  }, [selectedAsset?.asset.address]);
+  //   return amount;
+  // }, [selectedAsset?.asset.address]);
 
   // const maxMaspTxAmountAtom = useMemo(() => {
   //   let props: MaxMaspTxAmountProps | null;
@@ -211,12 +211,20 @@ export const MaspUnshield: React.FC = () => {
     if (!data || !selectedAsset) {
       return [BigNumber(0), false];
     }
-    const max = toDisplayAmount(selectedAsset.asset, data);
+    const displayGas = getDisplayGasFee(
+      feeProps.gasConfig,
+      chainAssetsMap.data || {}
+    );
 
-    return [max, max.lt(maxAmount)];
+    const max = toDisplayAmount(selectedAsset.asset, data);
+    const displayWarning = max.lt(selectedAsset.amount);
+    const maxWithFee = max.minus(displayGas.totalDisplayAmount);
+
+    return [maxWithFee, displayWarning];
   }, [
     maxMaspTxAmountQuery.data?.toString(),
-    maxAmount,
+    feeProps.gasConfig.gasLimit.toString(),
+    selectedAsset?.amount.toString(),
     selectedAsset?.asset.address,
   ]);
 
