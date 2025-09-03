@@ -149,56 +149,6 @@ export const MaspUnshield: React.FC = () => {
     }
   };
 
-  // const maxAmount = useMemo(() => {
-  //   if (!selectedAsset) {
-  //     return BigNumber(0);
-  //   }
-  //   const { gasToken } = feeProps.gasConfig;
-  //   const token = selectedAsset.asset.address;
-
-  //   const displayGas = getDisplayGasFee(
-  //     feeProps.gasConfig,
-  //     chainAssetsMap.data || {}
-  //   );
-  //   const amount =
-  //     token === gasToken ?
-  //       selectedAsset.amount.minus(displayGas.totalDisplayAmount)
-  //     : selectedAsset.amount;
-
-  //   return amount;
-  // }, [selectedAsset?.asset.address]);
-
-  // const maxMaspTxAmountAtom = useMemo(() => {
-  //   let props: MaxMaspTxAmountProps | null;
-  //   if (!account || !destinationAddress || !selectedAsset) {
-  //     props = null;
-  //   } else {
-  //     props = {
-  //       maxNotes: 6,
-  //       source: account.pseudoExtendedKey!,
-  //       target: destinationAddress,
-  //       token: selectedAsset.asset.address,
-  //       feeToken: feeProps.gasConfig.gasToken,
-  //       amount:
-  //         isNamadaAsset(selectedAsset.asset) ?
-  //           maxAmount.toString()
-  //         : toBaseAmount(selectedAsset.asset, maxAmount).toString(),
-  //       feeAmount: feeProps.gasConfig.gasPriceInMinDenom
-  //         .times(feeProps.gasConfig.gasLimit)
-  //         .toString(),
-  //     };
-  //   }
-
-  //   return estimateMaxMaspTxAmountAtom(props);
-  // }, [
-  //   selectedAsset?.asset.address,
-  //   feeProps.gasConfig.gasToken,
-  //   feeProps?.gasConfig.gasLimit.toString(),
-  //   account?.pseudoExtendedKey,
-  //   destinationAddress,
-  // ]);
-
-  // const maxMaspTxAmountQuery = useAtomValue(maxMaspTxAmountAtom);
   const maxMaspTxAmountQuery = useAtomValue(
     estimateMaxMaspTxAmountAtom2({
       token: selectedAsset?.asset.address,

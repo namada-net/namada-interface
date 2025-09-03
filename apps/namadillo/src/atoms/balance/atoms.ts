@@ -1,5 +1,4 @@
 import { DefaultApi } from "@namada/indexer-client";
-import { MaxMaspTxAmountProps } from "@namada/sdk-multicore";
 import { Account, AccountType, DatedViewingKey } from "@namada/types";
 import {
   accountsAtom,
@@ -25,8 +24,8 @@ import { sequenceT } from "fp-ts/lib/Apply";
 import { pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/Option";
 import invariant from "invariant";
-import { Atom, atom, getDefaultStore } from "jotai";
-import { atomWithQuery, AtomWithQueryResult } from "jotai-tanstack-query";
+import { atom, getDefaultStore } from "jotai";
+import { atomWithQuery } from "jotai-tanstack-query";
 import { atomFamily, atomWithStorage } from "jotai/utils";
 import { Address, TokenBalance } from "types";
 import { namadaAsset, toDisplayAmount } from "utils";
@@ -35,7 +34,6 @@ import {
   mapNamadaAssetsToTokenBalances,
 } from "./functions";
 import {
-  estiamteMaxMaspTxAmountByNotes,
   fetchShieldedBalance,
   fetchShieldedRewards,
   fetchShieldedRewardsPerToken,
@@ -204,26 +202,6 @@ export const shieldedBalanceAtom = atomWithQuery((get) => {
     ]),
   };
 });
-
-export const estimateMaxMaspTxAmountAtom = (
-  props: MaxMaspTxAmountProps | null
-): Atom<AtomWithQueryResult<[string, string] | null>> =>
-  atomWithQuery((get) => {
-    const chainParametersQuery = get(chainParametersAtom);
-    const chainId = chainParametersQuery.data?.chainId;
-
-    return {
-      queryKey: ["estimate-max-masp-tx-amount", chainId],
-      ...queryDependentFn(async () => {
-        if (!props || !chainId) {
-          return null;
-        }
-
-        const result = await estiamteMaxMaspTxAmountByNotes(props, chainId);
-        return result;
-      }, [chainParametersQuery]),
-    };
-  });
 
 export const getNotesAndConversionsAtom = atomWithQuery((get) => {
   const viewingKeysQuery = get(viewingKeysAtom);

@@ -3,7 +3,7 @@ import * as Comlink from "comlink";
 import {
   Balance,
   DatedViewingKey,
-  MaxMaspTxAmountProps,
+  NotesAndConversions,
   ProgressBarNames,
   SdkEvents,
 } from "@namada/sdk-multicore";
@@ -106,22 +106,13 @@ export const fetchShieldedBalance = async (
   return await sdk.rpc.queryBalance(viewingKey.key, addresses, chainId);
 };
 
-//TODO: typo
-export const estiamteMaxMaspTxAmountByNotes = async (
-  props: MaxMaspTxAmountProps,
-  chainId: string
-): Promise<[string, string]> => {
-  const sdk = await getSdkInstance();
-  return await sdk.tx.estiamteMaxMaspTxAmountByNotes(props, chainId);
-};
-
 export const getNotesAndConversions = async (
   viewingKey: string,
   chainId: string
-): Promise<Record<string, [string, string?][]>> => {
+): Promise<NotesAndConversions> => {
   const sdk = await getSdkInstance();
 
-  return await sdk.tx.getNotesAndConversions(viewingKey, chainId);
+  return await sdk.masp.getNotesAndConversions(viewingKey, chainId);
 };
 
 export const fetchShieldedRewards = async (
