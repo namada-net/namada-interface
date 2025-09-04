@@ -1,4 +1,4 @@
-import { estimateMaxMaspTxAmountAtom } from "atoms/balance";
+import { estimateMaxMaspTxAmountLedgerAtom } from "atoms/balance";
 import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import { useAtomValue } from "jotai";
@@ -23,19 +23,22 @@ export const useMaxMaspAmountForHWWallet = ({
   asset,
   amount,
   gasConfig,
-}: MaxMaspAmountForHWWalletParams): MaxMaspAmountForHWWalletResponse => {
+}: MaxMaspAmountForHWWalletParams): MaxMaspAmountForHWWalletResponse | null => {
   const maxMaspTxAmountQuery = useAtomValue(
-    estimateMaxMaspTxAmountAtom({
+    estimateMaxMaspTxAmountLedgerAtom({
       token: asset?.address,
       feeToken: gasConfig.gasToken,
     })
   );
   const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
 
-  const [maxMASPAmount, displayWarning] = useMemo(() => {
+  const res = useMemo(() => {
+    if (!maxMaspTxAmountQuery) {
+      return null;
+    }
     const { data } = maxMaspTxAmountQuery;
     if (!data || !asset || !amount) {
-      return [BigNumber(0), false];
+      return [BigNumber(0), false] as const;
     }
     const displayGas = getDisplayGasFee(gasConfig, chainAssetsMap.data || {});
 
@@ -43,16 +46,21 @@ export const useMaxMaspAmountForHWWallet = ({
     const displayWarning = max.lt(amount);
     const maxWithFee = max.minus(displayGas.totalDisplayAmount);
 
-    return [maxWithFee, displayWarning];
+    return [maxWithFee, displayWarning] as const;
   }, [
-    maxMaspTxAmountQuery.data?.toString(),
+    maxMaspTxAmountQuery?.data?.toString(),
     gasConfig.gasLimit.toString(),
     amount?.toString(),
     asset?.address,
   ]);
 
+  if (!res || !maxMaspTxAmountQuery) {
+    return null;
+  }
+
+  const [maxAmount, displayWarning] = res;
   return {
-    amount: maxMASPAmount,
+    amount: maxAmount,
     displayWarning,
     calculating:
       maxMaspTxAmountQuery.isPending || maxMaspTxAmountQuery.isFetching,

@@ -4,6 +4,7 @@ import {
   accountsAtom,
   allDefaultAccountsAtom,
   defaultAccountAtom,
+  isLedgerAccountAtom,
   transparentBalanceAtom,
 } from "atoms/accounts/atoms";
 import { indexerApiAtom } from "atoms/api";
@@ -263,6 +264,20 @@ export const estimateMaxMaspTxAmountAtom = atomFamily(
         }, [notesAndConversionsQuery]),
       };
     }),
+  (a, b) => a.token === b.token && a.feeToken === b.feeToken
+);
+
+export const estimateMaxMaspTxAmountLedgerAtom = atomFamily(
+  (props: { token?: string; feeToken?: string }) => {
+    const baseAtom = estimateMaxMaspTxAmountAtom(props);
+    return atom((get) => {
+      const isLedger = get(isLedgerAccountAtom);
+      if (!isLedger) {
+        return null;
+      }
+      return get(baseAtom);
+    });
+  },
   (a, b) => a.token === b.token && a.feeToken === b.feeToken
 );
 
