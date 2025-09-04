@@ -223,7 +223,7 @@ export const getNotesAndConversionsAtom = atomWithQuery((get) => {
   };
 });
 
-export const estimateMaxMaspTxAmountAtom2 = atomFamily(
+export const estimateMaxMaspTxAmountAtom = atomFamily(
   (props: { token?: string; feeToken?: string }) =>
     atomWithQuery((get) => {
       const { token, feeToken } = props;

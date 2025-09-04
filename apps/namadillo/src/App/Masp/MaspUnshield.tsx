@@ -1,4 +1,4 @@
-import { Alert, Panel, Stack } from "@namada/components";
+import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { MaspSyncCover } from "App/Common/MaspSyncCover";
 import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
@@ -9,18 +9,15 @@ import {
 } from "App/Transfer/TransferModule";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
-  estimateMaxMaspTxAmountAtom2,
   lastCompletedShieldedSyncAtom,
   namadaShieldedAssetsAtom,
 } from "atoms/balance/atoms";
 import { chainParametersAtom } from "atoms/chain/atoms";
-import {
-  namadaChainRegistryAtom,
-  namadaRegistryChainAssetsMapAtom,
-} from "atoms/integrations";
+import { namadaChainRegistryAtom } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger/atoms";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
+import { useMaxMaspAmountForHWWallet } from "hooks/useMaxMaspAmountForHWWallet";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
@@ -29,10 +26,8 @@ import { wallets } from "integrations";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
-import { useMemo, useState } from "react";
-import { GoCheckCircle } from "react-icons/go";
-import { toDisplayAmount } from "utils";
-import { getDisplayGasFee } from "utils/gas";
+import { useState } from "react";
+import { LedgerAmountInfoAlert } from "./LedgerAmountInfoAlert";
 
 export const MaspUnshield: React.FC = () => {
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
@@ -50,7 +45,6 @@ export const MaspUnshield: React.FC = () => {
   );
   const namadaChainRegistry = useAtomValue(namadaChainRegistryAtom);
   const chain = namadaChainRegistry.data?.chain;
-  const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
 
   const { storeTransaction } = useTransactionActions();
 
@@ -149,34 +143,11 @@ export const MaspUnshield: React.FC = () => {
     }
   };
 
-  const maxMaspTxAmountQuery = useAtomValue(
-    estimateMaxMaspTxAmountAtom2({
-      token: selectedAsset?.asset.address,
-      feeToken: feeProps.gasConfig.gasToken,
-    })
-  );
-
-  const [maxMASPAmount, displayWarning] = useMemo(() => {
-    const { data } = maxMaspTxAmountQuery;
-    if (!data || !selectedAsset) {
-      return [BigNumber(0), false];
-    }
-    const displayGas = getDisplayGasFee(
-      feeProps.gasConfig,
-      chainAssetsMap.data || {}
-    );
-
-    const max = toDisplayAmount(selectedAsset.asset, data);
-    const displayWarning = max.lt(selectedAsset.amount);
-    const maxWithFee = max.minus(displayGas.totalDisplayAmount);
-
-    return [maxWithFee, displayWarning];
-  }, [
-    maxMaspTxAmountQuery.data?.toString(),
-    feeProps.gasConfig.gasLimit.toString(),
-    selectedAsset?.amount.toString(),
-    selectedAsset?.asset.address,
-  ]);
+  const maxMASPAmountInfo = useMaxMaspAmountForHWWallet({
+    asset: selectedAsset?.asset,
+    amount: selectedAsset?.amount,
+    gasConfig: feeProps.gasConfig,
+  });
 
   // We stop the ledger status check when the transfer is in progress
   setLedgerStatusStop(isPerformingTransfer);
@@ -189,38 +160,12 @@ export const MaspUnshield: React.FC = () => {
           isDestinationShielded={false}
         />
       </header>
-      {maxMaspTxAmountQuery.isPending && (
-        <Alert type="warning" className="w-[480px] mx-auto mb-4">
-          <Stack direction="horizontal" gap={3} className="items-center">
-            <i
-              className={
-                "block w-6 h-6 border-2 border-transparent border-t-yellow rounded-[50%] animate-loadingSpinner"
-              }
-            />
-            <p>Calculating the maximum amount you can unshield this time... </p>
-          </Stack>
-        </Alert>
-      )}
-      {!maxMaspTxAmountQuery.isPending && displayWarning && (
-        <Alert type="warning" className="w-[480px] mx-auto mb-4">
-          <p>
-            Due to ledger BS we have to limit the amount that you can unshield
-            at this time to <b>{maxMASPAmount.toString()}</b>
-            <br />
-            After tx is successful, you will be able to unshield more
-          </p>
-        </Alert>
-      )}
-      {!displayWarning && !maxMaspTxAmountQuery.isPending && (
-        <Alert
-          type="success"
-          className="w-[480px] mx-auto mb-4 text-black bg-success"
-        >
-          <Stack direction="horizontal" gap={3} className="items-center">
-            <GoCheckCircle className="w-6 h-6" />
-            <p>You can unshield all the tokens</p>
-          </Stack>
-        </Alert>
+      {maxMASPAmountInfo && (
+        <LedgerAmountInfoAlert
+          calculating={maxMASPAmountInfo.calculating}
+          displayWarning={maxMASPAmountInfo.displayWarning}
+          amount={maxMASPAmountInfo.amount}
+        />
       )}
       <TransferModule
         source={{
@@ -228,10 +173,7 @@ export const MaspUnshield: React.FC = () => {
           availableAssets,
           selectedAssetAddress,
           availableAmount: selectedAsset?.amount,
-          maxAmount:
-            displayWarning && !maxMaspTxAmountQuery.isFetching ?
-              maxMASPAmount
-            : undefined,
+          maxAmount: maxMASPAmountInfo ? maxMASPAmountInfo.amount : undefined,
           chain,
           availableWallets: [wallets.namada],
           wallet: wallets.namada,
