@@ -1,4 +1,6 @@
 # dependencies
+yalc.lock
+/.yalc
 /node_modules
 /.pnp
 .pnp.js

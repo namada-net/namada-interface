@@ -4,6 +4,7 @@ import {
   accountsAtom,
   allDefaultAccountsAtom,
   defaultAccountAtom,
+  isLedgerAccountAtom,
   transparentBalanceAtom,
 } from "atoms/accounts/atoms";
 import { indexerApiAtom } from "atoms/api";
@@ -26,7 +27,7 @@ import * as O from "fp-ts/Option";
 import invariant from "invariant";
 import { atom, getDefaultStore } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
-import { atomWithStorage } from "jotai/utils";
+import { atomFamily, atomWithStorage } from "jotai/utils";
 import { Address, TokenBalance } from "types";
 import { namadaAsset, toDisplayAmount } from "utils";
 import {
@@ -37,6 +38,7 @@ import {
   fetchShieldedBalance,
   fetchShieldedRewards,
   fetchShieldedRewardsPerToken,
+  getNotesAndConversions,
   shieldedSync,
 } from "./services";
 
@@ -201,6 +203,83 @@ export const shieldedBalanceAtom = atomWithQuery((get) => {
     ]),
   };
 });
+
+export const getNotesAndConversionsAtom = atomWithQuery((get) => {
+  const viewingKeysQuery = get(viewingKeysAtom);
+  const chainParametersQuery = get(chainParametersAtom);
+
+  const [viewingKey] = viewingKeysQuery.data ?? [];
+  const chainId = chainParametersQuery.data?.chainId;
+
+  return {
+    queryKey: ["get-notes-and-conversions", viewingKey, chainId],
+    ...queryDependentFn(async () => {
+      if (!viewingKey || !chainId) {
+        return {};
+      }
+
+      const result = await getNotesAndConversions(viewingKey.key, chainId);
+      return result;
+    }, [viewingKeysQuery, chainParametersQuery]),
+  };
+});
+
+export const estimateMaxMaspTxAmountAtom = atomFamily(
+  (props: { token?: string; feeToken?: string }) =>
+    atomWithQuery((get) => {
+      const { token, feeToken } = props;
+      const notesAndConversionsQuery = get(getNotesAndConversionsAtom);
+      const notesAndConversions = notesAndConversionsQuery.data;
+
+      return {
+        queryKey: ["estimate-max-masp-tx-amount-2", token, feeToken],
+        ...queryDependentFn(async () => {
+          if (!token || !feeToken || !notesAndConversions) {
+            return BigNumber(0);
+          }
+          const notesAndConvByToken = notesAndConversions[token];
+          // TODO: handle undefiend
+          const sortedNotes = notesAndConvByToken.sort(
+            ([noteA, convA], [noteB, convB]) => {
+              const valA = convA ? BigNumber(convA) : BigNumber(noteA);
+              const valB = convB ? BigNumber(convB) : BigNumber(noteB);
+
+              return valB.comparedTo(valA);
+            }
+          );
+          // TODO: it should depend on device
+          const x = 6;
+          const notesWithConversions = sortedNotes.filter(
+            (n) => typeof n[1] === "string"
+          );
+          const extraOutputNotes = token !== feeToken ? 2 : 1;
+
+          const y = x - notesWithConversions.length - extraOutputNotes;
+          const amount = sortedNotes.slice(0, y).reduce((acc, [note, conv]) => {
+            const val = conv ? BigNumber(conv) : BigNumber(note);
+            return acc.plus(val);
+          }, BigNumber(0));
+
+          return BigNumber(amount);
+        }, [notesAndConversionsQuery]),
+      };
+    }),
+  (a, b) => a.token === b.token && a.feeToken === b.feeToken
+);
+
+export const estimateMaxMaspTxAmountLedgerAtom = atomFamily(
+  (props: { token?: string; feeToken?: string }) => {
+    const baseAtom = estimateMaxMaspTxAmountAtom(props);
+    return atom((get) => {
+      const isLedger = get(isLedgerAccountAtom);
+      if (!isLedger) {
+        return null;
+      }
+      return get(baseAtom);
+    });
+  },
+  (a, b) => a.token === b.token && a.feeToken === b.feeToken
+);
 
 export const namadaShieldedAssetsAtom = atomWithQuery((get) => {
   const storageShieldedBalance = get(storageShieldedBalanceAtom);

@@ -186,6 +186,16 @@ export const NamadaTransfer: React.FC = () => {
   // We stop the ledger status check when the transfer is in progress
   setLedgerStatusStop(isPerformingTransfer);
 
+  // const {
+  //   amount: maxMASPAmount,
+  //   displayWarning,
+  //   calculating,
+  // } = useMaxMaspAmountForHWWallet({
+  //   asset: selectedAsset?.asset,
+  //   amount: selectedAsset?.amount,
+  //   gasConfig: feeProps.gasConfig,
+  // });
+
   return (
     <Panel className="min-h-[600px] rounded-sm flex flex-col flex-1 py-9">
       <header className="flex flex-col items-center text-center mb-8 gap-6">

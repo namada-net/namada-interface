@@ -17,6 +17,7 @@ import { namadaChainRegistryAtom } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger/atoms";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
+import { useMaxMaspAmountForHWWallet } from "hooks/useMaxMaspAmountForHWWallet";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
@@ -26,6 +27,7 @@ import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useState } from "react";
+import { LedgerAmountInfoAlert } from "./LedgerAmountInfoAlert";
 
 export const MaspUnshield: React.FC = () => {
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
@@ -140,6 +142,13 @@ export const MaspUnshield: React.FC = () => {
       }
     }
   };
+
+  const maxMASPAmountInfo = useMaxMaspAmountForHWWallet({
+    asset: selectedAsset?.asset,
+    amount: selectedAsset?.amount,
+    gasConfig: feeProps.gasConfig,
+  });
+
   // We stop the ledger status check when the transfer is in progress
   setLedgerStatusStop(isPerformingTransfer);
 
@@ -151,12 +160,20 @@ export const MaspUnshield: React.FC = () => {
           isDestinationShielded={false}
         />
       </header>
+      {maxMASPAmountInfo && (
+        <LedgerAmountInfoAlert
+          calculating={maxMASPAmountInfo.calculating}
+          displayWarning={maxMASPAmountInfo.displayWarning}
+          amount={maxMASPAmountInfo.amount}
+        />
+      )}
       <TransferModule
         source={{
           isLoadingAssets: isLoadingAssets,
           availableAssets,
           selectedAssetAddress,
           availableAmount: selectedAsset?.amount,
+          maxAmount: maxMASPAmountInfo ? maxMASPAmountInfo.amount : undefined,
           chain,
           availableWallets: [wallets.namada],
           wallet: wallets.namada,

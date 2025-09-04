@@ -3,6 +3,7 @@ import * as Comlink from "comlink";
 import {
   Balance,
   DatedViewingKey,
+  NotesAndConversions,
   ProgressBarNames,
   SdkEvents,
 } from "@namada/sdk-multicore";
@@ -103,6 +104,15 @@ export const fetchShieldedBalance = async (
 ): Promise<Balance> => {
   const sdk = await getSdkInstance();
   return await sdk.rpc.queryBalance(viewingKey.key, addresses, chainId);
+};
+
+export const getNotesAndConversions = async (
+  viewingKey: string,
+  chainId: string
+): Promise<NotesAndConversions> => {
+  const sdk = await getSdkInstance();
+
+  return await sdk.masp.getNotesAndConversions(viewingKey, chainId);
 };
 
 export const fetchShieldedRewards = async (

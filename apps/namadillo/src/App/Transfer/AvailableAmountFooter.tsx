@@ -6,6 +6,7 @@ import { Asset } from "types";
 
 type AvailableAmountFooterProps = {
   availableAmount?: BigNumber;
+  maxAmount?: BigNumber;
   availableAmountMinusFees?: BigNumber;
   asset?: Asset;
   onClickMax?: () => void;
@@ -13,6 +14,7 @@ type AvailableAmountFooterProps = {
 
 export const AvailableAmountFooter = ({
   availableAmount,
+  maxAmount,
   availableAmountMinusFees,
   asset,
   onClickMax,
@@ -37,6 +39,11 @@ export const AvailableAmountFooter = ({
             symbol={asset.symbol}
           />
         </div>
+        {maxAmount && (
+          <div>
+            Max: <TokenCurrency amount={maxAmount} symbol={asset.symbol} />
+          </div>
+        )}
         {isInsufficientBalance && (
           <div className="text-fail">
             <div>Insufficient balance to cover the fee</div>
