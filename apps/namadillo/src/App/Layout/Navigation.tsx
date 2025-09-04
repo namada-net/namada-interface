@@ -86,34 +86,30 @@ export const Navigation = (): JSX.Element => {
 
           const historyRoute = item.label === "History";
           return (
-            <>
-              <li key={item.label}>
-                {shieldingRoute && (
-                  <>
-                    <hr className="border-neutral-300 border-t-1 w-full mb-2" />
-                    <h5 className="text-neutral-500 text-xs mb-2">
-                      Move Assets
-                    </h5>
-                  </>
-                )}
-                <SidebarMenuItem
-                  url={item.url}
-                  shouldHighlight={
-                    !!highlightTransferItem || !!highlightShieldItem
-                  }
-                  preventNavigationOnSameRoute={
-                    (item.label === "Shield" && highlightShieldItem) ||
-                    (item.label === "Transfer" && highlightTransferItem)
-                  }
-                >
-                  {item.icon}
-                  {item.label}
-                </SidebarMenuItem>
-                {historyRoute && (
-                  <hr className="border-neutral-300 border-t-1 w-full mt-3" />
-                )}
-              </li>
-            </>
+            <li key={item.label}>
+              {shieldingRoute && (
+                <>
+                  <hr className="border-neutral-300 border-t-1 w-full mb-2" />
+                  <h5 className="text-neutral-500 text-xs mb-2">Move Assets</h5>
+                </>
+              )}
+              <SidebarMenuItem
+                url={item.url}
+                shouldHighlight={
+                  !!highlightTransferItem || !!highlightShieldItem
+                }
+                preventNavigationOnSameRoute={
+                  (item.label === "Shield" && highlightShieldItem) ||
+                  (item.label === "Transfer" && highlightTransferItem)
+                }
+              >
+                {item.icon}
+                {item.label}
+              </SidebarMenuItem>
+              {historyRoute && (
+                <hr className="border-neutral-300 border-t-1 w-full mt-3" />
+              )}
+            </li>
           );
         })}
       </ul>
