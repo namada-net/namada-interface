@@ -188,22 +188,35 @@ export const TransferDestination = ({
             </div>
 
             <div className="mt-3">
-              <button
-                type="button"
-                disabled={
-                  isShieldingTransaction || isSubmitting || !sourceAsset
-                }
-                onClick={handleOpenModal}
-                className={clsx(
-                  "flex justify-between items-center bg-neutral-900 p-2 rounded-sm w-full",
-                  {
-                    "hover:bg-neutral-700 transition-colors":
-                      !isShieldingTransaction,
+              {!destinationAddress ?
+                <div className="flex justify-between items-center bg-neutral-900 p-2 rounded-sm w-full">
+                  <div className="flex">
+                    <div className="flex flex-col ml-4">
+                      <span className="text-neutral-500 font-normal">
+                        Select address
+                      </span>
+                    </div>
+                  </div>
+                  <ConnectProviderButton
+                    onClick={handleOpenModal}
+                    disabled={!sourceAsset}
+                  />
+                </div>
+              : <button
+                  type="button"
+                  disabled={
+                    isShieldingTransaction || isSubmitting || !sourceAsset
                   }
-                )}
-              >
-                <div className="flex">
-                  {destinationAddress && (
+                  onClick={handleOpenModal}
+                  className={clsx(
+                    "flex justify-between items-center bg-neutral-900 p-2 rounded-sm w-full",
+                    {
+                      "hover:bg-neutral-700 transition-colors":
+                        !isShieldingTransaction,
+                    }
+                  )}
+                >
+                  <div className="flex">
                     <img
                       src={
                         isShieldedAddress ? namadaShieldedIcon
@@ -220,9 +233,7 @@ export const TransferDestination = ({
                       }
                       className="w-7"
                     />
-                  )}
-                  <div className="flex flex-col ml-4">
-                    {destinationAddress ?
+                    <div className="flex flex-col ml-4">
                       <div className="flex flex-col">
                         <span className="text-neutral-500 text-left font-normal text-xs">
                           {isIbcAddress(destinationAddress) ? "Keplr" : alias}
@@ -231,28 +242,17 @@ export const TransferDestination = ({
                           {shortenAddress(destinationAddress, 15, 15)}
                         </span>
                       </div>
-                    : <span className="text-neutral-500 font-normal">
-                        Select address
-                      </span>
-                    }
+                    </div>
                   </div>
-                </div>
-                {!destinationAddress ?
-                  <>
-                    <ConnectProviderButton
-                      onClick={handleOpenModal}
-                      disabled={!sourceAsset}
-                    />
-                  </>
-                : !isShieldingTransaction && (
+                  {!isShieldingTransaction && (
                     <GoChevronDown
                       className={clsx(
                         "mr-3 transition-transform text-neutral-400 text-xs"
                       )}
                     />
-                  )
-                }
-              </button>
+                  )}
+                </button>
+              }
             </div>
 
             {customAddress && (
