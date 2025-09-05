@@ -72,16 +72,16 @@ export const useTransactionFee = (
         // TODO: we need to refactor userShieldedBalances to return Balance[] type instead
         userShieldedBalances.data?.map((balance) => ({
           minDenomAmount: BigNumber(balance.minDenomAmount),
-          tokenAddress: balance.address,
+          token: balance.address,
         }))
       : userTransparentBalances.data?.map((balance) => ({
           minDenomAmount: BigNumber(balance.minDenomAmount),
-          tokenAddress: balance.tokenAddress,
+          token: balance.token,
         }))) || [];
 
     // Check if user has enough NAM to pay fees
     const nativeAddressBalance = balances.find(
-      (balance) => balance.tokenAddress === nativeToken
+      (balance) => balance.token === nativeToken
     );
 
     if (nativeAddressBalance) {
@@ -95,14 +95,14 @@ export const useTransactionFee = (
 
       // Check if user has enough native token to pay fees
       if (BigNumber(nativeAddressBalance.minDenomAmount).gte(requiredBalance)) {
-        return nativeAddressBalance.tokenAddress;
+        return nativeAddressBalance.token;
       }
     }
     // Fallback to another token containing balance
     const gas = gasPriceTable.filter((gas) => {
       return !!balances.find(
         (balances) =>
-          balances.tokenAddress === gas.token && balances.minDenomAmount.gt(0)
+          balances.token === gas.token && balances.minDenomAmount.gt(0)
       );
     });
 

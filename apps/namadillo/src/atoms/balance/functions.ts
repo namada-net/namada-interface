@@ -26,10 +26,10 @@ export const mapNamadaAddressesToAssets = ({
 }): Record<Address, NamadaAssetWithAmount> => {
   const map: Record<Address, NamadaAssetWithAmount> = {};
   balances.forEach((item) => {
-    const asset = assets.find((asset) => asset.address === item.tokenAddress);
+    const asset = assets.find((asset) => asset.address === item.token);
 
     if (asset) {
-      map[item.tokenAddress] = {
+      map[item.token] = {
         amount: toDisplayAmount(asset, BigNumber(item.minDenomAmount)),
         asset,
       };

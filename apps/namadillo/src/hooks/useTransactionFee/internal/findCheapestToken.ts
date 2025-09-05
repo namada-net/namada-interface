@@ -5,7 +5,7 @@ import { Address } from "types";
 
 export const findCheapestToken = (
   gasPriceTable: GasPriceTable,
-  balance: { tokenAddress: Address; minDenomAmount: BigNumber }[],
+  balance: { token: Address; minDenomAmount: BigNumber }[],
   gasLimit: BigNumber,
   gasDollarMap: Record<Address, BigNumber>
 ): string | undefined => {
@@ -21,7 +21,7 @@ export const findCheapestToken = (
       gasItem.gasPriceInMinDenom
     );
     const tokenBalance = balance.find(
-      (balance) => balance.tokenAddress === gasItem.token
+      (balance) => balance.token === gasItem.token
     );
 
     if (!tokenBalance || tokenBalance.minDenomAmount.lt(requiredBalance)) {

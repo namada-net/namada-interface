@@ -105,9 +105,9 @@ export const accountBalanceAtom = atomWithQuery<BigNumber>((get) => {
     queryKey: ["balances", tokenAddress.data, transparentBalanceQuery.data],
     ...queryDependentFn(async (): Promise<BigNumber> => {
       const balance = transparentBalanceQuery.data
-        ?.filter(({ tokenAddress: ta }) => ta === tokenAddress.data)
-        .map(({ tokenAddress, minDenomAmount }) => ({
-          token: tokenAddress,
+        ?.filter(({ token: ta }) => ta === tokenAddress.data)
+        .map(({ token, minDenomAmount }) => ({
+          token,
           amount: toDisplayAmount(namadaAsset(), new BigNumber(minDenomAmount)),
         }))
         .at(0);
