@@ -319,22 +319,6 @@ const toIndexerProposalType = (
   }
 };
 
-export const fetchAllProposals = async (
-  api: DefaultApi
-): Promise<Proposal[]> => {
-  const proposalsPromise = api.apiV1GovProposalAllGet();
-  const totalVotingPowerPromise = api.apiV1PosVotingPowerGet();
-
-  const [proposalResponse, votingPowerResponse] = await Promise.all([
-    proposalsPromise,
-    totalVotingPowerPromise,
-  ]);
-
-  return proposalResponse.data.map((proposal) =>
-    toProposal(proposal, votingPowerResponse.data)
-  );
-};
-
 export const fetchPaginatedProposals = async (
   api: DefaultApi,
   page?: number,

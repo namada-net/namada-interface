@@ -29,12 +29,14 @@ export const GovernanceOverview: React.FC = () => {
   const activeAtoms = [allProposals, ...extensionAtoms];
 
   const liveProposals =
-    allProposals.data?.filter((proposal) => proposal.status === "ongoing") ||
-    [];
+    allProposals.data?.proposals?.filter(
+      (proposal) => proposal.status === "ongoing"
+    ) || [];
 
   const upcomingProposals =
-    allProposals.data?.filter((proposal) => proposal.status === "pending") ||
-    [];
+    allProposals.data?.proposals?.filter(
+      (proposal) => proposal.status === "pending"
+    ) || [];
 
   useNotifyOnAtomError(activeAtoms, [
     allProposals.isError,
@@ -86,7 +88,9 @@ export const GovernanceOverview: React.FC = () => {
             <SkeletonLoading height="150px" width="100%" />
           )}
           {atomsAreLoaded(allProposals) && (
-            <ProposalsSummary allProposals={allProposals.data!} />
+            <ProposalsSummary
+              allProposals={allProposals.data?.proposals || []}
+            />
           )}
         </Panel>
         <LearnAboutGovernance />

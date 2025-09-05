@@ -15,7 +15,6 @@ import { TransactionPair } from "lib/query";
 import { GasConfig } from "types";
 import {
   createVoteProposalTx,
-  fetchAllProposals,
   fetchPaginatedProposals,
   fetchProposalById,
   fetchProposalDataById,
@@ -72,7 +71,7 @@ export const allProposalsAtom = atomWithQuery((get) => {
   const api = get(indexerApiAtom);
   return {
     queryKey: ["all-proposals"],
-    queryFn: () => fetchAllProposals(api),
+    queryFn: () => fetchPaginatedProposals(api),
   };
 });
 
