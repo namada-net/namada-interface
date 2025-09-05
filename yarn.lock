@@ -3765,8 +3765,8 @@ __metadata:
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.3.0"
     "@namada/indexer-client": "npm:3.3.2"
-    "@namada/sdk-multicore": "npm:^0.20.7"
-    "@namada/sdk-node": "npm:^0.20.7"
+    "@namada/sdk-multicore": "npm:^0.20.8"
+    "@namada/sdk-node": "npm:^0.20.8"
     "@namada/vite-esbuild-plugin": "npm:^1.0.1"
     "@playwright/test": "npm:^1.24.1"
     "@svgr/webpack": "npm:^6.5.1"
@@ -3852,9 +3852,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/sdk-multicore@npm:^0.20.7":
-  version: 0.20.7
-  resolution: "@namada/sdk-multicore@npm:0.20.7"
+"@namada/sdk-multicore@npm:^0.20.8":
+  version: 0.20.8
+  resolution: "@namada/sdk-multicore@npm:0.20.8"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3865,7 +3865,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/954de17370d879af0781454f3f13239c3e2557592f353051fbcd7236d18ed0d084bd3d23c67995701cc5bb07abd15b39568d366c8d632a72efe8c70dd60956f9
+  checksum: 10c0/ad36e368790e3e18275672a036c7fecf6e3554098b856186daa7656cafb015fd76a7b10dcd8f78ca53303592f1c67908a159cd4b18d5ad5bd3737bb681c88438
   languageName: node
   linkType: hard
 
@@ -3883,6 +3883,23 @@ __metadata:
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
   checksum: 10c0/8050ed2b5882945eae9100b8bcfa4c43764d95a19a50965c99dec1df36e71558bcf1ca8b7e983cf099871426d886d8bd06fa18079b9079a07c2a144106d23c33
+  languageName: node
+  linkType: hard
+
+"@namada/sdk-node@npm:^0.20.8":
+  version: 0.20.8
+  resolution: "@namada/sdk-node@npm:0.20.8"
+  dependencies:
+    "@cosmjs/encoding": "npm:^0.29.0"
+    "@dao-xyz/borsh": "npm:^5.1.5"
+    "@ledgerhq/hw-transport": "npm:^6.31.4"
+    "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
+    "@zondax/ledger-namada": "npm:^2.0.0"
+    bignumber.js: "npm:^9.1.1"
+    buffer: "npm:^6.0.3"
+    semver: "npm:^7.7.2"
+    slip44: "npm:^3.0.18"
+  checksum: 10c0/8632dd2a5995f310d0aa7ad5c11ef8b50a71ca83da33560ff688231c35312e4ed59234aa32b5bc336767917930e20a3ae30538a6bb73eb9825f2196dd5e8c427
   languageName: node
   linkType: hard
 
