@@ -17,9 +17,9 @@ describe("findCheapestToken", () => {
     ] as GasPriceTable;
 
     const balance = [
-      { tokenAddress: tokenA, minDenomAmount: new BigNumber(5000) },
-      { tokenAddress: tokenB, minDenomAmount: new BigNumber(5000) },
-      { tokenAddress: tokenC, minDenomAmount: new BigNumber(5000) },
+      { token: tokenA, minDenomAmount: new BigNumber(5000) },
+      { token: tokenB, minDenomAmount: new BigNumber(5000) },
+      { token: tokenC, minDenomAmount: new BigNumber(5000) },
     ];
 
     const gasDollarMap = {
@@ -44,8 +44,8 @@ describe("findCheapestToken", () => {
     ] as GasPriceTable;
 
     const balance = [
-      { tokenAddress: tokenA, minDenomAmount: new BigNumber(500) },
-      { tokenAddress: tokenB, minDenomAmount: new BigNumber(5000) },
+      { token: tokenA, minDenomAmount: new BigNumber(500) },
+      { token: tokenB, minDenomAmount: new BigNumber(5000) },
     ];
 
     const gasDollarMap = {
@@ -69,8 +69,8 @@ describe("findCheapestToken", () => {
     ] as GasPriceTable;
 
     const balance = [
-      { tokenAddress: tokenA, minDenomAmount: new BigNumber(500) },
-      { tokenAddress: tokenB, minDenomAmount: new BigNumber(100) },
+      { token: tokenA, minDenomAmount: new BigNumber(500) },
+      { token: tokenB, minDenomAmount: new BigNumber(100) },
     ];
 
     const gasDollarMap = {
@@ -92,9 +92,7 @@ describe("findCheapestToken", () => {
       { token: tokenA, gasPriceInMinDenom: new BigNumber(1) },
     ] as GasPriceTable;
 
-    const balance = [
-      { tokenAddress: tokenA, minDenomAmount: new BigNumber(5000) },
-    ];
+    const balance = [{ token: tokenA, minDenomAmount: new BigNumber(5000) }];
 
     const gasDollarMap = {
       [tokenB]: new BigNumber(1),
@@ -116,8 +114,8 @@ describe("findCheapestToken", () => {
     ] as GasPriceTable;
 
     const balance = [
-      { tokenAddress: tokenA, minDenomAmount: new BigNumber(5000) },
-      { tokenAddress: tokenB, minDenomAmount: new BigNumber(5000) },
+      { token: tokenA, minDenomAmount: new BigNumber(5000) },
+      { token: tokenB, minDenomAmount: new BigNumber(5000) },
     ];
 
     const gasDollarMap = {
@@ -141,8 +139,8 @@ describe("findCheapestToken", () => {
     ] as GasPriceTable;
 
     const balance = [
-      { tokenAddress: tokenA, minDenomAmount: new BigNumber(5000) },
-      { tokenAddress: tokenB, minDenomAmount: new BigNumber(5000) },
+      { token: tokenA, minDenomAmount: new BigNumber(5000) },
+      { token: tokenB, minDenomAmount: new BigNumber(5000) },
     ];
 
     const gasDollarMap = {
