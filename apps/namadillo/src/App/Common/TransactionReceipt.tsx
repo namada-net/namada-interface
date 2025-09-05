@@ -1,6 +1,6 @@
 import { Chain } from "@chain-registry/types";
 import { CopyToClipboardControl, Stack } from "@namada/components";
-import { PseudoExtendedKey } from "@namada/sdk/web";
+import { PseudoExtendedKey } from "@namada/sdk-multicore";
 import { shortenAddress } from "@namada/utils";
 import {
   isNamadaAddress,
