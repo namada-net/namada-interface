@@ -16,7 +16,7 @@ export const KeplrAccount = (): JSX.Element => {
   useEffect(() => {
     if (!connectedKeplrAddress)
       setConnectedWallets((obj) => ({ ...obj, [keplrWallet.key]: false }));
-  });
+  }, [connectedKeplrAddress]);
 
   if (!connectedWallets.keplr) {
     return <></>;
