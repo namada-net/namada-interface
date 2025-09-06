@@ -138,11 +138,11 @@ export const canVoteAtom = atomFamily((proposalStartEpoch: bigint) =>
       queryKey: ["can-vote", account.data, api],
       enabled: account.isSuccess,
       queryFn: async () => {
-        const all_bonds = await api.apiV1PosBondAddressGet(
-          account.data!.address,
-          undefined,
-          Number(proposalStartEpoch)
-        );
+        const all_bonds = await api.apiV1PosBondAddressGet({
+          address: account.data!.address,
+          page: undefined,
+          activeAt: Number(proposalStartEpoch),
+        });
 
         return all_bonds.data.results.reduce(
           (acc: boolean, current: NamadaIndexerBond) => {

@@ -1,4 +1,7 @@
-import { GasEstimate } from "@namada/indexer-client";
+import {
+  ApiV1ChainTokenGet200ResponseInner,
+  GasEstimate,
+} from "@namada/indexer-client";
 import { defaultAccountAtom } from "atoms/accounts";
 import { indexerApiAtom } from "atoms/api";
 import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
@@ -9,13 +12,12 @@ import { atomWithQuery } from "jotai-tanstack-query";
 import { atomFamily } from "jotai/utils";
 import { isPublicKeyRevealed } from "lib/query";
 import isEqual from "lodash.isequal";
-import { Address } from "types";
 import { TxKind } from "types/txKind";
 import { isNamadaAsset, toDisplayAmount } from "utils";
 import { fetchGasEstimate, fetchTokensGasPrice } from "./services";
 
 export type GasPriceTableItem = {
-  token: Address;
+  token: ApiV1ChainTokenGet200ResponseInner;
   gasPrice: BigNumber;
   gasPriceInMinDenom: BigNumber;
 };
@@ -68,9 +70,9 @@ export const gasPriceTableAtom = atomWithQuery<GasPriceTable>((get) => {
       return (
         response
           // filter only tokens that exists on the chain
-          .filter(({ token }) => Boolean(chainAssetsMap.data[token]))
+          .filter(({ token }) => Boolean(chainAssetsMap.data[token.address]))
           .map(({ token, minDenomAmount }) => {
-            const asset = chainAssetsMap.data[token];
+            const asset = chainAssetsMap.data[token.address];
             const baseAmount = BigNumber(minDenomAmount);
             return {
               token,
