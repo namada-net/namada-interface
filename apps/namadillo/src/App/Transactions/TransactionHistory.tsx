@@ -152,7 +152,7 @@ export const TransactionHistory = (): JSX.Element => {
     index: number
   ): TableRow => {
     return {
-      key: transaction.tx?.txId || index.toString(),
+      key: transaction.tx?.id || index.toString(),
       cells: [
         transaction?.tx ?
           <TransactionCard key="transaction" tx={transaction} />
