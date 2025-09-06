@@ -76,7 +76,7 @@ export const useTransactionFee = (
         }))
       : userTransparentBalances.data?.map((balance) => ({
           minDenomAmount: BigNumber(balance.minDenomAmount),
-          token: balance.token,
+          token: balance.token.address,
         }))) || [];
 
     // Check if user has enough NAM to pay fees
@@ -102,7 +102,7 @@ export const useTransactionFee = (
     const gas = gasPriceTable.filter((gas) => {
       return !!balances.find(
         (balances) =>
-          balances.token === gas.token && balances.minDenomAmount.gt(0)
+          balances.token === gas.token.address && balances.minDenomAmount.gt(0)
       );
     });
 
@@ -113,15 +113,7 @@ export const useTransactionFee = (
 
     // Search for the cheapest token for fees (in dollars) among the available tokens:
     return (
-      findCheapestToken(
-        gas,
-        balances.map((balance) => ({
-          token: balance.token.address,
-          minDenomAmount: balance.minDenomAmount,
-        })),
-        gasLimit,
-        gasDollarMap
-      ) || nativeToken
+      findCheapestToken(gas, balances, gasLimit, gasDollarMap) || nativeToken
     );
   }, [
     userTransparentBalances.data,
@@ -134,7 +126,8 @@ export const useTransactionFee = (
 
   const gasToken = gasTokenValue ?? availableGasTokenAddress ?? "";
   const gasPrice =
-    gasPriceTable?.find((i) => i.token === gasToken)?.gasPrice ?? BigNumber(0);
+    gasPriceTable?.find((i) => i.token.address === gasToken)
+      ?.gasPriceInMinDenom ?? BigNumber(0);
 
   const gasConfig: GasConfig = {
     gasLimit,
