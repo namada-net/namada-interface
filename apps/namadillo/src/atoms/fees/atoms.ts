@@ -18,7 +18,6 @@ import { fetchGasEstimate, fetchTokensGasPrice } from "./services";
 
 export type GasPriceTableItem = {
   token: ApiV1ChainTokenGet200ResponseInner;
-  gasPrice: BigNumber;
   gasPriceInMinDenom: BigNumber;
 };
 

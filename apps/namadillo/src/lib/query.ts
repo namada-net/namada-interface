@@ -76,7 +76,7 @@ export const isPublicKeyRevealed = async (
   const api = getIndexerApi();
   let publicKey: string | undefined;
   try {
-    publicKey = (await api.apiV1RevealedPublicKeyAddressGet(address)).data
+    publicKey = (await api.apiV1RevealedPublicKeyAddressGet({ address })).data
       ?.publicKey;
   } catch {}
   return Boolean(publicKey);

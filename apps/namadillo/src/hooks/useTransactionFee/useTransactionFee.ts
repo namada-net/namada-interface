@@ -49,7 +49,7 @@ export const useTransactionFee = (
 
   const gasDollarMap =
     useAtomValue(
-      tokenPricesFamily(gasPriceTable?.map((item) => item.token) ?? [])
+      tokenPricesFamily(gasPriceTable?.map((item) => item.token.address) ?? [])
     ).data ?? {};
 
   const averageGasLimit = gasEstimate && BigNumber(gasEstimate.avg);
@@ -87,7 +87,7 @@ export const useTransactionFee = (
     if (nativeAddressBalance) {
       // Find gas price for native token, should be always present
       const gasPrice = gasPriceTable.find(
-        ({ token }) => token === nativeToken
+        ({ token }) => token.address === nativeToken
       )?.gasPrice;
       invariant(gasPrice, "Gas price for native token is not found");
 

@@ -13,7 +13,7 @@ export const findCheapestToken = (
     cheapestToken: string | undefined;
 
   for (const gasItem of gasPriceTable) {
-    const price = gasDollarMap[gasItem.token];
+    const price = gasDollarMap[gasItem.token.address];
     if (!price) continue;
 
     // Skip tokens that do not have enough balance
@@ -21,7 +21,7 @@ export const findCheapestToken = (
       gasItem.gasPriceInMinDenom
     );
     const tokenBalance = balance.find(
-      (balance) => balance.token === gasItem.token
+      (balance) => balance.token === gasItem.token.address
     );
 
     if (!tokenBalance || tokenBalance.minDenomAmount.lt(requiredBalance)) {
@@ -36,7 +36,7 @@ export const findCheapestToken = (
       gasPriceInDollars.lt(minPriceInDollars)
     ) {
       minPriceInDollars = gasPriceInDollars;
-      cheapestToken = gasItem.token;
+      cheapestToken = gasItem.token.address;
     }
   }
 
