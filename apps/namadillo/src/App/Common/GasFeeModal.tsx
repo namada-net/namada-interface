@@ -126,13 +126,13 @@ export const GasFeeModal = ({
       isShielded ?
         shieldedAmount.data?.map((balance) => ({
           minDenomAmount: balance.minDenomAmount,
-          tokenAddress: balance.address,
+          token: balance.address,
         }))
       : transparentAmount.data;
 
     return new BigNumber(
-      balances?.find((token) => token.tokenAddress === tokenAddres)
-        ?.minDenomAmount || "0"
+      balances?.find((token) => token.token === tokenAddres)?.minDenomAmount ||
+        "0"
     );
   };
 
