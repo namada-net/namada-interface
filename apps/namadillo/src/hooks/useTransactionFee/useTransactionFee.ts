@@ -88,7 +88,7 @@ export const useTransactionFee = (
       // Find gas price for native token, should be always present
       const gasPrice = gasPriceTable.find(
         ({ token }) => token.address === nativeToken
-      )?.gasPrice;
+      )?.gasPriceInMinDenom;
       invariant(gasPrice, "Gas price for native token is not found");
 
       const requiredBalance = BigNumber(gasLimit).times(gasPrice);
@@ -113,7 +113,15 @@ export const useTransactionFee = (
 
     // Search for the cheapest token for fees (in dollars) among the available tokens:
     return (
-      findCheapestToken(gas, balances, gasLimit, gasDollarMap) || nativeToken
+      findCheapestToken(
+        gas,
+        balances.map((balance) => ({
+          token: balance.token.address,
+          minDenomAmount: balance.minDenomAmount,
+        })),
+        gasLimit,
+        gasDollarMap
+      ) || nativeToken
     );
   }, [
     userTransparentBalances.data,

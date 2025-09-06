@@ -18,7 +18,7 @@ export const fetchClaimableRewards = async (
   api: DefaultApi,
   address: Address
 ): Promise<Reward[]> => {
-  const response = await api.apiV1PosRewardAddressGet(address);
+  const response = await api.apiV1PosRewardAddressGet({ address });
   return response.data;
 };
 

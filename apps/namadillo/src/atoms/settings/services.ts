@@ -25,7 +25,9 @@ export const getIndexerCrawlerInfo = async (
   services?: ApiV1CrawlersTimestampsGetCrawlerNamesEnum[]
 ): Promise<ApiV1CrawlersTimestampsGet200ResponseInner[] | undefined> => {
   try {
-    const response = await api.apiV1CrawlersTimestampsGet(services);
+    const response = await api.apiV1CrawlersTimestampsGet({
+      crawlerNames: services,
+    });
     return response.data;
   } catch {
     return;

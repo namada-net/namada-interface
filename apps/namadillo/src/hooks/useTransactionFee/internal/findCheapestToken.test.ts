@@ -14,17 +14,14 @@ describe("findCheapestToken", () => {
       {
         token: tokenA,
         gasPriceInMinDenom: new BigNumber(2),
-        gasPrice: new BigNumber(2),
       },
       {
         token: tokenB,
         gasPriceInMinDenom: new BigNumber(1),
-        gasPrice: new BigNumber(1),
       },
       {
         token: tokenC,
         gasPriceInMinDenom: new BigNumber(3),
-        gasPrice: new BigNumber(3),
       },
     ] as GasPriceTable;
 
@@ -54,12 +51,10 @@ describe("findCheapestToken", () => {
       {
         token: tokenA,
         gasPriceInMinDenom: new BigNumber(1),
-        gasPrice: new BigNumber(1),
       },
       {
         token: tokenB,
         gasPriceInMinDenom: new BigNumber(2),
-        gasPrice: new BigNumber(2),
       },
     ] as GasPriceTable;
 
@@ -87,12 +82,10 @@ describe("findCheapestToken", () => {
       {
         token: tokenA,
         gasPriceInMinDenom: new BigNumber(1),
-        gasPrice: new BigNumber(1),
       },
       {
         token: tokenB,
         gasPriceInMinDenom: new BigNumber(2),
-        gasPrice: new BigNumber(2),
       },
     ] as GasPriceTable;
 
@@ -120,7 +113,6 @@ describe("findCheapestToken", () => {
       {
         token: tokenA,
         gasPriceInMinDenom: new BigNumber(1),
-        gasPrice: new BigNumber(1),
       },
     ] as GasPriceTable;
 
@@ -146,12 +138,10 @@ describe("findCheapestToken", () => {
       {
         token: tokenA,
         gasPriceInMinDenom: new BigNumber(2),
-        gasPrice: new BigNumber(2),
       },
       {
         token: tokenB,
         gasPriceInMinDenom: new BigNumber(2),
-        gasPrice: new BigNumber(2),
       },
     ] as GasPriceTable;
 
@@ -179,12 +169,10 @@ describe("findCheapestToken", () => {
       {
         token: tokenA,
         gasPriceInMinDenom: new BigNumber(2),
-        gasPrice: new BigNumber(2),
       },
       {
         token: tokenB,
         gasPriceInMinDenom: new BigNumber(3),
-        gasPrice: new BigNumber(3),
       },
     ] as GasPriceTable;
 

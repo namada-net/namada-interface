@@ -262,7 +262,7 @@ export const GasFeeModal = ({
                 );
 
                 return {
-                  id: item.token,
+                  id: item.token.address,
                   value: (
                     <div
                       className={clsx(
