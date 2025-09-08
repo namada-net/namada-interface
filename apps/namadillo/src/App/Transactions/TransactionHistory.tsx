@@ -221,11 +221,11 @@ export const TransactionHistory = (): JSX.Element => {
   ): TableRow => {
     const key =
       transaction.type === "bundled" ?
-        `${transaction.revealPkTx.tx?.txId}-${transaction.mainTx.tx?.txId}`
-      : transaction.tx.tx?.txId || index.toString();
+        `${transaction.revealPkTx.tx?.id}-${transaction.mainTx.tx?.id}`
+      : transaction.tx.tx?.id || index.toString();
 
     return {
-      key: transaction.tx?.id || index.toString(),
+      key,
       cells: [
         transaction.type === "bundled" ?
           <BundledTransactionCard
