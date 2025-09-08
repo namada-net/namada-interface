@@ -1,12 +1,22 @@
 import { connectedWalletsAtom } from "atoms/integrations";
+import { useWalletManager } from "hooks/useWalletManager";
 import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtom } from "jotai";
+import { useEffect } from "react";
 import { AccountIconButton } from "./AccountIconButton";
 import { DisconnectAccountIcon } from "./DisconnectAccountIcon";
 
 export const KeplrAccount = (): JSX.Element => {
   const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
+  const keplrWallet = new KeplrWalletManager();
+  const { walletAddress: connectedKeplrAddress } =
+    useWalletManager(keplrWallet);
+
+  useEffect(() => {
+    if (!connectedKeplrAddress)
+      setConnectedWallets((obj) => ({ ...obj, [keplrWallet.key]: false }));
+  }, [connectedKeplrAddress]);
 
   if (!connectedWallets.keplr) {
     return <></>;

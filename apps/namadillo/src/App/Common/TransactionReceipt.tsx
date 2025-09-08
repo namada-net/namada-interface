@@ -1,5 +1,6 @@
 import { Chain } from "@chain-registry/types";
 import { CopyToClipboardControl, Stack } from "@namada/components";
+import { PseudoExtendedKey } from "@namada/sdk-multicore";
 import { shortenAddress } from "@namada/utils";
 import {
   isNamadaAddress,
@@ -48,6 +49,9 @@ const TransferTransactionReceipt = ({
     return chain;
   };
 
+  const isExtendedKey = (address: string): boolean =>
+    PseudoExtendedKey.can_decode(address);
+
   const sourceChain = useMemo(() => {
     return getChain(transaction.chainId, transaction.sourceAddress || "");
   }, [transaction]);
@@ -61,8 +65,18 @@ const TransferTransactionReceipt = ({
     );
   }, [transaction]);
 
+  const getEncodedViewingKey = (address: string): string => {
+    const decodedPseudokey = PseudoExtendedKey.decode(address);
+    const encodedViewingKey = decodedPseudokey.to_viewing_key().encode();
+    return encodedViewingKey;
+  };
+
+  // Used whenever the source funds are coming from the shielded pool
   const sourceWallet =
-    isNamadaAddress(transaction.sourceAddress || "") ?
+    (
+      isNamadaAddress(transaction.sourceAddress || "") ||
+      isExtendedKey(transaction.sourceAddress || "")
+    ) ?
       wallets.namada
     : wallets.keplr;
 
@@ -84,8 +98,12 @@ const TransferTransactionReceipt = ({
           {sourceWallet && (
             <SelectedWallet
               wallet={sourceWallet}
-              address={transaction.sourceAddress}
-              displayTooltip={!transaction.sourceAddress?.includes("shielded")}
+              address={
+                isExtendedKey(transaction.sourceAddress || "") ?
+                  getEncodedViewingKey(transaction.sourceAddress || "")
+                : transaction.sourceAddress
+              }
+              displayTooltip={!isExtendedKey(transaction.sourceAddress || "")}
             />
           )}
         </header>
