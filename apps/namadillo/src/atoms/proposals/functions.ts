@@ -243,7 +243,7 @@ export const fetchProposalById = async (
   api: DefaultApi,
   id: bigint
 ): Promise<Proposal> => {
-  const proposalPromise = api.apiV1GovProposalIdGet({ id: Number(id) });
+  const proposalPromise = api.apiV1GovProposalIdGet(Number(id));
   const totalVotingPowerPromise = api.apiV1PosVotingPowerGet();
   const [proposalResponse, votingPowerResponse] = await Promise.all([
     proposalPromise,
@@ -257,9 +257,9 @@ export const fetchProposalDataById = async (
   api: DefaultApi,
   id: bigint
 ): Promise<string> => {
-  const totalVotingPowerPromise = await api.apiV1GovProposalIdDataGet({
-    id: Number(id),
-  });
+  const totalVotingPowerPromise = await api.apiV1GovProposalIdDataGet(
+    Number(id)
+  );
 
   // TODO: fix after fixing swagger return type
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -326,12 +326,12 @@ export const fetchPaginatedProposals = async (
   proposalType?: ProposalTypeString,
   search?: string
 ): Promise<{ proposals: Proposal[]; pagination: Pagination }> => {
-  const proposalsPromise = api.apiV1GovProposalGet({
-    page: mapUndefined((p) => p + 1, page), // indexer uses 1 as first page, not 0
-    status: mapUndefined(toIndexerStatus, status),
-    kind: mapUndefined(toIndexerProposalType, proposalType),
-    pattern: search,
-  });
+  const proposalsPromise = api.apiV1GovProposalGet(
+    mapUndefined((p) => p + 1, page), // indexer uses 1 as first page, not 0
+    mapUndefined(toIndexerStatus, status),
+    mapUndefined(toIndexerProposalType, proposalType),
+    search
+  );
 
   const totalVotingPowerPromise = api.apiV1PosVotingPowerGet();
   const [proposalResponse, votingPowerResponse] = await Promise.all([
@@ -353,9 +353,7 @@ export const fetchVotedProposalsByAccount = async (
   api: DefaultApi,
   account: Account
 ): Promise<{ proposalId: bigint; vote: VoteType | UnknownVoteType }[]> => {
-  const response = await api.apiV1GovVoterAddressVotesGet({
-    address: account.address,
-  });
+  const response = await api.apiV1GovVoterAddressVotesGet(account.address);
 
   return response.data.map(({ proposalId, vote }) => ({
     proposalId: BigInt(proposalId),

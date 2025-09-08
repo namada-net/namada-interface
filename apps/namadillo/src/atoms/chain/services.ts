@@ -1,8 +1,8 @@
 import {
   DefaultApi,
   IbcToken,
+  ModelParameters,
   NativeToken,
-  Parameters,
 } from "@namada/indexer-client";
 import { getDenomFromIbcTrace } from "atoms/integrations";
 import BigNumber from "bignumber.js";
@@ -18,7 +18,7 @@ export const fetchRpcUrlFromIndexer = async (
 };
 
 // TODO: We need the response type of this call updated in the indexer client
-type TempChainParams = Parameters & {
+type TempChainParams = ModelParameters & {
   checksums: {
     current: Record<string, string>;
     fallback: Record<string, string>;
@@ -70,9 +70,7 @@ export const fetchBlockHeightByTimestamp = async (
   timestamp: number
 ): Promise<number> => {
   const timestampInSeconds = Math.floor(timestamp / 1000);
-  const response = await api.apiV1BlockTimestampValueGet({
-    value: timestampInSeconds,
-  });
+  const response = await api.apiV1BlockTimestampValueGet(timestampInSeconds);
 
   return Number(response.data.height);
 };
@@ -81,6 +79,6 @@ export const fetchBlockTimestampByHeight = async (
   api: DefaultApi,
   height: number
 ): Promise<number> => {
-  const response = await api.apiV1BlockHeightValueGet({ value: height });
+  const response = await api.apiV1BlockHeightValueGet(height);
   return Number(response.data.timestamp);
 };

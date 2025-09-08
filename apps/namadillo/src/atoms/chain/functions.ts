@@ -1,7 +1,9 @@
-import { Parameters } from "@namada/indexer-client";
+import { ModelParameters } from "@namada/indexer-client";
 import { singleUnitDurationFromInterval } from "@namada/utils/helpers";
 
-export const calculateUnbondingPeriod = (parameters: Parameters): string => {
+export const calculateUnbondingPeriod = (
+  parameters: ModelParameters
+): string => {
   const unbondingPeriodInEpochs =
     Number(parameters.unbondingLength) +
     Number(parameters.pipelineLength) +

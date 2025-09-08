@@ -70,8 +70,7 @@ export const fetchTransaction = async (
   hash: string
 ): Promise<WrapperTransaction> => {
   // indexer only accepts the hash as lowercase
-  return (await api.apiV1ChainWrapperTxIdGet({ txId: sanitizeAddress(hash) }))
-    .data;
+  return (await api.apiV1ChainWrapperTxIdGet(sanitizeAddress(hash))).data;
 };
 
 export const fetchHistoricalTransactions = async (
@@ -81,15 +80,12 @@ export const fetchHistoricalTransactions = async (
   perPage?: number
 ): Promise<{ results: TransactionHistory[]; pagination: Pagination }> => {
   const pageParam = page ? page : undefined;
-  const response = await api.apiV1ChainHistoryGet(
-    { addresses },
-    {
-      params: {
-        page: pageParam,
-        perPage: perPage,
-      },
-    }
-  );
+  const response = await api.apiV1ChainHistoryGet(addresses, {
+    params: {
+      page: pageParam,
+      perPage: perPage,
+    },
+  });
 
   return response.data;
 };

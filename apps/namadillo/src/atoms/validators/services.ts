@@ -33,9 +33,9 @@ export const fetchMyBondedAmounts = async (
   api: DefaultApi,
   account: Account
 ): Promise<MergedBond[]> => {
-  const bondsResponse = await api.apiV1PosMergedBondsAddressGet({
-    address: account.address,
-  });
+  const bondsResponse = await api.apiV1PosMergedBondsAddressGet(
+    account.address
+  );
   return bondsResponse.data.results;
 };
 
@@ -43,8 +43,8 @@ export const fetchMyUnbondedAmounts = async (
   api: DefaultApi,
   account: Account
 ): Promise<Unbond[]> => {
-  const unbondsResponse = await api.apiV1PosMergedUnbondsAddressGet({
-    address: account.address,
-  });
+  const unbondsResponse = await api.apiV1PosMergedUnbondsAddressGet(
+    account.address
+  );
   return unbondsResponse.data.results;
 };

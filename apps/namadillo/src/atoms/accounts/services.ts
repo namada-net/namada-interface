@@ -21,5 +21,5 @@ export const fetchAccountBalance = async (
   api: DefaultApi,
   account: NamadaKeychainAccount
 ): Promise<Balance[]> => {
-  return (await api.apiV1AccountAddressGet({ address: account.address })).data;
+  return (await api.apiV1AccountAddressGet(account.address)).data;
 };

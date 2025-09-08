@@ -12,24 +12,24 @@ export const fetchGasEstimate = async (
   const counter = (kind: TxKind): number | undefined =>
     txKinds.filter((i) => i === kind).length || undefined;
 
-  const params = {
-    bond: counter("Bond"),
-    claimRewards: counter("ClaimRewards"),
-    unbond: counter("Unbond"),
-    transparentTransfer: counter("TransparentTransfer"),
-    shieldedTransfer: counter("ShieldedTransfer"),
-    shieldingTransfer: counter("ShieldingTransfer"),
-    unshieldingTransfer: counter("UnshieldingTransfer"),
-    vote: counter("VoteProposal"),
-    ibcTransparentTransfer: counter("IbcTransfer"),
-    withdraw: counter("Withdraw"),
-    revealPk: counter("RevealPk"),
-    redelegate: counter("Redelegate"),
-  };
+  const params = [
+    counter("Bond"),
+    counter("ClaimRewards"),
+    counter("Unbond"),
+    counter("TransparentTransfer"),
+    counter("ShieldedTransfer"),
+    counter("ShieldingTransfer"),
+    counter("UnshieldingTransfer"),
+    counter("VoteProposal"),
+    counter("IbcTransfer"),
+    counter("Withdraw"),
+    counter("RevealPk"),
+    counter("Redelegate"),
+  ];
 
   // fetch from the estimate endpoint
   try {
-    return (await api.apiV1GasEstimateGet(params)).data;
+    return (await api.apiV1GasEstimateGet(...params)).data;
   } catch (e) {
     console.error("Failed to fetch gas estimate from indexer", e);
   }
