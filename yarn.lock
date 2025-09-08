@@ -3717,12 +3717,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/indexer-client@file:/Users/smagin07/desktop/namada/namada-indexer/clients/indexer-client-pr424/namada-indexer-client-9999.0.0-pr.424.tgz::locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo":
-  version: 9999.0.0-pr.424
-  resolution: "@namada/indexer-client@file:/Users/smagin07/desktop/namada/namada-indexer/clients/indexer-client-pr424/namada-indexer-client-9999.0.0-pr.424.tgz#/Users/smagin07/desktop/namada/namada-indexer/clients/indexer-client-pr424/namada-indexer-client-9999.0.0-pr.424.tgz::hash=c7c3a1&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
+"@namada/indexer-client@npm:4.0.0":
+  version: 4.0.0
+  resolution: "@namada/indexer-client@npm:4.0.0"
   dependencies:
     axios: "npm:^1.6.1"
-  checksum: 10c0/33c1f76f7261ef7121fa6af34bde007d719d4a26a9084a2c2ebd7ae5509be410cf791524b29a71b940977386fd0cf8fa9102173cb8629ab6b987dd6161baedcc
+  checksum: 10c0/e3ea68781acc524d12a398ce26ceea1e5ad869db0b6f23fcc1413b50474804f942e265b29973f43af6a7f1d876e822431020a99531f85260e565629accb76be8
   languageName: node
   linkType: hard
 
@@ -3764,7 +3764,7 @@ __metadata:
     "@eslint/js": "npm:^9.9.1"
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.3.0"
-    "@namada/indexer-client": /Users/smagin07/desktop/namada/namada-indexer/clients/indexer-client-pr424/namada-indexer-client-9999.0.0-pr.424.tgz
+    "@namada/indexer-client": "npm:4.0.0"
     "@namada/sdk-multicore": "npm:^0.20.7"
     "@namada/sdk-node": "npm:^0.20.7"
     "@namada/vite-esbuild-plugin": "npm:^1.0.1"
