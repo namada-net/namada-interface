@@ -9,6 +9,7 @@ import {
 } from "App/Transfer/TransferModule";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
+  estimateMaxMaspTxAmountAtom2,
   lastCompletedShieldedSyncAtom,
   namadaShieldedAssetsAtom,
 } from "atoms/balance/atoms";
@@ -17,7 +18,6 @@ import { namadaChainRegistryAtom } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger/atoms";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
-import { useMaxMaspAmountForHWWallet } from "hooks/useMaxMaspAmountForHWWallet";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
@@ -143,11 +143,72 @@ export const MaspUnshield: React.FC = () => {
     }
   };
 
-  const maxMASPAmountInfo = useMaxMaspAmountForHWWallet({
-    asset: selectedAsset?.asset,
-    amount: selectedAsset?.amount,
-    gasConfig: feeProps.gasConfig,
-  });
+  // const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
+  // const maxAmount = useMemo(() => {
+  //   if (!selectedAsset) {
+  //     return BigNumber(0);
+  //   }
+  //   const { gasToken } = feeProps.gasConfig;
+  //   const token = selectedAsset.asset.address;
+
+  //   const displayGas = getDisplayGasFee(
+  //     feeProps.gasConfig,
+  //     chainAssetsMap.data || {}
+  //   );
+  //   const amount =
+  //     token === gasToken ?
+  //       selectedAsset.amount.minus(displayGas.totalDisplayAmount)
+  //     : selectedAsset.amount;
+
+  //   return amount;
+  // }, [selectedAsset?.asset.address]);
+
+  //const maxMaspTxAmountAtom = useMemo(() => {
+  //  //TODO: do not reuse worker type here
+  //  let props: EstimateMaxMaspTxAmountByNotes["payload"] | null;
+
+  //  if (!chainId || !account || !destinationAddress || !selectedAsset) {
+  //    props = null;
+  //  } else {
+  //    props = {
+  //      source: account.pseudoExtendedKey!,
+  //      target: destinationAddress,
+  //      token: selectedAsset.asset.address,
+  //      feeToken: feeProps.gasConfig.gasToken,
+  //      feeAmount: feeProps.gasConfig.gasPriceInMinDenom.times(
+  //        feeProps.gasConfig.gasLimit
+  //      ),
+  //    };
+  //  }
+
+  //  return estimateMaxMaspTxAmountAtom2(props);
+  //}, [
+  //  selectedAsset?.asset.address,
+  //  feeProps.gasConfig.gasToken,
+  //  feeProps?.gasConfig.gasLimit.toString(),
+  //  account?.pseudoExtendedKey,
+  //  destinationAddress,
+  //]);
+  const maxMaspTxAmountQuery = useAtomValue(
+    estimateMaxMaspTxAmountAtom2({
+      source: account?.pseudoExtendedKey,
+      target: destinationAddress,
+      token: selectedAsset?.asset.address,
+      feeToken: feeProps.gasConfig.gasToken,
+      feeAmount: feeProps.gasConfig.gasPriceInMinDenom.times(
+        feeProps.gasConfig.gasLimit
+      ),
+    })
+  );
+
+  // const maxMASPAmountInfo = useMaxMaspAmountForHWWallet({
+  //   asset: selectedAsset?.asset,
+  //   amount: selectedAsset?.amount,
+  //   gasConfig: feeProps.gasConfig,
+  // });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const maxMASPAmountInfo: any = null;
 
   // We stop the ledger status check when the transfer is in progress
   setLedgerStatusStop(isPerformingTransfer);
@@ -160,6 +221,11 @@ export const MaspUnshield: React.FC = () => {
           isDestinationShielded={false}
         />
       </header>
+      <LedgerAmountInfoAlert
+        calculating={maxMaspTxAmountQuery.isPending}
+        displayWarning={true}
+        amount={maxMaspTxAmountQuery.data || BigNumber(0)}
+      />
       {maxMASPAmountInfo && (
         <LedgerAmountInfoAlert
           calculating={maxMASPAmountInfo.calculating}

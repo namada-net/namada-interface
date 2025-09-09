@@ -3578,7 +3578,8 @@ __metadata:
     "@dao-xyz/borsh": "npm:^5.1.5"
     "@ledgerhq/hw-transport": "npm:^6.31.4"
     "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
-    "@namada/sdk": "npm:^0.20.7"
+    "@namada/sdk": "file:.yalc/@namada/sdk"
+    "@namada/sdk-multicore": "file:.yalc/@namada/sdk-multicore"
     "@namada/sdk-node": "npm:^0.20.7"
     "@svgr/webpack": "npm:^6.3.1"
     "@types/chrome": "npm:^0.0.237"
@@ -3852,9 +3853,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo":
-  version: 0.20.7
-  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=36c1b2&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
+"@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension":
+  version: 0.21.0
+  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=9160ba&locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3865,7 +3866,24 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/20f54a37fe73cb3240111e22ba83689477c5b9d24ae9522e400ee2712aaf04f5e26fd074a0d522e5f7db872983298db965f7a4380be6b502209de7fea6ab4b64
+  checksum: 10c0/e964c7d82f54c905c76f0aff28fe319c936bc4741f5b1363cfbe06cf3389ba66e3eacd254a5a7790779fdcce62f7fa9a3499a23ebe9842bad6d5063d931ecbfc
+  languageName: node
+  linkType: hard
+
+"@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo":
+  version: 0.21.0
+  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=9160ba&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
+  dependencies:
+    "@cosmjs/encoding": "npm:^0.29.0"
+    "@dao-xyz/borsh": "npm:^5.1.5"
+    "@ledgerhq/hw-transport": "npm:^6.31.4"
+    "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
+    "@zondax/ledger-namada": "npm:^2.0.0"
+    bignumber.js: "npm:^9.1.1"
+    buffer: "npm:^6.0.3"
+    semver: "npm:^7.7.2"
+    slip44: "npm:^3.0.18"
+  checksum: 10c0/e964c7d82f54c905c76f0aff28fe319c936bc4741f5b1363cfbe06cf3389ba66e3eacd254a5a7790779fdcce62f7fa9a3499a23ebe9842bad6d5063d931ecbfc
   languageName: node
   linkType: hard
 
@@ -3886,9 +3904,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@namada/sdk@npm:^0.20.7":
-  version: 0.20.7
-  resolution: "@namada/sdk@npm:0.20.7"
+"@namada/sdk@file:.yalc/@namada/sdk::locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension":
+  version: 0.21.0
+  resolution: "@namada/sdk@file:.yalc/@namada/sdk#.yalc/@namada/sdk::hash=2f1d91&locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3899,7 +3917,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.6.3"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/0a4ff08bc4ca2c27069d5f6c52e2fc421d5647827a0a4d9386c24d436dbc1c254f31c5f7d5b0b6a650f3ce10730dab1dbf8fd24ba79df1bcb1fae10864ed5f37
+  checksum: 10c0/0b7163cc3a91cf61823b73b2c31b5460effda2ec81f9fc9beba75f7b59c9b9bf9f715a9ec6adbcb53c3e78f10a6bfc55c951fa9e758002dc72aa6979dd377695
   languageName: node
   linkType: hard
 

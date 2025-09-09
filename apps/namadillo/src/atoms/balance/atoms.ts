@@ -29,12 +29,13 @@ import { atom, getDefaultStore } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { atomFamily, atomWithStorage } from "jotai/utils";
 import { Address, TokenBalance } from "types";
-import { namadaAsset, toDisplayAmount } from "utils";
+import { isNamadaAsset, namadaAsset, toDisplayAmount } from "utils";
 import {
   mapNamadaAddressesToAssets,
   mapNamadaAssetsToTokenBalances,
 } from "./functions";
 import {
+  estiamteMaxMaspTxAmountByNotesWorker,
   fetchShieldedBalance,
   fetchShieldedRewards,
   fetchShieldedRewardsPerToken,
@@ -224,8 +225,101 @@ export const getNotesAndConversionsAtom = atomWithQuery((get) => {
   };
 });
 
+// TODO: move
+const reduceNotes = (
+  x: number,
+  sortedNotes: [string, string?][]
+): BigNumber => {
+  const amount = sortedNotes.slice(0, x).reduce((acc, [note, conv]) => {
+    const val = conv ? BigNumber(conv) : BigNumber(note);
+    return acc.plus(val);
+  }, BigNumber(0));
+
+  return BigNumber(amount);
+};
+
+export const estimateMaxMaspTxAmountAtom2 = atomFamily(
+  (props: {
+    token?: string;
+    feeToken?: string;
+    feeAmount?: BigNumber;
+    source?: string;
+    target?: string;
+  }) =>
+    atomWithQuery((get) => {
+      const chainParametersQuery = get(chainParametersAtom);
+      const chainId = chainParametersQuery.data?.chainId;
+      const notesAndConversionsQuery = get(getNotesAndConversionsAtom);
+      const notesAndConversions = notesAndConversionsQuery.data;
+      const assetsMapQuery = get(namadaRegistryChainAssetsMapAtom);
+      const assetsMap = assetsMapQuery.data;
+
+      return {
+        queryKey: [
+          "estimate-max-masp-tx-amount",
+          chainId,
+          props.token,
+          props.feeToken,
+          props.feeAmount?.toString(),
+        ],
+        ...queryDependentFn(async () => {
+          const { token, feeToken, feeAmount, source, target } = props;
+          if (
+            !source ||
+            !target ||
+            !token ||
+            !feeToken ||
+            !feeAmount ||
+            !chainId ||
+            !notesAndConversions ||
+            !assetsMap
+          ) {
+            return BigNumber(0);
+          }
+
+          const notesAndConvByToken = notesAndConversions[token];
+          // TODO: handle undefiend
+          const sortedNotes = notesAndConvByToken.sort(
+            ([noteA, convA], [noteB, convB]) => {
+              const valA = convA ? BigNumber(convA) : BigNumber(noteA);
+              const valB = convB ? BigNumber(convB) : BigNumber(noteB);
+
+              return valB.comparedTo(valA);
+            }
+          );
+          const promises = [5, 4, 3, 3, 2, 1].map(async (x) => {
+            const rawAmount = reduceNotes(x, sortedNotes);
+            const amount =
+              isNamadaAsset(assetsMap[token]) ?
+                toDisplayAmount(assetsMap[token], rawAmount)
+              : rawAmount;
+            const amountWithFee =
+              token === feeToken ? amount.minus(feeAmount) : amount;
+
+            return estiamteMaxMaspTxAmountByNotesWorker({
+              source,
+              target,
+              token,
+              feeToken,
+              amount: amountWithFee,
+              feeAmount,
+              chainId,
+            }).then((res) => [amountWithFee, res] as const);
+          });
+
+          const res = await Promise.all(promises);
+          const amount =
+            res.find(([, success]) => success)?.[0] ?? BigNumber(0);
+
+          return amount;
+        }, [chainParametersQuery, notesAndConversionsQuery, assetsMapQuery]),
+      };
+    }),
+  (a, b) => JSON.stringify(a) === JSON.stringify(b)
+);
+
 export const estimateMaxMaspTxAmountAtom = atomFamily(
-  (props: { token?: string; feeToken?: string }) =>
+  (props: { token?: string; feeToken?: string; unshielding?: boolean }) =>
     atomWithQuery((get) => {
       const { token, feeToken } = props;
       const notesAndConversionsQuery = get(getNotesAndConversionsAtom);
@@ -248,14 +342,18 @@ export const estimateMaxMaspTxAmountAtom = atomFamily(
             }
           );
           // TODO: it should depend on device
-          const x = 6;
-          const notesWithConversions = sortedNotes.filter(
-            (n) => typeof n[1] === "string"
-          );
-          const extraOutputNotes = token !== feeToken ? 2 : 1;
+          const x = 5;
+          // const saplingInputs = 6;
+          // const saplingInputsWithConversions = sortedNotes.filter(
+          //   (n) => typeof n[1] === "string"
+          // );
+          // const extraOutputNotes = token !== feeToken ? 2 : 1;
+          // if(unshielding) {
 
-          const y = x - notesWithConversions.length - extraOutputNotes;
-          const amount = sortedNotes.slice(0, y).reduce((acc, [note, conv]) => {
+          // }
+
+          // const y = x - notesWithConversions.length - extraOutputNotes;
+          const amount = sortedNotes.slice(0, x).reduce((acc, [note, conv]) => {
             const val = conv ? BigNumber(conv) : BigNumber(note);
             return acc.plus(val);
           }, BigNumber(0));

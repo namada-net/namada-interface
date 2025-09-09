@@ -1,5 +1,6 @@
 import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
+import { LedgerAmountInfoAlert } from "App/Masp/LedgerAmountInfoAlert";
 import { params } from "App/routes";
 import { isShieldedAddress } from "App/Transfer/common";
 import {
@@ -17,6 +18,7 @@ import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import { useFathomTracker } from "hooks/useFathomTracker";
+import { useMaxMaspAmountForHWWallet } from "hooks/useMaxMaspAmountForHWWallet";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
@@ -186,15 +188,11 @@ export const NamadaTransfer: React.FC = () => {
   // We stop the ledger status check when the transfer is in progress
   setLedgerStatusStop(isPerformingTransfer);
 
-  // const {
-  //   amount: maxMASPAmount,
-  //   displayWarning,
-  //   calculating,
-  // } = useMaxMaspAmountForHWWallet({
-  //   asset: selectedAsset?.asset,
-  //   amount: selectedAsset?.amount,
-  //   gasConfig: feeProps.gasConfig,
-  // });
+  const maxMASPAmountInfo = useMaxMaspAmountForHWWallet({
+    asset: selectedAsset?.asset,
+    amount: selectedAsset?.amount,
+    gasConfig: feeProps.gasConfig,
+  });
 
   return (
     <Panel className="min-h-[600px] rounded-sm flex flex-col flex-1 py-9">
@@ -204,6 +202,13 @@ export const NamadaTransfer: React.FC = () => {
           isDestinationShielded={target ? isTargetShielded : undefined}
         />
       </header>
+      {isSourceShielded && maxMASPAmountInfo && (
+        <LedgerAmountInfoAlert
+          calculating={maxMASPAmountInfo.calculating}
+          displayWarning={maxMASPAmountInfo.displayWarning}
+          amount={maxMASPAmountInfo.amount}
+        />
+      )}
       <TransferModule
         source={{
           isLoadingAssets,
@@ -211,6 +216,10 @@ export const NamadaTransfer: React.FC = () => {
           availableAmount: selectedAsset?.amount,
           chain,
           availableWallets: [wallets.namada],
+          maxAmount:
+            isSourceShielded && maxMASPAmountInfo ?
+              maxMASPAmountInfo.amount
+            : undefined,
           wallet: wallets.namada,
           walletAddress: sourceAddress,
           selectedAssetAddress,

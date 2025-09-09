@@ -14,6 +14,8 @@ import { namadaAsset, toDisplayAmount } from "utils";
 import {
   Broadcast,
   BroadcastDone,
+  EstimateMaxMaspTxAmountByNotes,
+  EstimateMaxMaspTxAmountByNotesDone,
   GenerateIbcShieldingMemo,
   GenerateIbcShieldingMemoDone,
   IbcTransfer,
@@ -118,6 +120,19 @@ export class Worker {
     return {
       type: "shielded-rewards-per-token-done",
       payload: await shieldedRewardsPerToken(this.sdk, m.payload),
+    };
+  }
+
+  async estiamteMaxMaspTxAmountByNotes(
+    m: EstimateMaxMaspTxAmountByNotes
+  ): Promise<EstimateMaxMaspTxAmountByNotesDone> {
+    if (!this.sdk) {
+      throw new Error("SDK is not initialized");
+    }
+
+    return {
+      type: "estimate-max-masp-tx-amount-by-notes-done",
+      payload: await estimateMaxMaspTxAmountByNotes(this.sdk, m.payload),
     };
   }
 
@@ -273,6 +288,22 @@ async function shieldedRewards(
   return await sdk.rpc.shieldedRewards(viewingKey, chainId);
 }
 
+async function estimateMaxMaspTxAmountByNotes(
+  sdk: Sdk,
+  payload: EstimateMaxMaspTxAmountByNotes["payload"]
+): Promise<boolean> {
+  const { chainId, ...rest } = payload;
+  const props = {
+    ...rest,
+    // TODO: unused
+    maxNotes: 10,
+    amount: payload.amount.toString(),
+    feeAmount: payload.feeAmount.toString(),
+  };
+
+  return await sdk.masp.estiamteMaxMaspTxAmountByNotes(props, payload.chainId);
+}
+
 // TODO: We will probably move this to the separate worker
 async function broadcast(
   sdk: Sdk,
@@ -311,6 +342,12 @@ export const registerTransferHandlers = (): void => {
   );
   registerBNTransferHandler<ShieldedRewards>("shielded-rewards");
   registerBNTransferHandler<ShieldedRewardsDone>("shielded-rewards-done");
+  registerBNTransferHandler<EstimateMaxMaspTxAmountByNotes>(
+    "estimate-max-masp-tx-amount-by-notes"
+  );
+  registerBNTransferHandler<EstimateMaxMaspTxAmountByNotesDone>(
+    "estimate-max-masp-tx-amount-by-notes-done"
+  );
   registerBNTransferHandler<Broadcast>("broadcast");
 };
 

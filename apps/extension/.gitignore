@@ -1,4 +1,6 @@
 # dependencies
+.yalc
+yalc.lock
 .env
 /node_modules
 /build

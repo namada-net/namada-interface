@@ -3,6 +3,7 @@ import * as Comlink from "comlink";
 import {
   Balance,
   DatedViewingKey,
+  MaxMaspTxAmountProps,
   NotesAndConversions,
   ProgressBarNames,
   SdkEvents,
@@ -18,6 +19,7 @@ import {
 import ShieldedSyncWorker from "workers/ShieldedSyncWorker?worker";
 // TODO: move to @namada/types?
 import BigNumber from "bignumber.js";
+import { EstimateMaxMaspTxAmountByNotes } from "workers/MaspTxMessages";
 import {
   Worker as MaspTxWorkerApi,
   registerTransferHandlers,
@@ -114,6 +116,52 @@ export const getNotesAndConversions = async (
 
   return await sdk.masp.getNotesAndConversions(viewingKey, chainId);
 };
+
+export const estiamteMaxMaspTxAmountByNotes = async (
+  props: MaxMaspTxAmountProps,
+  chainId: string
+): Promise<boolean> => {
+  const sdk = await getSdkInstance();
+  return await sdk.masp.estiamteMaxMaspTxAmountByNotes(props, chainId);
+};
+
+export const estiamteMaxMaspTxAmountByNotesWorker = async (
+  //TODO: do not reuse worker type here
+  props: EstimateMaxMaspTxAmountByNotes["payload"]
+): Promise<boolean> => {
+  registerTransferHandlers();
+  const sdk = await getSdkInstance();
+  const worker = new MaspTxWorker();
+  const workerLink = Comlink.wrap<MaspTxWorkerApi>(worker);
+  await workerLink.init({
+    type: "init",
+    payload: {
+      rpcUrl: "https://namada-rpc.emberstake.xyz",
+      token: sdk.nativeToken,
+      maspIndexerUrl: "",
+    },
+  });
+
+  const res = await workerLink.estiamteMaxMaspTxAmountByNotes({
+    type: "estimate-max-masp-tx-amount-by-notes",
+    payload: props,
+  });
+  worker.terminate();
+
+  return res.payload;
+};
+
+// const reduceNotes = (
+//   x: number,
+//   sortedNotes: [string, string?][]
+// ): BigNumber => {
+//   const amount = sortedNotes.slice(0, x).reduce((acc, [note, conv]) => {
+//     const val = conv ? BigNumber(conv) : BigNumber(note);
+//     return acc.plus(val);
+//   }, BigNumber(0));
+
+//   return BigNumber(amount);
+// };
 
 export const fetchShieldedRewards = async (
   viewingKey: DatedViewingKey,

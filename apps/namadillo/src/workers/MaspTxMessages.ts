@@ -117,6 +117,24 @@ export type ShieldedRewardsPerTokenDone = WebWorkerMessage<
   Record<string, BigNumber>
 >;
 
+type EstiamteMaxMaspTxAmountByNotesPayload = {
+  source: string;
+  target: string;
+  token: string;
+  feeToken: string;
+  amount: BigNumber;
+  feeAmount: BigNumber;
+  chainId: string;
+};
+export type EstimateMaxMaspTxAmountByNotes = WebWorkerMessage<
+  "estimate-max-masp-tx-amount-by-notes",
+  EstiamteMaxMaspTxAmountByNotesPayload
+>;
+export type EstimateMaxMaspTxAmountByNotesDone = WebWorkerMessage<
+  "estimate-max-masp-tx-amount-by-notes-done",
+  boolean
+>;
+
 type BroadcastPayload = TransactionPair<unknown>;
 
 export type Broadcast = WebWorkerMessage<"broadcast", BroadcastPayload>;
