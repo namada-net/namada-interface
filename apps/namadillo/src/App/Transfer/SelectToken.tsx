@@ -288,6 +288,7 @@ export const SelectToken = ({
                     </span>
                     {filteredTokens.length > 0 ?
                       filteredTokens.map((token) => {
+                        if (token.amount.eq(0)) return null;
                         const isKeplrAddress = !isNamadaAddress(sourceAddress);
 
                         // For Keplr addresses, only show amounts if we have balance data and it's > 0
