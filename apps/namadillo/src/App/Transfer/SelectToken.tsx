@@ -172,9 +172,11 @@ export const SelectToken = ({
     }
   };
 
-  const getOverlayChainLogo = (token: AssetWithAmount): JSX.Element => {
+  const getOverlayChainLogo = (token: AssetWithAmount): JSX.Element | null => {
     const chain = getChainFromAsset(token);
     const chainImageUrl = getChainImageUrl(chain);
+    const isNamada = token.asset.symbol === "NAM";
+    if (isNamada) return null;
     return (
       <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-black border-2 border-neutral-600 flex items-center justify-center overflow-hidden z-10">
         <img
