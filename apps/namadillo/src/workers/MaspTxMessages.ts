@@ -1,5 +1,6 @@
 import {
   IbcTransferProps,
+  NotesAndConversions as NotesAndConversionsResponse,
   SdkWasmOptions,
   ShieldedTransferProps,
   ShieldingTransferProps,
@@ -133,6 +134,19 @@ export type EstimateMaxMaspTxAmountByNotes = WebWorkerMessage<
 export type EstimateMaxMaspTxAmountByNotesDone = WebWorkerMessage<
   "estimate-max-masp-tx-amount-by-notes-done",
   boolean
+>;
+
+type NotesAndConversionsPayload = {
+  viewingKey: string;
+  chainId: string;
+};
+export type NotesAndConversions = WebWorkerMessage<
+  "notes-and-conversions",
+  NotesAndConversionsPayload
+>;
+export type NotesAndConversionsDone = WebWorkerMessage<
+  "notes-and-conversions-done",
+  NotesAndConversionsResponse
 >;
 
 type BroadcastPayload = TransactionPair<unknown>;

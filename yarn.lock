@@ -3855,7 +3855,7 @@ __metadata:
 
 "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension":
   version: 0.21.0
-  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=9160ba&locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension"
+  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=85ce0e&locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3866,13 +3866,13 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/e964c7d82f54c905c76f0aff28fe319c936bc4741f5b1363cfbe06cf3389ba66e3eacd254a5a7790779fdcce62f7fa9a3499a23ebe9842bad6d5063d931ecbfc
+  checksum: 10c0/41e7228255720ec29fc91b53a3deb9ed7c5d90ccd472eaa1b3f4b14d64b12c467bd9156893059990d16d2d0b00dc19c0101295469fce465f891d018e46a9bd13
   languageName: node
   linkType: hard
 
 "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo":
   version: 0.21.0
-  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=9160ba&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
+  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=85ce0e&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3883,7 +3883,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/e964c7d82f54c905c76f0aff28fe319c936bc4741f5b1363cfbe06cf3389ba66e3eacd254a5a7790779fdcce62f7fa9a3499a23ebe9842bad6d5063d931ecbfc
+  checksum: 10c0/41e7228255720ec29fc91b53a3deb9ed7c5d90ccd472eaa1b3f4b14d64b12c467bd9156893059990d16d2d0b00dc19c0101295469fce465f891d018e46a9bd13
   languageName: node
   linkType: hard
 

@@ -1,5 +1,6 @@
 import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import BigNumber from "bignumber.js";
+import clsx from "clsx";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
@@ -13,10 +14,12 @@ export const TransactionFeeButton = ({
   feeProps,
   className,
   isShieldedTransfer = false,
+  disabled = false,
 }: {
   feeProps: TransactionFeeProps;
   className?: string;
   isShieldedTransfer?: boolean;
+  disabled?: boolean;
 }): JSX.Element => {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -42,9 +45,14 @@ export const TransactionFeeButton = ({
           displayAmount={gasDisplayAmount?.totalDisplayAmount || BigNumber(0)}
           symbol={gasDisplayAmount?.asset.symbol || ""}
         />
-        <div className="flex items-center gap-2">
+        <div
+          className={clsx("flex items-center gap-2", {
+            "pointer-events-none opacity-30": disabled,
+          })}
+        >
           <div className="text-neutral-500 text-xs">Fee Options:</div>
           <button
+            disabled={disabled}
             type="button"
             className={twMerge(
               "flex items-center gap-1",

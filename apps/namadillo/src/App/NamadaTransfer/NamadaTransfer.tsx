@@ -9,16 +9,19 @@ import {
 } from "App/Transfer/TransferModule";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import {
+  estimateMaxMaspTxAmountLedgerAtom,
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
 } from "atoms/balance/atoms";
 import { chainParametersAtom } from "atoms/chain/atoms";
-import { namadaChainRegistryAtom } from "atoms/integrations";
+import {
+  namadaChainRegistryAtom,
+  namadaRegistryChainAssetsMapAtom,
+} from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import { useFathomTracker } from "hooks/useFathomTracker";
-import { useMaxMaspAmountForHWWallet } from "hooks/useMaxMaspAmountForHWWallet";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
@@ -29,6 +32,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { getDisplayGasFee } from "utils/gas";
 import { NamadaTransferTopHeader } from "./NamadaTransferTopHeader";
 
 export const NamadaTransfer: React.FC = () => {
@@ -188,11 +192,38 @@ export const NamadaTransfer: React.FC = () => {
   // We stop the ledger status check when the transfer is in progress
   setLedgerStatusStop(isPerformingTransfer);
 
-  const maxMASPAmountInfo = useMaxMaspAmountForHWWallet({
-    asset: selectedAsset?.asset,
-    amount: selectedAsset?.amount,
-    gasConfig: feeProps.gasConfig,
-  });
+  const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
+  const maxAmount = useMemo(() => {
+    if (!selectedAsset) {
+      return BigNumber(0);
+    }
+    const { gasToken } = feeProps.gasConfig;
+    const token = selectedAsset.asset.address;
+
+    const displayGas = getDisplayGasFee(
+      feeProps.gasConfig,
+      chainAssetsMap.data || {}
+    );
+    const amount =
+      token === gasToken ?
+        selectedAsset.amount.minus(displayGas.totalDisplayAmount)
+      : selectedAsset.amount;
+
+    return amount;
+  }, [selectedAsset?.asset.address]);
+
+  const maxMaspTxAmountQuery = useAtomValue(
+    estimateMaxMaspTxAmountLedgerAtom({
+      source: account?.pseudoExtendedKey,
+      target: customAddress,
+      token: selectedAsset?.asset.address,
+      feeToken: feeProps.gasConfig.gasToken,
+      feeAmount: feeProps.gasConfig.gasPriceInMinDenom.times(
+        feeProps.gasConfig.gasLimit
+      ),
+    })
+  );
+  const maxMaspTxAmount = maxMaspTxAmountQuery?.data;
 
   return (
     <Panel className="min-h-[600px] rounded-sm flex flex-col flex-1 py-9">
@@ -202,11 +233,13 @@ export const NamadaTransfer: React.FC = () => {
           isDestinationShielded={target ? isTargetShielded : undefined}
         />
       </header>
-      {isSourceShielded && maxMASPAmountInfo && (
+      {isSourceShielded && maxMaspTxAmountQuery && (
         <LedgerAmountInfoAlert
-          calculating={maxMASPAmountInfo.calculating}
-          displayWarning={maxMASPAmountInfo.displayWarning}
-          amount={maxMASPAmountInfo.amount}
+          calculating={maxMaspTxAmountQuery.isPending}
+          displayWarning={Boolean(
+            maxMaspTxAmount && maxMaspTxAmount.lt(maxAmount)
+          )}
+          amount={maxMaspTxAmount || BigNumber(0)}
         />
       )}
       <TransferModule
@@ -216,10 +249,7 @@ export const NamadaTransfer: React.FC = () => {
           availableAmount: selectedAsset?.amount,
           chain,
           availableWallets: [wallets.namada],
-          maxAmount:
-            isSourceShielded && maxMASPAmountInfo ?
-              maxMASPAmountInfo.amount
-            : undefined,
+          maxAmount: isSourceShielded ? maxMaspTxAmount : undefined,
           wallet: wallets.namada,
           walletAddress: sourceAddress,
           selectedAssetAddress,

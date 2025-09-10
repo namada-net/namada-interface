@@ -105,6 +105,7 @@ export type TransferModuleProps = {
   isSyncingMasp?: boolean;
   buttonTextErrors?: Partial<Record<ValidationResult, string>>;
   onComplete?: () => void;
+  disabled?: boolean;
 } & (
   | { ibcTransfer?: undefined; ibcOptions?: undefined }
   | { ibcTransfer: "deposit" | "withdraw"; ibcOptions: IbcOptions }
@@ -168,6 +169,7 @@ export const TransferModule = ({
   buttonTextErrors = {},
   isSyncingMasp = false,
   isShieldedTx = false,
+  disabled = false,
 }: TransferModuleProps): JSX.Element => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -511,6 +513,7 @@ export const TransferModule = ({
             isShieldedAddress={source.isShieldedAddress}
             onChangeShielded={source.onChangeShielded}
             isSubmitting={isSubmitting}
+            disabled={disabled}
           />
           <i className="flex items-center justify-center w-11 mx-auto -my-8 relative z-10">
             <TransferArrow
@@ -555,6 +558,7 @@ export const TransferModule = ({
             destinationAsset={selectedAsset?.asset}
             amount={source.amount}
             isSubmitting={isSubmitting}
+            disabled={disabled}
           />
           {ibcTransfer && requiresIbcChannels && (
             <IbcChannels

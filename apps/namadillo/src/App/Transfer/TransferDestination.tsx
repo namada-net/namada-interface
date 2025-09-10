@@ -36,6 +36,7 @@ type TransferDestinationProps = {
   address?: string;
   memo?: string;
   onChangeMemo?: (address: string) => void;
+  disabled?: boolean;
 };
 
 export const TransferDestination = ({
@@ -60,6 +61,7 @@ export const TransferDestination = ({
   onChangeMemo,
   openChainSelector,
   openProviderSelector,
+  disabled = false,
 }: TransferDestinationProps): JSX.Element => {
   return (
     <div
@@ -177,6 +179,7 @@ export const TransferDestination = ({
           {changeFeeEnabled ?
             feeProps && (
               <TransactionFeeButton
+                disabled={disabled}
                 feeProps={feeProps}
                 isShieldedTransfer={isShieldedTx}
               />

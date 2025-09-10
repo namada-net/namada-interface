@@ -113,8 +113,25 @@ export const getNotesAndConversions = async (
   chainId: string
 ): Promise<NotesAndConversions> => {
   const sdk = await getSdkInstance();
+  const worker = new MaspTxWorker();
+  const workerLink = Comlink.wrap<MaspTxWorkerApi>(worker);
+  await workerLink.init({
+    type: "init",
+    payload: {
+      // TODO:
+      rpcUrl: "https://namada-rpc.emberstake.xyz",
+      token: sdk.nativeToken,
+      maspIndexerUrl: "",
+    },
+  });
 
-  return await sdk.masp.getNotesAndConversions(viewingKey, chainId);
+  const res = await workerLink.notesAndConversions({
+    type: "notes-and-conversions",
+    payload: { viewingKey, chainId },
+  });
+  worker.terminate();
+
+  return res.payload;
 };
 
 export const estiamteMaxMaspTxAmountByNotes = async (
@@ -136,6 +153,7 @@ export const estiamteMaxMaspTxAmountByNotesWorker = async (
   await workerLink.init({
     type: "init",
     payload: {
+      // TODO:
       rpcUrl: "https://namada-rpc.emberstake.xyz",
       token: sdk.nativeToken,
       maspIndexerUrl: "",

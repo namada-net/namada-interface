@@ -1,5 +1,6 @@
 import {
   IbcTransferProps,
+  NotesAndConversions as NotesAndConversionsResponse,
   Sdk,
   ShieldedTransferProps,
   ShieldingTransferProps,
@@ -22,6 +23,8 @@ import {
   IbcTransferDone,
   Init,
   InitDone,
+  NotesAndConversions,
+  NotesAndConversionsDone,
   Shield,
   ShieldDone,
   ShieldedRewards,
@@ -133,6 +136,19 @@ export class Worker {
     return {
       type: "estimate-max-masp-tx-amount-by-notes-done",
       payload: await estimateMaxMaspTxAmountByNotes(this.sdk, m.payload),
+    };
+  }
+
+  async notesAndConversions(
+    m: NotesAndConversions
+  ): Promise<NotesAndConversionsDone> {
+    if (!this.sdk) {
+      throw new Error("SDK is not initialized");
+    }
+
+    return {
+      type: "notes-and-conversions-done",
+      payload: await notesAndConversions(this.sdk, m.payload),
     };
   }
 
@@ -302,6 +318,15 @@ async function estimateMaxMaspTxAmountByNotes(
   };
 
   return await sdk.masp.estiamteMaxMaspTxAmountByNotes(props, payload.chainId);
+}
+
+async function notesAndConversions(
+  sdk: Sdk,
+  payload: NotesAndConversions["payload"]
+): Promise<NotesAndConversionsResponse> {
+  const { chainId, viewingKey } = payload;
+
+  return await sdk.masp.getNotesAndConversions(viewingKey, chainId);
 }
 
 // TODO: We will probably move this to the separate worker

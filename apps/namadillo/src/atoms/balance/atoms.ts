@@ -1,5 +1,6 @@
 import { DefaultApi } from "@namada/indexer-client";
 import { Account, AccountType, DatedViewingKey } from "@namada/types";
+import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
 import {
   accountsAtom,
   allDefaultAccountsAtom,
@@ -238,7 +239,7 @@ const reduceNotes = (
   return BigNumber(amount);
 };
 
-export const estimateMaxMaspTxAmountAtom2 = atomFamily(
+export const estimateMaxMaspTxAmountAtom = atomFamily(
   (props: {
     token?: string;
     feeToken?: string;
@@ -253,6 +254,8 @@ export const estimateMaxMaspTxAmountAtom2 = atomFamily(
       const notesAndConversions = notesAndConversionsQuery.data;
       const assetsMapQuery = get(namadaRegistryChainAssetsMapAtom);
       const assetsMap = assetsMapQuery.data;
+      const isTransparent =
+        props.target ? isTransparentAddress(props.target) : undefined;
 
       return {
         queryKey: [
@@ -261,6 +264,7 @@ export const estimateMaxMaspTxAmountAtom2 = atomFamily(
           props.token,
           props.feeToken,
           props.feeAmount?.toString(),
+          isTransparent,
         ],
         ...queryDependentFn(async () => {
           const { token, feeToken, feeAmount, source, target } = props;
@@ -271,15 +275,13 @@ export const estimateMaxMaspTxAmountAtom2 = atomFamily(
             !feeToken ||
             !feeAmount ||
             !chainId ||
-            !notesAndConversions ||
+            !notesAndConversions?.[token] ||
             !assetsMap
           ) {
             return BigNumber(0);
           }
 
-          const notesAndConvByToken = notesAndConversions[token];
-          // TODO: handle undefiend
-          const sortedNotes = notesAndConvByToken.sort(
+          const sortedNotes = notesAndConversions[token].sort(
             ([noteA, convA], [noteB, convB]) => {
               const valA = convA ? BigNumber(convA) : BigNumber(noteA);
               const valB = convB ? BigNumber(convB) : BigNumber(noteB);
@@ -287,96 +289,73 @@ export const estimateMaxMaspTxAmountAtom2 = atomFamily(
               return valB.comparedTo(valA);
             }
           );
-          const promises = [5, 4, 3, 3, 2, 1].map(async (x) => {
+
+          const isNAM = isNamadaAsset(assetsMap[token]);
+          const asset = assetsMap[token];
+
+          const promises = [5, 4, 3, 2, 1].map(async (x) => {
             const rawAmount = reduceNotes(x, sortedNotes);
+            const one =
+              isNAM ? toDisplayAmount(asset, BigNumber(1)) : BigNumber(1);
             const amount =
-              isNamadaAsset(assetsMap[token]) ?
-                toDisplayAmount(assetsMap[token], rawAmount)
-              : rawAmount;
+              isNAM ? toDisplayAmount(asset, rawAmount) : rawAmount;
             const amountWithFee =
               token === feeToken ? amount.minus(feeAmount) : amount;
+            const displayAmountWithFee =
+              isNAM ? amountWithFee : toDisplayAmount(asset, amountWithFee);
 
             return estiamteMaxMaspTxAmountByNotesWorker({
               source,
               target,
               token,
               feeToken,
-              amount: amountWithFee,
+              // We do -1 to assume the fees - for consistency
+              amount: amountWithFee.minus(one),
               feeAmount,
               chainId,
-            }).then((res) => [amountWithFee, res] as const);
+            }).then((res) => [displayAmountWithFee, res] as const);
           });
 
-          const res = await Promise.all(promises);
-          const amount =
-            res.find(([, success]) => success)?.[0] ?? BigNumber(0);
+          try {
+            const res = await Promise.all(promises);
+            const amount =
+              res.find(([, success]) => success)?.[0] ?? BigNumber(0);
+            return amount;
+          } catch (e) {
+            console.error("Failed to estimate max masp tx amount", e);
+          }
 
-          return amount;
+          // TODO: proper error handling
+          return BigNumber(0);
         }, [chainParametersQuery, notesAndConversionsQuery, assetsMapQuery]),
       };
     }),
   (a, b) => JSON.stringify(a) === JSON.stringify(b)
 );
 
-export const estimateMaxMaspTxAmountAtom = atomFamily(
-  (props: { token?: string; feeToken?: string; unshielding?: boolean }) =>
-    atomWithQuery((get) => {
-      const { token, feeToken } = props;
-      const notesAndConversionsQuery = get(getNotesAndConversionsAtom);
-      const notesAndConversions = notesAndConversionsQuery.data;
-
-      return {
-        queryKey: ["estimate-max-masp-tx-amount-2", token, feeToken],
-        ...queryDependentFn(async () => {
-          if (!token || !feeToken || !notesAndConversions) {
-            return BigNumber(0);
-          }
-          const notesAndConvByToken = notesAndConversions[token];
-          // TODO: handle undefiend
-          const sortedNotes = notesAndConvByToken.sort(
-            ([noteA, convA], [noteB, convB]) => {
-              const valA = convA ? BigNumber(convA) : BigNumber(noteA);
-              const valB = convB ? BigNumber(convB) : BigNumber(noteB);
-
-              return valB.comparedTo(valA);
-            }
-          );
-          // TODO: it should depend on device
-          const x = 5;
-          // const saplingInputs = 6;
-          // const saplingInputsWithConversions = sortedNotes.filter(
-          //   (n) => typeof n[1] === "string"
-          // );
-          // const extraOutputNotes = token !== feeToken ? 2 : 1;
-          // if(unshielding) {
-
-          // }
-
-          // const y = x - notesWithConversions.length - extraOutputNotes;
-          const amount = sortedNotes.slice(0, x).reduce((acc, [note, conv]) => {
-            const val = conv ? BigNumber(conv) : BigNumber(note);
-            return acc.plus(val);
-          }, BigNumber(0));
-
-          return BigNumber(amount);
-        }, [notesAndConversionsQuery]),
-      };
-    }),
-  (a, b) => a.token === b.token && a.feeToken === b.feeToken
-);
-
 export const estimateMaxMaspTxAmountLedgerAtom = atomFamily(
-  (props: { token?: string; feeToken?: string }) => {
+  (props: {
+    token?: string;
+    feeToken?: string;
+    feeAmount?: BigNumber;
+    source?: string;
+    target?: string;
+  }) => {
     const baseAtom = estimateMaxMaspTxAmountAtom(props);
     return atom((get) => {
       const isLedger = get(isLedgerAccountAtom);
-      if (!isLedger) {
+      const { target } = props;
+      if (
+        !isLedger ||
+        !target ||
+        !(isTransparentAddress(target) || isShieldedAddress(target))
+      ) {
         return null;
       }
       return get(baseAtom);
     });
   },
-  (a, b) => a.token === b.token && a.feeToken === b.feeToken
+  (a, b) => JSON.stringify(a) === JSON.stringify(b)
 );
 
 export const namadaShieldedAssetsAtom = atomWithQuery((get) => {

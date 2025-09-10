@@ -31,6 +31,7 @@ export type TransferSourceProps = {
   onChangeAmount?: (amount: BigNumber | undefined) => void;
   isShieldedAddress?: boolean;
   onChangeShielded?: (isShielded: boolean) => void;
+  disabled?: boolean;
 };
 
 const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
@@ -62,6 +63,7 @@ export const TransferSource = ({
   isSyncingMasp,
   onChangeShielded,
   isSubmitting,
+  disabled,
 }: TransferSourceProps): JSX.Element => {
   return (
     <div className="relative bg-neutral-800 rounded-lg px-4 py-5">
@@ -141,7 +143,7 @@ export const TransferSource = ({
           <SelectedAsset
             asset={asset}
             isLoading={isLoadingAssets}
-            isDisabled={!chain || !walletAddress}
+            isDisabled={!chain || !walletAddress || disabled}
             onClick={openAssetSelector}
           />
           <AmountInput
@@ -149,7 +151,7 @@ export const TransferSource = ({
               "text-right [&_input]:text-right [&_input]:text-3xl [&_input]:bg-transparent",
               "[&_input]:!border-0 [&_input]:px-0"
             )}
-            disabled={!chain || !asset}
+            disabled={!chain || !asset || disabled}
             value={amount}
             onChange={(e) => onChangeAmount?.(e.target.value)}
             placeholder="Amount"

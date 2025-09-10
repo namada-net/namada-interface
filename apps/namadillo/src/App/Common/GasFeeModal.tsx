@@ -13,6 +13,7 @@ import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
 import { useAtomValue } from "jotai";
+import { useCallback, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { twMerge } from "tailwind-merge";
 import { Asset, GasConfig, NamadaAsset } from "types";
@@ -110,9 +111,12 @@ export const GasFeeModal = ({
     onChangeGasToken,
   } = feeProps;
 
+  const [gasLimit, setGasLimit] = useState<BigNumber>(gasConfig.gasLimit);
+  const [gasToken, setGasToken] = useState<string>(gasConfig.gasToken);
+
   const sortByNativeToken = useSortByNativeToken();
   const buildGasOption = useBuildGasOption({
-    gasConfig,
+    gasConfig: { ...gasConfig, gasLimit, gasToken },
     gasPriceTable,
     chainAssetsMap,
   });
@@ -143,8 +147,19 @@ export const GasFeeModal = ({
 
   const isLoading = isShielded && !shieldedAmount.data;
 
+  // We only commit the changes when the modal is closed, this prevents some atoms from triggering too many times
+  const onCloseCallback = useCallback(() => {
+    if (typeof gasLimit !== "undefined") {
+      onChangeGasLimit(gasLimit);
+    }
+    if (typeof gasToken !== "undefined") {
+      onChangeGasToken(gasToken);
+    }
+    onClose();
+  }, [gasLimit, gasToken]);
+
   return (
-    <Modal onClose={onClose}>
+    <Modal onClose={onCloseCallback}>
       <div
         className={twMerge(
           "fixed min-w-[550px] top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2",
@@ -156,7 +171,7 @@ export const GasFeeModal = ({
             "cursor-pointer text-white absolute right-3 top-3 text-xl",
             "hover:text-yellow transition-colors"
           )}
-          onClick={onClose}
+          onClick={onCloseCallback}
         >
           <IoClose />
         </i>
@@ -188,7 +203,7 @@ export const GasFeeModal = ({
                     "cursor-auto bg-yellow text-black"
                   : "cursor-pointer bg-neutral-800 hover:bg-neutral-700"
                 )}
-                onClick={() => onChangeGasLimit(BigNumber(item.amount))}
+                onClick={() => setGasLimit(BigNumber(item.amount))}
               >
                 <div className="font-semibold">{item.label}</div>
                 {totalInDollars && (
@@ -240,7 +255,7 @@ export const GasFeeModal = ({
           labelProps={{
             className: "group-hover/item:text-current",
           }}
-          onChange={(e) => onChangeGasToken(e.target.value)}
+          onChange={(e) => setGasToken(e.target.value)}
           options={
             gasPriceTable
               ?.filter(filterAvailableTokensOnly)
@@ -322,8 +337,8 @@ export const GasFeeModal = ({
           <AmountInput
             label="Gas Amount"
             className="[&_input]:border-neutral-800"
-            value={gasConfig.gasLimit}
-            onChange={(e) => e.target.value && onChangeGasLimit(e.target.value)}
+            value={gasLimit}
+            onChange={(e) => e.target.value && setGasLimit(e.target.value)}
           />
         </div>
 
@@ -335,7 +350,7 @@ export const GasFeeModal = ({
             backgroundHoverColor="yellow"
             textColor="white"
             textHoverColor="black"
-            onClick={onClose}
+            onClick={onCloseCallback}
           >
             Close
           </ActionButton>
