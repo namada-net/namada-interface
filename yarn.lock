@@ -3717,12 +3717,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/indexer-client@npm:4.0.0":
-  version: 4.0.0
-  resolution: "@namada/indexer-client@npm:4.0.0"
+"@namada/indexer-client@npm:4.0.1":
+  version: 4.0.1
+  resolution: "@namada/indexer-client@npm:4.0.1"
   dependencies:
     axios: "npm:^1.6.1"
-  checksum: 10c0/e3ea68781acc524d12a398ce26ceea1e5ad869db0b6f23fcc1413b50474804f942e265b29973f43af6a7f1d876e822431020a99531f85260e565629accb76be8
+  checksum: 10c0/bc1a8ded014227f5dcaba5257258d7b8b4ec343b9232b31a326b23e9bef23248afdb7783c91b44ecb9bf0772edde3202639b8454f2aa476ba618c51d05a255c8
   languageName: node
   linkType: hard
 
@@ -3764,7 +3764,7 @@ __metadata:
     "@eslint/js": "npm:^9.9.1"
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.3.0"
-    "@namada/indexer-client": "npm:4.0.0"
+    "@namada/indexer-client": "npm:4.0.1"
     "@namada/sdk-multicore": "npm:^0.20.8"
     "@namada/sdk-node": "npm:^0.20.8"
     "@namada/vite-esbuild-plugin": "npm:^1.0.1"
