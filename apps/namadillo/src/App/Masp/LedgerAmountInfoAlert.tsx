@@ -21,17 +21,17 @@ export const LedgerAmountInfoAlert = (
                 "block w-6 h-6 border-2 border-transparent border-t-yellow rounded-[50%] animate-loadingSpinner"
               }
             />
-            <p>Calculating the maximum amount you can unshield this time... </p>
+            <p>Calculating the maximum amount you can transfer this time... </p>
           </Stack>
         </Alert>
       )}
       {!calculating && displayWarning && (
         <Alert type="warning" className="w-[480px] mx-auto mb-4">
           <p>
-            Due to ledger BS we have to limit the amount that you can unshield
-            at this time to <b>{amount.toString()}</b>
-            <br />
-            After tx is successful, you will be able to unshield more
+            Due to the ledger device memory constrains we have to limit the
+            amount that you can transfer this time to <b>{amount.toString()}</b>
+            . Once the transaction is successful, you will be able to send
+            another transfer.
           </p>
         </Alert>
       )}
@@ -42,7 +42,7 @@ export const LedgerAmountInfoAlert = (
         >
           <Stack direction="horizontal" gap={3} className="items-center">
             <GoCheckCircle className="w-6 h-6" />
-            <p>You can unshield all the tokens</p>
+            <p>You can transfer all the tokens</p>
           </Stack>
         </Alert>
       )}

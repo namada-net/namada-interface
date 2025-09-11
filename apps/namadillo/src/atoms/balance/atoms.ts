@@ -36,7 +36,7 @@ import {
   mapNamadaAssetsToTokenBalances,
 } from "./functions";
 import {
-  estiamteMaxMaspTxAmountByNotesWorker,
+  estimateMaxMaspTxAmountByNotesWorker,
   fetchShieldedBalance,
   fetchShieldedRewards,
   fetchShieldedRewardsPerToken,
@@ -304,7 +304,7 @@ export const estimateMaxMaspTxAmountAtom = atomFamily(
             const displayAmountWithFee =
               isNAM ? amountWithFee : toDisplayAmount(asset, amountWithFee);
 
-            return estiamteMaxMaspTxAmountByNotesWorker({
+            return estimateMaxMaspTxAmountByNotesWorker({
               source,
               target,
               token,
@@ -333,6 +333,8 @@ export const estimateMaxMaspTxAmountAtom = atomFamily(
   (a, b) => JSON.stringify(a) === JSON.stringify(b)
 );
 
+const ledgerEstimationStopAtom = atom(false);
+// TODO: rename
 export const estimateMaxMaspTxAmountLedgerAtom = atomFamily(
   (props: {
     token?: string;
@@ -342,18 +344,26 @@ export const estimateMaxMaspTxAmountLedgerAtom = atomFamily(
     target?: string;
   }) => {
     const baseAtom = estimateMaxMaspTxAmountAtom(props);
-    return atom((get) => {
-      const isLedger = get(isLedgerAccountAtom);
-      const { target } = props;
-      if (
-        !isLedger ||
-        !target ||
-        !(isTransparentAddress(target) || isShieldedAddress(target))
-      ) {
-        return null;
+    return atom(
+      (get) => {
+        const isLedger = get(isLedgerAccountAtom);
+        const stop = get(ledgerEstimationStopAtom);
+
+        const { target } = props;
+        if (
+          stop ||
+          !isLedger ||
+          !target ||
+          !(isTransparentAddress(target) || isShieldedAddress(target))
+        ) {
+          return null;
+        }
+        return get(baseAtom);
+      },
+      (_, set, stop: boolean) => {
+        set(ledgerEstimationStopAtom, stop);
       }
-      return get(baseAtom);
-    });
+    );
   },
   (a, b) => JSON.stringify(a) === JSON.stringify(b)
 );

@@ -3855,7 +3855,7 @@ __metadata:
 
 "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension":
   version: 0.21.0
-  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=85ce0e&locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension"
+  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=312175&locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3866,13 +3866,13 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/41e7228255720ec29fc91b53a3deb9ed7c5d90ccd472eaa1b3f4b14d64b12c467bd9156893059990d16d2d0b00dc19c0101295469fce465f891d018e46a9bd13
+  checksum: 10c0/7ab68c923ace15a9bebc10e370db4a850b00c0d7e03b5c16286511920b079fc19119d865c4e06e3bd2b2788f2fda659a0941b54cec4c0382349b7025c8dc3ffd
   languageName: node
   linkType: hard
 
 "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo":
   version: 0.21.0
-  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=85ce0e&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
+  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=0ce3a6&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3883,7 +3883,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/41e7228255720ec29fc91b53a3deb9ed7c5d90ccd472eaa1b3f4b14d64b12c467bd9156893059990d16d2d0b00dc19c0101295469fce465f891d018e46a9bd13
+  checksum: 10c0/ae0b2ade50800cb510fc89c5255e19f8e34f2d58fc3a00cc73cc093d67046d3aca470e25370411462858ebefadb09698049175bd099028721d961241c5d4467a
   languageName: node
   linkType: hard
 

@@ -134,15 +134,15 @@ export const getNotesAndConversions = async (
   return res.payload;
 };
 
-export const estiamteMaxMaspTxAmountByNotes = async (
+export const estimateMaxMaspTxAmountByNotes = async (
   props: MaxMaspTxAmountProps,
   chainId: string
 ): Promise<boolean> => {
   const sdk = await getSdkInstance();
-  return await sdk.masp.estiamteMaxMaspTxAmountByNotes(props, chainId);
+  return await sdk.masp.estimateMaxMaspTxAmount(props, chainId);
 };
 
-export const estiamteMaxMaspTxAmountByNotesWorker = async (
+export const estimateMaxMaspTxAmountByNotesWorker = async (
   //TODO: do not reuse worker type here
   props: EstimateMaxMaspTxAmountByNotes["payload"]
 ): Promise<boolean> => {
@@ -160,7 +160,7 @@ export const estiamteMaxMaspTxAmountByNotesWorker = async (
     },
   });
 
-  const res = await workerLink.estiamteMaxMaspTxAmountByNotes({
+  const res = await workerLink.estimateMaxMaspTxAmountByNotes({
     type: "estimate-max-masp-tx-amount-by-notes",
     payload: props,
   });

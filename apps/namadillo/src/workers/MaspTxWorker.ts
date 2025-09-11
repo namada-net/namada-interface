@@ -126,7 +126,7 @@ export class Worker {
     };
   }
 
-  async estiamteMaxMaspTxAmountByNotes(
+  async estimateMaxMaspTxAmountByNotes(
     m: EstimateMaxMaspTxAmountByNotes
   ): Promise<EstimateMaxMaspTxAmountByNotesDone> {
     if (!this.sdk) {
@@ -311,13 +311,11 @@ async function estimateMaxMaspTxAmountByNotes(
   const { chainId, ...rest } = payload;
   const props = {
     ...rest,
-    // TODO: unused
-    maxNotes: 10,
     amount: payload.amount.toString(),
     feeAmount: payload.feeAmount.toString(),
   };
 
-  return await sdk.masp.estiamteMaxMaspTxAmountByNotes(props, payload.chainId);
+  return await sdk.masp.estimateMaxMaspTxAmount(props, payload.chainId);
 }
 
 async function notesAndConversions(

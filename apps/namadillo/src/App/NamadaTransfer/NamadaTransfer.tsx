@@ -212,7 +212,7 @@ export const NamadaTransfer: React.FC = () => {
     return amount;
   }, [selectedAsset?.asset.address]);
 
-  const maxMaspTxAmountQuery = useAtomValue(
+  const [maxMaspTxAmountQuery, maxMaspTxAmountQueryStop] = useAtom(
     estimateMaxMaspTxAmountLedgerAtom({
       source: account?.pseudoExtendedKey,
       target: customAddress,
@@ -223,6 +223,10 @@ export const NamadaTransfer: React.FC = () => {
       ),
     })
   );
+  // We stop estimations when transfer is in progress to not use the workers, this is useful especially when query
+  // runs on window focus or in interval
+  maxMaspTxAmountQueryStop(isPerformingTransfer);
+
   const maxMaspTxAmount = maxMaspTxAmountQuery?.data;
 
   return (
@@ -281,6 +285,7 @@ export const NamadaTransfer: React.FC = () => {
         onSubmitTransfer={onSubmitTransfer}
         completedAt={completedAt}
         onComplete={redirectToTransactionPage}
+        disabled={maxMaspTxAmountQuery?.isPending}
       />
     </Panel>
   );

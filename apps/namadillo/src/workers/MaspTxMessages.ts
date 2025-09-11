@@ -118,7 +118,7 @@ export type ShieldedRewardsPerTokenDone = WebWorkerMessage<
   Record<string, BigNumber>
 >;
 
-type EstiamteMaxMaspTxAmountByNotesPayload = {
+type EstimateMaxMaspTxAmountByNotesPayload = {
   source: string;
   target: string;
   token: string;
@@ -129,7 +129,7 @@ type EstiamteMaxMaspTxAmountByNotesPayload = {
 };
 export type EstimateMaxMaspTxAmountByNotes = WebWorkerMessage<
   "estimate-max-masp-tx-amount-by-notes",
-  EstiamteMaxMaspTxAmountByNotesPayload
+  EstimateMaxMaspTxAmountByNotesPayload
 >;
 export type EstimateMaxMaspTxAmountByNotesDone = WebWorkerMessage<
   "estimate-max-masp-tx-amount-by-notes-done",
