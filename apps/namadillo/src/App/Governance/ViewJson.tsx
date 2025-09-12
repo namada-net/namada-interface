@@ -2,11 +2,16 @@ import { useAtomValue } from "jotai";
 import { generatePath, useNavigate } from "react-router-dom";
 
 import { Modal } from "@namada/components";
-import { PgfIbcTarget, PgfTarget, Proposal } from "@namada/types";
+import {
+  PgfIbcTarget,
+  PgfTarget,
+  ProposalData,
+  ProposalWithData,
+} from "@namada/types";
 import { assertNever, copyToClipboard } from "@namada/utils";
 import { ModalContainer } from "App/Common/ModalContainer";
 import { routes } from "App/routes";
-import { proposalFamily } from "atoms/proposals";
+import { proposalWithDataFamily } from "atoms/proposals";
 import clsx from "clsx";
 import { useProposalIdParam } from "hooks";
 import { useState } from "react";
@@ -70,16 +75,16 @@ const formatIbcPgfTarget = (value: PgfIbcTarget): PgfIbcTargetJson => ({
   },
 });
 
-const formatData = (proposal: Proposal): DataJson => {
-  switch (proposal.proposalType.type) {
+const formatData = (proposalData: ProposalData): DataJson => {
+  switch (proposalData.type) {
     case "default":
       return undefined;
 
     case "default_with_wasm":
-      return proposal.proposalType.data;
+      return proposalData.data;
 
     case "pgf_steward":
-      const addRemove = proposal.proposalType.data;
+      const addRemove = proposalData.data;
 
       // deliberately specify keys to ensure no unwanted data is printed
       return {
@@ -88,7 +93,7 @@ const formatData = (proposal: Proposal): DataJson => {
       };
 
     case "pgf_payment":
-      const pgfActions = proposal.proposalType.data;
+      const pgfActions = proposalData.data;
 
       const continuous = [
         ...pgfActions.continuous.add,
@@ -113,11 +118,12 @@ const formatData = (proposal: Proposal): DataJson => {
       return { continuous, retro };
 
     default:
-      return assertNever(proposal.proposalType);
+      return assertNever(proposalData);
   }
 };
 
-const getProposalJsonString = (proposal: Proposal): string => {
+const getProposalJsonString = (proposalWithData: ProposalWithData): string => {
+  const { proposal, decodedData } = proposalWithData;
   const proposalJson: ProposalJson = {
     proposal: {
       id: proposal.id,
@@ -127,7 +133,7 @@ const getProposalJsonString = (proposal: Proposal): string => {
       voting_end_epoch: proposal.endEpoch,
       activation_epoch: proposal.activationEpoch,
     },
-    data: formatData(proposal),
+    data: formatData(decodedData),
   };
 
   const stringified = JSON.stringify(
@@ -151,7 +157,7 @@ const getProposalJsonString = (proposal: Proposal): string => {
     2
   );
 
-  const { type } = proposal.proposalType;
+  const { type } = decodedData;
 
   if (type === "default_with_wasm") {
     // remove double quotes around WASM data
@@ -187,17 +193,24 @@ export const ViewJson: React.FC = () => {
 };
 
 const WithProposalId: React.FC<{ proposalId: bigint }> = ({ proposalId }) => {
-  const proposal = useAtomValue(proposalFamily(proposalId));
+  const proposalWithDataQuery = useAtomValue(
+    proposalWithDataFamily(proposalId)
+  );
 
-  return proposal.status === "pending" || proposal.status === "error" ?
+  return (
+      proposalWithDataQuery.status === "pending" ||
+        proposalWithDataQuery.status === "error"
+    ) ?
       null
-    : <Loaded proposal={proposal.data} />;
+    : <Loaded proposalWithData={proposalWithDataQuery.data} />;
 };
 
-const Loaded: React.FC<{ proposal: Proposal }> = ({ proposal }) => {
+const Loaded: React.FC<{ proposalWithData: ProposalWithData }> = ({
+  proposalWithData,
+}) => {
   const [copied, setCopied] = useState(false);
 
-  const jsonString = getProposalJsonString(proposal);
+  const jsonString = getProposalJsonString(proposalWithData);
 
   const onCopy = (): void => {
     if (!copied) {

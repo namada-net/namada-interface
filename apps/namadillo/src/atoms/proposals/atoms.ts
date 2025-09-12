@@ -1,6 +1,6 @@
 import {
   ProposalStatus,
-  ProposalTypeString,
+  ProposalType,
   UnknownVoteType,
   VoteProposalProps,
   VoteType,
@@ -15,6 +15,7 @@ import { TransactionPair } from "lib/query";
 import { GasConfig } from "types";
 import {
   createVoteProposalTx,
+  decodeProposalData,
   fetchPaginatedProposals,
   fetchProposalById,
   fetchProposalDataById,
@@ -49,6 +50,31 @@ export const proposalDataFamily = atomFamily((id: bigint) =>
   })
 );
 
+export const proposalWithDataFamily = atomFamily((id: bigint) =>
+  atomWithQuery((get) => {
+    const proposal = get(proposalFamily(id));
+    const proposalData = get(proposalDataFamily(id));
+
+    return {
+      queryKey: ["proposal-with-data", id.toString()],
+      enabled: proposal.isSuccess && proposalData.isSuccess,
+      queryFn: async () => {
+        const encodedData = proposalData.data!;
+        const decodedData = decodeProposalData(
+          proposal.data!.proposalType,
+          encodedData.data
+        );
+
+        return {
+          proposal: proposal.data!,
+          decodedData,
+          encodedData,
+        };
+      },
+    };
+  })
+);
+
 export const proposalVoteFamily = atomFamily((id: bigint) =>
   atomWithQuery<VoteType | UnknownVoteType | null>((get) => {
     const votedProposals = get(votedProposalsAtom);
@@ -79,7 +105,7 @@ export const paginatedProposalsFamily = atomFamily(
   (options?: {
     page?: number;
     status?: ProposalStatus;
-    type?: ProposalTypeString;
+    type?: ProposalType;
     search?: string;
   }) =>
     atomWithQuery((get) => {

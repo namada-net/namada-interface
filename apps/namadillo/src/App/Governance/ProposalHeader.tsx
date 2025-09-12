@@ -4,7 +4,12 @@ import {
   ProgressBar as ProgressBarComponent,
   Stack,
 } from "@namada/components";
-import { Proposal, UnknownVoteType, VoteType } from "@namada/types";
+import {
+  EncodedProposalData,
+  Proposal,
+  UnknownVoteType,
+  VoteType,
+} from "@namada/types";
 import { routes } from "App/routes";
 import {
   canVoteAtom,
@@ -142,14 +147,13 @@ const JsonButton: React.FC<{
 
 const WasmButton: React.FC<{
   proposal: AtomWithQueryResult<Proposal>;
-  proposalData: AtomWithQueryResult<string>;
+  proposalData: AtomWithQueryResult<EncodedProposalData>;
 }> = ({ proposal, proposalData }) => {
   const { disabled, href, filename } = (() => {
     if (proposal.status === "success" && proposalData.status === "success") {
-      const { proposalType } = proposal.data;
       const wasmCode =
-        proposalType.type === "default_with_wasm" ?
-          fromHex(proposalData.data)
+        proposalData.data.type === "default_with_wasm" ?
+          fromHex(proposalData.data.data!)
         : undefined;
 
       if (typeof wasmCode !== "undefined") {

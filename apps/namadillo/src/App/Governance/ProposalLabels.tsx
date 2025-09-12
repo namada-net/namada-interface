@@ -75,6 +75,6 @@ export const TypeLabel: React.FC<
   } & React.ComponentProps<typeof InsetLabel>
 > = ({ proposalType, ...rest }) => (
   <InsetLabel className="text-xs leading-[1.65em]" {...rest}>
-    {proposalTypeStringToString(proposalType.type)}
+    {proposalTypeStringToString(proposalType)}
   </InsetLabel>
 );

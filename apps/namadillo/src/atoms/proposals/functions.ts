@@ -11,13 +11,14 @@ import {
 import {
   Account,
   AddRemove,
+  EncodedProposalData,
   PgfActions,
   PgfIbcTarget,
   PgfTarget,
   Proposal,
+  ProposalData,
   ProposalStatus,
   ProposalType,
-  ProposalTypeString,
   TallyType,
   UnknownVoteType,
   VoteProposalProps,
@@ -68,17 +69,35 @@ const pgfActionsSchema = t.array(
 );
 type PgfActionsJson = t.TypeOf<typeof pgfActionsSchema>;
 
-// TODO: this function is way too big
-const decodeProposalType = (
-  indexerProposalType: IndexerProposalTypeEnum,
-  data: string | undefined
+const mapProposalType = (
+  indexerProposalType: IndexerProposalTypeEnum
 ): ProposalType => {
   switch (indexerProposalType) {
     case IndexerProposalTypeEnum.Default:
+      return "default";
+    case IndexerProposalTypeEnum.DefaultWithWasm:
+      return "default_with_wasm";
+    case IndexerProposalTypeEnum.PgfSteward:
+      return "pgf_steward";
+    case IndexerProposalTypeEnum.PgfFunding:
+      return "pgf_payment";
+    default:
+      throw new Error(
+        `unknown proposal type string, got ${indexerProposalType}`
+      );
+  }
+};
+// TODO: this function is way too big
+export const decodeProposalData = (
+  proposalType: ProposalType,
+  data: string | undefined
+): ProposalData => {
+  switch (proposalType) {
+    case "default":
       return {
         type: "default",
       };
-    case IndexerProposalTypeEnum.DefaultWithWasm:
+    case "default_with_wasm":
       if (typeof data === "undefined") {
         throw new Error("data was undefined for default_with_wasm proposal");
       }
@@ -86,7 +105,7 @@ const decodeProposalType = (
         type: "default_with_wasm",
         data,
       };
-    case IndexerProposalTypeEnum.PgfSteward:
+    case "pgf_steward":
       if (typeof data === "undefined") {
         throw new Error("data was undefined for pgf_steward proposal");
       }
@@ -119,7 +138,7 @@ const decodeProposalType = (
 
       return { type: "pgf_steward", data: addRemove };
 
-    case IndexerProposalTypeEnum.PgfFunding:
+    case "pgf_payment":
       if (typeof data === "undefined") {
         throw new Error("data was undefined for pgf_payment proposal");
       }
@@ -187,9 +206,7 @@ const decodeProposalType = (
 
       return { type: "pgf_payment", data: mapJson(pgfActionsDecoded.right) };
     default:
-      throw new Error(
-        `unknown proposal type string, got ${indexerProposalType}`
-      );
+      throw new Error(`unknown proposal type string, got ${proposalType}`);
   }
 };
 
@@ -229,7 +246,7 @@ const toProposal = (
     endTime: BigInt(proposal.endTime),
     activationTime: BigInt(proposal.activationTime),
     currentTime: BigInt(proposal.currentTime),
-    proposalType: decodeProposalType(proposal.type, proposal.data),
+    proposalType: mapProposalType(proposal.type),
     tallyType: toTally(proposal.tallyType),
     status: fromIndexerStatus(proposal.status),
     totalVotingPower: BigNumber(votingPower.totalVotingPower),
@@ -256,14 +273,16 @@ export const fetchProposalById = async (
 export const fetchProposalDataById = async (
   api: DefaultApi,
   id: bigint
-): Promise<string> => {
-  const totalVotingPowerPromise = await api.apiV1GovProposalIdDataGet(
-    Number(id)
-  );
+): Promise<EncodedProposalData> => {
+  const {
+    data: { data, hash, type },
+  } = await api.apiV1GovProposalIdDataGet(Number(id));
 
-  // TODO: fix after fixing swagger return type
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return totalVotingPowerPromise.data as any as string;
+  return {
+    data,
+    hash,
+    type: mapProposalType(type),
+  };
 };
 
 const fromIndexerStatus = (
@@ -303,7 +322,7 @@ const toIndexerStatus = (
 };
 
 const toIndexerProposalType = (
-  proposalType: ProposalTypeString
+  proposalType: ProposalType
 ): IndexerProposalTypeEnum => {
   switch (proposalType) {
     case "default":
@@ -323,7 +342,7 @@ export const fetchPaginatedProposals = async (
   api: DefaultApi,
   page?: number,
   status?: ProposalStatus,
-  proposalType?: ProposalTypeString,
+  proposalType?: ProposalType,
   search?: string
 ): Promise<{ proposals: Proposal[]; pagination: Pagination }> => {
   const proposalsPromise = api.apiV1GovProposalGet(

@@ -7,10 +7,10 @@ import {
   PgfActions,
   PgfIbcTarget,
   PgfTarget,
-  Proposal,
+  ProposalWithData,
 } from "@namada/types";
 
-import { proposalFamily } from "atoms/proposals";
+import { proposalWithDataFamily } from "atoms/proposals";
 import BigNumber from "bignumber.js";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
@@ -150,18 +150,23 @@ const PgfPaymentInfoCards: React.FC<{
 export const VoteInfoCards: React.FC<{
   proposalId: bigint;
 }> = ({ proposalId }) => {
-  const proposal = useAtomValue(proposalFamily(proposalId));
+  const proposalWithDataQuery = useAtomValue(
+    proposalWithDataFamily(proposalId)
+  );
 
   return (
     <div className="grid grid-cols-6 gap-2 m-4">
-      {proposal.status === "pending" || proposal.status === "error" ?
+      {(
+        proposalWithDataQuery.status === "pending" ||
+        proposalWithDataQuery.status === "error"
+      ) ?
         <>
           <LoadingCard className="col-span-2" />
           <LoadingCard className="col-span-2" />
           <LoadingCard className="col-span-2" />
           <LoadingCard className="col-span-full" />
         </>
-      : <Loaded proposal={proposal.data} />}
+      : <Loaded proposalWithData={proposalWithDataQuery.data} />}
     </div>
   );
 };
@@ -185,16 +190,17 @@ const DateTimeEpoch: React.FC<{ date: bigint; epoch: bigint }> = ({
 );
 
 const Loaded: React.FC<{
-  proposal: Proposal;
-}> = ({ proposal }) => {
+  proposalWithData: ProposalWithData;
+}> = ({ proposalWithData }) => {
+  const { proposal, decodedData, encodedData } = proposalWithData;
   const [dataHash, setDataHash] = useState<string>();
 
   useEffect(() => {
     if (
-      proposal.proposalType.type === "default_with_wasm" &&
-      proposal.proposalType.data.length > 0
+      encodedData?.type === "default_with_wasm" &&
+      encodedData.data!.length > 0
     ) {
-      setDataHash(proposal.proposalType.data);
+      setDataHash(encodedData.hash);
     }
   }, [proposal.proposalType]);
 
@@ -239,11 +245,11 @@ const Loaded: React.FC<{
           className="col-span-full"
         />
       )}
-      {proposal.proposalType.type === "pgf_steward" && (
-        <PgfStewardInfoCards addRemove={proposal.proposalType.data} />
+      {decodedData.type === "pgf_steward" && (
+        <PgfStewardInfoCards addRemove={decodedData.data} />
       )}
-      {proposal.proposalType.type === "pgf_payment" && (
-        <PgfPaymentInfoCards pgfActions={proposal.proposalType.data} />
+      {decodedData.type === "pgf_payment" && (
+        <PgfPaymentInfoCards pgfActions={decodedData.data} />
       )}
     </>
   );

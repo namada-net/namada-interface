@@ -12,6 +12,12 @@ export type ProposalStatus = (typeof proposalStatuses)[number];
 export const isProposalStatus = (str: string): str is ProposalStatus =>
   proposalStatuses.includes(str as ProposalStatus);
 
+export type ProposalWithData = {
+  proposal: Proposal;
+  encodedData?: EncodedProposalData;
+  decodedData: ProposalData;
+};
+
 export type Proposal = {
   id: bigint;
   author: string;
@@ -64,9 +70,17 @@ export type Default = { type: "default" };
 export type DefaultWithWasm = { type: "default_with_wasm"; data: string };
 export type PgfSteward = { type: "pgf_steward"; data: AddRemove };
 export type PgfPayment = { type: "pgf_payment"; data: PgfActions };
-export type ProposalType = Default | DefaultWithWasm | PgfSteward | PgfPayment;
-
-export type ProposalTypeString = ProposalType["type"];
+export type ProposalType =
+  | "default"
+  | "default_with_wasm"
+  | "pgf_steward"
+  | "pgf_payment";
+export type ProposalData = Default | DefaultWithWasm | PgfSteward | PgfPayment;
+export type EncodedProposalData = {
+  data?: string;
+  hash?: string;
+  type: ProposalType;
+};
 
 export const voteTypes = ["yay", "nay", "abstain"] as const;
 export type VoteType = (typeof voteTypes)[number];

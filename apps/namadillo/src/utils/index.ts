@@ -3,7 +3,7 @@ import { TxProps } from "@namada/sdk-multicore";
 import {
   BroadcastTxError,
   ProposalStatus,
-  ProposalTypeString,
+  ProposalType,
   ResultCode,
 } from "@namada/types";
 import { getNamadaChainAssetsMap } from "atoms/integrations/functions";
@@ -23,10 +23,8 @@ export const proposalStatusToString = (status: ProposalStatus): string => {
   return statusText[status];
 };
 
-export const proposalTypeStringToString = (
-  type: ProposalTypeString
-): string => {
-  const typeText: Record<ProposalTypeString, string> = {
+export const proposalTypeStringToString = (type: ProposalType): string => {
+  const typeText: Record<ProposalType, string> = {
     default: "Default",
     default_with_wasm: "Default with Wasm",
     pgf_steward: "PGF Steward",
