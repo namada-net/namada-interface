@@ -1,6 +1,7 @@
 import {
   BparamsMsgValue,
   IbcTransferProps,
+  OsmosisSwapProps,
   ShieldedTransferProps,
   ShieldingTransferProps,
   TransparentTransferProps,
@@ -340,14 +341,14 @@ export const createOsmosisSwapTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const msgValue = new OsmosisSwapMsgValue({
+      const msgValue: OsmosisSwapProps = {
         ...props[0],
         transfer: {
           ...transfer,
           gasSpendingKey: transfer.gasSpendingKey,
           bparams,
         },
-      });
+      };
       const msg: OsmosisSwap = {
         type: "osmosis-swap",
         payload: {
