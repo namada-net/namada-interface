@@ -7,6 +7,7 @@ import {
   UnshieldingTransferProps,
 } from "@namada/sdk-multicore";
 import { initSdk } from "@namada/sdk-multicore/inline";
+import { OsmosisSwapMsgValue } from "@namada/types";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { buildTx, EncodedTxData } from "lib/query";

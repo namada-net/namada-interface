@@ -1,6 +1,7 @@
 import {
   DatedViewingKey,
   IbcTransferProps,
+  OsmosisSwapProps,
   ShieldedTransferProps,
   ShieldingTransferProps,
   TransparentTransferProps,
@@ -255,7 +256,7 @@ export const createOsmosisSwapTxAtom = atomWithMutation((get) => {
       account,
       signer,
       memo,
-    }: BuildTxAtomParams<OsmosisSwapMsgValue>) => {
+    }: BuildTxAtomParams<OsmosisSwapProps>) => {
       invariant(
         signer,
         "We always expect signer to be passed explicitly, because we might also need to unshield"

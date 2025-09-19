@@ -6,7 +6,7 @@ import {
   TxResponseProps,
   UnshieldingTransferProps,
 } from "@namada/sdk-multicore";
-import { Account } from "@namada/types";
+import { Account, OsmosisSwapMsgValue } from "@namada/types";
 import BigNumber from "bignumber.js";
 import { EncodedTxData, TransactionPair } from "lib/query";
 import { ChainSettings, GasConfig } from "types";
