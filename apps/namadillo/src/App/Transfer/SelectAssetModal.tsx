@@ -19,7 +19,7 @@ type SelectWalletModalProps = {
   wallet: WalletProvider;
   walletAddress: string;
   ibcTransfer?: "deposit" | "withdraw";
-  balances?: Record<Address, BigNumber>;
+  balances?: Record<Address, [BigNumber, BigNumber?]>;
 };
 
 export const SelectAssetModal = ({
