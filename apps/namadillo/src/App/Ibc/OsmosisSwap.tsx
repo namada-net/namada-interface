@@ -1,5 +1,6 @@
 import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
+import { SwapIcon } from "App/Icons/SwapIcon";
 import { SwapModule } from "App/Transfer/SwapModule";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaShieldedAssetsAtom } from "atoms/balance";
@@ -15,7 +16,7 @@ import { useTransactionFee } from "hooks";
 import invariant from "invariant";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { Asset, NamadaAssetWithAmount } from "types";
+import { NamadaAsset } from "types";
 
 const SLIPPAGE = 0.005;
 const SWAP_CONTRACT_ADDRESS =
@@ -25,7 +26,7 @@ export const OsmosisSwap: React.FC = () => {
   const { mutateAsync: performOsmosisSwap } = useAtomValue(
     createOsmosisSwapTxAtom
   );
-  const { data: availableAssets, isLoading: _isLoadingAssets } = useAtomValue(
+  const { data: assetsWithBalance, isLoading: _isLoadingAssets } = useAtomValue(
     namadaShieldedAssetsAtom
   );
 
@@ -36,8 +37,8 @@ export const OsmosisSwap: React.FC = () => {
   const osmosisAssets =
     getChainRegistryByChainId("osmosis-1")?.assets.assets || [];
 
-  const [from, setFrom] = useState<NamadaAssetWithAmount | undefined>();
-  const [to, setTo] = useState<Asset | undefined>();
+  const [from, setFrom] = useState<NamadaAsset | undefined>();
+  const [to, setTo] = useState<NamadaAsset | undefined>();
   const [amount, setAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>(
     "znam17drxewzvge966gzcl0u6tr4j90traepujm2vd8ptwwkgrftnhs2hdtnyzgl5freyjsdnchn4ddy"
@@ -46,8 +47,8 @@ export const OsmosisSwap: React.FC = () => {
     "osmo18st0wqx84av8y6xdlss9d6m2nepyqwj6n3q7js"
   );
   const [quote, setQuote] = useState<
-    (SwapResponseOk & { minAmount: string }) | null
-  >(null);
+    (SwapResponseOk & { minAmount: string }) | undefined
+  >();
 
   const { data: ibcChannels } = useAtomValue(ibcChannelsFamily("osmosis"));
 
@@ -59,11 +60,12 @@ export const OsmosisSwap: React.FC = () => {
       invariant(to, "No to asset selected");
       // We have to map namada assets to osmosis assets to get correct base
       const fromOsmosis = osmosisAssets.find(
-        (assets) => assets.symbol === from.asset.symbol
+        (assets) => assets.symbol === from.symbol
       );
       const toOsmosis = osmosisAssets.find(
         (assets) => assets.symbol === to.symbol
       );
+      const amt = BigNumber(amount || 1000000);
 
       invariant(fromOsmosis, "From asset is not found in Osmosis assets");
       invariant(toOsmosis, "To asset is not found in Osmosis assets");
@@ -71,7 +73,7 @@ export const OsmosisSwap: React.FC = () => {
       const quote = await fetch(
         "https://sqs.osmosis.zone/router/quote?" +
           new URLSearchParams({
-            tokenIn: `${amount}${fromOsmosis.base}`,
+            tokenIn: `${amt}${fromOsmosis.base}`,
             tokenOutDenom: toOsmosis.base,
             humanDenoms: "false",
           }).toString()
@@ -85,13 +87,13 @@ export const OsmosisSwap: React.FC = () => {
           .toString();
         setQuote({ ...(response as SwapResponseOk), minAmount });
       } else {
-        setQuote(null);
+        setQuote(undefined);
       }
     };
-    if (from && to && amount) {
+    if (from && to) {
       call();
     }
-  }, [from?.asset.address, to?.address, amount]);
+  }, [from?.address, to?.address, amount]);
 
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const shieldedAccount = defaultAccounts.data?.find(
@@ -183,34 +185,44 @@ export const OsmosisSwap: React.FC = () => {
   //}, [transparentAccount, shieldedAccount, quote]);
 
   //TODO: sucks
-  const toAmount = quote ? BigNumber(quote.amount_out) : undefined;
+  const toAmount = quote && amount ? BigNumber(quote.amount_out) : undefined;
 
   return (
     <Panel className="relative rounded-sm flex flex-col flex-1 pt-9">
-      <header className="flex flex-col items-center text-center mb-8 gap-6">
+      <header className="flex flex-col items-center text-center mb-8 gap-5">
         <h1 className="text-yellow"> Shielded Swaps </h1>
+        <i className="flex items-center justify-center w-13 mx-auto relative z-10">
+          <SwapIcon color={"#FF0"} />
+        </i>
+        <p>Swap an asset you hold in the shield pool</p>
       </header>
       <SwapModule
+        assets={namadaAssets}
+        assetsWithBalance={assetsWithBalance}
+        quote={quote}
         feeProps={feeProps}
         walletAddress={shieldedAccount?.address}
         source={{
           amount: amount ? BigNumber(amount) : undefined,
-          availableAmount: from?.amount,
-          selectedAssetAddress: from?.asset.address,
-          availableAssets,
+          selectedAssetAddress: from?.address,
           onChangeAmount: (a) => setAmount(a ? a.toString() : ""),
           onChangeSellSelectedAsset: (address) => {
-            setFrom(address ? availableAssets?.[address] : undefined);
-            setQuote(null);
+            const asset = namadaAssets.find((a) => a.address === address);
+            if (asset?.address === to?.address) {
+              setTo(from);
+            }
+            setFrom(asset);
           },
         }}
         target={{
           amount: toAmount,
           selectedAssetAddress: to?.address,
-          availableAssets,
           onChangeBuySelectedAsset: (address) => {
-            setTo(address ? availableAssets?.[address].asset : undefined);
-            setQuote(null);
+            const asset = namadaAssets.find((a) => a.address === address);
+            if (asset?.address === from?.address) {
+              setFrom(to);
+            }
+            setTo(asset);
           },
         }}
       />
@@ -219,7 +231,7 @@ export const OsmosisSwap: React.FC = () => {
         <div>
           <div>
             Amount in: {quote.amount_in.amount}
-            {from?.asset.denom_units[0].aliases?.[0]}
+            {from?.denom_units[0].aliases?.[0]}
           </div>
           <div>
             Amount out: {quote.amount_out}
@@ -233,8 +245,10 @@ export const OsmosisSwap: React.FC = () => {
           <div>Routes: </div>
           <div>Effective fee: {BigNumber(quote.effective_fee).toString()}</div>
           <div>
-            Price: 1 {from?.asset.symbol} ≈{" "}
-            {BigNumber(quote.amount_out).div(BigNumber(amount)).toString()}{" "}
+            Price: 1 {from?.symbol} ≈{" "}
+            {BigNumber(quote.amount_out)
+              .div(BigNumber(amount || 1))
+              .toString()}{" "}
             {to?.symbol}
           </div>
           <div>

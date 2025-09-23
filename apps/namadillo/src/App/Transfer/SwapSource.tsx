@@ -42,7 +42,7 @@ export const SwapSource = ({
   label,
 }: SwapSourceProps): JSX.Element => {
   return (
-    <div className="relative bg-neutral-800 rounded-lg px-4 py-5">
+    <div className="relative bg-neutral-800 rounded-lg px-4 py-5 border border-yellow">
       {/** Intro header - Ex: "IBC To Namada" */}
       {label && (
         <Text className="text-neutral-500 font-light mt-0 mb-2">{label}</Text>
