@@ -95,6 +95,11 @@ export type RpcStorage = {
   index: number;
 };
 
+export type SwapStorage = {
+  assetSymbolSell?: string;
+  assetSymbolBuy?: string;
+};
+
 export type Validator = Unique & {
   alias?: string;
   address: Address;
