@@ -11,13 +11,17 @@ import {
 } from "atoms/integrations";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import { SwapResponse, SwapResponseError, SwapResponseOk } from "atoms/swaps";
+import {
+  setSwapStorageBuyAssetAtom,
+  setSwapStorageSellAssetAtom,
+  swapStorageAtom,
+} from "atoms/swaps/atoms";
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
 import { useTransactionFee } from "hooks";
 import invariant from "invariant";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { NamadaAsset } from "types";
 import { toBaseAmount, toDisplayAmount } from "utils";
 
 const SLIPPAGE = 0.005;
@@ -42,9 +46,18 @@ export const OsmosisSwap: React.FC = () => {
   const { data: tokenPrices } = useAtomValue(
     tokenPricesFamily(namadaAssets.map((a) => a.address))
   );
+  const swapStorage = useAtomValue(swapStorageAtom);
+  const [, setSwapStorageBuyAsset] = useAtom(setSwapStorageBuyAssetAtom);
+  const [, setSwapStorageSellAsset] = useAtom(setSwapStorageSellAssetAtom);
+  const sellAsset = namadaAssets.find(
+    (asset) => asset.symbol === swapStorage.assetSymbolSell
+  );
+  const buyAsset = namadaAssets.find(
+    (asset) => asset.symbol === swapStorage.assetSymbolBuy
+  );
 
-  const [from, setFrom] = useState<NamadaAsset | undefined>();
-  const [to, setTo] = useState<NamadaAsset | undefined>();
+  // const [from, setFrom] = useState<NamadaAsset | undefined>();
+  // const [to, setTo] = useState<NamadaAsset | undefined>();
   const [amount, setAmount] = useState<string>("");
   const [recipient, setRecipient] = useState<string>(
     "znam17drxewzvge966gzcl0u6tr4j90traepujm2vd8ptwwkgrftnhs2hdtnyzgl5freyjsdnchn4ddy"
@@ -62,17 +75,17 @@ export const OsmosisSwap: React.FC = () => {
 
   useEffect(() => {
     const call = async (): Promise<void> => {
-      invariant(from, "No from asset selected");
-      invariant(to, "No to asset selected");
+      invariant(buyAsset, "No from asset selected");
+      invariant(sellAsset, "No to asset selected");
       // We have to map namada assets to osmosis assets to get correct base
       const fromOsmosis = osmosisAssets.find(
-        (assets) => assets.symbol === from.symbol
+        (assets) => assets.symbol === sellAsset.symbol
       );
       const toOsmosis = osmosisAssets.find(
-        (assets) => assets.symbol === to.symbol
+        (assets) => assets.symbol === buyAsset.symbol
       );
       // If amount is empty, we still want to get a quote for 1 unit of the asset
-      const baseAmount = toBaseAmount(from, BigNumber(amount || 1));
+      const baseAmount = toBaseAmount(buyAsset, BigNumber(amount || 1));
 
       invariant(fromOsmosis, "From asset is not found in Osmosis assets");
       invariant(toOsmosis, "To asset is not found in Osmosis assets");
@@ -97,10 +110,10 @@ export const OsmosisSwap: React.FC = () => {
         setQuote(undefined);
       }
     };
-    if (from && to) {
+    if (buyAsset && sellAsset) {
       call();
     }
-  }, [from?.address, to?.address, amount]);
+  }, [buyAsset?.address, sellAsset?.address, amount]);
 
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const shieldedAccount = defaultAccounts.data?.find(
@@ -193,8 +206,8 @@ export const OsmosisSwap: React.FC = () => {
 
   //TODO: sucks
   const toAmount =
-    quote && amount && to ?
-      toDisplayAmount(to, BigNumber(quote.amount_out))
+    quote && amount && sellAsset ?
+      toDisplayAmount(sellAsset, BigNumber(quote.amount_out))
     : undefined;
 
   return (
@@ -215,73 +228,28 @@ export const OsmosisSwap: React.FC = () => {
         tokenPrices={tokenPrices}
         source={{
           amount: amount ? BigNumber(amount) : undefined,
-          selectedAssetAddress: from?.address,
+          selectedAssetAddress: sellAsset?.address,
           onChangeAmount: (a) => setAmount(a ? a.toString() : ""),
           onChangeSellSelectedAsset: (address) => {
             const asset = namadaAssets.find((a) => a.address === address);
-            if (asset?.address === to?.address) {
-              setTo(from);
+            if (asset?.address === buyAsset?.address) {
+              setSwapStorageBuyAsset(sellAsset?.symbol);
             }
-            setFrom(asset);
+            setSwapStorageSellAsset(asset?.symbol);
           },
         }}
         target={{
           amount: toAmount,
-          selectedAssetAddress: to?.address,
+          selectedAssetAddress: buyAsset?.address,
           onChangeBuySelectedAsset: (address) => {
             const asset = namadaAssets.find((a) => a.address === address);
-            if (asset?.address === from?.address) {
-              setFrom(to);
+            if (asset?.address === sellAsset?.address) {
+              setSwapStorageSellAsset(buyAsset?.symbol);
             }
-            setTo(asset);
+            setSwapStorageBuyAsset(asset?.symbol);
           },
         }}
       />
-
-      {quote && (
-        <div>
-          <div>
-            Amount in: {quote.amount_in.amount}
-            {from?.denom_units[0].aliases?.[0]}
-          </div>
-          <div>
-            Amount out: {quote.amount_out}
-            {to?.denom_units[0].aliases?.[0]}
-          </div>
-          <div>
-            Min amount out: {quote.minAmount}
-            {to?.denom_units[0].aliases?.[0]}
-          </div>
-          <div>Slippage: {SLIPPAGE * 100}%</div>
-          <div>Routes: </div>
-          <div>Effective fee: {BigNumber(quote.effective_fee).toString()}</div>
-          <div>
-            Price: 1 {from?.symbol} ≈{" "}
-            {BigNumber(quote.amount_out)
-              .div(BigNumber(amount || 1))
-              .toString()}{" "}
-            {to?.symbol}
-          </div>
-          <div>
-            Price impact: {BigNumber(quote.price_impact).dp(3).toString()}
-          </div>
-          <ul className="list-disc list-inside">
-            {quote.route.map((r, i) => (
-              <li key={i}>
-                Route{i + 1}
-                <ul className="list-disc list-inside pl-4">
-                  {r.pools.map((p, i) => (
-                    <li key={i}>
-                      {p.id}: {p.token_out_denom}
-                      (Fee: {BigNumber(p.taker_fee).toString()})
-                    </li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </Panel>
     // <div className="text-white">
     //   <div>From:</div>

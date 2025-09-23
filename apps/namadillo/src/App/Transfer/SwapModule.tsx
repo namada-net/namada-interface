@@ -63,6 +63,7 @@ export const SwapModule = ({
   const balances = Object.entries(assetsWithBalance || {}).reduce(
     (acc, [key, value]) => {
       const price = tokenPrices?.[key];
+
       // TODO: sucks
       const fiatAmount = price ? value.amount.multipliedBy(price) : undefined;
       if (fiatAmount) {
