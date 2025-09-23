@@ -9,6 +9,7 @@ import {
   ibcChannelsFamily,
   namadaRegistryChainAssetsMapAtom,
 } from "atoms/integrations";
+import { tokenPricesFamily } from "atoms/prices/atoms";
 import { SwapResponse, SwapResponseError, SwapResponseOk } from "atoms/swaps";
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
@@ -37,6 +38,10 @@ export const OsmosisSwap: React.FC = () => {
 
   const osmosisAssets =
     getChainRegistryByChainId("osmosis-1")?.assets.assets || [];
+
+  const { data: tokenPrices } = useAtomValue(
+    tokenPricesFamily(namadaAssets.map((a) => a.address))
+  );
 
   const [from, setFrom] = useState<NamadaAsset | undefined>();
   const [to, setTo] = useState<NamadaAsset | undefined>();
@@ -207,6 +212,7 @@ export const OsmosisSwap: React.FC = () => {
         quote={quote}
         feeProps={feeProps}
         walletAddress={shieldedAccount?.address}
+        tokenPrices={tokenPrices}
         source={{
           amount: amount ? BigNumber(amount) : undefined,
           selectedAssetAddress: from?.address,

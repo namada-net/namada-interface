@@ -22,6 +22,7 @@ export type SwapModuleProps = {
   feeProps?: TransactionFeeProps;
   walletAddress?: string;
   quote?: SwapResponseOk & { minAmount: string };
+  tokenPrices?: Record<string, BigNumber>;
   source: {
     amount?: BigNumber;
     selectedAssetAddress?: string;
@@ -45,6 +46,7 @@ export const SwapModule = ({
   quote,
   source,
   target,
+  tokenPrices,
 }: SwapModuleProps): JSX.Element => {
   const selectedAsset = mapUndefined(
     (address) => assets.find((a) => a.address === address),
@@ -57,12 +59,21 @@ export const SwapModule = ({
       return 1;
     return 0;
   });
+
   const balances = Object.entries(assetsWithBalance || {}).reduce(
     (acc, [key, value]) => {
-      acc[key] = value.amount;
+      const price = tokenPrices?.[key];
+      // TODO: sucks
+      const fiatAmount = price ? value.amount.multipliedBy(price) : undefined;
+      if (fiatAmount) {
+        acc[key] = [value.amount, fiatAmount];
+      } else {
+        acc[key] = [value.amount];
+      }
+
       return acc;
     },
-    {} as Record<string, BigNumber>
+    {} as Record<string, [BigNumber, BigNumber?]>
   );
   const availableAmount = mapUndefined(
     (address) => assetsWithBalance?.[address]?.amount,
@@ -152,28 +163,14 @@ export const SwapModule = ({
             isSubmitting={false}
             label="Buy"
           />
-          {quote && selectedAsset && selectedTargetAsset && (
-            <Stack
-              className="text-sm justify-between text-neutral-400"
-              direction="horizontal"
-            >
-              <div className="underline">
-                1 {selectedAsset.symbol} ≈{" "}
-                {toDisplayAmount(
-                  selectedTargetAsset,
-                  BigNumber(quote.amount_out).div(BigNumber(source.amount || 1))
-                ).toFixed(5)}{" "}
-                {selectedTargetAsset.symbol} ($USD value)
-              </div>
-              <Stack
-                className="items-center cursor-pointer"
-                direction="horizontal"
-                gap={1}
-                onClick={() => alert("TODO")}
-              >
-                Show details <GoChevronDown />
-              </Stack>
-            </Stack>
+          {quote && selectedAsset && selectedTargetAsset && tokenPrices && (
+            <Sth
+              amount={source.amount}
+              quote={quote}
+              selectedAsset={selectedAsset}
+              selectedTargetAsset={selectedTargetAsset}
+              tokenPrice={tokenPrices[selectedTargetAsset.address]}
+            />
           )}
 
           <ActionButton
@@ -213,5 +210,47 @@ export const SwapModule = ({
           )}
       </section>
     </>
+  );
+};
+
+type SthProps = {
+  amount?: BigNumber;
+  quote: SwapResponseOk & { minAmount: string };
+  selectedAsset: NamadaAsset;
+  selectedTargetAsset: NamadaAsset;
+  tokenPrice: BigNumber;
+};
+
+const Sth = ({
+  amount,
+  quote,
+  selectedAsset,
+  selectedTargetAsset,
+  tokenPrice,
+}: SthProps): JSX.Element => {
+  const val = toDisplayAmount(
+    selectedTargetAsset,
+    BigNumber(quote.amount_out).div(BigNumber(amount || 1))
+  );
+  const valFiat = val.times(tokenPrice);
+
+  return (
+    <Stack
+      className="text-sm justify-between text-neutral-400"
+      direction="horizontal"
+    >
+      <div className="underline">
+        1 {selectedAsset.symbol} ≈ {val.toFixed(6)} {selectedTargetAsset.symbol}{" "}
+        (${valFiat.toFixed(6)})
+      </div>
+      <Stack
+        className="items-center cursor-pointer"
+        direction="horizontal"
+        gap={1}
+        onClick={() => alert("TODO")}
+      >
+        Show details <GoChevronDown />
+      </Stack>
+    </Stack>
   );
 };
