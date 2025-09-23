@@ -17,6 +17,7 @@ import invariant from "invariant";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
 import { NamadaAsset } from "types";
+import { toBaseAmount, toDisplayAmount } from "utils";
 
 const SLIPPAGE = 0.005;
 const SWAP_CONTRACT_ADDRESS =
@@ -65,7 +66,8 @@ export const OsmosisSwap: React.FC = () => {
       const toOsmosis = osmosisAssets.find(
         (assets) => assets.symbol === to.symbol
       );
-      const amt = BigNumber(amount || 1000000);
+      // If amount is empty, we still want to get a quote for 1 unit of the asset
+      const baseAmount = toBaseAmount(from, BigNumber(amount || 1));
 
       invariant(fromOsmosis, "From asset is not found in Osmosis assets");
       invariant(toOsmosis, "To asset is not found in Osmosis assets");
@@ -73,7 +75,7 @@ export const OsmosisSwap: React.FC = () => {
       const quote = await fetch(
         "https://sqs.osmosis.zone/router/quote?" +
           new URLSearchParams({
-            tokenIn: `${amt}${fromOsmosis.base}`,
+            tokenIn: `${baseAmount}${fromOsmosis.base}`,
             tokenOutDenom: toOsmosis.base,
             humanDenoms: "false",
           }).toString()
@@ -185,7 +187,10 @@ export const OsmosisSwap: React.FC = () => {
   //}, [transparentAccount, shieldedAccount, quote]);
 
   //TODO: sucks
-  const toAmount = quote && amount ? BigNumber(quote.amount_out) : undefined;
+  const toAmount =
+    quote && amount && to ?
+      toDisplayAmount(to, BigNumber(quote.amount_out))
+    : undefined;
 
   return (
     <Panel className="relative rounded-sm flex flex-col flex-1 pt-9">

@@ -10,6 +10,7 @@ import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { Address, NamadaAsset, NamadaAssetWithAmount } from "types";
+import { toDisplayAmount } from "utils";
 import { getDisplayGasFee } from "utils/gas";
 import { SelectAssetModal } from "./SelectAssetModal";
 import { SwapSource } from "./SwapSource";
@@ -158,9 +159,10 @@ export const SwapModule = ({
             >
               <div className="underline">
                 1 {selectedAsset.symbol} ≈{" "}
-                {BigNumber(quote.amount_out)
-                  .div(BigNumber(source.amount || 1))
-                  .toString()}{" "}
+                {toDisplayAmount(
+                  selectedTargetAsset,
+                  BigNumber(quote.amount_out).div(BigNumber(source.amount || 1))
+                ).toFixed(5)}{" "}
                 {selectedTargetAsset.symbol} ($USD value)
               </div>
               <Stack
