@@ -10,7 +10,6 @@ import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { Address, NamadaAsset, NamadaAssetWithAmount } from "types";
-import { toDisplayAmount } from "utils";
 import { getDisplayGasFee } from "utils/gas";
 import { SelectAssetModal } from "./SelectAssetModal";
 import { SwapSource } from "./SwapSource";
@@ -21,8 +20,10 @@ export type SwapModuleProps = {
   isSubmitting?: boolean;
   feeProps?: TransactionFeeProps;
   walletAddress?: string;
-  quote?: SwapResponseOk & { minAmount: string };
+  quote?: SwapResponseOk & { minAmount: BigNumber };
   tokenPrices?: Record<string, BigNumber>;
+  // TODO: change name
+  unitPrice?: BigNumber;
   onSwapArrowsClick?: () => void;
   source: {
     amount?: BigNumber;
@@ -48,6 +49,7 @@ export const SwapModule = ({
   source,
   target,
   tokenPrices,
+  unitPrice,
   onSwapArrowsClick,
 }: SwapModuleProps): JSX.Element => {
   const selectedAsset = mapUndefined(
@@ -194,10 +196,9 @@ export const SwapModule = ({
             isSubmitting={false}
             label="Buy"
           />
-          {quote && selectedAsset && selectedTargetAsset && tokenPrices && (
+          {unitPrice && selectedAsset && selectedTargetAsset && tokenPrices && (
             <Sth
-              amount={source.amount}
-              quote={quote}
+              unitPrice={unitPrice}
               selectedAsset={selectedAsset}
               selectedTargetAsset={selectedTargetAsset}
               tokenPrice={tokenPrices[selectedTargetAsset.address]}
@@ -248,30 +249,19 @@ export const SwapModule = ({
 
 type SthProps = {
   amount?: BigNumber;
-  quote: SwapResponseOk & { minAmount: string };
+  unitPrice: BigNumber;
   selectedAsset: NamadaAsset;
   selectedTargetAsset: NamadaAsset;
   tokenPrice: BigNumber;
 };
 
 const Sth = ({
-  amount,
-  quote,
+  unitPrice,
   selectedAsset,
   selectedTargetAsset,
   tokenPrice,
 }: SthProps): JSX.Element => {
-  // TODO: sucks
-  const quoteAmount =
-    typeof quote.amount_out === "string" ?
-      quote.amount_out
-    : quote.amount_out.amount;
-
-  const val = toDisplayAmount(
-    selectedTargetAsset,
-    BigNumber(quoteAmount).div(BigNumber(amount || 1))
-  );
-  const valFiat = val.times(tokenPrice);
+  const valFiat = unitPrice.times(tokenPrice);
 
   return (
     <Stack
@@ -279,8 +269,8 @@ const Sth = ({
       direction="horizontal"
     >
       <div className="underline">
-        1 {selectedAsset.symbol} ≈ {val.toFixed(6)} {selectedTargetAsset.symbol}{" "}
-        (${valFiat.toFixed(6)})
+        1 {selectedAsset.symbol} ≈ {unitPrice.toFixed(6)}{" "}
+        {selectedTargetAsset.symbol} (${valFiat.toFixed(6)})
       </div>
       <Stack
         className="items-center cursor-pointer"
