@@ -197,14 +197,20 @@ export const SwapModule = ({
             isSubmitting={false}
             label="Buy"
           />
-          {unitPrice && selectedAsset && selectedTargetAsset && tokenPrices && (
-            <Sth
-              unitPrice={unitPrice}
-              selectedAsset={selectedAsset}
-              selectedTargetAsset={selectedTargetAsset}
-              tokenPrice={tokenPrices[selectedTargetAsset.address]}
-            />
-          )}
+          {quote &&
+            unitPrice &&
+            selectedAsset &&
+            selectedTargetAsset &&
+            tokenPrices && (
+              <Sth
+                amount={target.amount}
+                unitPrice={unitPrice}
+                selectedAsset={selectedAsset}
+                selectedTargetAsset={selectedTargetAsset}
+                tokenPrice={tokenPrices[selectedTargetAsset.address]}
+                effectiveFee={BigNumber(quote.effective_fee)}
+              />
+            )}
 
           <ActionButton
             outlineColor="yellow"
@@ -254,33 +260,65 @@ type SthProps = {
   selectedAsset: NamadaAsset;
   selectedTargetAsset: NamadaAsset;
   tokenPrice: BigNumber;
+  effectiveFee: BigNumber;
 };
 
 const Sth = ({
+  amount,
   unitPrice,
   selectedAsset,
   selectedTargetAsset,
   tokenPrice,
+  effectiveFee,
 }: SthProps): JSX.Element => {
+  //TODO: We have to take price impact into consideration most likely
   const valFiat = unitPrice.times(tokenPrice);
+  const [showDetails, setShowDetails] = useState(false);
+  const swapFee = effectiveFee
+    ?.times(100)
+    .decimalPlaces(2, BigNumber.ROUND_HALF_UP);
+  const fiatFee = amount
+    ?.times(tokenPrice)
+    .times(effectiveFee || 0)
+    .decimalPlaces(3);
+  const fiatFeeDisplay =
+    !fiatFee ? "#"
+    : fiatFee.lt(0.01) ? "<$0.01"
+    : `~$${fiatFee.toString()}`;
 
   return (
-    <Stack
-      className="text-sm justify-between text-neutral-400"
-      direction="horizontal"
-    >
-      <div className="underline">
-        1 {selectedAsset.symbol} ≈ {unitPrice.toFixed(6)}{" "}
-        {selectedTargetAsset.symbol} (${valFiat.toFixed(6)})
-      </div>
+    <Stack className="text-sm">
       <Stack
-        className="items-center cursor-pointer"
+        className="justify-between text-neutral-400"
         direction="horizontal"
-        gap={1}
-        onClick={() => alert("TODO")}
       >
-        Show details <GoChevronDown />
+        <div className="underline">
+          1 {selectedAsset.symbol} ≈ {unitPrice.toFixed(6)}{" "}
+          {selectedTargetAsset.symbol} (${valFiat.toFixed(6)})
+        </div>
+        <Stack
+          className="items-center cursor-pointer"
+          direction="horizontal"
+          gap={1}
+          onClick={() => setShowDetails(!showDetails)}
+        >
+          Show details{" "}
+          {!showDetails ?
+            <GoChevronDown />
+          : <GoChevronDown className="rotate-180" />}
+        </Stack>
       </Stack>
+      {showDetails && (
+        <Stack
+          direction="horizontal"
+          className="justify-between text-neutral-400"
+        >
+          <p>Swap Fee</p>
+          <p>
+            {fiatFeeDisplay} ({swapFee.toString()}%)
+          </p>
+        </Stack>
+      )}
     </Stack>
   );
 };
