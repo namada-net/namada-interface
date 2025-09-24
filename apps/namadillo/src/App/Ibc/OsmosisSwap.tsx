@@ -21,7 +21,8 @@ import BigNumber from "bignumber.js";
 import { useTransactionFee } from "hooks";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import debounce from "lodash.debounce";
+import { useEffect, useMemo, useState } from "react";
 import { toBaseAmount, toDisplayAmount } from "utils";
 
 const SLIPPAGE = 0.005;
@@ -33,11 +34,13 @@ type SwapState = {
   mode: "sell" | "buy" | "none";
   sourceAmount?: BigNumber;
   targetAmount?: BigNumber;
+  unitPrice?: BigNumber;
 };
 const defaultSwapState: SwapState = {
   mode: "none",
   sourceAmount: undefined,
   targetAmount: undefined,
+  unitPrice: undefined,
 };
 
 export const OsmosisSwap: React.FC = () => {
@@ -77,98 +80,109 @@ export const OsmosisSwap: React.FC = () => {
     "osmo18st0wqx84av8y6xdlss9d6m2nepyqwj6n3q7js"
   );
   const [quote, setQuote] = useState<
-    (SwapResponseOk & { minAmount: string }) | undefined
+    (SwapResponseOk & { minAmount: BigNumber }) | undefined
   >();
 
   const { data: ibcChannels } = useAtomValue(ibcChannelsFamily("osmosis"));
 
   const feeProps = useTransactionFee(["IbcTransfer"], true);
 
-  useEffect(() => {
-    const call = async (): Promise<void> => {
-      invariant(buyAsset, "No from asset selected");
-      invariant(sellAsset, "No to asset selected");
-      // We have to map namada assets to osmosis assets to get correct base
-      const fromOsmosis = osmosisAssets.find(
-        (assets) => assets.symbol === sellAsset.symbol
-      );
-      const toOsmosis = osmosisAssets.find(
-        (assets) => assets.symbol === buyAsset.symbol
-      );
-      // If amount is empty, we still want to get a quote for 1 unit of the asset
-      const baseAmount =
-        swapState.mode === "sell" ?
-          toBaseAmount(sellAsset, swapState.sourceAmount!)
-        : swapState.mode === "buy" ?
-          toBaseAmount(buyAsset, swapState.targetAmount!)
-        : toBaseAmount(buyAsset, BigNumber(1));
+  // Outside your component or in useMemo
+  const debouncedCall = useMemo(
+    () =>
+      debounce(async (swapState: SwapState) => {
+        invariant(buyAsset, "No from asset selected");
+        invariant(sellAsset, "No to asset selected");
+        // We have to map namada assets to osmosis assets to get correct base
+        const fromOsmosis = osmosisAssets.find(
+          (assets) => assets.symbol === sellAsset.symbol
+        );
+        const toOsmosis = osmosisAssets.find(
+          (assets) => assets.symbol === buyAsset.symbol
+        );
+        // If amount is empty, we still want to get a quote for 1 unit of the asset
+        const baseAmount =
+          swapState.mode === "sell" ?
+            toBaseAmount(sellAsset, swapState.sourceAmount!)
+          : swapState.mode === "buy" ?
+            toBaseAmount(buyAsset, swapState.targetAmount!)
+          : toBaseAmount(buyAsset, BigNumber(1));
 
-      invariant(fromOsmosis, "From asset is not found in Osmosis assets");
-      invariant(toOsmosis, "To asset is not found in Osmosis assets");
+        invariant(fromOsmosis, "From asset is not found in Osmosis assets");
+        invariant(toOsmosis, "To asset is not found in Osmosis assets");
 
-      const simulateSell =
-        swapState.mode === "sell" || swapState.mode === "none";
-      const simulateBuy = swapState.mode === "buy";
+        const simulateSell =
+          swapState.mode === "sell" || swapState.mode === "none";
+        const simulateBuy = swapState.mode === "buy";
 
-      const params: Record<string, string> =
-        simulateSell ?
-          {
-            tokenIn: `${baseAmount}${fromOsmosis.base}`,
-            tokenOutDenom: toOsmosis.base,
+        const params: Record<string, string> =
+          simulateSell ?
+            {
+              tokenIn: `${baseAmount}${fromOsmosis.base}`,
+              tokenOutDenom: toOsmosis.base,
+            }
+          : {
+              tokenOut: `${baseAmount}${toOsmosis.base}`,
+              tokenInDenom: fromOsmosis.base,
+            };
+
+        const quote = await fetch(
+          "https://sqs.osmosis.zone/router/quote?" +
+            new URLSearchParams({
+              ...params,
+              humanDenoms: "false",
+            }).toString()
+        );
+        const response: SwapResponse = await quote.json();
+
+        if (!(response as SwapResponseError).message) {
+          const r = response as SwapResponseOk;
+          const minAmount = BigNumber(
+            simulateSell ? (r.amount_out as string) : (r.amount_in as string)
+          ).times(BigNumber(1).minus(SLIPPAGE));
+
+          const unitPrice = toDisplayAmount(
+            buyAsset,
+            minAmount.div(toDisplayAmount(buyAsset, baseAmount))
+          );
+
+          if (simulateSell && sellAsset) {
+            setSwapState((s) => ({
+              ...s,
+              targetAmount: toDisplayAmount(buyAsset, minAmount),
+              unitPrice,
+            }));
+          } else if (simulateBuy && buyAsset) {
+            setSwapState((s) => ({
+              ...s,
+              sourceAmount: toDisplayAmount(sellAsset, minAmount),
+              unitPrice,
+            }));
           }
-        : {
-            tokenOut: `${baseAmount}${toOsmosis.base}`,
-            tokenInDenom: fromOsmosis.base,
-          };
 
-      const quote = await fetch(
-        "https://sqs.osmosis.zone/router/quote?" +
-          new URLSearchParams({
-            ...params,
-            humanDenoms: "false",
-          }).toString()
-      );
-      const response: SwapResponse = await quote.json();
-
-      if (!(response as SwapResponseError).message) {
-        const r = response as SwapResponseOk;
-        const minAmount = BigNumber(
-          simulateSell ? (r.amount_out as string) : (r.amount_in as string)
-        )
-          .times(BigNumber(1).minus(SLIPPAGE))
-          .toString();
-
-        if (simulateSell && sellAsset) {
-          setSwapState((s) => ({
-            ...s,
-            targetAmount: toDisplayAmount(
-              buyAsset,
-              BigNumber(r.amount_out as string)
-            ),
-          }));
-        } else if (simulateBuy && buyAsset) {
-          setSwapState((s) => ({
-            ...s,
-            sourceAmount: toDisplayAmount(
-              sellAsset,
-              BigNumber(r.amount_in as string)
-            ),
-          }));
+          setQuote({ ...(response as SwapResponseOk), minAmount });
+        } else {
+          setQuote(undefined);
         }
+      }, 300),
+    [buyAsset, sellAsset] // Dependencies that should recreate the debounced function
+  );
 
-        setQuote({ ...(response as SwapResponseOk), minAmount });
-      } else {
-        setQuote(undefined);
-      }
-    };
+  useEffect(() => {
     if (buyAsset && sellAsset) {
-      call();
+      debouncedCall(swapState);
     }
+
+    return () => {
+      debouncedCall.cancel(); // Cancel pending calls on cleanup
+    };
   }, [
-    buyAsset?.address,
-    sellAsset?.address,
+    debouncedCall,
     swapState.targetAmount?.toString(),
     swapState.sourceAmount?.toString(),
+    swapState.mode,
+    buyAsset?.address,
+    sellAsset?.address,
   ]);
 
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
@@ -282,6 +296,7 @@ export const OsmosisSwap: React.FC = () => {
         feeProps={feeProps}
         walletAddress={shieldedAccount?.address}
         tokenPrices={tokenPrices}
+        unitPrice={swapState.unitPrice}
         source={{
           amount: swapState.sourceAmount,
           selectedAssetAddress: sellAsset?.address,
@@ -293,11 +308,12 @@ export const OsmosisSwap: React.FC = () => {
                 sourceAmount: a,
               }));
             } else {
-              setSwapState({
+              setSwapState((s) => ({
                 mode: "none",
-                sourceAmount: undefined,
-                targetAmount: undefined,
-              });
+                // we do not want to reset unit price when clearing the amount as this will hide the UI
+                // it will fix itself after new quote is fetched
+                unitPrice: s.unitPrice,
+              }));
             }
             // setMode("sell");
             // setSellAmount(a ? a.toString() : "");
@@ -321,11 +337,12 @@ export const OsmosisSwap: React.FC = () => {
                 targetAmount: a,
               }));
             } else {
-              setSwapState({
+              setSwapState((s) => ({
                 mode: "none",
-                sourceAmount: undefined,
-                targetAmount: undefined,
-              });
+                // we do not want to reset unit price when clearing the amount as this will hide the UI
+                // it will fix itself after new quote is fetched
+                unitPrice: s.unitPrice,
+              }));
             }
           },
           onChangeBuySelectedAsset: (address) => {
