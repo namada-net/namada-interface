@@ -23,6 +23,7 @@ export type SwapModuleProps = {
   walletAddress?: string;
   quote?: SwapResponseOk & { minAmount: string };
   tokenPrices?: Record<string, BigNumber>;
+  onSwapArrowsClick?: () => void;
   source: {
     amount?: BigNumber;
     selectedAssetAddress?: string;
@@ -47,6 +48,7 @@ export const SwapModule = ({
   source,
   target,
   tokenPrices,
+  onSwapArrowsClick,
 }: SwapModuleProps): JSX.Element => {
   const selectedAsset = mapUndefined(
     (address) => assets.find((a) => a.address === address),
@@ -127,6 +129,25 @@ export const SwapModule = ({
   }, [source.selectedAssetAddress, availableAmount, displayGasFee]);
   // TODO: end reuse
 
+  const validationResult = useMemo(() => {
+    if (!selectedAsset) {
+      return "NoSellAssetSelected";
+    } else if (!selectedTargetAsset) {
+      return "NoBuyAssetSelected";
+    } else if (!source.amount || source.amount.isZero()) {
+      return "SellAmountIsZero";
+    } else if (!target.amount || target.amount.isZero()) {
+      return "BuyAmountIsZero";
+    } else {
+      return "Ok";
+    }
+  }, [
+    selectedAsset?.address,
+    selectedTargetAsset?.address,
+    source.amount,
+    target.amount,
+  ]);
+
   return (
     <>
       <section className="max-w-[480px] mx-auto" role="widget">
@@ -148,7 +169,7 @@ export const SwapModule = ({
           />
           <i
             className="flex items-center justify-center w-13 mx-auto relative z-10 -my-8 cursor-pointer"
-            onClick={() => alert("TODO")}
+            onClick={onSwapArrowsClick}
           >
             <SwapArrowsIcon color={"#FF0"} />
           </i>
@@ -160,7 +181,9 @@ export const SwapModule = ({
                 () => setBuyAssetSelectorModalOpen(true)
               : undefined
             }
-            amount={target.amount}
+            // TODO: this is done to not show the amount ig the source amount is empty
+            amount={source.amount && target.amount}
+            onChangeAmount={target.onChangeAmount}
             isSubmitting={false}
             label="Buy"
           />
@@ -180,9 +203,11 @@ export const SwapModule = ({
             backgroundHoverColor="transparent"
             textColor="black"
             textHoverColor="yellow"
+            disabled={isSubmitting || validationResult !== "Ok"}
           >
-            Review
+            {ValidationMessages[validationResult]}
           </ActionButton>
+          <p className="self-center">Powered by Osmosis</p>
         </Stack>
 
         {sellAssetSelectorModalOpen &&
@@ -229,9 +254,15 @@ const Sth = ({
   selectedTargetAsset,
   tokenPrice,
 }: SthProps): JSX.Element => {
+  // TODO: sucks
+  const quoteAmount =
+    typeof quote.amount_out === "string" ?
+      quote.amount_out
+    : quote.amount_out.amount;
+
   const val = toDisplayAmount(
     selectedTargetAsset,
-    BigNumber(quote.amount_out).div(BigNumber(amount || 1))
+    BigNumber(quoteAmount).div(BigNumber(amount || 1))
   );
   const valFiat = val.times(tokenPrice);
 
@@ -254,4 +285,12 @@ const Sth = ({
       </Stack>
     </Stack>
   );
+};
+
+const ValidationMessages: Record<string, string> = {
+  NoSellAssetSelected: "Select a token to sell",
+  NoBuyAssetSelected: "Select a token to buy",
+  SellAmountIsZero: "Enter an amount to sell",
+  BuyAmountIsZero: "Enter an amount to buy",
+  Ok: "Review",
 };
