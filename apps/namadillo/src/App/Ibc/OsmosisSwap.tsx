@@ -56,9 +56,13 @@ export const OsmosisSwap: React.FC = () => {
     (asset) => asset.symbol === swapStorage.assetSymbolBuy
   );
 
-  // const [from, setFrom] = useState<NamadaAsset | undefined>();
-  // const [to, setTo] = useState<NamadaAsset | undefined>();
-  const [amount, setAmount] = useState<string>("");
+  const [mode, setMode] = useState<"sell" | "buy">("sell");
+  const [buyAmount, setBuyAmount] = useState<string>("");
+  const [sellAmount, setSellAmount] = useState<string>("");
+
+  const [sourceAmount, setSourceAmount] = useState<BigNumber | undefined>();
+  const [targetAmount, setTargetAmount] = useState<BigNumber | undefined>();
+
   const [recipient, setRecipient] = useState<string>(
     "znam17drxewzvge966gzcl0u6tr4j90traepujm2vd8ptwwkgrftnhs2hdtnyzgl5freyjsdnchn4ddy"
   );
@@ -85,16 +89,29 @@ export const OsmosisSwap: React.FC = () => {
         (assets) => assets.symbol === buyAsset.symbol
       );
       // If amount is empty, we still want to get a quote for 1 unit of the asset
-      const baseAmount = toBaseAmount(buyAsset, BigNumber(amount || 1));
+      const baseAmount =
+        mode === "sell" ?
+          toBaseAmount(sellAsset, BigNumber(sellAmount || 1))
+        : toBaseAmount(buyAsset, BigNumber(buyAmount));
 
       invariant(fromOsmosis, "From asset is not found in Osmosis assets");
       invariant(toOsmosis, "To asset is not found in Osmosis assets");
 
+      const params: Record<string, string> =
+        mode === "sell" ?
+          {
+            tokenIn: `${baseAmount}${fromOsmosis.base}`,
+            tokenOutDenom: toOsmosis.base,
+          }
+        : {
+            tokenOut: `${baseAmount}${toOsmosis.base}`,
+            tokenInDenom: fromOsmosis.base,
+          };
+
       const quote = await fetch(
         "https://sqs.osmosis.zone/router/quote?" +
           new URLSearchParams({
-            tokenIn: `${baseAmount}${fromOsmosis.base}`,
-            tokenOutDenom: toOsmosis.base,
+            ...params,
             humanDenoms: "false",
           }).toString()
       );
@@ -102,9 +119,24 @@ export const OsmosisSwap: React.FC = () => {
 
       if (!(response as SwapResponseError).message) {
         const r = response as SwapResponseOk;
-        const minAmount = BigNumber(r.amount_out)
+        const minAmount = BigNumber(
+          mode == "sell" ? (r.amount_out as string) : (r.amount_in as string)
+        )
           .times(BigNumber(1).minus(SLIPPAGE))
           .toString();
+
+        if (mode === "sell" && sellAsset) {
+          setSourceAmount(sellAmount ? BigNumber(sellAmount) : undefined);
+          setTargetAmount(
+            toDisplayAmount(sellAsset, BigNumber(r.amount_out as string))
+          );
+        } else if (mode === "buy" && buyAsset) {
+          setSourceAmount(
+            toDisplayAmount(buyAsset, BigNumber(r.amount_in as string))
+          );
+          setTargetAmount(buyAmount ? BigNumber(buyAmount) : undefined);
+        }
+
         setQuote({ ...(response as SwapResponseOk), minAmount });
       } else {
         setQuote(undefined);
@@ -113,7 +145,7 @@ export const OsmosisSwap: React.FC = () => {
     if (buyAsset && sellAsset) {
       call();
     }
-  }, [buyAsset?.address, sellAsset?.address, amount]);
+  }, [buyAsset?.address, sellAsset?.address, sellAmount, buyAmount]);
 
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const shieldedAccount = defaultAccounts.data?.find(
@@ -205,10 +237,10 @@ export const OsmosisSwap: React.FC = () => {
   //}, [transparentAccount, shieldedAccount, quote]);
 
   //TODO: sucks
-  const toAmount =
-    quote && amount && sellAsset ?
-      toDisplayAmount(sellAsset, BigNumber(quote.amount_out))
-    : undefined;
+  // const toAmount =
+  //   quote && sellAmount && sellAsset ?
+  //     toDisplayAmount(sellAsset, BigNumber(quote.amount_out))
+  //   : undefined;
 
   return (
     <Panel className="relative rounded-sm flex flex-col flex-1 pt-9">
@@ -227,9 +259,12 @@ export const OsmosisSwap: React.FC = () => {
         walletAddress={shieldedAccount?.address}
         tokenPrices={tokenPrices}
         source={{
-          amount: amount ? BigNumber(amount) : undefined,
+          amount: sourceAmount,
           selectedAssetAddress: sellAsset?.address,
-          onChangeAmount: (a) => setAmount(a ? a.toString() : ""),
+          onChangeAmount: (a) => {
+            setMode("sell");
+            setSellAmount(a ? a.toString() : "");
+          },
           onChangeSellSelectedAsset: (address) => {
             const asset = namadaAssets.find((a) => a.address === address);
             if (asset?.address === buyAsset?.address) {
@@ -239,8 +274,18 @@ export const OsmosisSwap: React.FC = () => {
           },
         }}
         target={{
-          amount: toAmount,
+          amount: targetAmount,
           selectedAssetAddress: buyAsset?.address,
+          onChangeAmount: (a) => {
+            if (a) {
+              setMode("buy");
+              setBuyAmount(a.toString());
+            } else {
+              setBuyAmount("");
+              setSellAmount("");
+              setMode("sell");
+            }
+          },
           onChangeBuySelectedAsset: (address) => {
             const asset = namadaAssets.find((a) => a.address === address);
             if (asset?.address === sellAsset?.address) {
@@ -248,6 +293,20 @@ export const OsmosisSwap: React.FC = () => {
             }
             setSwapStorageBuyAsset(asset?.symbol);
           },
+        }}
+        onSwapArrowsClick={() => {
+          if (sellAsset && buyAsset) {
+            setSwapStorageBuyAsset(sellAsset.symbol);
+            setSwapStorageSellAsset(buyAsset.symbol);
+
+            if (mode === "sell") {
+              setBuyAmount(sellAmount);
+              setMode("buy");
+            } else {
+              setSellAmount(buyAmount);
+              setMode("sell");
+            }
+          }
         }}
       />
     </Panel>

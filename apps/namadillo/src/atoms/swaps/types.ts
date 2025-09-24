@@ -1,9 +1,16 @@
 export type SwapResponseOk = {
-  amount_in: {
-    denom: string;
-    amount: string;
-  };
-  amount_out: string;
+  amount_in:
+    | {
+        denom: string;
+        amount: string;
+      }
+    | string;
+  amount_out:
+    | {
+        denom: string;
+        amount: string;
+      }
+    | string;
   route: Array<{
     pools: Array<{
       id: number;
