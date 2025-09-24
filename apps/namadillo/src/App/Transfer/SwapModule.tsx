@@ -138,6 +138,13 @@ export const SwapModule = ({
       return "SellAmountIsZero";
     } else if (!target.amount || target.amount.isZero()) {
       return "BuyAmountIsZero";
+    }
+    if (
+      source.amount &&
+      availableAmountMinusFees &&
+      source.amount.gt(availableAmountMinusFees)
+    ) {
+      return "SellAmountExceedsBalance";
     } else {
       return "Ok";
     }
@@ -292,5 +299,6 @@ const ValidationMessages: Record<string, string> = {
   NoBuyAssetSelected: "Select a token to buy",
   SellAmountIsZero: "Enter an amount to sell",
   BuyAmountIsZero: "Enter an amount to buy",
+  SellAmountExceedsBalance: "Insufficient balance",
   Ok: "Review",
 };
