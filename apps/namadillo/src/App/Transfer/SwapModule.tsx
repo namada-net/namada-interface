@@ -142,9 +142,10 @@ export const SwapModule = ({
       return "BuyAmountIsZero";
     }
     if (
-      source.amount &&
-      availableAmountMinusFees &&
-      source.amount.gt(availableAmountMinusFees)
+      !availableAmountMinusFees ||
+      (source.amount &&
+        availableAmountMinusFees &&
+        source.amount.gt(availableAmountMinusFees))
     ) {
       return "SellAmountExceedsBalance";
     } else {
