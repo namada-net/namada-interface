@@ -149,13 +149,19 @@ export const OsmosisSwap: React.FC = () => {
           if (simulateSell && sellAsset) {
             setSwapState((s) => ({
               ...s,
-              targetAmount: toDisplayAmount(buyAsset, minAmount),
+              targetAmount: toDisplayAmount(
+                buyAsset,
+                BigNumber(r.amount_out as string)
+              ),
               unitPrice,
             }));
           } else if (simulateBuy && buyAsset) {
             setSwapState((s) => ({
               ...s,
-              sourceAmount: toDisplayAmount(sellAsset, minAmount),
+              sourceAmount: toDisplayAmount(
+                sellAsset,
+                BigNumber(r.amount_in as string)
+              ),
               unitPrice,
             }));
           }
@@ -359,17 +365,19 @@ export const OsmosisSwap: React.FC = () => {
             setSwapStorageSellAsset(buyAsset.symbol);
 
             if (swapState.mode === "sell") {
-              setSwapState({
+              setSwapState((s) => ({
                 mode: "buy",
                 sourceAmount: swapState.targetAmount,
                 targetAmount: swapState.sourceAmount,
-              });
+                unitPrice: s.unitPrice,
+              }));
             } else {
-              setSwapState({
+              setSwapState((s) => ({
                 mode: "sell",
                 sourceAmount: swapState.targetAmount,
                 targetAmount: swapState.sourceAmount,
-              });
+                unitPrice: s.unitPrice,
+              }));
             }
           }
         }}
