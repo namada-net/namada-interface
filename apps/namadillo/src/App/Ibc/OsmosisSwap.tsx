@@ -22,7 +22,8 @@ import { useTransactionFee } from "hooks";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import debounce from "lodash.debounce";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { NamadaAsset } from "types";
 import { toBaseAmount, toDisplayAmount } from "utils";
 
 const SLIPPAGE = 0.005;
@@ -72,6 +73,10 @@ export const OsmosisSwap: React.FC = () => {
   );
 
   const [swapState, setSwapState] = useState<SwapState>(defaultSwapState);
+  const swapStateRef = useRef(swapState);
+  useEffect(() => {
+    swapStateRef.current = swapState;
+  }, [swapState]);
 
   const [recipient, setRecipient] = useState<string>(
     "znam17drxewzvge966gzcl0u6tr4j90traepujm2vd8ptwwkgrftnhs2hdtnyzgl5freyjsdnchn4ddy"
@@ -90,93 +95,110 @@ export const OsmosisSwap: React.FC = () => {
   // Outside your component or in useMemo
   const debouncedCall = useMemo(
     () =>
-      debounce(async (swapState: SwapState) => {
-        invariant(buyAsset, "No from asset selected");
-        invariant(sellAsset, "No to asset selected");
-        // We have to map namada assets to osmosis assets to get correct base
-        const fromOsmosis = osmosisAssets.find(
-          (assets) => assets.symbol === sellAsset.symbol
-        );
-        const toOsmosis = osmosisAssets.find(
-          (assets) => assets.symbol === buyAsset.symbol
-        );
-        // If amount is empty, we still want to get a quote for 1 unit of the asset
-        const baseAmount =
-          swapState.mode === "sell" ?
-            toBaseAmount(sellAsset, swapState.sourceAmount!)
-          : swapState.mode === "buy" ?
-            toBaseAmount(buyAsset, swapState.targetAmount!)
-          : toBaseAmount(buyAsset, BigNumber(1));
-
-        invariant(fromOsmosis, "From asset is not found in Osmosis assets");
-        invariant(toOsmosis, "To asset is not found in Osmosis assets");
-
-        const simulateSell =
-          swapState.mode === "sell" || swapState.mode === "none";
-        const simulateBuy = swapState.mode === "buy";
-
-        const params: Record<string, string> =
-          simulateSell ?
-            {
-              tokenIn: `${baseAmount}${fromOsmosis.base}`,
-              tokenOutDenom: toOsmosis.base,
-            }
-          : {
-              tokenOut: `${baseAmount}${toOsmosis.base}`,
-              tokenInDenom: fromOsmosis.base,
-            };
-
-        const quote = await fetch(
-          "https://sqs.osmosis.zone/router/quote?" +
-            new URLSearchParams({
-              ...params,
-              humanDenoms: "false",
-            }).toString()
-        );
-        const response: SwapResponse = await quote.json();
-
-        if (!(response as SwapResponseError).message) {
-          const r = response as SwapResponseOk;
-          const minAmount = BigNumber(
-            simulateSell ? (r.amount_out as string) : (r.amount_in as string)
-          ).times(BigNumber(1).minus(SLIPPAGE));
-
-          const unitPrice = toDisplayAmount(
-            buyAsset,
-            minAmount.div(toDisplayAmount(buyAsset, baseAmount))
+      debounce(
+        async (
+          swapState: SwapState,
+          buyAsset: NamadaAsset,
+          sellAsset: NamadaAsset
+        ) => {
+          invariant(buyAsset, "No from asset selected");
+          invariant(sellAsset, "No to asset selected");
+          // We have to map namada assets to osmosis assets to get correct base
+          const fromOsmosis = osmosisAssets.find(
+            (assets) => assets.symbol === sellAsset.symbol
           );
+          const toOsmosis = osmosisAssets.find(
+            (assets) => assets.symbol === buyAsset.symbol
+          );
+          // If amount is empty, we still want to get a quote for 1 unit of the asset
+          const baseAmount =
+            swapState.mode === "sell" ?
+              toBaseAmount(sellAsset, swapState.sourceAmount!)
+            : swapState.mode === "buy" ?
+              toBaseAmount(buyAsset, swapState.targetAmount!)
+            : toBaseAmount(buyAsset, BigNumber(1));
 
-          if (simulateSell && sellAsset) {
-            setSwapState((s) => ({
-              ...s,
-              targetAmount: toDisplayAmount(
-                buyAsset,
-                BigNumber(r.amount_out as string)
-              ),
-              unitPrice,
-            }));
-          } else if (simulateBuy && buyAsset) {
-            setSwapState((s) => ({
-              ...s,
-              sourceAmount: toDisplayAmount(
-                sellAsset,
-                BigNumber(r.amount_in as string)
-              ),
-              unitPrice,
-            }));
+          invariant(fromOsmosis, "From asset is not found in Osmosis assets");
+          invariant(toOsmosis, "To asset is not found in Osmosis assets");
+
+          const simulateSell =
+            swapState.mode === "sell" || swapState.mode === "none";
+          const simulateBuy = swapState.mode === "buy";
+
+          const params: Record<string, string> =
+            simulateSell ?
+              {
+                tokenIn: `${baseAmount}${fromOsmosis.base}`,
+                tokenOutDenom: toOsmosis.base,
+              }
+            : {
+                tokenOut: `${baseAmount}${toOsmosis.base}`,
+                tokenInDenom: fromOsmosis.base,
+              };
+
+          const quote = await fetch(
+            "https://sqs.osmosis.zone/router/quote?" +
+              new URLSearchParams({
+                ...params,
+                humanDenoms: "false",
+              }).toString()
+          );
+          const response: SwapResponse = await quote.json();
+
+          if (!(response as SwapResponseError).message) {
+            const r = response as SwapResponseOk;
+            const minAmount = BigNumber(
+              simulateSell ? (r.amount_out as string) : (r.amount_in as string)
+            ).times(BigNumber(1).minus(SLIPPAGE));
+
+            const unitPrice = toDisplayAmount(
+              buyAsset,
+              minAmount.div(toDisplayAmount(buyAsset, baseAmount))
+            );
+
+            if (simulateSell && sellAsset) {
+              // We kame sure that we do not update after user has changed the amount
+              if (
+                swapState.sourceAmount === swapStateRef.current.sourceAmount
+              ) {
+                setSwapState((s) => ({
+                  ...s,
+                  targetAmount: toDisplayAmount(
+                    buyAsset,
+                    BigNumber(r.amount_out as string)
+                  ),
+                  unitPrice,
+                }));
+              }
+            } else if (simulateBuy && buyAsset) {
+              // We kame sure that we do not update after user has changed the amount
+              if (
+                swapState.targetAmount === swapStateRef.current.targetAmount
+              ) {
+                setSwapState((s) => ({
+                  ...s,
+                  sourceAmount: toDisplayAmount(
+                    sellAsset,
+                    BigNumber(r.amount_in as string)
+                  ),
+                  unitPrice,
+                }));
+              }
+            }
+
+            setQuote({ ...(response as SwapResponseOk), minAmount });
+          } else {
+            setQuote(undefined);
           }
-
-          setQuote({ ...(response as SwapResponseOk), minAmount });
-        } else {
-          setQuote(undefined);
-        }
-      }, 300),
-    [buyAsset, sellAsset] // Dependencies that should recreate the debounced function
+        },
+        300
+      ),
+    [] // Dependencies that should recreate the debounced function
   );
 
   useEffect(() => {
     if (buyAsset && sellAsset) {
-      debouncedCall(swapState);
+      debouncedCall(swapState, buyAsset, sellAsset);
     }
 
     return () => {
