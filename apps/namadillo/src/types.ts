@@ -4,6 +4,7 @@ import {
   Asset as ChainRegistryAsset,
   IBCInfo,
 } from "@chain-registry/types";
+import { IbcTransition } from "@chain-registry/types/assetlist.schema";
 import { ValidatorStatus } from "@namada/indexer-client";
 import { ClaimRewardsMsgValue } from "@namada/sdk-multicore";
 import { Account, ChainKey, ExtensionKey } from "@namada/types";
@@ -227,6 +228,7 @@ export type Asset = ChainRegistryAsset;
 
 // Namada assets should always have address field defined
 export type NamadaAsset = Asset & { address: Address };
+export type NamadaIbcTransition = IbcTransition;
 
 export type AssetWithAmount = {
   asset: Asset;

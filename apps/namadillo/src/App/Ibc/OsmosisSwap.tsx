@@ -1,5 +1,5 @@
 import { Panel } from "@namada/components";
-import { AccountType } from "@namada/types";
+import { AccountType, BparamsMsgValue } from "@namada/types";
 import { SwapIcon } from "App/Icons/SwapIcon";
 import { SwapModule } from "App/Transfer/SwapModule";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -21,10 +21,12 @@ import BigNumber from "bignumber.js";
 import { useTransactionFee } from "hooks";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
+import { broadcastTransaction, signTx } from "lib/query";
 import debounce from "lodash.debounce";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { NamadaAsset } from "types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { NamadaAsset, NamadaIbcTransition } from "types";
 import { toBaseAmount, toDisplayAmount } from "utils";
+import { getSdkInstance } from "utils/sdk";
 
 const SLIPPAGE = 0.005;
 const SWAP_CONTRACT_ADDRESS =
@@ -79,7 +81,7 @@ export const OsmosisSwap: React.FC = () => {
   }, [swapState]);
 
   const [recipient, setRecipient] = useState<string>(
-    "znam17drxewzvge966gzcl0u6tr4j90traepujm2vd8ptwwkgrftnhs2hdtnyzgl5freyjsdnchn4ddy"
+    "znam1a84q94utg8tc35hrfr39k044qauh28vnjd3zgvx9ygkgaahpn73ffnfdq8ntwmwr93t0zgj6sys"
   );
   const [localRecoveryAddr, setLocalRecoveryAddress] = useState<string>(
     "osmo18st0wqx84av8y6xdlss9d6m2nepyqwj6n3q7js"
@@ -217,96 +219,102 @@ export const OsmosisSwap: React.FC = () => {
   const shieldedAccount = defaultAccounts.data?.find(
     (account) => account.type === AccountType.ShieldedKeys
   );
+  const transparentAccount = defaultAccounts.data?.find(
+    (account) => account.type !== AccountType.ShieldedKeys
+  );
 
-  //const handleOsmosisSwap = useCallback(async () => {
-  //  invariant(transparentAccount, "No transparent account is found");
-  //  invariant(shieldedAccount, "No shielded account is found");
-  //  invariant(from, "No from asset");
-  //  invariant(to, "No to asset");
-  //  invariant(ibcChannels, "No ibc channels");
-  //  invariant(quote, "No quote");
-  //  invariant(localRecoveryAddr, "No local recovery address");
-  //  invariant(recipient, "No recipient");
+  const handleOsmosisSwap = useCallback(async () => {
+    invariant(shieldedAccount, "No shielded account is found");
+    invariant(transparentAccount, "No transparentAccount account is found");
+    invariant(ibcChannels, "No ibc channels");
+    invariant(quote, "No quote");
+    invariant(localRecoveryAddr, "No local recovery address");
+    invariant(recipient, "No recipient");
+    invariant(swapState.sourceAmount, "No source amount");
+    invariant(buyAsset, "No asset to buy selected");
+    invariant(sellAsset, "No asset to sell selected");
 
-  //  const toTrace = to.traces?.find((t): t is IbcTransition => t.type === "ibc")
-  //    ?.chain.path;
-  //  invariant(toTrace, "No IBC trace found for the to asset");
-  //  invariant(quote.route[0], "No route found in the quote");
-  //  const route = quote.route[0].pools.map((p) => ({
-  //    poolId: String(p.id),
-  //    tokenOutDenom: p.token_out_denom,
-  //  }));
+    const buyAssetOnOsmosis = osmosisAssets.find(
+      (a) => a.symbol === buyAsset.symbol
+    );
 
-  //  let bparams: BparamsMsgValue[] | undefined;
-  //  if (transparentAccount.type === AccountType.Ledger) {
-  //    const sdk = await getSdkInstance();
-  //    const ledger = await sdk.initLedger();
-  //    bparams = await ledger.getBparams();
-  //    ledger.closeTransport();
-  //  }
+    console.log("buyAssetOnOsmosis", buyAssetOnOsmosis, buyAsset);
 
-  //  const transfer = {
-  //    amountInBaseDenom: BigNumber(amount),
-  //    // osmosis channel
-  //    channelId: "channel-1",
-  //    portId: "transfer",
-  //    token: from.asset.address,
-  //    source: shieldedAccount.pseudoExtendedKey!,
-  //    gasSpendingKey: shieldedAccount.pseudoExtendedKey!,
-  //    receiver: SWAP_CONTRACT_ADDRESS,
-  //    bparams,
-  //    // TODO: replace with disposable signer
-  //    refundTarget: transparentAccount.address,
-  //  };
-  //  const params = {
-  //    transfer,
-  //    outputDenom: toTrace,
-  //    recipient,
-  //    // TODO: this should also be disposable address most likely
-  //    overflow: transparentAccount.address,
-  //    slippage: {
-  //      0: BigNumber(quote.minAmount)
-  //        .integerValue(BigNumber.ROUND_DOWN)
-  //        .toString(),
-  //    },
-  //    localRecoveryAddr,
-  //    route,
-  //    // TODO: not sure if hardcoding is ok, maybe we should connect keplr wallet
-  //    osmosisRestRpc: "https://osmosis-rest.publicnode.com",
-  //  };
+    const toTrace = buyAsset.traces?.find(
+      (t): t is NamadaIbcTransition => t.type === "ibc"
+    )?.chain.path;
+    invariant(toTrace, "No IBC trace found for the to asset");
+    invariant(quote.route[0], "No route found in the quote");
 
-  //  try {
-  //    const encodedTxData = await performOsmosisSwap({
-  //      signer: {
-  //        // TODO: use disposable signer
-  //        publicKey: transparentAccount.publicKey!,
-  //        address: transparentAccount.address!,
-  //      },
-  //      account: transparentAccount,
-  //      params: [params],
-  //      gasConfig: feeProps.gasConfig,
-  //    });
+    const route = quote.route[0].pools.map((p) => ({
+      poolId: String(p.id),
+      tokenOutDenom: p.token_out_denom,
+    }));
 
-  //    // TODO: use disposable signer
-  //    const signedTxs = await signTx(
-  //      encodedTxData,
-  //      transparentAccount.address!
-  //    );
-  //    const wwww = await broadcastTransaction(encodedTxData, signedTxs);
-  //    //eslint-disable-next-line no-console
-  //    console.log("Transaction broadcasted:", wwww);
-  //    alert("Transaction sent 🚀");
-  //  } catch (error) {
-  //    console.error("Error performing Osmosis swap:", error);
-  //    alert("Transaction errror 🪦");
-  //  }
-  //}, [transparentAccount, shieldedAccount, quote]);
+    let bparams: BparamsMsgValue[] | undefined;
+    if (transparentAccount.type === AccountType.Ledger) {
+      const sdk = await getSdkInstance();
+      const ledger = await sdk.initLedger();
+      bparams = await ledger.getBparams();
+      ledger.closeTransport();
+    }
 
-  //TODO: sucks
-  // const toAmount =
-  //   quote && sellAmount && sellAsset ?
-  //     toDisplayAmount(sellAsset, BigNumber(quote.amount_out))
-  //   : undefined;
+    const transfer = {
+      amountInBaseDenom: toBaseAmount(sellAsset, swapState.sourceAmount),
+      // osmosis channel
+      channelId: "channel-1",
+      portId: "transfer",
+      token: sellAsset.address,
+      source: shieldedAccount.pseudoExtendedKey!,
+      gasSpendingKey: shieldedAccount.pseudoExtendedKey!,
+      receiver: SWAP_CONTRACT_ADDRESS,
+      bparams,
+      // TODO: replace with disposable signer
+      refundTarget: transparentAccount.address,
+    };
+    const params = {
+      transfer,
+      outputDenom: toTrace,
+      recipient,
+      // TODO: this should also be disposable address most likely
+      overflow: transparentAccount.address,
+      slippage: {
+        0: BigNumber(quote.minAmount)
+          .integerValue(BigNumber.ROUND_DOWN)
+          .toString(),
+      },
+      localRecoveryAddr,
+      route,
+      // TODO: not sure if hardcoding is ok, maybe we should connect keplr wallet
+      osmosisRestRpc: "https://osmosis-rest.publicnode.com",
+    };
+
+    try {
+      const encodedTxData = await performOsmosisSwap({
+        signer: {
+          // TODO: use disposable signer
+          publicKey: transparentAccount.publicKey!,
+          address: transparentAccount.address!,
+        },
+        account: transparentAccount,
+        params: [params],
+        gasConfig: feeProps.gasConfig,
+      });
+
+      // TODO: use disposable signer
+      const signedTxs = await signTx(
+        encodedTxData,
+        transparentAccount.address!
+      );
+      const wwww = await broadcastTransaction(encodedTxData, signedTxs);
+      //eslint-disable-next-line no-console
+      console.log("Transaction broadcasted:", wwww);
+      alert("Transaction sent 🚀");
+    } catch (error) {
+      console.error("Error performing Osmosis swap:", error);
+      alert("Transaction errror 🪦");
+    }
+  }, [transparentAccount, shieldedAccount, quote]);
 
   return (
     <Panel className="relative rounded-sm flex flex-col flex-1 pt-9">
@@ -318,6 +326,7 @@ export const OsmosisSwap: React.FC = () => {
         <p>Swap an asset you hold in the shield pool</p>
       </header>
       <SwapModule
+        slippage={SLIPPAGE}
         assets={namadaAssets}
         assetsWithBalance={assetsWithBalance}
         quote={quote}
@@ -325,6 +334,7 @@ export const OsmosisSwap: React.FC = () => {
         walletAddress={shieldedAccount?.address}
         tokenPrices={tokenPrices}
         unitPrice={swapState.unitPrice}
+        onSubmitSwap={handleOsmosisSwap}
         source={{
           amount: swapState.sourceAmount,
           selectedAssetAddress: sellAsset?.address,
@@ -343,8 +353,6 @@ export const OsmosisSwap: React.FC = () => {
                 unitPrice: s.unitPrice,
               }));
             }
-            // setMode("sell");
-            // setSellAmount(a ? a.toString() : "");
           },
           onChangeSellSelectedAsset: (address) => {
             const asset = namadaAssets.find((a) => a.address === address);
@@ -382,7 +390,7 @@ export const OsmosisSwap: React.FC = () => {
           },
         }}
         onSwapArrowsClick={() => {
-          if (swapState.mode !== "none" && sellAsset && buyAsset) {
+          if (sellAsset && buyAsset) {
             setSwapStorageBuyAsset(sellAsset.symbol);
             setSwapStorageSellAsset(buyAsset.symbol);
 
@@ -393,7 +401,7 @@ export const OsmosisSwap: React.FC = () => {
                 targetAmount: swapState.sourceAmount,
                 unitPrice: s.unitPrice,
               }));
-            } else {
+            } else if (swapState.mode === "buy") {
               setSwapState((s) => ({
                 mode: "sell",
                 sourceAmount: swapState.targetAmount,
