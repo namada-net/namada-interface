@@ -12,9 +12,12 @@ import { GoChevronDown } from "react-icons/go";
 import { Address, NamadaAsset, NamadaAssetWithAmount } from "types";
 import { getDisplayGasFee } from "utils/gas";
 import { SelectAssetModal } from "./SelectAssetModal";
+import { SwapReview } from "./SwapReview";
 import { SwapSource } from "./SwapSource";
 
 export type SwapModuleProps = {
+  onSubmitSwap: () => Promise<void>;
+  slippage: number;
   assets: NamadaAsset[];
   assetsWithBalance?: Record<string, NamadaAssetWithAmount>;
   isSubmitting?: boolean;
@@ -40,6 +43,8 @@ export type SwapModuleProps = {
 };
 
 export const SwapModule = ({
+  onSubmitSwap,
+  slippage,
   assets,
   assetsWithBalance,
   walletAddress,
@@ -52,6 +57,7 @@ export const SwapModule = ({
   unitPrice,
   onSwapArrowsClick,
 }: SwapModuleProps): JSX.Element => {
+  const [isReviewing, setIsReviewing] = useState(false);
   const selectedAsset = mapUndefined(
     (address) => assets.find((a) => a.address === address),
     source.selectedAssetAddress
@@ -160,70 +166,87 @@ export const SwapModule = ({
 
   return (
     <>
-      <section className="max-w-[480px] mx-auto" role="widget">
-        <Stack>
-          <SwapSource
-            asset={selectedAsset}
-            isLoadingAssets={false}
-            openAssetSelector={
-              source.onChangeSellSelectedAsset && !isSubmitting ?
-                () => setSellAssetSelectorModalOpen(true)
-              : undefined
-            }
-            availableAmount={availableAmount}
-            availableAmountMinusFees={availableAmountMinusFees}
-            amount={source.amount}
-            onChangeAmount={source.onChangeAmount}
-            isSubmitting={false}
-            label="Sell"
-          />
-          <i
-            className="flex items-center justify-center w-13 mx-auto relative z-10 -my-8 cursor-pointer"
-            onClick={onSwapArrowsClick}
-          >
-            <SwapArrowsIcon color={"#FF0"} />
-          </i>
-          <SwapSource
-            asset={selectedTargetAsset}
-            isLoadingAssets={false}
-            openAssetSelector={
-              target.onChangeBuySelectedAsset && !isSubmitting ?
-                () => setBuyAssetSelectorModalOpen(true)
-              : undefined
-            }
-            // TODO: this is done to not show the amount ig the source amount is empty
-            amount={source.amount && target.amount}
-            onChangeAmount={target.onChangeAmount}
-            isSubmitting={false}
-            label="Buy"
-          />
-          {quote &&
-            unitPrice &&
-            selectedAsset &&
-            selectedTargetAsset &&
-            tokenPrices && (
-              <Sth
-                amount={target.amount}
-                unitPrice={unitPrice}
-                selectedAsset={selectedAsset}
-                selectedTargetAsset={selectedTargetAsset}
-                tokenPrice={tokenPrices[selectedTargetAsset.address]}
-                effectiveFee={BigNumber(quote.effective_fee)}
-              />
-            )}
+      <section className="w-full max-w-[480px] mx-auto" role="widget">
+        {!isReviewing && (
+          <Stack>
+            <SwapSource
+              asset={selectedAsset}
+              isLoadingAssets={false}
+              openAssetSelector={
+                source.onChangeSellSelectedAsset && !isSubmitting ?
+                  () => setSellAssetSelectorModalOpen(true)
+                : undefined
+              }
+              availableAmount={availableAmount}
+              availableAmountMinusFees={availableAmountMinusFees}
+              amount={source.amount}
+              onChangeAmount={source.onChangeAmount}
+              isSubmitting={false}
+              label="Sell"
+            />
+            <i
+              className="flex items-center justify-center w-13 mx-auto relative z-10 -my-8 cursor-pointer"
+              onClick={onSwapArrowsClick}
+            >
+              <SwapArrowsIcon color={"#FF0"} />
+            </i>
+            <SwapSource
+              asset={selectedTargetAsset}
+              isLoadingAssets={false}
+              openAssetSelector={
+                target.onChangeBuySelectedAsset && !isSubmitting ?
+                  () => setBuyAssetSelectorModalOpen(true)
+                : undefined
+              }
+              // TODO: this is done to not show the amount ig the source amount is empty
+              amount={source.amount && target.amount}
+              onChangeAmount={target.onChangeAmount}
+              isSubmitting={false}
+              label="Buy"
+            />
+            {quote &&
+              unitPrice &&
+              selectedAsset &&
+              selectedTargetAsset &&
+              tokenPrices && (
+                <Sth
+                  amount={target.amount}
+                  unitPrice={unitPrice}
+                  selectedAsset={selectedAsset}
+                  selectedTargetAsset={selectedTargetAsset}
+                  tokenPrice={tokenPrices[selectedTargetAsset.address]}
+                  effectiveFee={BigNumber(quote.effective_fee)}
+                />
+              )}
 
-          <ActionButton
-            outlineColor="yellow"
-            backgroundColor="yellow"
-            backgroundHoverColor="transparent"
-            textColor="black"
-            textHoverColor="yellow"
-            disabled={isSubmitting || validationResult !== "Ok"}
-          >
-            {ValidationMessages[validationResult]}
-          </ActionButton>
-          <p className="self-center">Powered by Osmosis</p>
-        </Stack>
+            <ActionButton
+              outlineColor="yellow"
+              backgroundColor="yellow"
+              backgroundHoverColor="transparent"
+              textColor="black"
+              textHoverColor="yellow"
+              disabled={isSubmitting || validationResult !== "Ok"}
+              onClick={() => setIsReviewing(true)}
+            >
+              {ValidationMessages[validationResult]}
+            </ActionButton>
+            <p className="self-center">Powered by Osmosis</p>
+          </Stack>
+        )}
+        {isReviewing && (
+          <SwapReview
+            sourceAmount={source.amount!}
+            targetAmount={target.amount!}
+            assetSell={selectedAsset!}
+            assetBuy={selectedTargetAsset!}
+            tokenPrices={tokenPrices!}
+            priceImpact={BigNumber(quote!.price_impact)}
+            swapFee={BigNumber(quote!.effective_fee)}
+            receiveAtLeast={quote!.minAmount}
+            slippageTolerance={slippage}
+            onSubmitSwap={onSubmitSwap}
+          />
+        )}
 
         {sellAssetSelectorModalOpen &&
           source.onChangeSellSelectedAsset &&
@@ -274,6 +297,8 @@ const Sth = ({
   //TODO: We have to take price impact into consideration most likely
   const valFiat = unitPrice.times(tokenPrice);
   const [showDetails, setShowDetails] = useState(false);
+
+  // TODO:  reused
   const swapFee = effectiveFee
     ?.times(100)
     .decimalPlaces(2, BigNumber.ROUND_HALF_UP);
