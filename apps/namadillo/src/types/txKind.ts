@@ -11,6 +11,7 @@ export const txKinds = [
   "ShieldedTransfer",
   "ShieldingTransfer",
   "UnshieldingTransfer",
+  "ShieldedSwap",
   "Unknown",
 ] as const;
 

@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { getAssetImageUrl } from "integrations/utils";
 import { NamadaAsset } from "types";
 import { toDisplayAmount } from "utils";
+import { CurrentStatus } from "./CurrentStatus";
 
 type SwapReviewProps = {
   onSubmitSwap: () => Promise<void>;
@@ -17,9 +18,14 @@ type SwapReviewProps = {
   swapFee: BigNumber;
   slippageTolerance: number;
   receiveAtLeast: BigNumber;
+  status: {
+    reason: string;
+    explanation: string;
+  } | null;
 };
 export const SwapReview = ({
   onSubmitSwap,
+  status,
   sourceAmount,
   targetAmount,
   assetSell,
@@ -128,16 +134,24 @@ export const SwapReview = ({
         </Stack>
       </div>
 
-      <ActionButton
-        outlineColor="yellow"
-        backgroundColor="yellow"
-        backgroundHoverColor="transparent"
-        textColor="black"
-        textHoverColor="yellow"
-        onClick={onSubmitSwap}
-      >
-        Swap
-      </ActionButton>
+      {!status && (
+        <ActionButton
+          outlineColor="yellow"
+          backgroundColor="yellow"
+          backgroundHoverColor="transparent"
+          textColor="black"
+          textHoverColor="yellow"
+          onClick={onSubmitSwap}
+        >
+          Swap
+        </ActionButton>
+      )}
+      {status && (
+        <CurrentStatus
+          status={status.reason}
+          explanation={status.explanation}
+        />
+      )}
     </Stack>
   );
 };

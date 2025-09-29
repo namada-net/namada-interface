@@ -1,14 +1,19 @@
 import { Panel } from "@namada/components";
-import { AccountType, BparamsMsgValue } from "@namada/types";
+import { AccountType, BparamsMsgValue, OsmosisSwapProps } from "@namada/types";
 import { SwapIcon } from "App/Icons/SwapIcon";
 import { SwapModule } from "App/Transfer/SwapModule";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaShieldedAssetsAtom } from "atoms/balance";
+import { chainAtom } from "atoms/chain";
 import {
   getChainRegistryByChainId,
   ibcChannelsFamily,
   namadaRegistryChainAssetsMapAtom,
 } from "atoms/integrations";
+import {
+  createNotificationId,
+  dispatchToastNotificationAtom,
+} from "atoms/notifications";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import { SwapResponse, SwapResponseError, SwapResponseOk } from "atoms/swaps";
 import {
@@ -19,18 +24,47 @@ import {
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
 import { useTransactionFee } from "hooks";
+import { useTransactionActions } from "hooks/useTransactionActions";
 import invariant from "invariant";
-import { useAtom, useAtomValue } from "jotai";
-import { broadcastTransaction, signTx } from "lib/query";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { broadcastTxWithEvents, signTx, TransactionPair } from "lib/query";
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { NamadaAsset, NamadaIbcTransition } from "types";
+import {
+  IbcTransferTransactionData,
+  NamadaAsset,
+  NamadaIbcTransition,
+  TransferStep,
+} from "types";
 import { toBaseAmount, toDisplayAmount } from "utils";
 import { getSdkInstance } from "utils/sdk";
 
 const SLIPPAGE = 0.005;
 const SWAP_CONTRACT_ADDRESS =
   "osmo14q5zmg3fp774kpz2j8c52q7gqjn0dnm3vcj3guqpj4p9xylqpc7s2ezh0h";
+
+// TODO: reused - unify
+class TransactionError<T> extends Error {
+  public cause: { originalError: unknown; context: TransactionPair<T> };
+  constructor(
+    public message: string,
+    options: {
+      cause: { originalError: unknown; context: TransactionPair<T> };
+    }
+  ) {
+    super(message);
+    this.cause = options.cause;
+  }
+}
+
+// TODO: reused - unify
+const getNotificationId = <T,>(tx: TransactionPair<T>): string => {
+  const notificationId = createNotificationId(
+    tx.encodedTxData.txs.map((tx) => tx.hash)
+  );
+
+  return notificationId;
+};
 
 // TODO: make this type mroe specific
 type SwapState = {
@@ -93,6 +127,13 @@ export const OsmosisSwap: React.FC = () => {
   const { data: ibcChannels } = useAtomValue(ibcChannelsFamily("osmosis"));
 
   const feeProps = useTransactionFee(["IbcTransfer"], true);
+
+  const [status, setStatus] = useState<{
+    reason: string;
+    explanation: string;
+  } | null>(null);
+
+  const dispatchNotification = useSetAtom(dispatchToastNotificationAtom);
 
   // Outside your component or in useMemo
   const debouncedCall = useMemo(
@@ -234,12 +275,6 @@ export const OsmosisSwap: React.FC = () => {
     invariant(buyAsset, "No asset to buy selected");
     invariant(sellAsset, "No asset to sell selected");
 
-    const buyAssetOnOsmosis = osmosisAssets.find(
-      (a) => a.symbol === buyAsset.symbol
-    );
-
-    console.log("buyAssetOnOsmosis", buyAssetOnOsmosis, buyAsset);
-
     const toTrace = buyAsset.traces?.find(
       (t): t is NamadaIbcTransition => t.type === "ibc"
     )?.chain.path;
@@ -290,6 +325,11 @@ export const OsmosisSwap: React.FC = () => {
     };
 
     try {
+      setStatus({
+        reason: "Building shielded swap tx...",
+        explanation:
+          "This can take up to couple of minutes depending on the tx size.",
+      });
       const encodedTxData = await performOsmosisSwap({
         signer: {
           // TODO: use disposable signer
@@ -301,20 +341,115 @@ export const OsmosisSwap: React.FC = () => {
         gasConfig: feeProps.gasConfig,
       });
 
+      setStatus({
+        reason: "Waiting for signature...",
+        explanation: "Please confirm the transaction in your wallet.",
+      });
       // TODO: use disposable signer
       const signedTxs = await signTx(
         encodedTxData,
         transparentAccount.address!
       );
-      const wwww = await broadcastTransaction(encodedTxData, signedTxs);
-      //eslint-disable-next-line no-console
-      console.log("Transaction broadcasted:", wwww);
-      alert("Transaction sent 🚀");
+
+      // TODO: move to SwapModule?
+      const transactionPair: TransactionPair<OsmosisSwapProps> = {
+        signedTxs,
+        encodedTxData,
+      };
+
+      const notificationId = getNotificationId(transactionPair);
+
+      dispatchNotification({
+        id: notificationId,
+        type: "pending",
+        title: "Transaction pending",
+        description: (
+          <div>Your swap is being processed. This can take a few minutes.</div>
+        ),
+      });
+      // TODO: end
+
+      try {
+        await broadcastTxWithEvents(
+          transactionPair.encodedTxData,
+          transactionPair.signedTxs,
+          transactionPair.encodedTxData.meta?.props,
+          "IbcTransfer"
+        );
+
+        const ibcTxData = storeTransferTransaction(
+          transactionPair,
+          toDisplayAmount(sellAsset, swapState.sourceAmount),
+          sellAsset
+        );
+      } catch (error) {
+        dispatchNotification({
+          id: notificationId,
+          details: error instanceof Error ? error.message : undefined,
+          type: "error",
+          title: "Swap error",
+          description: "",
+        });
+
+        throw new TransactionError<OsmosisSwapProps>("Transaction error", {
+          cause: {
+            originalError: error,
+            context: transactionPair,
+          },
+        });
+      }
     } catch (error) {
-      console.error("Error performing Osmosis swap:", error);
-      alert("Transaction errror 🪦");
+      if (error instanceof TransactionError) {
+        setStatus(null);
+      } else {
+        setStatus(null);
+      }
+      throw error;
     }
   }, [transparentAccount, shieldedAccount, quote]);
+
+  //TODO: memoize or sth
+  const { storeTransaction } = useTransactionActions();
+  const namadaChain = useAtomValue(chainAtom);
+
+  const storeTransferTransaction = (
+    tx: TransactionPair<OsmosisSwapProps>,
+    displayAmount: BigNumber,
+    asset: NamadaAsset
+  ): IbcTransferTransactionData => {
+    // We have to use the last element from lists in case we revealPK
+    const props = tx.encodedTxData.meta?.props.pop();
+    const lastTx = tx.encodedTxData.txs.pop();
+    invariant(props && lastTx, "Invalid transaction data");
+    const lastInnerTxHash = lastTx.innerTxHashes.pop();
+    invariant(lastInnerTxHash, "Inner tx not found");
+
+    const transferTransaction: IbcTransferTransactionData = {
+      hash: lastTx.hash,
+      innerHash: lastInnerTxHash.toLowerCase(),
+      currentStep: TransferStep.WaitingConfirmation,
+      rpc: "",
+      type: "ShieldedToIbc",
+      status: "pending",
+      sourcePort: "transfer",
+      asset,
+      chainId: namadaChain.data?.chainId || "",
+      //TODO: this is incorrect but whatever
+      destinationChainId: namadaChain.data?.chainId || "",
+      memo: tx.encodedTxData.wrapperTxProps.memo || props.transfer.memo,
+      displayAmount,
+      shielded: true,
+      sourceAddress: `${transparentAccount?.alias} - shielded`,
+      sourceChannel: props.transfer.channelId,
+      destinationAddress: props.transfer.receiver,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      sequence: new BigNumber(0),
+    };
+
+    storeTransaction(transferTransaction);
+    return transferTransaction;
+  };
 
   return (
     <Panel className="relative rounded-sm flex flex-col flex-1 pt-9">
@@ -326,6 +461,7 @@ export const OsmosisSwap: React.FC = () => {
         <p>Swap an asset you hold in the shield pool</p>
       </header>
       <SwapModule
+        status={status}
         slippage={SLIPPAGE}
         assets={namadaAssets}
         assetsWithBalance={assetsWithBalance}
