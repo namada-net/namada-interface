@@ -222,6 +222,7 @@ export const isTransferEventType = (
         "TransparentTransfer",
         "ShieldedTransfer",
         "UnshieldingTransfer",
+        "ShieldedSwap",
       ].includes(eventType)
     : false;
 };

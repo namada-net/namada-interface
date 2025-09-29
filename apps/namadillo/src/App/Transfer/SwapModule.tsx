@@ -16,6 +16,10 @@ import { SwapReview } from "./SwapReview";
 import { SwapSource } from "./SwapSource";
 
 export type SwapModuleProps = {
+  status: {
+    reason: string;
+    explanation: string;
+  } | null;
   onSubmitSwap: () => Promise<void>;
   slippage: number;
   assets: NamadaAsset[];
@@ -43,6 +47,7 @@ export type SwapModuleProps = {
 };
 
 export const SwapModule = ({
+  status,
   onSubmitSwap,
   slippage,
   assets,
@@ -235,6 +240,7 @@ export const SwapModule = ({
         )}
         {isReviewing && (
           <SwapReview
+            status={status}
             sourceAmount={source.amount!}
             targetAmount={target.amount!}
             assetSell={selectedAsset!}
