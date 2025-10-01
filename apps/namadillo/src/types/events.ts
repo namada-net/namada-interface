@@ -70,5 +70,7 @@ declare global {
     "IbcWithdraw.Error": CustomEvent<TransferTransactionData>;
     "ShieldedIbcWithdraw.Success": CustomEvent<TransferTransactionData>;
     "ShieldedIbcWithdraw.Error": CustomEvent<TransferTransactionData>;
+    "ShieldedOsmosisSwap.Success": CustomEvent<TransferTransactionData>;
+    "ShieldedOsmosisSwap.Error": CustomEvent<TransferTransactionData>;
   }
 }

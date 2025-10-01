@@ -1,6 +1,9 @@
 import { ActionButton, Stack } from "@namada/components";
 import { mapUndefined } from "@namada/utils";
+import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
+import { SwapStatus } from "App/Ibc/OsmosisSwap";
 import { SwapArrowsIcon } from "App/Icons/SwapArrowsIcon";
+import { SwapIcon } from "App/Icons/SwapIcon";
 import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import { SwapResponseOk } from "atoms/swaps";
 import BigNumber from "bignumber.js";
@@ -8,18 +11,16 @@ import { TransactionFeeProps } from "hooks";
 import { wallets } from "integrations";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
-import { GoChevronDown } from "react-icons/go";
 import { Address, NamadaAsset, NamadaAssetWithAmount } from "types";
 import { getDisplayGasFee } from "utils/gas";
 import { SelectAssetModal } from "./SelectAssetModal";
+import { SwapInProgress } from "./SwapInProgress";
 import { SwapReview } from "./SwapReview";
 import { SwapSource } from "./SwapSource";
+import { SwapSuccess } from "./SwapSuccess";
 
 export type SwapModuleProps = {
-  status: {
-    reason: string;
-    explanation: string;
-  } | null;
+  status: SwapStatus;
   onSubmitSwap: () => Promise<void>;
   slippage: number;
   assets: NamadaAsset[];
@@ -32,6 +33,7 @@ export type SwapModuleProps = {
   // TODO: change name
   unitPrice?: BigNumber;
   onSwapArrowsClick?: () => void;
+  onComplete: () => void;
   source: {
     amount?: BigNumber;
     selectedAssetAddress?: string;
@@ -49,6 +51,7 @@ export type SwapModuleProps = {
 export const SwapModule = ({
   status,
   onSubmitSwap,
+  onComplete,
   slippage,
   assets,
   assetsWithBalance,
@@ -171,6 +174,20 @@ export const SwapModule = ({
 
   return (
     <>
+      {![
+        SwapStatus.Broadcasting,
+        SwapStatus.Confirming,
+        SwapStatus.Completed,
+        SwapStatus.Error,
+      ].includes(status) && (
+        <header className="flex flex-col items-center text-center mb-8 gap-5">
+          <h1 className="text-yellow"> Shielded Swaps </h1>
+          <i className="flex items-center justify-center w-13 mx-auto relative z-10">
+            <SwapIcon color={"#FF0"} />
+          </i>
+          <p>Swap an asset you hold in the shield pool</p>
+        </header>
+      )}
       <section className="w-full max-w-[480px] mx-auto" role="widget">
         {!isReviewing && (
           <Stack>
@@ -190,7 +207,7 @@ export const SwapModule = ({
               label="Sell"
             />
             <i
-              className="flex items-center justify-center w-13 mx-auto relative z-10 -my-8 cursor-pointer"
+              className="flex items-center justify-center w-13 mx-auto relative z-10 -my-8 cursor-pointer hover:rotate-180 transition-transform"
               onClick={onSwapArrowsClick}
             >
               <SwapArrowsIcon color={"#FF0"} />
@@ -210,12 +227,13 @@ export const SwapModule = ({
               label="Buy"
             />
             {quote &&
+              feeProps &&
               unitPrice &&
               selectedAsset &&
               selectedTargetAsset &&
               tokenPrices && (
                 <Sth
-                  amount={target.amount}
+                  feeProps={feeProps}
                   unitPrice={unitPrice}
                   selectedAsset={selectedAsset}
                   selectedTargetAsset={selectedTargetAsset}
@@ -235,23 +253,54 @@ export const SwapModule = ({
             >
               {ValidationMessages[validationResult]}
             </ActionButton>
-            <p className="self-center">Powered by Osmosis</p>
           </Stack>
         )}
-        {isReviewing && (
-          <SwapReview
-            status={status}
-            sourceAmount={source.amount!}
-            targetAmount={target.amount!}
-            assetSell={selectedAsset!}
-            assetBuy={selectedTargetAsset!}
-            tokenPrices={tokenPrices!}
-            priceImpact={BigNumber(quote!.price_impact)}
-            swapFee={BigNumber(quote!.effective_fee)}
-            receiveAtLeast={quote!.minAmount}
-            slippageTolerance={slippage}
-            onSubmitSwap={onSubmitSwap}
+        {/* TODO: Sucks  use enum for status */}
+        {![
+          SwapStatus.Broadcasting,
+          SwapStatus.Confirming,
+          SwapStatus.Completed,
+          SwapStatus.Error,
+        ].includes(status) &&
+          isReviewing && (
+            <SwapReview
+              status={status}
+              sourceAmount={source.amount!}
+              targetAmount={target.amount!}
+              assetSell={selectedAsset!}
+              assetBuy={selectedTargetAsset!}
+              tokenPrices={tokenPrices!}
+              priceImpact={BigNumber(quote!.price_impact)}
+              swapFee={BigNumber(quote!.effective_fee)}
+              receiveAtLeast={quote!.minAmount}
+              slippageTolerance={slippage}
+              onSubmitSwap={onSubmitSwap}
+              onBack={() => setIsReviewing(false)}
+            />
+          )}
+        {/* TODO: Sucks use clsx */}
+        {[SwapStatus.Confirming, SwapStatus.Broadcasting].includes(status) && (
+          <SwapInProgress />
+        )}
+        {status === SwapStatus.Completed && (
+          <SwapSuccess
+            onComplete={() => {
+              onComplete();
+              // TODO: make isReviewing part of a status
+              setIsReviewing(false);
+            }}
           />
+        )}
+
+        {![
+          SwapStatus.Broadcasting,
+          SwapStatus.Confirming,
+          SwapStatus.Completed,
+          SwapStatus.Error,
+        ].includes(status) && (
+          <p className="w-full mt-6 text-center font-light">
+            Powered by Osmosis
+          </p>
         )}
 
         {sellAssetSelectorModalOpen &&
@@ -284,7 +333,7 @@ export const SwapModule = ({
 };
 
 type SthProps = {
-  amount?: BigNumber;
+  feeProps: TransactionFeeProps;
   unitPrice: BigNumber;
   selectedAsset: NamadaAsset;
   selectedTargetAsset: NamadaAsset;
@@ -293,63 +342,31 @@ type SthProps = {
 };
 
 const Sth = ({
-  amount,
+  feeProps,
   unitPrice,
   selectedAsset,
   selectedTargetAsset,
   tokenPrice,
-  effectiveFee,
 }: SthProps): JSX.Element => {
   //TODO: We have to take price impact into consideration most likely
   const valFiat = unitPrice.times(tokenPrice);
-  const [showDetails, setShowDetails] = useState(false);
-
-  // TODO:  reused
-  const swapFee = effectiveFee
-    ?.times(100)
-    .decimalPlaces(2, BigNumber.ROUND_HALF_UP);
-  const fiatFee = amount
-    ?.times(tokenPrice)
-    .times(effectiveFee || 0)
-    .decimalPlaces(3);
-  const fiatFeeDisplay =
-    !fiatFee ? "#"
-    : fiatFee.lt(0.01) ? "<$0.01"
-    : `~$${fiatFee.toString()}`;
 
   return (
     <Stack className="text-sm">
       <Stack
-        className="justify-between text-neutral-400"
+        className="justify-between items-center text-neutral-400"
         direction="horizontal"
       >
         <div className="underline">
           1 {selectedAsset.symbol} ≈ {unitPrice.toFixed(6)}{" "}
           {selectedTargetAsset.symbol} (${valFiat.toFixed(6)})
         </div>
-        <Stack
-          className="items-center cursor-pointer"
-          direction="horizontal"
-          gap={1}
-          onClick={() => setShowDetails(!showDetails)}
-        >
-          Show details{" "}
-          {!showDetails ?
-            <GoChevronDown />
-          : <GoChevronDown className="rotate-180" />}
-        </Stack>
+        <TransactionFeeButton
+          compact={true}
+          feeProps={feeProps}
+          isShieldedTransfer={true}
+        />
       </Stack>
-      {showDetails && (
-        <Stack
-          direction="horizontal"
-          className="justify-between text-neutral-400"
-        >
-          <p>Swap Fee</p>
-          <p>
-            {fiatFeeDisplay} ({swapFee.toString()}%)
-          </p>
-        </Stack>
-      )}
     </Stack>
   );
 };

@@ -411,6 +411,8 @@ export const transactionTypeToEventName = (
     case "IbcToShielded":
     case "IbcToTransparent":
       return "IbcTransfer";
+    case "ShieldedOsmosisSwap":
+      return "ShieldedOsmosisSwap";
   }
 };
 

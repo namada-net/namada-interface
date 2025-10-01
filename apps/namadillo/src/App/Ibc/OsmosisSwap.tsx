@@ -1,6 +1,5 @@
 import { Panel } from "@namada/components";
 import { AccountType, BparamsMsgValue, OsmosisSwapProps } from "@namada/types";
-import { SwapIcon } from "App/Icons/SwapIcon";
 import { SwapModule } from "App/Transfer/SwapModule";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { namadaShieldedAssetsAtom } from "atoms/balance";
@@ -31,12 +30,16 @@ import { broadcastTxWithEvents, signTx, TransactionPair } from "lib/query";
 import debounce from "lodash.debounce";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  IbcTransferTransactionData,
   NamadaAsset,
   NamadaIbcTransition,
+  OsmosisSwapTransactionData,
   TransferStep,
 } from "types";
-import { toBaseAmount, toDisplayAmount } from "utils";
+import {
+  toBaseAmount,
+  toDisplayAmount,
+  useTransactionEventListener,
+} from "utils";
 import { getSdkInstance } from "utils/sdk";
 
 const SLIPPAGE = 0.005;
@@ -64,6 +67,54 @@ const getNotificationId = <T,>(tx: TransactionPair<T>): string => {
   );
 
   return notificationId;
+};
+
+// TODO: move this somewhere
+export enum SwapStatus {
+  Idle = "Idle",
+  Building = "Building",
+  AwaitingSignature = "AwaitingSignature",
+  Broadcasting = "Broadcasting",
+  Confirming = "Confirming",
+  Completed = "Completed",
+  Error = "Error",
+}
+
+// TODO: move this somewhere
+export const statusMessages: Record<
+  SwapStatus,
+  { title: string; description: string }
+> = {
+  [SwapStatus.Idle]: {
+    title: "Ready to swap",
+    description: "Review the details and submit your swap.",
+  },
+  [SwapStatus.Building]: {
+    title: "Building transaction",
+    description:
+      "Your transaction is being built. This may take a few moments.",
+  },
+  [SwapStatus.AwaitingSignature]: {
+    title: "Awaiting signature",
+    description: "Please sign the transaction in your wallet.",
+  },
+  [SwapStatus.Broadcasting]: {
+    title: "Broadcasting transaction",
+    description: "Your transaction is being broadcast to the network.",
+  },
+  [SwapStatus.Confirming]: {
+    title: "Confirming transaction",
+    description:
+      "Your transaction is being confirmed. This may take a few moments.",
+  },
+  [SwapStatus.Completed]: {
+    title: "Swap completed",
+    description: "Your swap has been successfully completed.",
+  },
+  [SwapStatus.Error]: {
+    title: "Transaction error",
+    description: "An error occurred during the transaction. Please try again.",
+  },
 };
 
 // TODO: make this type mroe specific
@@ -108,6 +159,8 @@ export const OsmosisSwap: React.FC = () => {
     (asset) => asset.symbol === swapStorage.assetSymbolBuy
   );
 
+  const [txHash, setTxHash] = useState<string | undefined>();
+
   const [swapState, setSwapState] = useState<SwapState>(defaultSwapState);
   const swapStateRef = useRef(swapState);
   useEffect(() => {
@@ -128,10 +181,7 @@ export const OsmosisSwap: React.FC = () => {
 
   const feeProps = useTransactionFee(["IbcTransfer"], true);
 
-  const [status, setStatus] = useState<{
-    reason: string;
-    explanation: string;
-  } | null>(null);
+  const [status, setStatus] = useState<SwapStatus>(SwapStatus.Idle);
 
   const dispatchNotification = useSetAtom(dispatchToastNotificationAtom);
 
@@ -239,6 +289,12 @@ export const OsmosisSwap: React.FC = () => {
     [] // Dependencies that should recreate the debounced function
   );
 
+  useTransactionEventListener(["ShieldedOsmosisSwap.Success"], async (e) => {
+    if (txHash && e.detail.hash === txHash) {
+      setStatus(SwapStatus.Completed);
+    }
+  });
+
   useEffect(() => {
     if (buyAsset && sellAsset) {
       debouncedCall(swapState, buyAsset, sellAsset);
@@ -272,6 +328,7 @@ export const OsmosisSwap: React.FC = () => {
     invariant(localRecoveryAddr, "No local recovery address");
     invariant(recipient, "No recipient");
     invariant(swapState.sourceAmount, "No source amount");
+    invariant(swapState.targetAmount, "No target amount");
     invariant(buyAsset, "No asset to buy selected");
     invariant(sellAsset, "No asset to sell selected");
 
@@ -325,11 +382,7 @@ export const OsmosisSwap: React.FC = () => {
     };
 
     try {
-      setStatus({
-        reason: "Building shielded swap tx...",
-        explanation:
-          "This can take up to couple of minutes depending on the tx size.",
-      });
+      setStatus(SwapStatus.Building);
       const encodedTxData = await performOsmosisSwap({
         signer: {
           // TODO: use disposable signer
@@ -341,10 +394,7 @@ export const OsmosisSwap: React.FC = () => {
         gasConfig: feeProps.gasConfig,
       });
 
-      setStatus({
-        reason: "Waiting for signature...",
-        explanation: "Please confirm the transaction in your wallet.",
-      });
+      setStatus(SwapStatus.AwaitingSignature);
       // TODO: use disposable signer
       const signedTxs = await signTx(
         encodedTxData,
@@ -364,24 +414,33 @@ export const OsmosisSwap: React.FC = () => {
         type: "pending",
         title: "Transaction pending",
         description: (
-          <div>Your swap is being processed. This can take a few minutes.</div>
+          <div>
+            Your shielded swap is being processed. This can take a few moments.
+          </div>
         ),
       });
       // TODO: end
 
+      setStatus(SwapStatus.Broadcasting);
       try {
         await broadcastTxWithEvents(
           transactionPair.encodedTxData,
           transactionPair.signedTxs,
           transactionPair.encodedTxData.meta?.props,
+          // TODO: use correct type here
           "IbcTransfer"
         );
 
         const ibcTxData = storeTransferTransaction(
           transactionPair,
-          toDisplayAmount(sellAsset, swapState.sourceAmount),
-          sellAsset
+          swapState.sourceAmount,
+          swapState.targetAmount,
+          sellAsset,
+          buyAsset
         );
+
+        setTxHash(ibcTxData.hash);
+        setStatus(SwapStatus.Confirming);
       } catch (error) {
         dispatchNotification({
           id: notificationId,
@@ -399,10 +458,11 @@ export const OsmosisSwap: React.FC = () => {
         });
       }
     } catch (error) {
+      // TODO:
       if (error instanceof TransactionError) {
-        setStatus(null);
+        setStatus(SwapStatus.Error);
       } else {
-        setStatus(null);
+        setStatus(SwapStatus.Error);
       }
       throw error;
     }
@@ -415,8 +475,10 @@ export const OsmosisSwap: React.FC = () => {
   const storeTransferTransaction = (
     tx: TransactionPair<OsmosisSwapProps>,
     displayAmount: BigNumber,
-    asset: NamadaAsset
-  ): IbcTransferTransactionData => {
+    displayTargetMinAmount: BigNumber,
+    asset: NamadaAsset,
+    targetAsset: NamadaAsset
+  ): OsmosisSwapTransactionData => {
     // We have to use the last element from lists in case we revealPK
     const props = tx.encodedTxData.meta?.props.pop();
     const lastTx = tx.encodedTxData.txs.pop();
@@ -424,27 +486,25 @@ export const OsmosisSwap: React.FC = () => {
     const lastInnerTxHash = lastTx.innerTxHashes.pop();
     invariant(lastInnerTxHash, "Inner tx not found");
 
-    const transferTransaction: IbcTransferTransactionData = {
+    const transferTransaction: OsmosisSwapTransactionData = {
       hash: lastTx.hash,
       innerHash: lastInnerTxHash.toLowerCase(),
       currentStep: TransferStep.WaitingConfirmation,
       rpc: "",
-      type: "ShieldedToIbc",
+      type: "ShieldedOsmosisSwap",
       status: "pending",
-      sourcePort: "transfer",
       asset,
+      targetAsset,
+      minAmountOut: displayTargetMinAmount,
       chainId: namadaChain.data?.chainId || "",
-      //TODO: this is incorrect but whatever
-      destinationChainId: namadaChain.data?.chainId || "",
+      destinationChainId: "",
       memo: tx.encodedTxData.wrapperTxProps.memo || props.transfer.memo,
       displayAmount,
       shielded: true,
       sourceAddress: `${transparentAccount?.alias} - shielded`,
-      sourceChannel: props.transfer.channelId,
       destinationAddress: props.transfer.receiver,
       createdAt: new Date(),
       updatedAt: new Date(),
-      sequence: new BigNumber(0),
     };
 
     storeTransaction(transferTransaction);
@@ -453,13 +513,6 @@ export const OsmosisSwap: React.FC = () => {
 
   return (
     <Panel className="relative rounded-sm flex flex-col flex-1 pt-9">
-      <header className="flex flex-col items-center text-center mb-8 gap-5">
-        <h1 className="text-yellow"> Shielded Swaps </h1>
-        <i className="flex items-center justify-center w-13 mx-auto relative z-10">
-          <SwapIcon color={"#FF0"} />
-        </i>
-        <p>Swap an asset you hold in the shield pool</p>
-      </header>
       <SwapModule
         status={status}
         slippage={SLIPPAGE}
@@ -471,6 +524,12 @@ export const OsmosisSwap: React.FC = () => {
         tokenPrices={tokenPrices}
         unitPrice={swapState.unitPrice}
         onSubmitSwap={handleOsmosisSwap}
+        onComplete={() => {
+          setStatus(SwapStatus.Idle);
+          setSwapState(defaultSwapState);
+          setQuote(undefined);
+          setTxHash(undefined);
+        }}
         source={{
           amount: swapState.sourceAmount,
           selectedAssetAddress: sellAsset?.address,
@@ -549,109 +608,5 @@ export const OsmosisSwap: React.FC = () => {
         }}
       />
     </Panel>
-    // <div className="text-white">
-    //   <div>From:</div>
-    //   <Stack direction="horizontal">
-    //     <select
-    //       className="text-black"
-    //       onChange={(e) => setFrom(availableAssets?.[e.target.value])}
-    //     >
-    //       <option value=""></option>
-    //       {Object.values(availableAssets || {}).map((al, idx) => (
-    //         <option key={`${al.asset.base}_${idx}`} value={al.asset.address}>
-    //           {al.asset.symbol}
-    //         </option>
-    //       ))}
-    //     </select>
-    //     <div>{from?.amount?.toString()}</div>
-    //   </Stack>
-    //   <div>To:</div>
-    //   <select
-    //     className="text-black"
-    //     onChange={(e) => setTo(namadaAssets[Number(e.target.value)])}
-    //   >
-    //     <option value=""></option>
-    //     {namadaAssets.map((asset, i) => (
-    //       <option key={asset.base} value={i}>
-    //         {asset.symbol}
-    //       </option>
-    //     ))}
-    //   </select>
-    //   <div>Amount in base denom:</div>
-    //   <input
-    //     className="text-black"
-    //     type="text"
-    //     onChange={(e) => setAmount(e.target.value)}
-    //   />
-    //   <div>Recipient(znam address):</div>
-    //   <input
-    //     className="text-black"
-    //     type="text"
-    //     onChange={(e) => setRecipient(e.target.value)}
-    //     value={recipient}
-    //   />
-    //   <div>
-    //     Local recovery address(osmosis address to send tokens to in case
-    //     something goes wrong on osmisis)
-    //   </div>
-    //   <input
-    //     className="text-black"
-    //     type="text"
-    //     onChange={(e) => setLocalRecoveryAddress(e.target.value)}
-    //     value={localRecoveryAddr}
-    //   />
-    //   <br />
-    //   <button
-    //     className="bg-yellow text-black p-4 m-3"
-    //     onClick={handleOsmosisSwap}
-    //   >
-    //     SWAP🎏
-    //   </button>
-
-    //   <p>---</p>
-    //   <div> Receive: </div>
-    //   {quote && (
-    //     <div>
-    //       <div>
-    //         Amount in: {quote.amount_in.amount}
-    //         {from?.asset.denom_units[0].aliases?.[0]}
-    //       </div>
-    //       <div>
-    //         Amount out: {quote.amount_out}
-    //         {to?.denom_units[0].aliases?.[0]}
-    //       </div>
-    //       <div>
-    //         Min amount out: {quote.minAmount}
-    //         {to?.denom_units[0].aliases?.[0]}
-    //       </div>
-    //       <div>Slippage: {SLIPPAGE * 100}%</div>
-    //       <div>Routes: </div>
-    //       <div>Effective fee: {BigNumber(quote.effective_fee).toString()}</div>
-    //       <div>
-    //         Price: 1 {from?.asset.symbol} ≈{" "}
-    //         {BigNumber(quote.amount_out).div(BigNumber(amount)).toString()}{" "}
-    //         {to?.symbol}
-    //       </div>
-    //       <div>
-    //         Price impact: {BigNumber(quote.price_impact).dp(3).toString()}
-    //       </div>
-    //       <ul className="list-disc list-inside">
-    //         {quote.route.map((r, i) => (
-    //           <li key={i}>
-    //             Route{i + 1}
-    //             <ul className="list-disc list-inside pl-4">
-    //               {r.pools.map((p, i) => (
-    //                 <li key={i}>
-    //                   {p.id}: {p.token_out_denom}
-    //                   (Fee: {BigNumber(p.taker_fee).toString()})
-    //                 </li>
-    //               ))}
-    //             </ul>
-    //           </li>
-    //         ))}
-    //       </ul>
-    //     </div>
-    //   )}
-    // </div>
   );
 };

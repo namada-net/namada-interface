@@ -13,10 +13,12 @@ export const TransactionFeeButton = ({
   feeProps,
   className,
   isShieldedTransfer = false,
+  compact = false,
 }: {
   feeProps: TransactionFeeProps;
   className?: string;
   isShieldedTransfer?: boolean;
+  compact?: boolean;
 }): JSX.Element => {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -34,16 +36,17 @@ export const TransactionFeeButton = ({
     <>
       <div
         className={twMerge(
-          "flex items-center justify-between gap-5 flex-1",
+          "flex items-center",
+          compact ? "gap-2" : "justify-between gap-5 flex-1",
           className
         )}
       >
         <TransactionFee
           displayAmount={gasDisplayAmount?.totalDisplayAmount || BigNumber(0)}
-          symbol={gasDisplayAmount?.asset.symbol || ""}
+          symbol={(!compact && gasDisplayAmount?.asset.symbol) || ""}
         />
         <div className="flex items-center gap-2">
-          <div className="text-neutral-500 text-xs">Fees:</div>
+          {!compact && <div className="text-neutral-500 text-xs">Fees:</div>}
           <button
             type="button"
             className={twMerge(

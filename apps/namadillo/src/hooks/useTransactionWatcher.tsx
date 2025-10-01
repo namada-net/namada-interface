@@ -50,6 +50,7 @@ export const useTransactionWatcher = (): void => {
               break;
             }
 
+            case "ShieldedOsmosisSwap":
             case "ShieldedToIbc":
             case "TransparentToIbc": {
               const newTx = await updateIbcWithdrawalStatus(
