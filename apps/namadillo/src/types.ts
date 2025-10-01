@@ -312,6 +312,12 @@ export const namadaTransferStages = {
 
 // Defines the steps in the IBC <> Namada transfer progress for tracking transaction stages.
 export const ibcTransferStages = {
+  ShieldedOsmosisSwap: [
+    TransferStep.Sign,
+    TransferStep.IbcWithdraw,
+    TransferStep.WaitingConfirmation,
+    TransferStep.Complete,
+  ] as const,
   ShieldedToIbc: [
     TransferStep.Sign,
     TransferStep.IbcWithdraw,
@@ -405,9 +411,16 @@ export type IbcTransferTransactionData = BaseTransferTransaction & {
   destinationChainId: string;
 };
 
+export type OsmosisSwapTransactionData = BaseTransferTransaction & {
+  type: "ShieldedOsmosisSwap";
+  targetAsset: Asset;
+  minAmountOut: BigNumber;
+};
+
 export type TransferTransactionData =
   | BaseTransferTransaction
-  | IbcTransferTransactionData;
+  | IbcTransferTransactionData
+  | OsmosisSwapTransactionData;
 
 export type PartialTransferTransactionData = Partial<TransferTransactionData> &
   Pick<TransferTransactionData, "type" | "chainId" | "asset">;

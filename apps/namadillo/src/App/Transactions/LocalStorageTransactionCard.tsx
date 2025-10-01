@@ -6,6 +6,7 @@ import { AssetImage } from "App/Transfer/AssetImage";
 import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
 import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 
+import { SwapTradeIcon } from "App/Icons/SwapTradeIcon";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
@@ -16,7 +17,7 @@ import {
   IoCloseCircleOutline,
 } from "react-icons/io5";
 import { twMerge } from "tailwind-merge";
-import { TransferTransactionData } from "types";
+import { OsmosisSwapTransactionData, TransferTransactionData } from "types";
 import keplrSvg from "../../integrations/assets/keplr.svg";
 
 type TransactionCardProps = {
@@ -27,6 +28,7 @@ const getTitle = (transferTransaction: TransferTransactionData): string => {
   const { type } = transferTransaction;
   if (type === "IbcToShielded") return "IBC Shielding";
   if (type === "ShieldedToIbc") return "IBC Unshielding";
+  if (type === "ShieldedOsmosisSwap") return "Shielded Swap";
   return "";
 };
 
@@ -60,12 +62,14 @@ export const LocalStorageTransactionCard = ({
   const sender = transaction.sourceAddress;
   const receiver = transaction.destinationAddress;
   const transactionFailed = transaction.status === "error";
+  const isSwap = transaction.type === "ShieldedOsmosisSwap";
   return (
     <article
       className={clsx(
-        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 items-center my-1 font-semibold",
+        "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 my-1 font-semibold",
         "gap-5 bg-neutral-800 rounded-sm px-5 py-5 text-white border border-transparent",
-        "transition-colors duration-200 hover:border-neutral-500"
+        "transition-colors duration-200 hover:border-neutral-500",
+        isSwap ? "items-start" : "items-center"
       )}
     >
       <div className="flex items-center gap-3">
@@ -115,23 +119,54 @@ export const LocalStorageTransactionCard = ({
         </div>
       </div>
 
-      <div className="flex items-center">
-        <div className="aspect-square w-10 h-10">
-          <AssetImage asset={transaction.asset} />
-        </div>
-        <div className="ml-2 flex flex-col">
-          <TokenCurrency
-            className="text-white"
-            amount={displayAmount}
-            symbol={transaction.asset.symbol}
-          />
-          {dollarAmount && (
-            <FiatCurrency
-              className="text-neutral-400 text-sm"
-              amount={dollarAmount}
+      <div className={isSwap ? "mt-1" : ""}>
+        <div className="flex items-center">
+          <div className="aspect-square w-10 h-10">
+            <AssetImage asset={transaction.asset} />
+          </div>
+          <div className="ml-2 flex flex-col">
+            <TokenCurrency
+              className="text-white"
+              amount={displayAmount}
+              symbol={transaction.asset.symbol}
             />
-          )}
+            {dollarAmount && !isSwap && (
+              <FiatCurrency
+                className="text-neutral-400 text-sm"
+                amount={dollarAmount}
+              />
+            )}
+          </div>
         </div>
+        {transaction.type === "ShieldedOsmosisSwap" && (
+          <>
+            <i className="flex w-15 my-2 ml-3">
+              <SwapTradeIcon color={"#FF0"} />
+            </i>
+            <div className="flex items-center">
+              <div className="aspect-square w-10 h-10">
+                <AssetImage
+                  asset={
+                    (transaction as OsmosisSwapTransactionData).targetAsset
+                  }
+                />
+              </div>
+              <div className="ml-2 flex flex-col">
+                <TokenCurrency
+                  className="text-white"
+                  amount={
+                    (transaction as OsmosisSwapTransactionData).minAmountOut
+                  }
+                  symbol={
+                    (transaction as OsmosisSwapTransactionData).targetAsset
+                      .symbol
+                  }
+                />
+                {/* dollar amount for target asset */}
+              </div>
+            </div>
+          </>
+        )}
       </div>
       <div className="flex flex-col">
         <h4 className="text-neutral-400">From</h4>
@@ -139,7 +174,8 @@ export const LocalStorageTransactionCard = ({
           className={
             (
               isShieldedAddress(sender ?? "") ||
-              transaction.type === "ShieldedToIbc"
+              transaction.type === "ShieldedToIbc" ||
+              transaction.type === "ShieldedOsmosisSwap"
             ) ?
               "text-yellow"
             : ""
@@ -147,7 +183,8 @@ export const LocalStorageTransactionCard = ({
         >
           {(
             isShieldedAddress(sender ?? "") ||
-            transaction.type === "ShieldedToIbc"
+            transaction.type === "ShieldedToIbc" ||
+            transaction.type === "ShieldedOsmosisSwap"
           ) ?
             <span className="flex items-center gap-1">
               <FaLock className="w-4 h-4" /> Shielded

@@ -12,12 +12,11 @@ export const SwapArrowsIcon = ({ color }: SwapArrowsIconProps): JSX.Element => {
       xmlns="http://www.w3.org/2000/svg"
     >
       <rect
-        x="45.6406"
-        y="2.36343"
-        width="43.9626"
-        height="43.9618"
-        rx="21.9809"
-        transform="rotate(90 45.6406 2.36343)"
+        x="2"
+        y="2"
+        width="44"
+        height="44"
+        rx="22"
         fill="#262626"
         stroke={color}
         strokeWidth="3"

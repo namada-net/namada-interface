@@ -1,4 +1,5 @@
 import { ActionButton, Stack, Text } from "@namada/components";
+import { statusMessages, SwapStatus } from "App/Ibc/OsmosisSwap";
 import { SwapTradeIcon } from "App/Icons/SwapTradeIcon";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
@@ -9,6 +10,7 @@ import { CurrentStatus } from "./CurrentStatus";
 
 type SwapReviewProps = {
   onSubmitSwap: () => Promise<void>;
+  onBack: () => void;
   sourceAmount: BigNumber;
   targetAmount: BigNumber;
   assetSell: NamadaAsset;
@@ -18,13 +20,11 @@ type SwapReviewProps = {
   swapFee: BigNumber;
   slippageTolerance: number;
   receiveAtLeast: BigNumber;
-  status: {
-    reason: string;
-    explanation: string;
-  } | null;
+  status: SwapStatus;
 };
 export const SwapReview = ({
   onSubmitSwap,
+  onBack,
   status,
   sourceAmount,
   targetAmount,
@@ -134,7 +134,11 @@ export const SwapReview = ({
         </Stack>
       </div>
 
-      {!status && (
+      {![
+        SwapStatus.Building,
+        SwapStatus.AwaitingSignature,
+        SwapStatus.Broadcasting,
+      ].includes(status) && (
         <ActionButton
           outlineColor="yellow"
           backgroundColor="yellow"
@@ -146,11 +150,31 @@ export const SwapReview = ({
           Swap
         </ActionButton>
       )}
-      {status && (
+      {[
+        SwapStatus.Building,
+        SwapStatus.AwaitingSignature,
+        SwapStatus.Broadcasting,
+      ].includes(status) && (
         <CurrentStatus
-          status={status.reason}
-          explanation={status.explanation}
+          status={statusMessages[status].title}
+          explanation={statusMessages[status].description}
         />
+      )}
+      {![
+        SwapStatus.Building,
+        SwapStatus.AwaitingSignature,
+        SwapStatus.Broadcasting,
+      ].includes(status) && (
+        <ActionButton
+          outlineColor="yellow"
+          backgroundColor="transparent"
+          backgroundHoverColor="yellow"
+          textColor="yellow"
+          textHoverColor="black"
+          onClick={onBack}
+        >
+          Back
+        </ActionButton>
       )}
     </Stack>
   );

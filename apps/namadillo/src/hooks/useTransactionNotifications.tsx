@@ -15,7 +15,7 @@ import { searchAllStoredTxByHash } from "atoms/transactions";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import { useSetAtom } from "jotai";
-import { TransferTransactionData } from "types";
+import { OsmosisSwapTransactionData, TransferTransactionData } from "types";
 import { useTransactionEventListener } from "utils";
 
 type TxWithAmount = { amount: BigNumber };
@@ -553,4 +553,62 @@ export const useTransactionNotifications = (): void => {
       });
     }
   );
+
+  useTransactionEventListener(["ShieldedOsmosisSwap.Success"], ({ detail }) => {
+    const tx = detail as OsmosisSwapTransactionData;
+    if (!tx) return;
+    invariant(tx.hash, "Notification error: Invalid Tx hash");
+
+    const id = createNotificationId([tx.hash]);
+    const title = "Shielded Osmosis swap transaction succeeded";
+
+    dispatchNotification({
+      id,
+      title,
+      description: (
+        <>
+          Your shielded swap of{" "}
+          <b>
+            <TokenCurrency amount={tx.displayAmount} symbol={tx.asset.symbol} />{" "}
+            to{" "}
+            <TokenCurrency
+              amount={tx.minAmountOut}
+              symbol={tx.targetAsset.symbol}
+            />
+          </b>{" "}
+          has completed
+        </>
+      ),
+      type: "success",
+    });
+  });
+
+  useTransactionEventListener(["ShieldedOsmosisSwap.Error"], ({ detail }) => {
+    const tx = detail as OsmosisSwapTransactionData;
+    if (!tx) return;
+    invariant(tx.hash, "Notification error: Invalid Tx provider");
+
+    const id = createNotificationId([tx.hash]);
+    const title = "Shielded Osmosis swap transaction failed";
+
+    dispatchNotification({
+      id,
+      title,
+      description: (
+        <>
+          Your shielded swap of{" "}
+          <TokenCurrency amount={tx.displayAmount} symbol={tx.asset.symbol} />{" "}
+          to
+          <TokenCurrency
+            amount={tx.minAmountOut}
+            symbol={tx.targetAsset.symbol}
+          />
+          has failed.{" "}
+          <b>Open the Namada extension to access the refund account.</b>
+        </>
+      ),
+      details: tx.errorMessage,
+      type: "error",
+    });
+  });
 };

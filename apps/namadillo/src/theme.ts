@@ -7,6 +7,13 @@ export const colors = {
 };
 
 export const keyframes = {
+  halfSpinBreak: {
+    "0%": { transform: "rotate(0deg)" },
+    "20%": { transform: "rotate(180deg)" },
+    "50%": { transform: "rotate(180deg)" },
+    "70%": { transform: "rotate(360deg)" },
+    "100%": { transform: "rotate(360deg)" },
+  },
   niceSpin: {
     "0%": { transform: "rotateZ(0)" },
     "25%, 90%": { transform: "rotateZ(180deg)" },
@@ -32,6 +39,7 @@ export const keyframes = {
 };
 
 export const animation = {
+  halfSpinBreak: "halfSpinBreak 4s ease-in-out infinite",
   niceSpin: "niceSpin 1s ease-out infinite 1s",
   loadingSpinner: "loading 1s ease infinite",
   pulseFast: "pulseFast 1.25s infinite ease-in",

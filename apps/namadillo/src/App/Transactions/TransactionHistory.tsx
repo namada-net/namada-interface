@@ -65,7 +65,11 @@ export const TransactionHistory = (): JSX.Element => {
 
   const completedIbcShieldTransactions = completedIbcTransactions
     .filter((transaction) => {
-      const acceptedTypes = ["IbcToShielded", "ShieldedToIbc"];
+      const acceptedTypes = [
+        "IbcToShielded",
+        "ShieldedToIbc",
+        "ShieldedOsmosisSwap",
+      ];
       const isAcceptedType = acceptedTypes.includes(transaction.type);
       const isAcceptedChain =
         transaction.destinationChainId === chainId ||
