@@ -2,6 +2,7 @@ import { Stack } from "@namada/components";
 import { Search } from "App/Common/Search";
 import { SelectModal } from "App/Common/SelectModal";
 import { TokenCard } from "App/Common/TokenCard";
+import { ConnectedWalletInfo } from "App/Transfer/ConnectedWalletInfo";
 import { nativeTokenAddressAtom } from "atoms/chain/atoms";
 import { applicationFeaturesAtom } from "atoms/settings/atoms";
 import BigNumber from "bignumber.js";
@@ -10,8 +11,9 @@ import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { Address, Asset, NamadaAsset, WalletProvider } from "types";
-import { ConnectedWalletInfo } from "./ConnectedWalletInfo";
 
+type DisplayAmount = BigNumber;
+type FiatAmount = BigNumber;
 type SelectWalletModalProps = {
   onClose: () => void;
   onSelect: (address: Address) => void;
@@ -19,7 +21,7 @@ type SelectWalletModalProps = {
   wallet: WalletProvider;
   walletAddress: string;
   ibcTransfer?: "deposit" | "withdraw";
-  balances?: Record<Address, [BigNumber, BigNumber?]>;
+  balances?: Record<Address, [DisplayAmount, FiatAmount?]>;
 };
 
 export const SelectAssetModal = ({

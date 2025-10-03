@@ -1,55 +1,60 @@
 import { ActionButton, Stack, Text } from "@namada/components";
-import { statusMessages, SwapStatus } from "App/Ibc/OsmosisSwap";
+import { CurrentStatus } from "App/Common/CurrentStatus";
 import { SwapTradeIcon } from "App/Icons/SwapTradeIcon";
+import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { getAssetImageUrl } from "integrations/utils";
-import { NamadaAsset } from "types";
+import invariant from "invariant";
+import { useAtom, useAtomValue } from "jotai";
 import { toDisplayAmount } from "utils";
-import { CurrentStatus } from "./CurrentStatus";
+import { statusMessages, SwapStatus } from "./state";
+import {
+  buyAssetAtom,
+  sellAssetAtom,
+  swapQuoteAtom,
+  swapStateAtom,
+  swapStatusAtom,
+} from "./state/atoms";
+import { SLIPPAGE } from "./state/functions";
 
-type SwapReviewProps = {
-  onSubmitSwap: () => Promise<void>;
-  onBack: () => void;
-  sourceAmount: BigNumber;
-  targetAmount: BigNumber;
-  assetSell: NamadaAsset;
-  assetBuy: NamadaAsset;
-  tokenPrices: Record<string, BigNumber>;
-  priceImpact: BigNumber;
-  swapFee: BigNumber;
-  slippageTolerance: number;
-  receiveAtLeast: BigNumber;
-  status: SwapStatus;
-};
-export const SwapReview = ({
-  onSubmitSwap,
-  onBack,
-  status,
-  sourceAmount,
-  targetAmount,
-  assetSell,
-  assetBuy,
-  tokenPrices,
-  priceImpact,
-  swapFee: effectiveFee,
-  slippageTolerance,
-  receiveAtLeast,
-}: SwapReviewProps): JSX.Element => {
-  const sourceAmountFiat = tokenPrices[assetSell.address].times(sourceAmount);
-  const targetPrice = tokenPrices[assetBuy.address];
-  const targetPriceImpact = targetPrice.times(BigNumber(1).plus(priceImpact));
-  const targetAmountFiat = targetPriceImpact.times(targetAmount);
-  const receiveAtLeastDenominated = toDisplayAmount(assetBuy, receiveAtLeast);
+export const SwapReview = (): JSX.Element => {
+  // Feature state and sanity checks
+  const [status, setStatus] = useAtom(swapStatusAtom);
+  const swapState = useAtomValue(swapStateAtom);
+  const { data: quote } = useAtomValue(swapQuoteAtom);
 
-  // TODO:  reused
-  const swapFee = effectiveFee
-    ?.times(100)
+  const sellAsset = useAtomValue(sellAssetAtom);
+  invariant(sellAsset, "Sell asset is required");
+
+  const buyAsset = useAtomValue(buyAssetAtom);
+  invariant(buyAsset, "Buy asset is required");
+
+  const sellPrice = useAtomValue(tokenPricesFamily([sellAsset.address])).data?.[
+    sellAsset.address
+  ];
+  const buyPrice = useAtomValue(tokenPricesFamily([buyAsset.address])).data?.[
+    buyAsset.address
+  ];
+
+  invariant(quote, "Quote is required");
+  invariant(swapState.sellAmount, "Swap state is required");
+  invariant(swapState.buyAmount, "Swap state is required");
+
+  const sellAmountFiat = sellPrice && sellPrice.times(swapState.sellAmount);
+  const buyPriceImpact =
+    buyPrice && buyPrice.times(BigNumber(1).plus(quote.priceImpact));
+  const buyAmountFiat =
+    buyPriceImpact && buyPriceImpact.times(swapState.buyAmount);
+  const receiveAtLeastDenominated = toDisplayAmount(buyAsset, quote.minAmount);
+
+  // TODO: sucks, move prices to the swapState
+  const swapFee = quote.effectiveFee
+    .times(100)
     .decimalPlaces(2, BigNumber.ROUND_HALF_UP);
-  const fiatFee = targetPrice
-    ?.times(targetPriceImpact)
-    .times(effectiveFee || 0)
-    .decimalPlaces(3);
+  const fiatFee =
+    buyPriceImpact &&
+    buyPrice.times(buyPriceImpact).times(quote.effectiveFee).decimalPlaces(3);
   const fiatFeeDisplay =
     !fiatFee ? "#"
     : fiatFee.lt(0.01) ? "<$0.01"
@@ -66,18 +71,18 @@ export const SwapReview = ({
                 "w-15 aspect-square object-cover select-none",
                 "object-center bg-neutral-800 rounded-full"
               )}
-              alt={`${assetSell.name} image`}
-              src={getAssetImageUrl(assetSell)}
+              alt={`${sellAsset.name} image`}
+              src={getAssetImageUrl(sellAsset)}
             />
           </span>
           <Stack gap={0} className="justify-center grow">
             <Text className="text-sm my-0">Sell</Text>
             <Text className="text-lg my-0">
-              {sourceAmount.toString()} {assetSell.symbol}
+              {swapState.sellAmount.toString()} {sellAsset.symbol}
             </Text>
           </Stack>
           <Text className="my-0 mb-2 self-end">
-            ${sourceAmountFiat.decimalPlaces(2).toString()}
+            ${sellAmountFiat && sellAmountFiat.decimalPlaces(2).toString()}
           </Text>
         </Stack>
         <i className="flex w-15 justify-center my-4">
@@ -90,18 +95,18 @@ export const SwapReview = ({
                 "w-15 aspect-square object-cover select-none",
                 "object-center bg-neutral-800 rounded-full"
               )}
-              alt={`${assetBuy.name} image`}
-              src={getAssetImageUrl(assetBuy)}
+              alt={`${buyAsset.name} image`}
+              src={getAssetImageUrl(buyAsset)}
             />
           </span>
           <Stack gap={0} className="justify-center grow">
             <Text className="text-sm my-0">Buy</Text>
             <Text className="text-lg my-0">
-              {targetAmount.toString()} {assetBuy.symbol}
+              {swapState.buyAmount.toString()} {buyAsset.symbol}
             </Text>
           </Stack>
           <Text className="my-0 mb-2 self-end">
-            ${targetAmountFiat.decimalPlaces(2).toString()}
+            ${buyAmountFiat && buyAmountFiat.decimalPlaces(2).toString()}
           </Text>
         </Stack>
         <hr className="my-5 mx-2 border-white opacity-[5%]" />
@@ -120,7 +125,7 @@ export const SwapReview = ({
             className="justify-between text-neutral-300 text-sm"
           >
             <div>Slippage tolerance</div>
-            <div>{slippageTolerance * 100}%</div>
+            <div>{SLIPPAGE * 100}%</div>
           </Stack>
           <Stack
             direction="horizontal"
@@ -128,7 +133,7 @@ export const SwapReview = ({
           >
             <div>Receive at least</div>
             <div>
-              {receiveAtLeastDenominated.toString()} {assetBuy.symbol}
+              {receiveAtLeastDenominated.toString()} {buyAsset.symbol}
             </div>
           </Stack>
         </Stack>
@@ -145,7 +150,7 @@ export const SwapReview = ({
           backgroundHoverColor="transparent"
           textColor="black"
           textHoverColor="yellow"
-          onClick={onSubmitSwap}
+          onClick={() => {}}
         >
           Swap
         </ActionButton>
@@ -171,7 +176,7 @@ export const SwapReview = ({
           backgroundHoverColor="yellow"
           textColor="yellow"
           textHoverColor="black"
-          onClick={onBack}
+          onClick={() => setStatus(SwapStatus.Idle)}
         >
           Back
         </ActionButton>

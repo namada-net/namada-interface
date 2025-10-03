@@ -1,9 +1,9 @@
 import { SkeletonLoading, Tooltip } from "@namada/components";
+import { EmptyResourceIcon } from "App/Transfer/EmptyResourceIcon";
 import clsx from "clsx";
 import { getAssetImageUrl } from "integrations/utils";
 import { GoChevronDown } from "react-icons/go";
 import { Asset } from "types";
-import { EmptyResourceIcon } from "./EmptyResourceIcon";
 
 type SelectedAssetProps = {
   asset?: Asset;

@@ -31,7 +31,7 @@ export const SwapInProgress = (): JSX.Element => {
     timelineRotation.add({
       targets: [image],
       rotate: {
-        value: "+=180",
+        value: "-=180",
         duration: 600,
       },
     });
@@ -40,7 +40,7 @@ export const SwapInProgress = (): JSX.Element => {
       {
         targets: [image],
         rotate: {
-          value: "+=180",
+          value: "-=180",
           duration: 600,
         },
       },
@@ -58,11 +58,7 @@ export const SwapInProgress = (): JSX.Element => {
         </Heading>
       </div>
       <div ref={imageContainerRef} className="flex items-center justify-center">
-        <img
-          className="max-w-[280px] animate-halfSpinBreak"
-          src={swapInProgressImg}
-          alt=""
-        />
+        <img className="max-w-[280px]" src={swapInProgressImg} alt="" />
       </div>
     </Stack>
   );

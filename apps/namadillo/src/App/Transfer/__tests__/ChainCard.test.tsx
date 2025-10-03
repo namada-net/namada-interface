@@ -1,7 +1,7 @@
 import { Chain } from "@chain-registry/types";
 import { render, screen } from "@testing-library/react";
+import { randomChainMock } from "App/Common/__mocks__/chains";
 import { ChainCard } from "App/Transfer/ChainCard";
-import { randomChainMock } from "../__mocks__/chains";
 
 describe("Component: ChainCard", () => {
   it("renders the chain's name", () => {

@@ -1,15 +1,24 @@
 import { Heading, Stack } from "@namada/components";
 import anime from "animejs";
-import { useEffect, useRef } from "react";
+import { useSetAtom } from "jotai";
+import { useCallback, useEffect, useRef } from "react";
 import { CgCheck } from "react-icons/cg";
+import { SwapStatus } from "./state";
+import { swapStateAtom, swapStatusAtom } from "./state/atoms";
 
-type SwapSuccessProps = {
-  onComplete: () => void;
-};
-
-export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
+export const SwapSuccess = (): JSX.Element => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const headerRef = useRef<HTMLHeadingElement | null>(null);
+
+  // Feature state
+  const setStatus = useSetAtom(swapStatusAtom);
+  const setSwapState = useSetAtom(swapStateAtom);
+
+  // Handlers
+  const onComplete = useCallback(() => {
+    setStatus(SwapStatus.Idle);
+    setSwapState({ mode: "none" });
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current || !headerRef.current) return;
@@ -25,7 +34,6 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
       easing: "easeOutExpo",
     });
 
-    // Step 1: Outer ring shows
     timeline.add({
       targets: outer,
       scale: [0, 1],
@@ -33,7 +41,6 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
       duration: 1000,
     });
 
-    // Step 2: Middle ring shows while outer fades
     timeline.add(
       {
         targets: middle,
@@ -41,7 +48,7 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
         opacity: [0, 1],
         duration: 1000,
       },
-      "-=500" // overlap with previous step
+      "-=500"
     );
     timeline.add(
       {
@@ -53,7 +60,6 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
       "-=1000"
     );
 
-    // Step 3: Inner ring shows while middle fades
     timeline.add(
       {
         targets: inner,
@@ -73,7 +79,6 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
       "-=1000"
     );
 
-    // Step 4: Filled center circle shows while inner fades
     timeline.add(
       {
         targets: [center, header],
@@ -94,10 +99,8 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
     );
   }, []);
 
-  // Redirect after some time
   useEffect(() => {
     const timer = setTimeout(() => {
-      console.log("completed 2");
       onComplete();
     }, 4000);
 
@@ -113,7 +116,6 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
       </div>
       <div className="flex items-center justify-center h-[280px]">
         <div ref={containerRef} className="relative">
-          {/* Outer ring */}
           <div
             className="circle absolute rounded-full border border-yellow-400"
             style={{
@@ -125,7 +127,6 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
             }}
           />
 
-          {/* Middle ring */}
           <div
             className="circle absolute rounded-full border border-yellow-400"
             style={{
@@ -137,7 +138,6 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
             }}
           />
 
-          {/* Inner ring */}
           <div
             className="circle absolute rounded-full border border-yellow-400"
             style={{
@@ -149,7 +149,6 @@ export const SwapSuccess = ({ onComplete }: SwapSuccessProps): JSX.Element => {
             }}
           />
 
-          {/* Final filled circle */}
           <div
             className="flex items-center justify-center circle absolute rounded-full bg-yellow-400"
             style={{
