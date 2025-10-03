@@ -1,4 +1,3 @@
-import { walletMock } from "../__mocks__/providers";
 const testWalletAddress = "0x1234567890abcdefghijkl";
 const mockIntegration = {
   detect: jest.fn(),
@@ -17,6 +16,7 @@ const mockIntegration = {
 
 import { shortenAddress } from "@namada/utils";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { walletMock } from "App/Common/__mocks__/providers";
 import { SelectedWallet } from "App/Transfer/SelectedWallet";
 
 describe("Component: SelectedWallet", () => {

@@ -1,10 +1,10 @@
 import { AmountInput, Text } from "@namada/components";
+import { AvailableAmountFooter } from "App/Common/AvailableAmountFooter";
+import { SelectedAsset } from "App/Common/SelectedAsset";
+import { TokenAmountCard } from "App/Common/TokenAmountCard";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { Asset } from "types";
-import { AvailableAmountFooter } from "./AvailableAmountFooter";
-import { SelectedAsset } from "./SelectedAsset";
-import { TokenAmountCard } from "./TokenAmountCard";
 
 export type SwapSourceProps = {
   walletAddress?: string;

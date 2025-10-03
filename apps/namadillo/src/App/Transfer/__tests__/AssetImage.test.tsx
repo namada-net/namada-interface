@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { AssetImage } from "App/Transfer/AssetImage";
 
 import { Asset } from "types";
-import { assetMock, assetWithoutLogo } from "../__mocks__/assets";
+import { assetMock, assetWithoutLogo } from "../../Common/__mocks__/assets";
 
 jest.mock("integrations/utils", () => ({
   getAssetImageUrl: jest.fn((asset: Asset) =>

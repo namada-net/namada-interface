@@ -1,9 +1,9 @@
 import { Chain } from "@chain-registry/types";
 import "@testing-library/jest-dom";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { randomChainMock } from "App/Common/__mocks__/chains";
+import { walletMock } from "App/Common/__mocks__/providers";
 import { SelectedChain } from "App/Transfer/SelectedChain";
-import { randomChainMock } from "../__mocks__/chains";
-import { walletMock } from "../__mocks__/providers";
 
 describe("Component: SelectedChain", () => {
   it("renders disabled with no provider selected", () => {

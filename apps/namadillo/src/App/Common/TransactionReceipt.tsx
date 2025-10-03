@@ -9,7 +9,6 @@ import {
 } from "App/Transfer/common";
 import { SelectedChain } from "App/Transfer/SelectedChain";
 import { SelectedWallet } from "App/Transfer/SelectedWallet";
-import { TokenAmountCard } from "App/Transfer/TokenAmountCard";
 import { TransferArrow } from "App/Transfer/TransferArrow";
 import { getChainRegistryByChainId } from "atoms/integrations";
 import BigNumber from "bignumber.js";
@@ -19,6 +18,7 @@ import { useMemo } from "react";
 import { FaCheckCircle } from "react-icons/fa";
 import { GoHourglass, GoXCircle } from "react-icons/go";
 import { PartialTransferTransactionData, TransferStep } from "types";
+import { TokenAmountCard } from "./TokenAmountCard";
 
 type TransactionReceiptProps = {
   transaction: PartialTransferTransactionData;
