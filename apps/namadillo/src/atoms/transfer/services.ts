@@ -54,7 +54,6 @@ const workerBuildTxPair = async <T>({
   maspTxRegisterTransferHandlers();
   const worker = new MaspTxWorker();
   const workerLink = Comlink.wrap<MaspTxWorkerApi>(worker);
-  console.log("initiating worker");
   await workerLink.init({
     type: "init",
     payload: { rpcUrl, token: nativeToken, maspIndexerUrl: "" },

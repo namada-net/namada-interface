@@ -13,9 +13,9 @@ export const SwapModule = (): JSX.Element => {
 
   return (
     <>
-      {!["Broadcasting", "Confirming", "Completed", "Error"].includes(
-        status.t
-      ) && <SwapHeader />}
+      {!["Broadcasting", "Confirming", "Completed"].includes(status.t) && (
+        <SwapHeader />
+      )}
 
       <section className="w-full max-w-[480px] mx-auto" role="widget">
         {status.t === "Idle" && <SwapCalculations />}
