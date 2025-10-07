@@ -81,7 +81,6 @@ export const SwapReview = (): JSX.Element => {
     }
   }, []);
 
-  // TODO: handle error, you can try base amount 1
   const { error: _err, performSwap } = usePerformOsmosisSwapTx();
 
   const onSwap = useCallback(async (): Promise<void> => {
