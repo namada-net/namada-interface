@@ -17,6 +17,32 @@ import {
   NamadaChainRegistryEntry,
   RpcStorage,
 } from "types";
+import celestiaSquare from "./assets/celestia-square.svg";
+import cosmoshubSquare from "./assets/cosmoshub-square.svg";
+import namadaSquare from "./assets/namada-square.svg";
+import neutronSquare from "./assets/neutron-square.svg";
+import nobleSquare from "./assets/noble-square.svg";
+import nyxSquare from "./assets/nyx-square.svg";
+import osmosisSquare from "./assets/osmosis-square.svg";
+import strideSquare from "./assets/stride-square.svg";
+
+// Override square images while they dont exists on chain-registry package
+const overrides: [{ chain: Chain }, string][] = [
+  [celestia, celestiaSquare],
+  [cosmoshub, cosmoshubSquare],
+  [namada, namadaSquare],
+  [neutron, neutronSquare],
+  [noble, nobleSquare],
+  [nyx, nyxSquare],
+  [osmosis, osmosisSquare],
+  [stride, strideSquare],
+];
+overrides.forEach(([network, squareImage]) => {
+  network.chain.images = [
+    { svg: squareImage, theme: { circle: false } },
+    ...(network.chain.images ?? []),
+  ];
+});
 
 // TODO: hardcoded for now, more info below
 // ---- Housefire Chain Registry section ----
