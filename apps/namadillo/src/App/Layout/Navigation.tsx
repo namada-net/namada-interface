@@ -1,6 +1,7 @@
 import { SidebarMenuItem } from "App/Common/SidebarMenuItem";
 import { ReceiveIcon } from "App/Icons/ReceiveIcon";
 import { ShieldIcon } from "App/Icons/ShieldIcon";
+import { SwapIcon } from "App/Icons/SwapIcon";
 import { TransferIcon } from "App/Icons/TransferIcon";
 import { routes } from "App/routes";
 import { applicationFeaturesAtom } from "atoms/settings";
@@ -50,6 +51,11 @@ export const Navigation = (): JSX.Element => {
       label: "Receive",
       icon: <ReceiveIcon />,
       url: routes.receive,
+    },
+    {
+      label: "Shielded Swaps",
+      icon: <SwapIcon className="w-[18px]" />,
+      url: routes.swap,
     },
     {
       label: "History",

@@ -15,6 +15,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { broadcastTxWithEvents, signTx, TransactionPair } from "lib/query";
 import { useCallback, useState } from "react";
 import { NamadaAsset, OsmosisSwapTransactionData, TransferStep } from "types";
+import { toBaseAmount } from "utils";
 import { SwapStatus } from "../state";
 import {
   buyAssetAtom,
@@ -156,8 +157,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
         invariant(route, "No swap route found");
 
         const transfer = {
-          // amountInBaseDenom: toBaseAmount(sellAsset, sellAmount),
-          amountInBaseDenom: BigNumber(1),
+          amountInBaseDenom: toBaseAmount(sellAsset, sellAmount),
           channelId: "channel-1",
           portId: "transfer",
           token: sellAsset.address,
