@@ -21,6 +21,19 @@ export const SwapInProgress = (): JSX.Element => {
     }
   });
 
+  useTransactionEventListener(["ShieldedOsmosisSwap.Error"], async (e) => {
+    if (
+      status.t === "Confirming" &&
+      status.txHash &&
+      e.detail.hash === status.txHash
+    ) {
+      setStatus({
+        t: "Error",
+        message: e.detail.errorMessage || "Transaction failed",
+      });
+    }
+  });
+
   useEffect(() => {
     if (!imageContainerRef.current || !headerRef.current) return;
 

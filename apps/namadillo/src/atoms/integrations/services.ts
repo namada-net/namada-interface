@@ -78,7 +78,6 @@ export const getShieldedArgs = async (
 
   const worker = new MaspTxWorker();
   const workerLink = Comlink.wrap<MaspTxWorkerApi>(worker);
-  console.log("initiating worker4");
   await workerLink.init({
     type: "init",
     payload: { rpcUrl, token: sdk.nativeToken, maspIndexerUrl: "" },
@@ -266,13 +265,11 @@ export const updateIbcTransferStatus = async (
 export const updateIbcWithdrawalStatus = async (
   tx: IbcTransferTransactionData
 ): Promise<IbcTransferTransactionData> => {
-  console.log("Updating IBC Withdraw status for tx:", tx);
   if (!tx.hash) throw new Error("Transaction hash not defined");
 
   const api = getIndexerApi();
   // We have to pass inner hash here to get specific transaction status
   const response = await api.apiV1IbcTxIdStatusGet(tx.innerHash);
-  console.log("IBC Withdraw status response:", response);
   const { status } = response.data;
 
   if (status === "success") {

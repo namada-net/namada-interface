@@ -1,5 +1,6 @@
 import { ActionButton, Stack, Text } from "@namada/components";
 import { CurrentStatus } from "App/Common/CurrentStatus";
+import { InlineError } from "App/Common/InlineError";
 import { SwapTradeIcon } from "App/Icons/SwapTradeIcon";
 import { getChainRegistryByChainName } from "atoms/integrations";
 import { tokenPricesFamily } from "atoms/prices/atoms";
@@ -165,7 +166,7 @@ export const SwapReview = (): JSX.Element => {
           </Stack>
         </Stack>
       </div>
-
+      {status.t === "Error" && <InlineError errorMessage={status.message} />}
       {!["Building", "AwaitingSignature", "Broadcasting"].includes(
         status.t
       ) && (
