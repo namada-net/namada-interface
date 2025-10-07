@@ -16,7 +16,7 @@ export const SwapSuccess = (): JSX.Element => {
 
   // Handlers
   const onComplete = useCallback(() => {
-    setStatus(SwapStatus.Idle);
+    setStatus(SwapStatus.idle());
     setSwapState({ mode: "none" });
   }, []);
 

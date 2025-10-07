@@ -1,22 +1,25 @@
 import { ActionButton, Stack } from "@namada/components";
-import { AccountType } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
 import { SelectAssetModal } from "App/Common/SelectAssetModal";
 import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
 import { SwapArrowsIcon } from "App/Icons/SwapArrowsIcon";
-import { allDefaultAccountsAtom } from "atoms/accounts";
-import { namadaShieldedAssetsAtom } from "atoms/balance";
-import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
+import { defaultShieldedAccountAtom } from "atoms/accounts";
+import {
+  namadaAssetsSortedAtom,
+  namadaShieldedAssetsAtom,
+} from "atoms/balance";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
 import { TransactionFeeProps, useTransactionFee } from "hooks";
+import { useAvailableAmountMinusFees } from "hooks/useAvailableAmountMinusFee";
 import { wallets } from "integrations";
-import { useAtom, useAtomValue } from "jotai";
-import { useMemo, useState } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { NamadaAsset } from "types";
-import { getDisplayGasFee } from "utils/gas";
 import { SwapSource } from "./SwapSource";
-import { SwapStatus } from "./state";
+import { useSwapSimulation } from "./hooks/useSwapSimulation";
+import { useSwapValidation } from "./hooks/useSwapValidation";
+import { SwapQuote, SwapStatus } from "./state";
 import {
   buyAssetAtom,
   sellAssetAtom,
@@ -37,86 +40,42 @@ export const SwapCalculations = (): JSX.Element => {
   const [buyAsset, setBuyAsset] = useAtom(buyAssetAtom);
   const [swapState, setSwapState] = useAtom(swapStateAtom);
   const { data: quote } = useAtomValue(swapQuoteAtom);
-  const [status, setStatus] = useAtom(swapStatusAtom);
+  const setStatus = useSetAtom(swapStatusAtom);
 
   // Global state
-  const { data: chainAssetsMap } = useAtomValue(
-    namadaRegistryChainAssetsMapAtom
-  );
-  const assets = chainAssetsMap ? Object.values(chainAssetsMap) : [];
+  const sortedAssets = useAtomValue(namadaAssetsSortedAtom);
   const { data: assetsWithBalance } = useAtomValue(namadaShieldedAssetsAtom);
-  const feeProps = useTransactionFee(["IbcTransfer"]);
   const { data: tokenPrices } = useAtomValue(
-    tokenPricesFamily(assets.map((a) => a.address))
+    tokenPricesFamily(sortedAssets.map((a) => a.address))
   );
-  const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
+  const feeProps = useTransactionFee(["IbcTransfer"]);
+  const shieldedAccountAddress = useAtomValue(
+    defaultShieldedAccountAtom
+  )?.address;
+
+  useSwapSimulation({
+    swapState,
+    setSwapState,
+    quote,
+    buyAsset,
+    sellAsset,
+  });
 
   // Derived state
   const availableAmount = mapUndefined(
     (address) => assetsWithBalance?.[address]?.amount,
     sellAsset?.address
   );
-  const availableAmountMinusFees = useMemo(() => {
-    if (
-      !availableAmount ||
-      // Don't subtract if the gas token is different than the selected asset:
-      feeProps.gasConfig.gasToken !== sellAsset?.address
-    ) {
-      return availableAmount;
-    }
-    const displayGasFee = getDisplayGasFee(
-      feeProps.gasConfig,
-      chainAssetsMap || {}
-    );
-
-    const amountMinusFees = availableAmount
-      .minus(displayGasFee.totalDisplayAmount)
-      .decimalPlaces(6);
-
-    return BigNumber.max(amountMinusFees, 0);
-  }, [sellAsset?.address, availableAmount?.toString()]);
-
-  const shieldedAccountAddress = defaultAccounts.data?.find(
-    (account) => account.type === AccountType.ShieldedKeys
-  )?.address;
-
-  const validationResult = useMemo(() => {
-    if (!sellAsset) {
-      return "NoSellAssetSelected";
-    } else if (!buyAsset) {
-      return "NoBuyAssetSelected";
-    } else if (!swapState.sellAmount || swapState.sellAmount.isZero()) {
-      return "SellAmountIsZero";
-    } else if (!swapState.buyAmount || swapState.buyAmount.isZero()) {
-      return "BuyAmountIsZero";
-    }
-    if (
-      !availableAmountMinusFees ||
-      (swapState.sellAmount &&
-        availableAmountMinusFees &&
-        swapState.sellAmount.gt(availableAmountMinusFees))
-    ) {
-      return "SellAmountExceedsBalance";
-    } else {
-      return "Ok";
-    }
-  }, [
+  const availableAmountMinusFees = useAvailableAmountMinusFees(
+    feeProps.gasConfig,
     sellAsset?.address,
-    buyAsset?.address,
-    swapState.sellAmount,
-    swapState.buyAmount,
-  ]);
-
-  // We want assets with balance to be on top of the list
-  const sortedAssets = assets.sort((assetA, assetB) => {
-    const assetWithBalanceA = assetsWithBalance?.[assetA.address];
-    const assetWithBalanceB = assetsWithBalance?.[assetB.address];
-
-    return (
-      assetWithBalanceA && !assetWithBalanceB ? -1
-      : !assetWithBalanceA && assetWithBalanceB ? 1
-      : 0
-    );
+    availableAmount
+  );
+  const validationResult = useSwapValidation({
+    swapState,
+    sellAsset,
+    buyAsset,
+    availableAmountMinusFees,
   });
 
   const balances = Object.entries(assetsWithBalance || {}).reduce(
@@ -132,8 +91,8 @@ export const SwapCalculations = (): JSX.Element => {
     {} as Record<string, [BigNumber, BigNumber?]>
   );
 
-  // TODO: use callback
-  const onChangeSellAmount = (a: BigNumber | undefined): void => {
+  // Handlers
+  const onChangeSellAmount = useCallback((a: BigNumber | undefined): void => {
     if (a) {
       setSwapState((s) => ({
         ...s,
@@ -143,12 +102,12 @@ export const SwapCalculations = (): JSX.Element => {
     } else {
       setSwapState((s) => ({
         mode: "none",
-        unitPrice: s.unitPrice,
+        sellAmountPerOneBuy: s.sellAmountPerOneBuy,
       }));
     }
-  };
+  }, []);
 
-  const onChangeBuyAmount = (a: BigNumber | undefined): void => {
+  const onChangeBuyAmount = useCallback((a: BigNumber | undefined): void => {
     if (a) {
       setSwapState((s) => ({
         ...s,
@@ -158,41 +117,49 @@ export const SwapCalculations = (): JSX.Element => {
     } else {
       setSwapState((s) => ({
         mode: "none",
-        unitPrice: s.unitPrice,
+        sellAmountPerOneBuy: s.sellAmountPerOneBuy,
       }));
     }
-  };
+  }, []);
 
-  const onSwapArrowsClick = (): void => {
+  const onSwapArrowsClick = useCallback((): void => {
     if (sellAsset && buyAsset) {
       setSellAsset(buyAsset.symbol);
       setBuyAsset(sellAsset.symbol);
 
-      const newMode = swapState.mode === "sell" ? "buy" : "sell";
-      setSwapState((s) => ({
-        mode: newMode,
-        sellAmount: swapState.buyAmount,
-        buyAmount: swapState.sellAmount,
-        unitPrice: s.unitPrice,
-      }));
+      if (swapState.mode !== "none") {
+        const newMode = swapState.mode === "sell" ? "buy" : "sell";
+        setSwapState((s) => ({
+          mode: newMode,
+          sellAmount: s.buyAmount,
+          buyAmount: s.sellAmount,
+          sellAmountPerOneBuy: s.sellAmountPerOneBuy,
+        }));
+      }
     }
-  };
+  }, [sellAsset?.symbol, buyAsset?.symbol, swapState.mode]);
 
-  const onChangeBuySelectedAsset = (address: string): void => {
-    const asset = assets.find((a) => a.address === address);
-    if (asset?.address === sellAsset?.address) {
-      setSellAsset(buyAsset?.symbol);
-    }
-    setBuyAsset(asset?.symbol);
-  };
+  const onChangeBuySelectedAsset = useCallback(
+    (address: string): void => {
+      const asset = sortedAssets.find((a) => a.address === address);
+      if (asset?.address === sellAsset?.address) {
+        setSellAsset(buyAsset?.symbol);
+      }
+      setBuyAsset(asset?.symbol);
+    },
+    [sortedAssets.length]
+  );
 
-  const onChangeSellSelectedAsset = (address: string): void => {
-    const asset = assets.find((a) => a.address === address);
-    if (asset?.address === buyAsset?.address) {
-      setBuyAsset(sellAsset?.symbol);
-    }
-    setSellAsset(asset?.symbol);
-  };
+  const onChangeSellSelectedAsset = useCallback(
+    (address: string): void => {
+      const asset = sortedAssets.find((a) => a.address === address);
+      if (asset?.address === buyAsset?.address) {
+        setBuyAsset(sellAsset?.symbol);
+      }
+      setSellAsset(asset?.symbol);
+    },
+    [sortedAssets.length]
+  );
 
   return (
     <>
@@ -209,7 +176,7 @@ export const SwapCalculations = (): JSX.Element => {
           label="Sell"
         />
         <i
-          className="flex items-center justify-center w-13 mx-auto relative z-10 -my-8 cursor-pointer hover:rotate-180 transition-transform"
+          className="flex items-center justify-center w-13 mx-auto relative z-10 -my-8 cursor-pointer duration-300 hover:rotate-180 transition-transform ease-in-out"
           onClick={onSwapArrowsClick}
         >
           <SwapArrowsIcon color={"#FF0"} />
@@ -218,25 +185,24 @@ export const SwapCalculations = (): JSX.Element => {
           asset={buyAsset}
           isLoadingAssets={false}
           openAssetSelector={() => setBuyAssetSelectorModalOpen(true)}
-          // To not show  buy amount if sell amount is empty
+          // To not show buy amount if sell amount is empty
           amount={swapState.sellAmount && swapState.buyAmount}
           onChangeAmount={onChangeBuyAmount}
           isSubmitting={false}
           label="Buy"
         />
-        {quote &&
-          feeProps &&
-          swapState.unitPrice &&
+        {feeProps &&
+          swapState.sellAmountPerOneBuy &&
           sellAsset &&
           buyAsset &&
           tokenPrices && (
             <SwapCalculationsFooter
               feeProps={feeProps}
-              unitPrice={swapState.unitPrice}
+              sellAmountPerOneBuy={swapState.sellAmountPerOneBuy}
               selectedAsset={sellAsset}
               selectedTargetAsset={buyAsset}
               tokenPrice={tokenPrices[buyAsset.address]}
-              effectiveFee={BigNumber(quote.effectiveFee)}
+              quote={quote}
             />
           )}
 
@@ -247,7 +213,7 @@ export const SwapCalculations = (): JSX.Element => {
           textColor="black"
           textHoverColor="yellow"
           disabled={validationResult !== "Ok"}
-          onClick={() => setStatus(SwapStatus.Review)}
+          onClick={() => setStatus(SwapStatus.review())}
         >
           {ValidationMessages[validationResult]}
         </ActionButton>
@@ -279,22 +245,37 @@ export const SwapCalculations = (): JSX.Element => {
 
 type SwapCalculationsFooterProps = {
   feeProps: TransactionFeeProps;
-  unitPrice: BigNumber;
+  sellAmountPerOneBuy: BigNumber;
   selectedAsset: NamadaAsset;
   selectedTargetAsset: NamadaAsset;
   tokenPrice: BigNumber;
-  effectiveFee: BigNumber;
+  quote?: SwapQuote;
 };
 
 const SwapCalculationsFooter = ({
   feeProps,
-  unitPrice,
+  sellAmountPerOneBuy,
   selectedAsset,
   selectedTargetAsset,
   tokenPrice,
+  quote,
 }: SwapCalculationsFooterProps): JSX.Element => {
-  //TODO: We have to take price impact into consideration most likely
-  const valFiat = unitPrice.times(tokenPrice);
+  // Quote cache, prevents blinking when quote is temporarily undefined
+  const lastValidQuoteRef = useRef<typeof quote>();
+  useEffect(() => {
+    if (quote !== undefined) {
+      lastValidQuoteRef.current = quote;
+    }
+  }, [quote]);
+
+  const quoteToUse = quote ?? lastValidQuoteRef.current;
+  if (!quoteToUse) {
+    return <></>;
+  }
+
+  const { priceImpact } = quoteToUse;
+  const price = tokenPrice.times(BigNumber(1).plus(priceImpact));
+  const valFiat = sellAmountPerOneBuy.times(price);
 
   return (
     <Stack className="text-sm">
@@ -303,7 +284,7 @@ const SwapCalculationsFooter = ({
         direction="horizontal"
       >
         <div className="underline">
-          1 {selectedAsset.symbol} ≈ {unitPrice.toFixed(6)}{" "}
+          1 {selectedAsset.symbol} ≈ {sellAmountPerOneBuy.toFixed(6)}{" "}
           {selectedTargetAsset.symbol} (${valFiat.toFixed(6)})
         </div>
         <TransactionFeeButton

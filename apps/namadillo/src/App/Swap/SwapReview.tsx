@@ -1,13 +1,18 @@
 import { ActionButton, Stack, Text } from "@namada/components";
 import { CurrentStatus } from "App/Common/CurrentStatus";
 import { SwapTradeIcon } from "App/Icons/SwapTradeIcon";
+import { getChainRegistryByChainName } from "atoms/integrations";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
+import { KeplrWalletManager } from "integrations/Keplr";
 import { getAssetImageUrl } from "integrations/utils";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
+import { useCallback, useEffect, useState } from "react";
+import { ChainRegistryEntry } from "types";
 import { toDisplayAmount } from "utils";
+import { usePerformOsmosisSwapTx } from "./hooks/usePerformOsmosisSwapTx";
 import { statusMessages, SwapStatus } from "./state";
 import {
   buyAssetAtom,
@@ -18,7 +23,9 @@ import {
 } from "./state/atoms";
 import { SLIPPAGE } from "./state/functions";
 
+const keplr = new KeplrWalletManager();
 export const SwapReview = (): JSX.Element => {
+  const [keplrRecoveryAddr, setKeplrRecoveryAddr] = useState<string>();
   // Feature state and sanity checks
   const [status, setStatus] = useAtom(swapStatusAtom);
   const swapState = useAtomValue(swapStateAtom);
@@ -48,7 +55,6 @@ export const SwapReview = (): JSX.Element => {
     buyPriceImpact && buyPriceImpact.times(swapState.buyAmount);
   const receiveAtLeastDenominated = toDisplayAmount(buyAsset, quote.minAmount);
 
-  // TODO: sucks, move prices to the swapState
   const swapFee = quote.effectiveFee
     .times(100)
     .decimalPlaces(2, BigNumber.ROUND_HALF_UP);
@@ -59,6 +65,27 @@ export const SwapReview = (): JSX.Element => {
     !fiatFee ? "#"
     : fiatFee.lt(0.01) ? "<$0.01"
     : `~$${fiatFee.toString()}`;
+
+  //TODO:  Should take housefire into consideration
+  useEffect(() => {
+    const registry = getChainRegistryByChainName("osmosis");
+    const fn = async (registry: ChainRegistryEntry): Promise<void> => {
+      await keplr.connect(registry);
+      const addr = await keplr.getAddress(registry.chain.chain_id);
+      setKeplrRecoveryAddr(addr);
+    };
+
+    if (registry) {
+      fn(registry);
+    }
+  }, []);
+
+  // TODO: handle error, you can try base amount 1
+  const { error: _err, performSwap } = usePerformOsmosisSwapTx();
+
+  const onSwap = useCallback(async (): Promise<void> => {
+    await performSwap({ localRecoveryAddr: keplrRecoveryAddr });
+  }, [keplrRecoveryAddr]);
 
   return (
     <Stack>
@@ -139,44 +166,36 @@ export const SwapReview = (): JSX.Element => {
         </Stack>
       </div>
 
-      {![
-        SwapStatus.Building,
-        SwapStatus.AwaitingSignature,
-        SwapStatus.Broadcasting,
-      ].includes(status) && (
+      {!["Building", "AwaitingSignature", "Broadcasting"].includes(
+        status.t
+      ) && (
         <ActionButton
           outlineColor="yellow"
           backgroundColor="yellow"
           backgroundHoverColor="transparent"
           textColor="black"
           textHoverColor="yellow"
-          onClick={() => {}}
+          onClick={onSwap}
         >
           Swap
         </ActionButton>
       )}
-      {[
-        SwapStatus.Building,
-        SwapStatus.AwaitingSignature,
-        SwapStatus.Broadcasting,
-      ].includes(status) && (
+      {["Building", "AwaitingSignature", "Broadcasting"].includes(status.t) && (
         <CurrentStatus
-          status={statusMessages[status].title}
-          explanation={statusMessages[status].description}
+          status={statusMessages[status.t].title}
+          explanation={statusMessages[status.t].description}
         />
       )}
-      {![
-        SwapStatus.Building,
-        SwapStatus.AwaitingSignature,
-        SwapStatus.Broadcasting,
-      ].includes(status) && (
+      {!["Building", "AwaitingSignature", "Broadcasting"].includes(
+        status.t
+      ) && (
         <ActionButton
           outlineColor="yellow"
           backgroundColor="transparent"
           backgroundHoverColor="yellow"
           textColor="yellow"
           textHoverColor="black"
-          onClick={() => setStatus(SwapStatus.Idle)}
+          onClick={() => setStatus(SwapStatus.idle())}
         >
           Back
         </ActionButton>

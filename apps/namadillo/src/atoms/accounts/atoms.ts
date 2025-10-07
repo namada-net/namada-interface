@@ -77,6 +77,13 @@ export const allDefaultAccountsAtom = atomWithQuery<NamadaKeychainAccount[]>(
   }
 );
 
+export const defaultShieldedAccountAtom = atom((get) => {
+  const defaultAccounts = get(allDefaultAccountsAtom);
+  return defaultAccounts.data?.find(
+    (account) => account.type === AccountType.ShieldedKeys
+  );
+});
+
 export const isLedgerAccountAtom = atom((get) => {
   const defaultAccounts = get(allDefaultAccountsAtom);
   return Boolean(

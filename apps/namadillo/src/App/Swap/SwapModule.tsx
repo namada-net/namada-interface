@@ -1,5 +1,4 @@
-import { useAtom } from "jotai";
-import { SwapStatus } from "./state";
+import { useAtomValue } from "jotai";
 import { swapStatusAtom } from "./state/atoms";
 import { SwapCalculations } from "./SwapCalculations";
 import { SwapHeader } from "./SwapHeader";
@@ -7,34 +6,31 @@ import { SwapInProgress } from "./SwapInProgress";
 import { SwapReview } from "./SwapReview";
 import { SwapSuccess } from "./SwapSuccess";
 
+// TODO: for better state isolation, we should create a new store for the swap module
+// and pass the shared state(accounts, fees, etc.) as props to the module components
 export const SwapModule = (): JSX.Element => {
-  // Feature state
-  const [status, setStatus] = useAtom(swapStatusAtom);
+  const status = useAtomValue(swapStatusAtom);
 
   return (
     <>
-      {![
-        SwapStatus.Broadcasting,
-        SwapStatus.Confirming,
-        SwapStatus.Completed,
-        SwapStatus.Error,
-      ].includes(status) && <SwapHeader />}
+      {!["Broadcasting", "Confirming", "Completed", "Error"].includes(
+        status.t
+      ) && <SwapHeader />}
 
       <section className="w-full max-w-[480px] mx-auto" role="widget">
-        {status === SwapStatus.Idle && <SwapCalculations />}
-        {[SwapStatus.Review].includes(status) && <SwapReview />}
+        {status.t === "Idle" && <SwapCalculations />}
+        {["Review", "Building", "AwaitingSignature", "Error"].includes(
+          status.t
+        ) && <SwapReview />}
 
-        {[SwapStatus.Confirming, SwapStatus.Broadcasting].includes(status) && (
+        {["Confirming", "Broadcasting"].includes(status.t) && (
           <SwapInProgress />
         )}
-        {status === SwapStatus.Completed && <SwapSuccess />}
+        {status.t === "Completed" && <SwapSuccess />}
 
-        {![
-          SwapStatus.Broadcasting,
-          SwapStatus.Confirming,
-          SwapStatus.Completed,
-          SwapStatus.Error,
-        ].includes(status) && (
+        {!["Broadcasting", "Confirming", "Completed", "Error"].includes(
+          status.t
+        ) && (
           <p className="w-full mt-6 text-center font-light">
             Powered by Osmosis
           </p>

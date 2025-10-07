@@ -7,6 +7,7 @@ import { queryDependentFn } from "atoms/utils";
 import BigNumber from "bignumber.js";
 import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import invariant from "invariant";
+import { atom } from "jotai";
 import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
 import { atomFamily, atomWithStorage } from "jotai/utils";
 import {
@@ -16,6 +17,7 @@ import {
   BaseDenom,
   Coin,
   IbcChannels,
+  NamadaAsset,
   RpcStorage,
 } from "types";
 import { toDisplayAmount } from "utils";
@@ -344,4 +346,10 @@ export const allChainsAtom = atomWithQuery<Chain[]>((get) => {
       return [...ibcChains, namadaChain];
     }, [chainSettings]),
   };
+});
+
+export const namadaRegistryChainAssetsAtom = atom<NamadaAsset[]>((get) => {
+  const { data: chainAssetsMap } = get(namadaRegistryChainAssetsMapAtom);
+
+  return chainAssetsMap ? Object.values(chainAssetsMap) : [];
 });

@@ -4,52 +4,62 @@
 
 import BigNumber from "bignumber.js";
 
-export enum SwapStatus {
-  Idle = "Idle",
-  Review = "Review",
-  Building = "Building",
-  AwaitingSignature = "AwaitingSignature",
-  Broadcasting = "Broadcasting",
-  Confirming = "Confirming",
-  Completed = "Completed",
-  Error = "Error",
-}
+export type SwapStatusType =
+  | { t: "Idle" }
+  | { t: "Review" }
+  | { t: "Building" }
+  | { t: "AwaitingSignature" }
+  | { t: "Broadcasting" }
+  | { t: "Confirming"; txHash: string }
+  | { t: "Completed" }
+  | { t: "Error"; message: string };
+
+export const SwapStatus = {
+  idle: (): SwapStatusType => ({ t: "Idle" }),
+  review: (): SwapStatusType => ({ t: "Review" }),
+  building: (): SwapStatusType => ({ t: "Building" }),
+  awaitingSignature: (): SwapStatusType => ({ t: "AwaitingSignature" }),
+  broadcasting: (): SwapStatusType => ({ t: "Broadcasting" }),
+  confirming: (txHash: string): SwapStatusType => ({ t: "Confirming", txHash }),
+  completed: (): SwapStatusType => ({ t: "Completed" }),
+  error: (message: string): SwapStatusType => ({ t: "Error", message }),
+};
 
 export const statusMessages: Record<
-  SwapStatus,
+  SwapStatusType["t"],
   { title: string; description: string }
 > = {
-  [SwapStatus.Idle]: {
+  Idle: {
     title: "Ready to swap",
     description: "Review the details and submit your swap.",
   },
-  [SwapStatus.Review]: {
+  Review: {
     title: "Reviewing transaction",
     description: "Please review the transaction details before proceeding.",
   },
-  [SwapStatus.Building]: {
+  Building: {
     title: "Building transaction",
     description:
       "Your transaction is being built. This may take a few moments.",
   },
-  [SwapStatus.AwaitingSignature]: {
+  AwaitingSignature: {
     title: "Awaiting signature",
     description: "Please sign the transaction in your wallet.",
   },
-  [SwapStatus.Broadcasting]: {
+  Broadcasting: {
     title: "Broadcasting transaction",
     description: "Your transaction is being broadcast to the network.",
   },
-  [SwapStatus.Confirming]: {
+  Confirming: {
     title: "Confirming transaction",
     description:
       "Your transaction is being confirmed. This may take a few moments.",
   },
-  [SwapStatus.Completed]: {
+  Completed: {
     title: "Swap completed",
     description: "Your swap has been successfully completed.",
   },
-  [SwapStatus.Error]: {
+  Error: {
     title: "Transaction error",
     description: "An error occurred during the transaction. Please try again.",
   },
@@ -60,7 +70,7 @@ export type SwapState = {
   mode: "sell" | "buy" | "none";
   sellAmount?: BigNumber;
   buyAmount?: BigNumber;
-  unitPrice?: BigNumber;
+  sellAmountPerOneBuy?: BigNumber;
 };
 
 export type SwapQuote = {
