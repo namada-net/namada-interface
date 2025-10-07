@@ -1,11 +1,25 @@
 import { Heading, Stack } from "@namada/components";
 import anime from "animejs";
+import { useAtom } from "jotai";
 import { useEffect, useRef } from "react";
+import { useTransactionEventListener } from "utils";
 import swapInProgressImg from "../Masp/assets/swap-in-progress.png";
+import { swapStatusAtom } from "./state/atoms";
 
 export const SwapInProgress = (): JSX.Element => {
+  const [status, setStatus] = useAtom(swapStatusAtom);
   const imageContainerRef = useRef<HTMLImageElement | null>(null);
   const headerRef = useRef<HTMLHeadingElement | null>(null);
+
+  useTransactionEventListener(["ShieldedOsmosisSwap.Success"], async (e) => {
+    if (
+      status.t === "Confirming" &&
+      status.txHash &&
+      e.detail.hash === status.txHash
+    ) {
+      setStatus({ t: "Completed" });
+    }
+  });
 
   useEffect(() => {
     if (!imageContainerRef.current || !headerRef.current) return;
@@ -17,7 +31,7 @@ export const SwapInProgress = (): JSX.Element => {
       easing: "easeOutExpo",
     });
     const timelineRotation = anime.timeline({
-      easing: "easeOutExpo",
+      easing: "easeInOutCirc",
       loop: true,
     });
 
@@ -28,13 +42,16 @@ export const SwapInProgress = (): JSX.Element => {
       easing: "easeOutBack",
     });
 
-    timelineRotation.add({
-      targets: [image],
-      rotate: {
-        value: "-=180",
-        duration: 600,
+    timelineRotation.add(
+      {
+        targets: [image],
+        rotate: {
+          value: "-=180",
+          duration: 600,
+        },
       },
-    });
+      "+=1000"
+    );
 
     timelineRotation.add(
       {
@@ -44,7 +61,7 @@ export const SwapInProgress = (): JSX.Element => {
           duration: 600,
         },
       },
-      "+=400"
+      "+=1000"
     );
   }, []);
 

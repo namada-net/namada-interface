@@ -597,12 +597,14 @@ export const useTransactionNotifications = (): void => {
       description: (
         <>
           Your shielded swap of{" "}
-          <TokenCurrency amount={tx.displayAmount} symbol={tx.asset.symbol} />{" "}
-          to
-          <TokenCurrency
-            amount={tx.minAmountOut}
-            symbol={tx.targetAsset.symbol}
-          />
+          <b>
+            <TokenCurrency amount={tx.displayAmount} symbol={tx.asset.symbol} />{" "}
+            to{" "}
+            <TokenCurrency
+              amount={tx.minAmountOut}
+              symbol={tx.targetAsset.symbol}
+            />
+          </b>{" "}
           has failed.{" "}
           <b>Open the Namada extension to access the refund account.</b>
         </>

@@ -249,7 +249,7 @@ export const createOsmosisSwapTxAtom = atomWithMutation((get) => {
 
   return {
     enabled: account.isSuccess && chain.isSuccess,
-    mutationKey: ["create-ibc-tx"],
+    mutationKey: ["create-osmosis-swap-tx"],
     mutationFn: async ({
       params,
       gasConfig,

@@ -14,7 +14,10 @@ import {
   nativeTokenAddressAtom,
 } from "atoms/chain";
 import { shouldUpdateBalanceAtom } from "atoms/etc";
-import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
+import {
+  namadaRegistryChainAssetsAtom,
+  namadaRegistryChainAssetsMapAtom,
+} from "atoms/integrations";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import { maspIndexerUrlAtom, rpcUrlAtom } from "atoms/settings";
 import { queryDependentFn } from "atoms/utils";
@@ -26,7 +29,7 @@ import invariant from "invariant";
 import { atom, getDefaultStore } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { atomWithStorage } from "jotai/utils";
-import { Address, TokenBalance } from "types";
+import { Address, NamadaAsset, TokenBalance } from "types";
 import { namadaAsset, toDisplayAmount } from "utils";
 import { isError404 } from "utils/http";
 import {
@@ -270,6 +273,26 @@ export const shieldedTokensAtom = atomWithQuery<TokenBalance[]>((get) => {
       [shieldedAssets]
     ),
   };
+});
+
+// Namada assets sorted by assets with balance first
+export const namadaAssetsSortedAtom = atom<NamadaAsset[]>((get) => {
+  const assets = get(namadaRegistryChainAssetsAtom);
+  const { data: assetsWithBalance } = get(namadaShieldedAssetsAtom);
+
+  // We want assets with balance to be on top of the list
+  const sortedAssets = assets.sort((assetA, assetB) => {
+    const assetWithBalanceA = assetsWithBalance?.[assetA.address];
+    const assetWithBalanceB = assetsWithBalance?.[assetB.address];
+
+    return (
+      assetWithBalanceA && !assetWithBalanceB ? -1
+      : !assetWithBalanceA && assetWithBalanceB ? 1
+      : 0
+    );
+  });
+
+  return sortedAssets;
 });
 
 export const shieldedRewardsPerTokenAtom = atomWithQuery((get) => {

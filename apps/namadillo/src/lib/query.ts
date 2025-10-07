@@ -222,7 +222,7 @@ export const isTransferEventType = (
         "TransparentTransfer",
         "ShieldedTransfer",
         "UnshieldingTransfer",
-        "OsmosisShieldedSwap",
+        "ShieldedOsmosisSwap",
       ].includes(eventType)
     : false;
 };

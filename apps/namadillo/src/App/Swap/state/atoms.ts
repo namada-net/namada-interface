@@ -8,12 +8,14 @@ import {
 } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
-import { atom } from "jotai";
+import { atom, Setter } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { atomWithStorage } from "jotai/utils";
+import debounce from "lodash.debounce";
 import { SwapStorage } from "types";
 import { toBaseAmount } from "utils";
 import { fetchQuote } from "./functions";
+import type { SwapStatusType } from "./types";
 import { SwapState, SwapStatus } from "./types";
 
 export const swapStorageAtom = atomWithStorage<SwapStorage>(
@@ -70,15 +72,29 @@ export const buyAssetAtom = atom(
   }
 );
 
-export const swapStateAtom = atom<SwapState>({
-  mode: "none",
-});
+const defaultSwapState: SwapState = { mode: "none" };
+const internalSwapStateAtom = atom<SwapState>(defaultSwapState);
+// We use debounced version of the swap state for fetching quotes to avoid excessive requests
+const debouncedSwapStateAtom = atom<SwapState>(defaultSwapState);
 
-export const swapStatusAtom = atom<SwapStatus>(SwapStatus.Idle);
+const debouncedSet = debounce((set: Setter, value: SwapState) => {
+  set(debouncedSwapStateAtom, value);
+}, 300);
+
+export const swapStateAtom = atom(
+  (get) => get(internalSwapStateAtom),
+  (get, set, update: SwapState | ((prev: SwapState) => SwapState)) => {
+    set(internalSwapStateAtom, update);
+    const val = get(internalSwapStateAtom);
+    debouncedSet(set, val);
+  }
+);
+
+export const swapStatusAtom = atom<SwapStatusType>(SwapStatus.idle());
 
 export const swapQuoteAtom = atomWithQuery((get) => {
   const swapStorage = get(swapStorageAtom);
-  const swapState = get(swapStateAtom);
+  const swapState = get(debouncedSwapStateAtom);
   const chainAssetsMapAtom = get(namadaRegistryChainAssetsMapAtom);
 
   const namadaAssets =
@@ -103,11 +119,6 @@ export const swapQuoteAtom = atomWithQuery((get) => {
     enabled: Boolean(sellAsset && buyAsset),
     queryKey: ["swapQuote", sellKey, buyKey],
     queryFn: async () => {
-      console.log(
-        "swapState",
-        swapState.sellAmount?.toString(),
-        swapState.buyAmount?.toString()
-      );
       // Sanity checks
       invariant(sellAsset, "Sell asset not found");
       invariant(buyAsset, "Buy asset not found");
