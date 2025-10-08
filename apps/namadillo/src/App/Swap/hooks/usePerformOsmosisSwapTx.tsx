@@ -7,6 +7,7 @@ import {
   dispatchToastNotificationAtom,
 } from "atoms/notifications";
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
+import { getDisposableSigner } from "atoms/transfer/services";
 import BigNumber from "bignumber.js";
 import { useTransactionFee } from "hooks";
 import { useTransactionActions } from "hooks/useTransactionActions";
@@ -177,21 +178,17 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
         };
 
         setStatus(SwapStatus.building());
+
+        const signer = await getDisposableSigner();
         const encodedTxData = await performOsmosisSwap({
-          signer: {
-            publicKey: transparentAccount.publicKey!,
-            address: transparentAccount.address!,
-          },
+          signer,
           account: transparentAccount,
           params: [params],
           gasConfig: feeProps.gasConfig,
         });
 
         setStatus(SwapStatus.awaitingSignature());
-        const signedTxs = await signTx(
-          encodedTxData,
-          transparentAccount.address!
-        );
+        const signedTxs = await signTx(encodedTxData, signer.address);
 
         const transactionPair: TransactionPair<OsmosisSwapProps> = {
           signedTxs,
