@@ -325,9 +325,11 @@ export const createOsmosisSwapTx = async (
   props: OsmosisSwapProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
-  signerPublicKey: string,
+  disposableSigner: GenDisposableSignerResponse,
   memo?: string
 ): Promise<EncodedTxData<OsmosisSwapProps>> => {
+  const { publicKey: signerPublicKey } = disposableSigner;
+
   let bparams: BparamsMsgValue[] | undefined;
   if (account.type === AccountType.Ledger) {
     const sdk = await getSdkInstance();

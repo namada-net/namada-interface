@@ -270,7 +270,7 @@ export const createOsmosisSwapTxAtom = atomWithMutation((get) => {
         params,
         gasConfig,
         rpcUrl,
-        signer?.publicKey,
+        signer,
         memo
       );
     },
