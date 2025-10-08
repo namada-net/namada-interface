@@ -6,7 +6,7 @@ import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { getSdkInstance } from "utils/sdk";
 
-export type LedgerStatus = {
+type LedgerStatus = {
   connected: boolean;
   errorMessage: string;
 };

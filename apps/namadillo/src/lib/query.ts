@@ -36,12 +36,12 @@ export type EncodedTxData<T> = {
   };
 };
 
-export type TransactionNotification = {
+type TransactionNotification = {
   success?: { title: string; text: string };
   error?: { title: string; text: string };
 };
 
-export type PreparedTransaction<T> = {
+type PreparedTransaction<T> = {
   encodedTx: WrapperTxProps;
   signedTx: Uint8Array;
   meta: T;

@@ -30,7 +30,7 @@ import {
 } from "workers/MaspTxWorker";
 import MaspTxWorker from "workers/MaspTxWorker?worker";
 
-export type WorkerTransferParams = {
+type WorkerTransferParams = {
   sourceAddress: Address;
   destinationAddress: Address;
   tokenAddress: Address;

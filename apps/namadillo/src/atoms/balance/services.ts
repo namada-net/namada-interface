@@ -23,7 +23,7 @@ import {
 } from "workers/MaspTxWorker";
 import MaspTxWorker from "workers/MaspTxWorker?worker";
 
-export type ShieldedSyncEventMap = {
+type ShieldedSyncEventMap = {
   [SdkEvents.ProgressBarStarted]: ProgressBarStarted[];
   [SdkEvents.ProgressBarIncremented]: ProgressBarIncremented[];
   [SdkEvents.ProgressBarFinished]: ProgressBarFinished[];

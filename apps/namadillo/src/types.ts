@@ -22,7 +22,7 @@ type Unique = {
   uuid: string;
 };
 
-export type PublicKey = string;
+type PublicKey = string;
 
 export type Address = string;
 
@@ -30,12 +30,12 @@ export type BaseDenom = string;
 
 export type ChainId = string;
 
-export type GasLimit = BigNumber;
+type GasLimit = BigNumber;
 
-export type GasPrice = BigNumber;
+type GasPrice = BigNumber;
 
 // For Namada chain, it should be the address. For Ibc, it should be the base denom
-export type GasToken = Address | BaseDenom;
+type GasToken = Address | BaseDenom;
 
 export type AddressBalance = Record<Address, BigNumber>;
 
@@ -50,9 +50,9 @@ export type GasConfigToDisplay = {
   asset: Asset;
 };
 
-export type TxGas = Record<Address, GasLimit>;
+type TxGas = Record<Address, GasLimit>;
 
-export type GasTable = Record<TxKind, TxGas>;
+type GasTable = Record<TxKind, TxGas>;
 
 export type ChainSettings = {
   id: ChainKey;
@@ -138,7 +138,7 @@ export type StakingTotals = {
   totalWithdrawable: BigNumber;
 };
 
-export type ChangeInStakingProps = {
+type ChangeInStakingProps = {
   account: Account;
   changes: ChangeInStakingPosition[];
   gasConfig: GasConfig;
@@ -149,7 +149,7 @@ export type ChangeInStakingPosition = {
   amount: BigNumber;
 };
 
-export type RedelegateChangesProps = {
+type RedelegateChangesProps = {
   account: Account;
   changes: RedelegateChange[];
   gasConfig: GasConfig;
@@ -161,13 +161,13 @@ export type RedelegateChange = {
   amount: BigNumber;
 };
 
-export type ClaimRewardsProps = {
+type ClaimRewardsProps = {
   account: Account;
   params: ClaimRewardsMsgValue[];
   gasConfig: GasConfig;
 };
 
-export type Signer = {
+type Signer = {
   publicKey: string;
   address: string;
 };
@@ -194,7 +194,7 @@ export type ToastNotification = {
   timeout?: number;
 };
 
-export type ToastNotificationEntryFilter = (
+type ToastNotificationEntryFilter = (
   notification: ToastNotification
 ) => boolean;
 
@@ -233,7 +233,7 @@ export type NamadaAssetWithAmount = {
   amount: BigNumber;
 };
 
-export type AssetWithMinDenomAmount = {
+type AssetWithMinDenomAmount = {
   asset: Asset;
   minDenomAmount: BigNumber;
 };
@@ -337,15 +337,15 @@ export const transferPossibleStages = [
 
 type NamadaTransferStages = typeof namadaTransferStages;
 type IbcTransferStages = typeof ibcTransferStages;
-export type AllTransferStages = typeof allTransferStages;
+type AllTransferStages = typeof allTransferStages;
 
 export type NamadaTransferTxKind = keyof NamadaTransferStages;
 
-export type IbcTransferTxKind = keyof IbcTransferStages;
+type IbcTransferTxKind = keyof IbcTransferStages;
 
 export type AllTransferTxKind = NamadaTransferTxKind | IbcTransferTxKind;
 
-export type NamadaTransferStage = {
+type NamadaTransferStage = {
   [P in NamadaTransferTxKind]: {
     type: P;
     currentStep: TransferStep;
@@ -359,9 +359,9 @@ export type IbcTransferStage = {
   };
 }[IbcTransferTxKind];
 
-export type TransferStage = IbcTransferStage | NamadaTransferStage;
+type TransferStage = IbcTransferStage | NamadaTransferStage;
 
-export type BaseTransferTransaction = TransferStage & {
+type BaseTransferTransaction = TransferStage & {
   rpc: string;
   asset: Asset;
   hash: string;

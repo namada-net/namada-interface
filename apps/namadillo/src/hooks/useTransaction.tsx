@@ -39,7 +39,7 @@ export type UseTransactionPropsEvents<T> = {
   onBroadcasted?: (tx: TransactionPair<T>) => void;
 };
 
-export type UseTransactionProps<T> = {
+type UseTransactionProps<T> = {
   params: T[];
   createTxAtom: AtomType<T>;
   useDisposableSigner?: boolean;

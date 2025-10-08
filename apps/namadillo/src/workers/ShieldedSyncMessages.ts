@@ -16,5 +16,5 @@ type ShiededSyncPayload = {
 export type Sync = WebWorkerMessage<"sync", ShiededSyncPayload>;
 export type SyncDone = WebWorkerMessage<"sync-done", null>;
 
-export type ShieldMessageIn = Init | Sync;
-export type ShieldMessageOut = InitDone | SyncDone;
+type ShieldMessageIn = Init | Sync;
+type ShieldMessageOut = InitDone | SyncDone;

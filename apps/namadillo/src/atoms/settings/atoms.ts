@@ -14,8 +14,8 @@ import {
   isRpcAlive,
 } from "./services";
 
-export type AttachStatus = "pending" | "attached" | "detached";
-export type ConnectStatus = "idle" | "connecting" | "connected" | "error";
+type AttachStatus = "pending" | "attached" | "detached";
+type ConnectStatus = "idle" | "connecting" | "connected" | "error";
 export const namadaExtensionAttachStatus = atom<AttachStatus>("pending");
 export const namadaExtensionConnectionStatus = atom<ConnectStatus>("idle");
 

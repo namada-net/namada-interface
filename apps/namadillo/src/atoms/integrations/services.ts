@@ -61,7 +61,7 @@ type ShieldedParams = CommonParams & {
   destinationChannelId: string;
 };
 
-export type IbcTransferParams = TransparentParams | ShieldedParams;
+type IbcTransferParams = TransparentParams | ShieldedParams;
 
 export const getShieldedArgs = async (
   target: string,

@@ -60,7 +60,8 @@
     "test:ci": "jest",
     "test:watch-only": "yarn jest --watchAll=true",
     "e2e-test": "PLAYWRIGHT_BASE_URL=http://localhost:3000 yarn playwright test",
-    "e2e-test:headed": "PLAYWRIGHT_BASE_URL=http://localhost:3000 yarn playwright test --project=chromium --headed"
+    "e2e-test:headed": "PLAYWRIGHT_BASE_URL=http://localhost:3000 yarn playwright test --project=chromium --headed",
+    "knip": "knip"
   },
   "browserslist": {
     "production": [
@@ -86,7 +87,7 @@
     "@types/jest": "^29.5.12",
     "@types/lodash.debounce": "^4.0.9",
     "@types/lodash.isequal": "^4",
-    "@types/node": "^22.5.4",
+    "@types/node": "^24.7.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@types/react-paginate": "^7.1.2",
@@ -101,10 +102,11 @@
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "jest-transformer-svg": "^2.0.2",
+    "knip": "^5.64.2",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
     "ts-jest": "^29.2.5",
-    "typescript": "^5.5.4",
+    "typescript": "^5.9.3",
     "vite": "^5.4.3",
     "vite-plugin-node-polyfills": "^0.22.0",
     "vite-plugin-pwa": "^0.21.1",
