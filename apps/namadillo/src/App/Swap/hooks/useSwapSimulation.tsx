@@ -1,20 +1,17 @@
+import invariant from "invariant";
 import { useEffect, useRef } from "react";
-import { NamadaAsset } from "types";
 import { toDisplayAmount } from "utils";
 import { SwapQuote, SwapState } from "../state";
 
+// TODO: no need to pass props, use atoms directly
 export const useSwapSimulation = ({
   swapState,
-  setSwapState,
+  setInternalSwapState,
   quote,
-  buyAsset,
-  sellAsset,
 }: {
   swapState: SwapState;
-  setSwapState: React.Dispatch<React.SetStateAction<SwapState>>;
+  setInternalSwapState: React.Dispatch<React.SetStateAction<SwapState>>;
   quote?: SwapQuote;
-  buyAsset?: NamadaAsset;
-  sellAsset?: NamadaAsset;
 }): void => {
   const swapStateRef = useRef(swapState);
 
@@ -23,12 +20,12 @@ export const useSwapSimulation = ({
   }, [swapState]);
 
   useEffect(() => {
-    const simulate = (
-      buyAsset: NamadaAsset,
-      sellAsset: NamadaAsset,
-      quote: SwapQuote,
-      swapState: SwapState
-    ): void => {
+    const simulate = (quote: SwapQuote, swapState: SwapState): void => {
+      const { sellAsset, buyAsset } = swapState;
+      // Sanity checks
+      invariant(buyAsset, "Buy asset is required for simulation");
+      invariant(sellAsset, "Sell asset is required for simulation");
+
       const baseAmount =
         swapState.mode === "sell" ? quote.amountIn : quote.amountOut;
 
@@ -43,7 +40,7 @@ export const useSwapSimulation = ({
 
       if (simulateSell && sellAsset) {
         if (swapState.sellAmount === swapStateRef.current.sellAmount) {
-          setSwapState((s) => ({
+          setInternalSwapState((s) => ({
             ...s,
             buyAmount: toDisplayAmount(buyAsset, quote.amountOut),
             sellAmountPerOneBuy,
@@ -51,7 +48,7 @@ export const useSwapSimulation = ({
         }
       } else if (simulateBuy && buyAsset) {
         if (swapState.buyAmount === swapStateRef.current.buyAmount) {
-          setSwapState((s) => ({
+          setInternalSwapState((s) => ({
             ...s,
             sellAmount: toDisplayAmount(sellAsset, quote.amountIn),
             sellAmountPerOneBuy,
@@ -60,8 +57,8 @@ export const useSwapSimulation = ({
       }
     };
 
-    if (swapState && buyAsset && sellAsset && quote) {
-      simulate(buyAsset, sellAsset, quote, swapState);
+    if (swapState.sellAsset && swapState.buyAsset && quote) {
+      simulate(quote, swapState);
     }
-  }, [quote, sellAsset?.address, buyAsset?.address]);
+  }, [quote, swapState.sellAsset?.symbol, swapState.buyAsset?.symbol]);
 };

@@ -17,13 +17,7 @@ import { useCallback, useState } from "react";
 import { NamadaAsset, OsmosisSwapTransactionData, TransferStep } from "types";
 import { toBaseAmount } from "utils";
 import { SwapStatus } from "../state";
-import {
-  buyAssetAtom,
-  sellAssetAtom,
-  swapQuoteAtom,
-  swapStateAtom,
-  swapStatusAtom,
-} from "../state/atoms";
+import { swapQuoteAtom, swapStateAtom, swapStatusAtom } from "../state/atoms";
 
 // TODO: reused - unify
 class TransactionError<T> extends Error {
@@ -69,10 +63,9 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
   const [error, setError] = useState<Error | undefined>();
 
   // Feature state
-  const sellAsset = useAtomValue(sellAssetAtom);
-  const buyAsset = useAtomValue(buyAssetAtom);
   const setStatus = useSetAtom(swapStatusAtom);
-  const { buyAmount, sellAmount } = useAtomValue(swapStateAtom);
+  const { buyAmount, sellAmount, buyAsset, sellAsset } =
+    useAtomValue(swapStateAtom);
   const quoteQuery = useAtomValue(swapQuoteAtom);
 
   // Global state

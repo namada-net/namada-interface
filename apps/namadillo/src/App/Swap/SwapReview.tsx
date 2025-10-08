@@ -15,13 +15,7 @@ import { ChainRegistryEntry } from "types";
 import { toDisplayAmount } from "utils";
 import { usePerformOsmosisSwapTx } from "./hooks/usePerformOsmosisSwapTx";
 import { statusMessages, SwapStatus } from "./state";
-import {
-  buyAssetAtom,
-  sellAssetAtom,
-  swapQuoteAtom,
-  swapStateAtom,
-  swapStatusAtom,
-} from "./state/atoms";
+import { swapQuoteAtom, swapStateAtom, swapStatusAtom } from "./state/atoms";
 import { SLIPPAGE } from "./state/functions";
 
 const keplr = new KeplrWalletManager();
@@ -30,12 +24,10 @@ export const SwapReview = (): JSX.Element => {
   // Feature state and sanity checks
   const [status, setStatus] = useAtom(swapStatusAtom);
   const swapState = useAtomValue(swapStateAtom);
+  const { sellAsset, buyAsset } = swapState;
   const { data: quote } = useAtomValue(swapQuoteAtom);
 
-  const sellAsset = useAtomValue(sellAssetAtom);
   invariant(sellAsset, "Sell asset is required");
-
-  const buyAsset = useAtomValue(buyAssetAtom);
   invariant(buyAsset, "Buy asset is required");
 
   const sellPrice = useAtomValue(tokenPricesFamily([sellAsset.address])).data?.[
