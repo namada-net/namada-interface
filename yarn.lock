@@ -2931,6 +2931,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@eslint/js@npm:^9.9.1":
+  version: 9.37.0
+  resolution: "@eslint/js@npm:9.37.0"
+  checksum: 10c0/84f98a6213522fc76ea104bd910f606136200bd918544e056a7a22442d3f9d5c3c5cd7f4cdf2499d49b1fa140155b87d597a1f16d01644920f05c228e9ca0378
+  languageName: node
+  linkType: hard
+
 "@fluent/syntax@npm:0.19.0":
   version: 0.19.0
   resolution: "@fluent/syntax@npm:0.19.0"
@@ -3762,6 +3769,7 @@ __metadata:
   resolution: "@namada/namadillo@workspace:apps/namadillo"
   dependencies:
     "@cosmjs/encoding": "npm:^0.32.3"
+    "@eslint/js": "npm:^9.9.1"
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.3.0"
     "@namada/indexer-client": "npm:4.0.3"
@@ -3795,6 +3803,11 @@ __metadata:
     clsx: "npm:^2.1.1"
     comlink: "npm:^4.4.1"
     eslint: "npm:^8.57.0"
+    eslint-config-prettier: "npm:^9.1.0"
+    eslint-import-resolver-typescript: "npm:^3.6.3"
+    eslint-plugin-import: "npm:^2.30.0"
+    eslint-plugin-react: "npm:^7.35.2"
+    eslint-plugin-react-hooks: "npm:^4.6.0"
     fathom-client: "npm:^3.7.2"
     fp-ts: "npm:^2.16.1"
     framer-motion: "npm:^11.3.28"
