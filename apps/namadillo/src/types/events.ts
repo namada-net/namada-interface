@@ -18,15 +18,6 @@ export type TransactionEventsStatus =
   | "Success"
   | "PartialSuccess";
 
-type TransactionEvent =
-  `${TransactionEventsClasses}.${TransactionEventsStatus}`;
-
-type TransactionEventHandlers = {
-  onError?: TransactionEvent;
-  onSuccess?: TransactionEvent;
-  onPending?: TransactionEvent;
-};
-
 interface EventData<T> extends CustomEvent {
   detail: {
     tx: TxProps[];

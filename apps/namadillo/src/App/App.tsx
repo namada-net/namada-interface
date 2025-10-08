@@ -12,7 +12,7 @@ import { useTransactionWatcher } from "hooks/useTransactionWatcher";
 import { Outlet } from "react-router-dom";
 import { ChainLoader } from "./Setup/ChainLoader";
 
-const history = createBrowserHistory({ window });
+export const history = createBrowserHistory({ window });
 
 export function App(): JSX.Element {
   useExtensionEvents();

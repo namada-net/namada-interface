@@ -5,11 +5,9 @@ import {
   IBCInfo,
 } from "@chain-registry/types";
 import { ValidatorStatus } from "@namada/indexer-client";
-import { ClaimRewardsMsgValue } from "@namada/sdk-multicore";
 import { Account, ChainKey, ExtensionKey } from "@namada/types";
 import { MutationStatus } from "@tanstack/query-core";
 import BigNumber from "bignumber.js";
-import { TxKind } from "types/txKind";
 
 declare module "*.module.css" {
   const content: Record<string, string>;
@@ -21,8 +19,6 @@ declare module "*.module.css" {
 type Unique = {
   uuid: string;
 };
-
-type PublicKey = string;
 
 export type Address = string;
 
@@ -49,10 +45,6 @@ export type GasConfigToDisplay = {
   totalDisplayAmount: BigNumber;
   asset: Asset;
 };
-
-type TxGas = Record<Address, GasLimit>;
-
-type GasTable = Record<TxKind, TxGas>;
 
 export type ChainSettings = {
   id: ChainKey;
@@ -138,33 +130,15 @@ export type StakingTotals = {
   totalWithdrawable: BigNumber;
 };
 
-type ChangeInStakingProps = {
-  account: Account;
-  changes: ChangeInStakingPosition[];
-  gasConfig: GasConfig;
-};
-
 export type ChangeInStakingPosition = {
   validatorId: Address;
   amount: BigNumber;
-};
-
-type RedelegateChangesProps = {
-  account: Account;
-  changes: RedelegateChange[];
-  gasConfig: GasConfig;
 };
 
 export type RedelegateChange = {
   sourceValidator: Address;
   destinationValidator: Address;
   amount: BigNumber;
-};
-
-type ClaimRewardsProps = {
-  account: Account;
-  params: ClaimRewardsMsgValue[];
-  gasConfig: GasConfig;
 };
 
 type Signer = {
@@ -193,10 +167,6 @@ export type ToastNotification = {
   details?: React.ReactNode;
   timeout?: number;
 };
-
-type ToastNotificationEntryFilter = (
-  notification: ToastNotification
-) => boolean;
 
 export type WalletProvider = {
   id: ExtensionKey;
@@ -231,11 +201,6 @@ export type AssetWithAmount = {
 export type NamadaAssetWithAmount = {
   asset: NamadaAsset;
   amount: BigNumber;
-};
-
-type AssetWithMinDenomAmount = {
-  asset: Asset;
-  minDenomAmount: BigNumber;
 };
 
 export type Coin = {
@@ -331,13 +296,8 @@ export const allTransferStages = {
   ...ibcTransferStages,
 };
 
-export const transferPossibleStages = [
-  ...new Set(Object.values(allTransferStages).flat()),
-] as const;
-
 type NamadaTransferStages = typeof namadaTransferStages;
 type IbcTransferStages = typeof ibcTransferStages;
-type AllTransferStages = typeof allTransferStages;
 
 export type NamadaTransferTxKind = keyof NamadaTransferStages;
 

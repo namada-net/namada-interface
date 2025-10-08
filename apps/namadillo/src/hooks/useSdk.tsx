@@ -7,7 +7,6 @@ import {
   createContext,
   FunctionComponent,
   PropsWithChildren,
-  useContext,
   useEffect,
   useState,
 } from "react";
@@ -78,8 +77,4 @@ export const SdkProvider: FunctionComponent<PropsWithChildren> = ({
       </SdkContext.Provider>
     </>
   );
-};
-
-export const useSdk = (): SdkContext => {
-  return useContext(SdkContext);
 };

@@ -10,7 +10,7 @@ type ControlRoutineProps = {
   lastBlockHeight: BigNumber | undefined;
 };
 
-export const controlRoutineAtom = atomWithStorage<ControlRoutineProps>(
+const controlRoutineAtom = atomWithStorage<ControlRoutineProps>(
   "namadillo:etc",
   {
     shouldUpdateAmount: false,
@@ -34,9 +34,4 @@ export const shouldUpdateBalanceAtom = atom(
 export const shouldUpdateProposalAtom = atom(
   (get) => get(controlRoutineAtom).shouldUpdateProposal,
   changeProps<boolean>("shouldUpdateProposal")
-);
-
-export const lastBlockHeightAtom = atom(
-  (get) => get(controlRoutineAtom).lastBlockHeight,
-  changeProps<BigNumber | undefined>("lastBlockHeight")
 );

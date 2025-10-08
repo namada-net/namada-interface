@@ -1,3 +1,4 @@
+import { Router } from "@remix-run/router";
 import { applicationFeaturesAtom } from "atoms/settings";
 import { useAtomValue } from "jotai";
 import {
@@ -7,7 +8,6 @@ import {
   createBrowserRouter,
   createRoutesFromElements,
   useLocation,
-  type Router,
 } from "react-router-dom";
 import { AccountOverview } from "./AccountOverview";
 import { App } from "./App";

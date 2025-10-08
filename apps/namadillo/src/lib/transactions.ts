@@ -26,7 +26,7 @@ import {
 import { isNamadaAsset, toDisplayAmount } from "utils";
 import { TransactionPair } from "./query";
 
-export const getEventAttribute = (
+const getEventAttribute = (
   tx: DeliverTxResponse,
   attributeType: string
 ): Record<string, string> => {

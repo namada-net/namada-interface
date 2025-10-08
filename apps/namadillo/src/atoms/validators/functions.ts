@@ -37,7 +37,7 @@ export const toValidator = (
   };
 };
 
-export const calculateUnbondingTimeLeft = (unbond: IndexerUnbond): string => {
+const calculateUnbondingTimeLeft = (unbond: IndexerUnbond): string => {
   const timeNow = Math.round(Date.now() / 1000);
   const withdrawTime = Number(unbond.withdrawTime);
   const canWithdraw = unbond.canWithdraw;

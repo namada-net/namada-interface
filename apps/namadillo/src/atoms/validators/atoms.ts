@@ -13,7 +13,7 @@ import {
   fetchVotingPower,
 } from "./services";
 
-export const votingPowerAtom = atomWithQuery((get) => {
+const votingPowerAtom = atomWithQuery((get) => {
   const api = get(indexerApiAtom);
   return {
     queryKey: ["voting-power"],

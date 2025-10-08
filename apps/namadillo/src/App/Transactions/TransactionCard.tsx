@@ -55,10 +55,7 @@ type TransactionInfo = {
   receiver?: string;
 };
 
-export function getToken(
-  txn: Tx["tx"],
-  nativeToken: string
-): string | undefined {
+function getToken(txn: Tx["tx"], nativeToken: string): string | undefined {
   if (
     txn?.kind === "bond" ||
     txn?.kind === "unbond" ||

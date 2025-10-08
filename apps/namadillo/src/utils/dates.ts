@@ -1,15 +1,12 @@
 import { DateTime } from "luxon";
 
-export const epochToString = (epoch: bigint): string =>
-  `Epoch ${epoch.toString()}`;
-
-export const secondsToDateTime = (seconds: bigint): DateTime =>
+const secondsToDateTime = (seconds: bigint): DateTime =>
   DateTime.fromSeconds(Number(seconds));
 
-export const secondsToTimeString = (seconds: bigint): string =>
+const secondsToTimeString = (seconds: bigint): string =>
   secondsToDateTime(seconds).toLocaleString(DateTime.TIME_SIMPLE);
 
-export const secondsToDateString = (seconds: bigint): string =>
+const secondsToDateString = (seconds: bigint): string =>
   secondsToDateTime(seconds).toLocaleString(DateTime.DATE_MED);
 
 export const secondsToDateTimeString = (seconds: bigint): string =>

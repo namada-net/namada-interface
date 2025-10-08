@@ -50,7 +50,7 @@ export const defaultServerConfigAtom = atomWithQuery((_get) => {
   };
 });
 
-export const defaultLocalStorageProps = {
+const defaultLocalStorageProps = {
   version: "0.1",
   indexerUrl: "",
   signArbitraryEnabled: false,
@@ -132,22 +132,6 @@ export const updateRpcUrlAtom = atomWithMutation(() => {
   return {
     mutationKey: ["update-rpc-url"],
     mutationFn: changeSettingsUrl("rpcUrl", isRpcAlive),
-  };
-});
-
-export const rpcHeartbeatAtom = atomWithQuery((get) => {
-  const rpcUrl = get(rpcUrlAtom);
-  return {
-    queryKey: ["rpc-heartbeat", rpcUrl],
-    enabled: !!rpcUrl,
-    retry: false,
-    refetchOnWindowFocus: true,
-    refetchInterval: 10_000,
-    queryFn: async () => {
-      const valid = await isRpcAlive(rpcUrl);
-      if (!valid) throw "Unable to verify rpc heartbeat";
-      return true;
-    },
   };
 });
 

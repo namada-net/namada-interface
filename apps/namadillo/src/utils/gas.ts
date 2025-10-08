@@ -5,7 +5,7 @@ import { Address, Asset, GasConfig, GasConfigToDisplay } from "types";
 import { isNamadaAsset, toDisplayAmount } from "utils";
 import { unknownAsset } from "./assets";
 
-export const calculateGasFee = (gasConfig: GasConfig): BigNumber => {
+const calculateGasFee = (gasConfig: GasConfig): BigNumber => {
   return BigNumber(gasConfig.gasPriceInMinDenom).multipliedBy(
     gasConfig.gasLimit
   );

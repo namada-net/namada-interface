@@ -36,19 +36,6 @@ export type EncodedTxData<T> = {
   };
 };
 
-type TransactionNotification = {
-  success?: { title: string; text: string };
-  error?: { title: string; text: string };
-};
-
-type PreparedTransaction<T> = {
-  encodedTx: WrapperTxProps;
-  signedTx: Uint8Array;
-  meta: T;
-};
-
-export const revealPublicKeyType = "revealPublicKey";
-
 const getTxProps = (
   account: Account,
   gasConfig: GasConfig,
@@ -209,7 +196,7 @@ export const signEncodedTx = async <T>(
   };
 };
 
-export const broadcastTransaction = async <T>(
+const broadcastTransaction = async <T>(
   encodedTx: EncodedTxData<T>,
   signedTxs: Uint8Array[]
 ): Promise<PromiseSettledResult<[EncodedTxData<T>, TxResponseProps]>[]> => {
@@ -227,9 +214,7 @@ export const broadcastTransaction = async <T>(
 
 // We use this to prevent dispatching events for transfer events
 // as they are handled by useTransactionWatcher
-export const isTransferEventType = (
-  eventType?: TransactionEventsClasses
-): boolean => {
+const isTransferEventType = (eventType?: TransactionEventsClasses): boolean => {
   return eventType ?
       [
         "IbcTransfer",

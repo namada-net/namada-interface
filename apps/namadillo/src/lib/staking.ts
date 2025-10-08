@@ -1,22 +1,6 @@
 import BigNumber from "bignumber.js";
 import { RedelegateChange, Validator } from "types";
 
-export const getReducedAmounts = (
-  stakedAmounts: Record<string, BigNumber>,
-  updatedAmounts: Record<string, BigNumber>
-): Record<string, BigNumber> => {
-  const reducedAmounts: Record<string, BigNumber> = {};
-  for (const address in updatedAmounts) {
-    if (!stakedAmounts.hasOwnProperty(address)) continue;
-    if (stakedAmounts[address].gt(updatedAmounts[address])) {
-      reducedAmounts[address] = stakedAmounts[address].minus(
-        updatedAmounts[address]
-      );
-    }
-  }
-  return reducedAmounts;
-};
-
 export const getTopValidatorsAddresses = (
   validators: Validator[],
   topNumber = 10
@@ -31,47 +15,7 @@ export const getTopValidatorsAddresses = (
     .map((validator) => validator.address);
 };
 
-export const getIncrementedAmounts = (
-  stakedAmounts: Record<string, BigNumber>,
-  updatedAmounts: Record<string, BigNumber>
-): Record<string, BigNumber> => {
-  const incrementedAmounts: Record<string, BigNumber> = {};
-  for (const address in updatedAmounts) {
-    if (
-      !stakedAmounts[address] ||
-      updatedAmounts[address].gt(stakedAmounts[address])
-    ) {
-      incrementedAmounts[address] = updatedAmounts[address].minus(
-        stakedAmounts[address] || 0
-      );
-    }
-  }
-  return incrementedAmounts;
-};
-
-export const getPendingToDistributeAmount = (
-  stakedAmounts: Record<string, BigNumber>,
-  updatedAmounts: Record<string, BigNumber>
-): BigNumber => {
-  const incrementedAmounts = Object.values(
-    getIncrementedAmounts(stakedAmounts, updatedAmounts)
-  );
-  const decreasedAmounts = Object.values(
-    getReducedAmounts(stakedAmounts, updatedAmounts)
-  );
-
-  const incrementedTotal =
-    incrementedAmounts.length ?
-      BigNumber.sum(...incrementedAmounts)
-    : BigNumber(0);
-
-  const decreasedTotal =
-    decreasedAmounts.length ? BigNumber.sum(...decreasedAmounts) : BigNumber(0);
-
-  return decreasedTotal.minus(incrementedTotal);
-};
-
-export const buildRedelegateChange = (
+const buildRedelegateChange = (
   sourceValidator: string,
   destinationValidator: string,
   amount: BigNumber

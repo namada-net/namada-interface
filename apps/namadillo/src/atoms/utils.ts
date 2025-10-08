@@ -15,7 +15,7 @@ export const atomsAreLoaded = (...args: AtomWithQueryResult[]): boolean => {
   return args.reduce((prev, current) => prev && current.isSuccess, true);
 };
 
-export const atomsAreError = (...args: AtomWithQueryResult[]): boolean => {
+const atomsAreError = (...args: AtomWithQueryResult[]): boolean => {
   return args.reduce((prev, current) => prev || current.isError, false);
 };
 
@@ -23,7 +23,7 @@ export const atomsAreLoading = (...args: AtomWithQueryResult[]): boolean => {
   return args.reduce((prev, current) => prev || current.isLoading, false);
 };
 
-export const getFirstError = (
+const getFirstError = (
   ...args: AtomWithQueryResult[]
 ): Error | null | undefined => {
   return args.find((arg) => arg.isError)?.error;

@@ -4,7 +4,7 @@ import { Bech32Config, ChainInfo, Currency } from "@keplr-wallet/types";
 import tokenImage from "App/Common/assets/token.svg";
 import { getRestApiAddressByIndex, getRpcByIndex } from "atoms/integrations";
 import BigNumber from "bignumber.js";
-import { Asset, ChainId, ChainRegistryEntry, GasConfig } from "types";
+import { Asset, GasConfig } from "types";
 
 type GasPriceStep = {
   low: number;
@@ -16,16 +16,6 @@ type GasPriceByDenom = Record<string, GasPriceStep>;
 
 type CurrencyWithGasPriceStep = Currency & {
   gasPriceStep?: GasPriceStep;
-};
-
-export const findRegistryByChainId = (
-  knownChains: Record<ChainId, ChainRegistryEntry>,
-  chainId: string
-): ChainRegistryEntry | undefined => {
-  if (chainId in knownChains) {
-    return knownChains[chainId];
-  }
-  return undefined;
 };
 
 const getSvgOrPng = (image?: {
@@ -70,7 +60,7 @@ export const getIbcGasConfig = (
   };
 };
 
-export const assetsToKeplrCurrencies = (assets: Asset[]): Currency[] => {
+const assetsToKeplrCurrencies = (assets: Asset[]): Currency[] => {
   return assets.map((asset) => ({
     coinDenom: asset.symbol,
     coinMinimalDenom: asset.base,

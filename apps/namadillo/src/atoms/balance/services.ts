@@ -9,9 +9,6 @@ import {
 import { getSdkInstance } from "utils/sdk";
 import {
   Events,
-  ProgressBarFinished,
-  ProgressBarIncremented,
-  ProgressBarStarted,
   Worker as ShieldedSyncWorkerApi,
 } from "workers/ShieldedSyncWorker";
 import ShieldedSyncWorker from "workers/ShieldedSyncWorker?worker";
@@ -22,12 +19,6 @@ import {
   registerTransferHandlers,
 } from "workers/MaspTxWorker";
 import MaspTxWorker from "workers/MaspTxWorker?worker";
-
-type ShieldedSyncEventMap = {
-  [SdkEvents.ProgressBarStarted]: ProgressBarStarted[];
-  [SdkEvents.ProgressBarIncremented]: ProgressBarIncremented[];
-  [SdkEvents.ProgressBarFinished]: ProgressBarFinished[];
-};
 
 let runningShieldedSync: Promise<void> | undefined;
 

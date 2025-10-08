@@ -1,7 +1,7 @@
 import { AssetList, Chain } from "@chain-registry/types";
 import { DeliverTxResponse, SigningStargateClient } from "@cosmjs/stargate";
 import { ExtensionKey } from "@namada/types";
-import { chainAtom, chainTokensAtom } from "atoms/chain";
+import { chainAtom } from "atoms/chain";
 import { defaultServerConfigAtom } from "atoms/settings";
 import { queryDependentFn } from "atoms/utils";
 import BigNumber from "bignumber.js";
@@ -20,7 +20,6 @@ import {
 import {
   broadcastIbcTransaction,
   fetchIbcChannelFromRegistry,
-  fetchIbcRateLimits,
   queryAndStoreRpc,
   queryAssetBalances,
 } from "./services";
@@ -120,16 +119,6 @@ export const assetBalanceAtomFamily = atomFamily(
     );
   }
 );
-
-export const ibcRateLimitAtom = atomWithQuery((get) => {
-  const chainTokens = get(chainTokensAtom);
-  return {
-    queryKey: ["ibc-rate-limit", chainTokens],
-    ...queryDependentFn(async () => {
-      return await fetchIbcRateLimits();
-    }, [chainTokens]),
-  };
-});
 
 export const ibcChannelsFamily = atomFamily((ibcChainName?: string) =>
   atomWithQuery<IbcChannels | null>((get) => {

@@ -1,4 +1,3 @@
-import { IbcToken, NativeToken } from "@namada/indexer-client";
 import { shortenAddress } from "@namada/utils";
 import { Address, Asset, AssetWithAmount } from "types";
 
@@ -10,38 +9,6 @@ export const unknownAsset = (denom: string): Asset => ({
   display: denom,
   symbol: shortenAddress(denom, 4, 4),
 });
-
-// TODO upgrade this function to be as smart as possible
-// please refer to `tnamAddressToDenomTrace` and how we could combine both
-export const findAssetByToken = (
-  token: NativeToken | IbcToken,
-  assets: Asset[]
-): Asset | undefined => {
-  // first, search by the address
-  const asset = assets.find((a) => a.address === token.address);
-  if (asset) {
-    return asset;
-  }
-
-  // then, search by trace
-  if ("trace" in token) {
-    const traceDenom = token.trace.split("/").at(-1);
-    if (traceDenom) {
-      for (let i = 0; i < assets.length; i++) {
-        const asset = assets[i];
-        if (
-          asset.base === traceDenom ||
-          asset.denom_units.find(
-            (u) => u.denom === traceDenom || u.aliases?.includes(traceDenom)
-          )
-        ) {
-          return asset;
-        }
-      }
-    }
-  }
-  return undefined;
-};
 
 export const filterAvailableAssetsWithBalance = (
   availableAssets?: Record<Address, AssetWithAmount>

@@ -13,7 +13,7 @@ type LedgerStatus = {
 
 const ledgerStatusStopAtom = atom(false);
 
-export const ledgerStatusAtom = atomWithQuery<LedgerStatus | undefined>(() => {
+const ledgerStatusAtom = atomWithQuery<LedgerStatus | undefined>(() => {
   return {
     refetchInterval: 1000,
     queryKey: ["ledger-status"],
