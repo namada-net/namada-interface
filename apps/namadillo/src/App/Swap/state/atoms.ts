@@ -15,10 +15,10 @@ import debounce from "lodash.debounce";
 import { SwapStorage } from "types";
 import { toBaseAmount } from "utils";
 import { fetchQuote } from "./functions";
-import type { SwapStatusType } from "./types";
-import { SwapState, SwapStatus } from "./types";
+import type { SwapState, SwapStatusType } from "./types";
+import { SwapStatus } from "./types";
 
-export const swapStorageAtom = atomWithStorage<SwapStorage>(
+const swapStorageAtom = atomWithStorage<SwapStorage>(
   "namadillo:swap",
   {
     assetSymbolBuy: undefined,
@@ -28,7 +28,7 @@ export const swapStorageAtom = atomWithStorage<SwapStorage>(
   { getOnInit: true }
 );
 
-export const sellAssetAtom = atom(
+const sellAssetAtom = atom(
   (get) => {
     const swapStorage = get(swapStorageAtom);
     const chainAssetsMapAtom = get(namadaRegistryChainAssetsMapAtom);
@@ -50,7 +50,7 @@ export const sellAssetAtom = atom(
   }
 );
 
-export const buyAssetAtom = atom(
+const buyAssetAtom = atom(
   (get) => {
     const swapStorage = get(swapStorageAtom);
     const chainAssetsMapAtom = get(namadaRegistryChainAssetsMapAtom);
@@ -73,7 +73,29 @@ export const buyAssetAtom = atom(
 );
 
 const defaultSwapState: SwapState = { mode: "none" };
-const internalSwapStateAtom = atom<SwapState>(defaultSwapState);
+const baseSwapStateAtom = atom<SwapState>(defaultSwapState);
+
+export const internalSwapStateAtom = atom(
+  (get) => {
+    const sellAsset = get(sellAssetAtom);
+    const buyAsset = get(buyAssetAtom);
+    const baseState = get(baseSwapStateAtom);
+
+    return {
+      ...baseState,
+      sellAsset: baseState.sellAsset || sellAsset,
+      buyAsset: baseState.buyAsset || buyAsset,
+    };
+  },
+  (get, set, update: SwapState | ((prev: SwapState) => SwapState)) => {
+    set(baseSwapStateAtom, update);
+    const { sellAsset, buyAsset } = get(internalSwapStateAtom);
+
+    set(sellAssetAtom, sellAsset?.symbol);
+    set(buyAssetAtom, buyAsset?.symbol);
+  }
+);
+
 // We use debounced version of the swap state for fetching quotes to avoid excessive requests
 const debouncedSwapStateAtom = atom<SwapState>(defaultSwapState);
 
@@ -90,30 +112,32 @@ export const swapStateAtom = atom(
   }
 );
 
+export const setInternalSwapStateAtom = atom(
+  null,
+  (_get, set, update: SwapState | ((prev: SwapState) => SwapState)) => {
+    set(internalSwapStateAtom, update);
+  }
+);
+
 export const swapStatusAtom = atom<SwapStatusType>(SwapStatus.idle());
 
 export const swapQuoteAtom = atomWithQuery((get) => {
-  const swapStorage = get(swapStorageAtom);
   const swapState = get(debouncedSwapStateAtom);
-  const chainAssetsMapAtom = get(namadaRegistryChainAssetsMapAtom);
-
-  const namadaAssets =
-    chainAssetsMapAtom.isSuccess ? Object.values(chainAssetsMapAtom.data) : [];
-
-  const sellAsset = namadaAssets.find(
-    (asset) => asset.symbol === swapStorage.assetSymbolSell
-  );
-  const buyAsset = namadaAssets.find(
-    (asset) => asset.symbol === swapStorage.assetSymbolBuy
-  );
+  const { sellAsset, buyAsset } = swapState;
 
   // TODO: osmosis-1 should be dynamic
   const osmosisAssets =
     getChainRegistryByChainId("osmosis-1")?.assets.assets || [];
 
   //We only want to refetch when sellAmount changes when selling, and buyAmount when buying
-  const sellKey = swapState.mode === "sell" ? swapState.sellAmount : "sell";
-  const buyKey = swapState.mode === "buy" ? swapState.buyAmount : "buy";
+  const sellKey =
+    swapState.mode === "sell" ?
+      `${swapState.sellAmount}-${swapState.sellAsset?.symbol}`
+    : "sell";
+  const buyKey =
+    swapState.mode === "buy" ?
+      `${swapState.buyAmount}-${swapState.buyAsset?.symbol}`
+    : "buy";
 
   return {
     enabled: Boolean(sellAsset && buyAsset),

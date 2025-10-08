@@ -3,6 +3,7 @@
 // If any of those are used outside of the swap feature, consider moving them up to a more global types file
 
 import BigNumber from "bignumber.js";
+import { NamadaAsset } from "types";
 
 export type SwapStatusType =
   | { t: "Idle" }
@@ -71,6 +72,8 @@ export type SwapState = {
   sellAmount?: BigNumber;
   buyAmount?: BigNumber;
   sellAmountPerOneBuy?: BigNumber;
+  sellAsset?: NamadaAsset;
+  buyAsset?: NamadaAsset;
 };
 
 export type SwapQuote = {

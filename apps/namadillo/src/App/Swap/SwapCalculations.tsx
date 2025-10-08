@@ -19,10 +19,9 @@ import { NamadaAsset } from "types";
 import { SwapSource } from "./SwapSource";
 import { useSwapSimulation } from "./hooks/useSwapSimulation";
 import { useSwapValidation } from "./hooks/useSwapValidation";
-import { SwapQuote, SwapStatus } from "./state";
+import { SwapQuote, SwapState, SwapStatus } from "./state";
 import {
-  buyAssetAtom,
-  sellAssetAtom,
+  setInternalSwapStateAtom,
   swapQuoteAtom,
   swapStateAtom,
   swapStatusAtom,
@@ -36,9 +35,8 @@ export const SwapCalculations = (): JSX.Element => {
     useState(false);
 
   // Feature state
-  const [sellAsset, setSellAsset] = useAtom(sellAssetAtom);
-  const [buyAsset, setBuyAsset] = useAtom(buyAssetAtom);
   const [swapState, setSwapState] = useAtom(swapStateAtom);
+  const setInternalSwapState = useSetAtom(setInternalSwapStateAtom);
   const { data: quote } = useAtomValue(swapQuoteAtom);
   const setStatus = useSetAtom(swapStatusAtom);
 
@@ -55,13 +53,12 @@ export const SwapCalculations = (): JSX.Element => {
 
   useSwapSimulation({
     swapState,
-    setSwapState,
+    setInternalSwapState,
     quote,
-    buyAsset,
-    sellAsset,
   });
 
   // Derived state
+  const { sellAsset, buyAsset } = swapState;
   const availableAmount = mapUndefined(
     (address) => assetsWithBalance?.[address]?.amount,
     sellAsset?.address
@@ -123,42 +120,54 @@ export const SwapCalculations = (): JSX.Element => {
   }, []);
 
   const onSwapArrowsClick = useCallback((): void => {
-    if (sellAsset && buyAsset) {
-      setSellAsset(buyAsset.symbol);
-      setBuyAsset(sellAsset.symbol);
-
+    const update = (s: SwapState): SwapState => {
       if (swapState.mode !== "none") {
         const newMode = swapState.mode === "sell" ? "buy" : "sell";
-        setSwapState((s) => ({
+        return {
           mode: newMode,
           sellAmount: s.buyAmount,
           buyAmount: s.sellAmount,
           sellAmountPerOneBuy: s.sellAmountPerOneBuy,
-        }));
+        };
       }
+
+      return s;
+    };
+
+    if (sellAsset && buyAsset) {
+      setSwapState((s) => ({
+        ...update(s),
+        sellAsset: buyAsset,
+        buyAsset: sellAsset,
+      }));
     }
   }, [sellAsset?.symbol, buyAsset?.symbol, swapState.mode]);
-
-  const onChangeBuySelectedAsset = useCallback(
-    (address: string): void => {
-      const asset = sortedAssets.find((a) => a.address === address);
-      if (asset?.address === sellAsset?.address) {
-        setSellAsset(buyAsset?.symbol);
-      }
-      setBuyAsset(asset?.symbol);
-    },
-    [sortedAssets.length]
-  );
 
   const onChangeSellSelectedAsset = useCallback(
     (address: string): void => {
       const asset = sortedAssets.find((a) => a.address === address);
-      if (asset?.address === buyAsset?.address) {
-        setBuyAsset(sellAsset?.symbol);
-      }
-      setSellAsset(asset?.symbol);
+
+      setSwapState((s) => ({
+        ...s,
+        sellAsset: asset,
+        buyAsset: asset?.address === buyAsset?.address ? sellAsset : s.buyAsset,
+      }));
     },
-    [sortedAssets.length]
+    [sortedAssets.length, sellAsset?.symbol, sellAsset?.symbol]
+  );
+
+  const onChangeBuySelectedAsset = useCallback(
+    (address: string): void => {
+      const asset = sortedAssets.find((a) => a.address === address);
+
+      setSwapState((s) => ({
+        ...s,
+        sellAsset:
+          asset?.address === sellAsset?.address ? buyAsset : s.sellAsset,
+        buyAsset: asset,
+      }));
+    },
+    [sortedAssets.length, buyAsset?.symbol, sellAsset?.symbol]
   );
 
   return (
