@@ -36,7 +36,7 @@ import { StakingOverview } from "./Staking/StakingOverview";
 import { StakingRewards } from "./Staking/StakingRewards";
 import { StakingWithdrawModal } from "./Staking/StakingWithdrawModal";
 import { Unstake } from "./Staking/Unstake";
-import { OsmosisSwap } from "./Swap/OsmosisSwap";
+import { SwapModule } from "./Swap/SwapModule";
 import { SwitchAccountPanel } from "./SwitchAccount/SwitchAccountPanel";
 import { TransactionDetails } from "./Transactions/TransactionDetails";
 import { TransactionHistory } from "./Transactions/TransactionHistory";
@@ -103,7 +103,7 @@ export const MainRoutes = (): JSX.Element => {
           {/* Swapping */}
           {true && (
             <>
-              <Route path={routes.swap} element={<OsmosisSwap />} />
+              <Route path={routes.swap} element={<SwapModule />} />
             </>
           )}
 

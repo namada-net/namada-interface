@@ -1,7 +1,9 @@
 import { Heading, Stack } from "@namada/components";
 import anime from "animejs";
+import { clearDisposableSigner } from "atoms/transfer/services";
 import { useAtom } from "jotai";
 import { useEffect, useRef } from "react";
+import { OsmosisSwapTransactionData } from "types";
 import { useTransactionEventListener } from "utils";
 import swapInProgressImg from "../Masp/assets/swap-in-progress.png";
 import { swapStatusAtom } from "./state/atoms";
@@ -12,11 +14,13 @@ export const SwapInProgress = (): JSX.Element => {
   const headerRef = useRef<HTMLHeadingElement | null>(null);
 
   useTransactionEventListener(["ShieldedOsmosisSwap.Success"], async (e) => {
+    const tx = e.detail as OsmosisSwapTransactionData;
     if (
       status.t === "Confirming" &&
       status.txHash &&
-      e.detail.hash === status.txHash
+      tx.hash === status.txHash
     ) {
+      await clearDisposableSigner(tx.refundTarget);
       setStatus({ t: "Completed" });
     }
   });

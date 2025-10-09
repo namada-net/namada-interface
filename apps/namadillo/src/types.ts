@@ -415,6 +415,7 @@ export type OsmosisSwapTransactionData = BaseTransferTransaction & {
   type: "ShieldedOsmosisSwap";
   targetAsset: Asset;
   minAmountOut: BigNumber;
+  refundTarget: string;
 };
 
 export type TransferTransactionData =
