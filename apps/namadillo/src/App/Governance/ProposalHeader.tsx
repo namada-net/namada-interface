@@ -158,7 +158,9 @@ const WasmButton: React.FC<{
 
       if (typeof wasmCode !== "undefined") {
         const href = URL.createObjectURL(
-          new Blob([wasmCode], { type: "application/octet-stream" })
+          new Blob([new Uint8Array(wasmCode)], {
+            type: "application/octet-stream",
+          })
         );
 
         const filename = `proposal-${proposal.data.id.toString()}.wasm`;
