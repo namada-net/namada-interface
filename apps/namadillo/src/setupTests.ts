@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { atom } from "jotai";
 import { TextDecoder, TextEncoder } from "util";
 
-global.TextEncoder = TextEncoder;
+global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
 jest.mock("atoms/integrations", () => ({
