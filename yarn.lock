@@ -2903,13 +2903,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/js@npm:^9.9.1":
-  version: 9.37.0
-  resolution: "@eslint/js@npm:9.37.0"
-  checksum: 10c0/84f98a6213522fc76ea104bd910f606136200bd918544e056a7a22442d3f9d5c3c5cd7f4cdf2499d49b1fa140155b87d597a1f16d01644920f05c228e9ca0378
-  languageName: node
-  linkType: hard
-
 "@fluent/syntax@npm:0.19.0":
   version: 0.19.0
   resolution: "@fluent/syntax@npm:0.19.0"
@@ -3741,7 +3734,6 @@ __metadata:
   resolution: "@namada/namadillo@workspace:apps/namadillo"
   dependencies:
     "@cosmjs/encoding": "npm:^0.32.3"
-    "@eslint/js": "npm:^9.9.1"
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.3.0"
     "@namada/indexer-client": "npm:4.0.3"
@@ -3761,7 +3753,7 @@ __metadata:
     "@types/jest": "npm:^29.5.12"
     "@types/lodash.debounce": "npm:^4.0.9"
     "@types/lodash.isequal": "npm:^4"
-    "@types/node": "npm:^24.7.0"
+    "@types/node": "npm:^22.5.4"
     "@types/react": "npm:^18.3.5"
     "@types/react-dom": "npm:^18.3.0"
     "@types/react-paginate": "npm:^7.1.2"
@@ -3774,13 +3766,7 @@ __metadata:
     bignumber.js: "npm:^9.1.1"
     clsx: "npm:^2.1.1"
     comlink: "npm:^4.4.1"
-    crypto-browserify: "npm:^3.12.0"
     eslint: "npm:^8.57.0"
-    eslint-config-prettier: "npm:^9.1.0"
-    eslint-import-resolver-typescript: "npm:^3.6.3"
-    eslint-plugin-import: "npm:^2.30.0"
-    eslint-plugin-react: "npm:^7.35.2"
-    eslint-plugin-react-hooks: "npm:^4.6.0"
     fathom-client: "npm:^3.7.2"
     fp-ts: "npm:^2.16.1"
     framer-motion: "npm:^11.3.28"
@@ -5281,15 +5267,6 @@ __metadata:
   dependencies:
     undici-types: "npm:~5.26.4"
   checksum: 10c0/68866e53b92be60d8840f5c93232d3ae39c71663101decc1d4f1870d9236c3c89e74177b616c2a2cabce116b1356f3e89c57df3e969c9f9b0e0b5c59b5f790f7
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^24.7.0":
-  version: 24.7.0
-  resolution: "@types/node@npm:24.7.0"
-  dependencies:
-    undici-types: "npm:~7.14.0"
-  checksum: 10c0/f036c78062cb3a0d5c6586bf2dac347ed3f4af121cef4ab92c85c44e32be1c50aab5ba96955842b7f8165f0e0f1c8066d1813ae259372df6c0fa9fadb1116a3e
   languageName: node
   linkType: hard
 
@@ -19408,13 +19385,6 @@ __metadata:
   version: 6.20.0
   resolution: "undici-types@npm:6.20.0"
   checksum: 10c0/68e659a98898d6a836a9a59e6adf14a5d799707f5ea629433e025ac90d239f75e408e2e5ff086afc3cace26f8b26ee52155293564593fbb4a2f666af57fc59bf
-  languageName: node
-  linkType: hard
-
-"undici-types@npm:~7.14.0":
-  version: 7.14.0
-  resolution: "undici-types@npm:7.14.0"
-  checksum: 10c0/e7f3214b45d788f03c51ceb33817be99c65dae203863aa9386b3ccc47201a245a7955fc721fb581da9c888b6ebad59fa3f53405214afec04c455a479908f0f14
   languageName: node
   linkType: hard
 
