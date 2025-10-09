@@ -7,7 +7,11 @@ import {
   dispatchToastNotificationAtom,
 } from "atoms/notifications";
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
-import { getDisposableSigner } from "atoms/transfer/services";
+import {
+  clearDisposableSigner,
+  getDisposableSigner,
+  persistDisposableSigner,
+} from "atoms/transfer/services";
 import BigNumber from "bignumber.js";
 import { useTransactionFee } from "hooks";
 import { useTransactionActions } from "hooks/useTransactionActions";
@@ -99,6 +103,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
     invariant(props && lastTx, "Invalid transaction data");
     const lastInnerTxHash = lastTx.innerTxHashes.pop();
     invariant(lastInnerTxHash, "Inner tx not found");
+    invariant(props.transfer.refundTarget, "No refund target found");
 
     const transferTransaction: OsmosisSwapTransactionData = {
       hash: lastTx.hash,
@@ -117,6 +122,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
       shielded: true,
       sourceAddress: `${transparentAccount?.alias} - shielded`,
       destinationAddress: props.transfer.receiver,
+      refundTarget: props.transfer.refundTarget,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -150,6 +156,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
         const route = quote.routes[0]?.pools;
         invariant(route, "No swap route found");
 
+        const disposableRefundTarget = await getDisposableSigner();
         const transfer = {
           amountInBaseDenom: toBaseAmount(sellAsset, sellAmount),
           channelId: "channel-1",
@@ -158,8 +165,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
           source: shieldedAccount.pseudoExtendedKey!,
           gasSpendingKey: shieldedAccount.pseudoExtendedKey!,
           receiver: SWAP_CONTRACT_ADDRESS,
-          // TODO: disposable
-          refundTarget: transparentAccount.address,
+          refundTarget: disposableRefundTarget.address,
         };
 
         const params = {
@@ -180,6 +186,8 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
         setStatus(SwapStatus.building());
 
         const signer = await getDisposableSigner();
+
+        await persistDisposableSigner(disposableRefundTarget.address);
         const encodedTxData = await performOsmosisSwap({
           signer,
           account: transparentAccount,
@@ -219,6 +227,8 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
             "ShieldedOsmosisSwap"
           );
         } catch (error) {
+          await clearDisposableSigner(disposableRefundTarget.address);
+
           dispatchNotification({
             id: notificationId,
             details: error instanceof Error ? error.message : undefined,

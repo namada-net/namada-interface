@@ -1,3 +1,4 @@
+import { Panel } from "@namada/components";
 import { useAtomValue } from "jotai";
 import { swapStatusAtom } from "./state/atoms";
 import { SwapCalculations } from "./SwapCalculations";
@@ -12,7 +13,7 @@ export const SwapModule = (): JSX.Element => {
   const status = useAtomValue(swapStatusAtom);
 
   return (
-    <>
+    <Panel className="relative rounded-sm flex flex-col flex-1 pt-9">
       {!["Broadcasting", "Confirming", "Completed"].includes(status.t) && (
         <SwapHeader />
       )}
@@ -36,6 +37,6 @@ export const SwapModule = (): JSX.Element => {
           </p>
         )}
       </section>
-    </>
+    </Panel>
   );
 };

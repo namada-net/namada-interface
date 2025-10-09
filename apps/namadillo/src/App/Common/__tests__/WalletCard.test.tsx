@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { walletMock } from "App/Common/__mocks__/providers";
-import { WalletCard } from "App/Transfer/WalletCard";
+import { WalletCard } from "App/Common/WalletCard";
 
 describe("Component: WalletCard", () => {
   it("should render wallet name and icon", () => {

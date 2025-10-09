@@ -1,27 +1,37 @@
 import { ActionButton, Stack, Text } from "@namada/components";
+import { ConnectProviderButton } from "App/Common/ConnectProviderButton";
 import { CurrentStatus } from "App/Common/CurrentStatus";
 import { InlineError } from "App/Common/InlineError";
+import { LedgerDeviceTooltip } from "App/Common/LedgerDeviceTooltip";
+import { SelectWalletModal } from "App/Common/SelectWalletModal";
+import { WalletAddress } from "App/Common/WalletAddress";
 import { SwapTradeIcon } from "App/Icons/SwapTradeIcon";
-import { getChainRegistryByChainName } from "atoms/integrations";
+import { ledgerStatusDataAtom } from "atoms/ledger";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
+import { useWalletManager } from "hooks/useWalletManager";
+import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getAssetImageUrl } from "integrations/utils";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
-import { ChainRegistryEntry } from "types";
 import { toDisplayAmount } from "utils";
 import { usePerformOsmosisSwapTx } from "./hooks/usePerformOsmosisSwapTx";
+import { useSwapReviewValidation } from "./hooks/useSwapReviewValidation";
 import { statusMessages, SwapStatus } from "./state";
 import { swapQuoteAtom, swapStateAtom, swapStatusAtom } from "./state/atoms";
 import { SLIPPAGE } from "./state/functions";
 
 const keplr = new KeplrWalletManager();
 export const SwapReview = (): JSX.Element => {
-  const [keplrRecoveryAddr, setKeplrRecoveryAddr] = useState<string>();
-  // Feature state and sanity checks
+  // Local state
+  const [walletSelectorModalOpen, setWalletSelectorModalOpen] = useState(false);
+  const [showConnectToWalletButton, setShowConnectToWalletButton] =
+    useState(false);
+
+  // Feature state  sanity checks
   const [status, setStatus] = useAtom(swapStatusAtom);
   const swapState = useAtomValue(swapStateAtom);
   const { sellAsset, buyAsset } = swapState;
@@ -41,6 +51,14 @@ export const SwapReview = (): JSX.Element => {
   invariant(swapState.sellAmount, "Swap state is required");
   invariant(swapState.buyAmount, "Swap state is required");
 
+  // Global state
+  const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
+
+  // Derived state
+  const ledgerAccountInfo = ledgerStatus && {
+    deviceConnected: ledgerStatus.connected,
+    errorMessage: ledgerStatus.errorMessage,
+  };
   const sellAmountFiat = sellPrice && sellPrice.times(swapState.sellAmount);
   const buyPriceImpact =
     buyPrice && buyPrice.times(BigNumber(1).plus(quote.priceImpact));
@@ -59,139 +77,194 @@ export const SwapReview = (): JSX.Element => {
     : fiatFee.lt(0.01) ? "<$0.01"
     : `~$${fiatFee.toString()}`;
 
-  //TODO:  Should take housefire into consideration
+  const { walletAddress, connectToChainId, registry } = useWalletManager(keplr);
   useEffect(() => {
-    const registry = getChainRegistryByChainName("osmosis");
-    const fn = async (registry: ChainRegistryEntry): Promise<void> => {
-      await keplr.connect(registry);
-      const addr = await keplr.getAddress(registry.chain.chain_id);
-      setKeplrRecoveryAddr(addr);
-    };
+    // Because of the current bug with connectedWallets, this prevents button flash
+    const handler = setTimeout(() => {
+      setShowConnectToWalletButton(!walletAddress);
+    }, 500);
 
+    return () => clearTimeout(handler);
+  }, [walletAddress]);
+
+  const onChangeWallet = useCallback((): void => {
     if (registry) {
-      fn(registry);
+      connectToChainId(registry.chain.chain_id);
+      return;
     }
+    connectToChainId("osmosis-1");
   }, []);
 
   const { error: _err, performSwap } = usePerformOsmosisSwapTx();
-
   const onSwap = useCallback(async (): Promise<void> => {
-    await performSwap({ localRecoveryAddr: keplrRecoveryAddr });
-  }, [keplrRecoveryAddr]);
+    await performSwap({ localRecoveryAddr: walletAddress });
+  }, [walletAddress]);
+
+  const validationResult = useSwapReviewValidation({
+    walletAddress,
+    ledgerAccountInfo,
+  });
+
+  // We stop the ledger status check when the transfer is in progress
+  setLedgerStatusStop(["Building", "AwaitingSignature"].includes(status.t));
 
   return (
-    <Stack>
-      <div className="relative bg-neutral-800 rounded-lg px-4 py-5 border border-yellow font-light">
-        <Text className="mt-0">Review Shielded Swap</Text>
-        <Stack direction="horizontal">
-          <span>
-            <img
-              className={clsx(
-                "w-15 aspect-square object-cover select-none",
-                "object-center bg-neutral-800 rounded-full"
-              )}
-              alt={`${sellAsset.name} image`}
-              src={getAssetImageUrl(sellAsset)}
-            />
-          </span>
-          <Stack gap={0} className="justify-center grow">
-            <Text className="text-sm my-0">Sell</Text>
-            <Text className="text-lg my-0">
-              {swapState.sellAmount.toString()} {sellAsset.symbol}
+    <>
+      <Stack>
+        <div className="relative bg-neutral-800 rounded-lg px-4 py-5 border border-yellow font-light">
+          <Stack direction="horizontal" className="justify-between">
+            <Text className="mt-0">Review Shielded Swap</Text>
+            {showConnectToWalletButton && (
+              <div className="h-[30px]">
+                <ConnectProviderButton
+                  onClick={() => {
+                    setWalletSelectorModalOpen(true);
+                  }}
+                />
+              </div>
+            )}
+          </Stack>
+          <Stack direction="horizontal">
+            <span>
+              <img
+                className={clsx(
+                  "w-15 aspect-square object-cover select-none",
+                  "object-center bg-neutral-800 rounded-full"
+                )}
+                alt={`${sellAsset.name} image`}
+                src={getAssetImageUrl(sellAsset)}
+              />
+            </span>
+            <Stack gap={0} className="justify-center grow">
+              <Text className="text-sm my-0">Sell</Text>
+              <Text className="text-lg my-0">
+                {swapState.sellAmount.toString()} {sellAsset.symbol}
+              </Text>
+            </Stack>
+            <Text className="my-0 mb-2 self-end">
+              ${sellAmountFiat && sellAmountFiat.decimalPlaces(2).toString()}
             </Text>
           </Stack>
-          <Text className="my-0 mb-2 self-end">
-            ${sellAmountFiat && sellAmountFiat.decimalPlaces(2).toString()}
-          </Text>
-        </Stack>
-        <i className="flex w-15 justify-center my-4">
-          <SwapTradeIcon color={"#FF0"} />
-        </i>
-        <Stack direction="horizontal">
-          <span>
-            <img
-              className={clsx(
-                "w-15 aspect-square object-cover select-none",
-                "object-center bg-neutral-800 rounded-full"
-              )}
-              alt={`${buyAsset.name} image`}
-              src={getAssetImageUrl(buyAsset)}
-            />
-          </span>
-          <Stack gap={0} className="justify-center grow">
-            <Text className="text-sm my-0">Buy</Text>
-            <Text className="text-lg my-0">
-              {swapState.buyAmount.toString()} {buyAsset.symbol}
+          <i className="flex w-15 justify-center my-4">
+            <SwapTradeIcon color={"#FF0"} />
+          </i>
+          <Stack direction="horizontal">
+            <span>
+              <img
+                className={clsx(
+                  "w-15 aspect-square object-cover select-none",
+                  "object-center bg-neutral-800 rounded-full"
+                )}
+                alt={`${buyAsset.name} image`}
+                src={getAssetImageUrl(buyAsset)}
+              />
+            </span>
+            <Stack gap={0} className="justify-center grow">
+              <Text className="text-sm my-0">Buy</Text>
+              <Text className="text-lg my-0">
+                {swapState.buyAmount.toString()} {buyAsset.symbol}
+              </Text>
+            </Stack>
+            <Text className="my-0 mb-2 self-end">
+              ${buyAmountFiat && buyAmountFiat.decimalPlaces(2).toString()}
             </Text>
           </Stack>
-          <Text className="my-0 mb-2 self-end">
-            ${buyAmountFiat && buyAmountFiat.decimalPlaces(2).toString()}
-          </Text>
-        </Stack>
-        <hr className="my-5 mx-2 border-white opacity-[5%]" />
-        <Stack gap={3}>
-          <Stack
-            direction="horizontal"
-            className="justify-between text-neutral-300 text-sm"
-          >
-            <div>Swap Fee</div>
-            <p>
-              {fiatFeeDisplay} ({swapFee.toString()}%)
-            </p>
+          <hr className="my-5 mx-2 border-white opacity-[5%]" />
+          <Stack gap={3}>
+            <Stack
+              direction="horizontal"
+              className="justify-between text-neutral-300 text-sm"
+            >
+              <div>Swap Fee</div>
+              <p>
+                {fiatFeeDisplay} ({swapFee.toString()}%)
+              </p>
+            </Stack>
+            <Stack
+              direction="horizontal"
+              className="justify-between text-neutral-300 text-sm"
+            >
+              <div>Slippage tolerance</div>
+              <div>{SLIPPAGE * 100}%</div>
+            </Stack>
+            <Stack
+              direction="horizontal"
+              className="justify-between text-neutral-300 text-sm"
+            >
+              <div>Receive at least</div>
+              <div>
+                {receiveAtLeastDenominated.toString()} {buyAsset.symbol}
+              </div>
+            </Stack>
+            {walletAddress && (
+              <Stack
+                direction="horizontal"
+                className="justify-between text-neutral-300 text-sm"
+              >
+                <div>Local recovery address</div>
+                <WalletAddress address={walletAddress} displayTooltip={true} />
+              </Stack>
+            )}
           </Stack>
-          <Stack
-            direction="horizontal"
-            className="justify-between text-neutral-300 text-sm"
+        </div>
+        {status.t === "Error" && <InlineError errorMessage={status.message} />}
+        {!["Building", "AwaitingSignature", "Broadcasting"].includes(
+          status.t
+        ) && (
+          <div className="relative">
+            <ActionButton
+              outlineColor="yellow"
+              backgroundColor="yellow"
+              backgroundHoverColor="transparent"
+              textColor="black"
+              textHoverColor="yellow"
+              disabled={validationResult !== "Ok"}
+              onClick={onSwap}
+            >
+              {ValidationMessages[validationResult]}
+            </ActionButton>
+
+            {validationResult === "LedgerDeviceNotConnected" && (
+              <LedgerDeviceTooltip />
+            )}
+          </div>
+        )}
+        {["Building", "AwaitingSignature", "Broadcasting"].includes(
+          status.t
+        ) && (
+          <CurrentStatus
+            status={statusMessages[status.t].title}
+            explanation={statusMessages[status.t].description}
+          />
+        )}
+        {!["Building", "AwaitingSignature", "Broadcasting"].includes(
+          status.t
+        ) && (
+          <ActionButton
+            outlineColor="yellow"
+            backgroundColor="transparent"
+            backgroundHoverColor="yellow"
+            textColor="yellow"
+            textHoverColor="black"
+            onClick={() => setStatus(SwapStatus.idle())}
           >
-            <div>Slippage tolerance</div>
-            <div>{SLIPPAGE * 100}%</div>
-          </Stack>
-          <Stack
-            direction="horizontal"
-            className="justify-between text-neutral-300 text-sm"
-          >
-            <div>Receive at least</div>
-            <div>
-              {receiveAtLeastDenominated.toString()} {buyAsset.symbol}
-            </div>
-          </Stack>
-        </Stack>
-      </div>
-      {status.t === "Error" && <InlineError errorMessage={status.message} />}
-      {!["Building", "AwaitingSignature", "Broadcasting"].includes(
-        status.t
-      ) && (
-        <ActionButton
-          outlineColor="yellow"
-          backgroundColor="yellow"
-          backgroundHoverColor="transparent"
-          textColor="black"
-          textHoverColor="yellow"
-          onClick={onSwap}
-        >
-          Swap
-        </ActionButton>
-      )}
-      {["Building", "AwaitingSignature", "Broadcasting"].includes(status.t) && (
-        <CurrentStatus
-          status={statusMessages[status.t].title}
-          explanation={statusMessages[status.t].description}
+            Back
+          </ActionButton>
+        )}
+      </Stack>
+      {walletSelectorModalOpen && (
+        <SelectWalletModal
+          availableWallets={[wallets.keplr]}
+          onClose={() => setWalletSelectorModalOpen(false)}
+          onConnect={onChangeWallet}
         />
       )}
-      {!["Building", "AwaitingSignature", "Broadcasting"].includes(
-        status.t
-      ) && (
-        <ActionButton
-          outlineColor="yellow"
-          backgroundColor="transparent"
-          backgroundHoverColor="yellow"
-          textColor="yellow"
-          textHoverColor="black"
-          onClick={() => setStatus(SwapStatus.idle())}
-        >
-          Back
-        </ActionButton>
-      )}
-    </Stack>
+    </>
   );
+};
+
+const ValidationMessages: Record<string, string> = {
+  NoWalletConnected: "Connect Keplr Wallet",
+  LedgerDeviceNotConnected: "Connect your ledger and open the Namada App",
+  Ok: "Swap",
 };
