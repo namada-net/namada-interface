@@ -1,6 +1,7 @@
 import { ActionButton, Stack, Text } from "@namada/components";
 import { ConnectProviderButton } from "App/Common/ConnectProviderButton";
 import { CurrentStatus } from "App/Common/CurrentStatus";
+import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
 import { LedgerDeviceTooltip } from "App/Common/LedgerDeviceTooltip";
 import { SelectWalletModal } from "App/Common/SelectWalletModal";
@@ -17,6 +18,7 @@ import { getAssetImageUrl } from "integrations/utils";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
+import { BsQuestionCircleFill } from "react-icons/bs";
 import { toDisplayAmount } from "utils";
 import { usePerformOsmosisSwapTx } from "./hooks/usePerformOsmosisSwapTx";
 import { useSwapReviewValidation } from "./hooks/useSwapReviewValidation";
@@ -171,39 +173,45 @@ export const SwapReview = (): JSX.Element => {
           </Stack>
           <hr className="my-5 mx-2 border-white opacity-[5%]" />
           <Stack gap={3}>
-            <Stack
-              direction="horizontal"
-              className="justify-between text-neutral-300 text-sm"
-            >
+            <ReviewRow>
               <div>Swap Fee</div>
               <p>
                 {fiatFeeDisplay} ({swapFee.toString()}%)
               </p>
-            </Stack>
-            <Stack
-              direction="horizontal"
-              className="justify-between text-neutral-300 text-sm"
-            >
+            </ReviewRow>
+            <ReviewRow>
               <div>Slippage tolerance</div>
               <div>{SLIPPAGE * 100}%</div>
-            </Stack>
-            <Stack
-              direction="horizontal"
-              className="justify-between text-neutral-300 text-sm"
-            >
+            </ReviewRow>
+            <ReviewRow>
               <div>Receive at least</div>
               <div>
                 {receiveAtLeastDenominated.toString()} {buyAsset.symbol}
               </div>
-            </Stack>
+            </ReviewRow>
             {walletAddress && (
-              <Stack
-                direction="horizontal"
-                className="justify-between text-neutral-300 text-sm"
-              >
-                <div>Local recovery address</div>
+              <ReviewRow>
+                <Stack
+                  direction="horizontal"
+                  className="relative items-center"
+                  gap={2}
+                >
+                  Local recovery address
+                  <IconTooltip
+                    className=""
+                    icon={
+                      <BsQuestionCircleFill className="w-4 h-4 text-yellow" />
+                    }
+                    text={
+                      <span>
+                        This is the address where your assets will land in case
+                        something goes wrong on the destination chain.
+                      </span>
+                    }
+                  />
+                </Stack>
                 <WalletAddress address={walletAddress} displayTooltip={true} />
-              </Stack>
+              </ReviewRow>
             )}
           </Stack>
         </div>
@@ -260,6 +268,21 @@ export const SwapReview = (): JSX.Element => {
         />
       )}
     </>
+  );
+};
+
+const ReviewRow = ({
+  children,
+}: {
+  children: React.ReactNode;
+}): JSX.Element => {
+  return (
+    <Stack
+      direction="horizontal"
+      className="justify-between text-neutral-300 text-sm"
+    >
+      {children}
+    </Stack>
   );
 };
 
