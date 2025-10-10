@@ -1,10 +1,8 @@
 import { ActionButton, Stack, Text } from "@namada/components";
-import { ConnectProviderButton } from "App/Common/ConnectProviderButton";
 import { CurrentStatus } from "App/Common/CurrentStatus";
 import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
 import { LedgerDeviceTooltip } from "App/Common/LedgerDeviceTooltip";
-import { SelectWalletModal } from "App/Common/SelectWalletModal";
 import { WalletAddress } from "App/Common/WalletAddress";
 import { SwapTradeIcon } from "App/Icons/SwapTradeIcon";
 import { ledgerStatusDataAtom } from "atoms/ledger";
@@ -12,12 +10,11 @@ import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { useWalletManager } from "hooks/useWalletManager";
-import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getAssetImageUrl } from "integrations/utils";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { toDisplayAmount } from "utils";
 import { usePerformOsmosisSwapTx } from "./hooks/usePerformOsmosisSwapTx";
@@ -28,11 +25,6 @@ import { SLIPPAGE } from "./state/functions";
 
 const keplr = new KeplrWalletManager();
 export const SwapReview = (): JSX.Element => {
-  // Local state
-  const [walletSelectorModalOpen, setWalletSelectorModalOpen] = useState(false);
-  const [showConnectToWalletButton, setShowConnectToWalletButton] =
-    useState(false);
-
   // Feature state  sanity checks
   const [status, setStatus] = useAtom(swapStatusAtom);
   const swapState = useAtomValue(swapStateAtom);
@@ -79,23 +71,7 @@ export const SwapReview = (): JSX.Element => {
     : fiatFee.lt(0.01) ? "<$0.01"
     : `~$${fiatFee.toString()}`;
 
-  const { walletAddress, connectToChainId, registry } = useWalletManager(keplr);
-  useEffect(() => {
-    // Because of the current bug with connectedWallets, this prevents button flash
-    const handler = setTimeout(() => {
-      setShowConnectToWalletButton(!walletAddress);
-    }, 500);
-
-    return () => clearTimeout(handler);
-  }, [walletAddress]);
-
-  const onChangeWallet = useCallback((): void => {
-    if (registry) {
-      connectToChainId(registry.chain.chain_id);
-      return;
-    }
-    connectToChainId("osmosis-1");
-  }, []);
+  const { walletAddress } = useWalletManager(keplr);
 
   const { error: _err, performSwap } = usePerformOsmosisSwapTx();
   const onSwap = useCallback(async (): Promise<void> => {
@@ -114,18 +90,7 @@ export const SwapReview = (): JSX.Element => {
     <>
       <Stack>
         <div className="relative bg-neutral-800 rounded-lg px-4 py-5 border border-yellow font-light">
-          <Stack direction="horizontal" className="justify-between">
-            <Text className="mt-0">Review Shielded Swap</Text>
-            {showConnectToWalletButton && (
-              <div className="h-[30px]">
-                <ConnectProviderButton
-                  onClick={() => {
-                    setWalletSelectorModalOpen(true);
-                  }}
-                />
-              </div>
-            )}
-          </Stack>
+          <Text className="mt-0">Review Shielded Swap</Text>
           <Stack direction="horizontal">
             <span>
               <img
@@ -260,13 +225,6 @@ export const SwapReview = (): JSX.Element => {
           </ActionButton>
         )}
       </Stack>
-      {walletSelectorModalOpen && (
-        <SelectWalletModal
-          availableWallets={[wallets.keplr]}
-          onClose={() => setWalletSelectorModalOpen(false)}
-          onConnect={onChangeWallet}
-        />
-      )}
     </>
   );
 };
