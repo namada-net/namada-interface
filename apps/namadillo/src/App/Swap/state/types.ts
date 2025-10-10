@@ -66,7 +66,6 @@ export const statusMessages: Record<
   },
 };
 
-// TODO: make this type mroe specific
 export type SwapState = {
   mode: "sell" | "buy" | "none";
   sellAmount?: BigNumber;

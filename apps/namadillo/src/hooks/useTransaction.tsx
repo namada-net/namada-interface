@@ -1,8 +1,8 @@
 import { useMutation, UseMutationResult } from "@tanstack/react-query";
 import { defaultAccountAtom } from "atoms/accounts";
 import {
-  createNotificationId,
   dispatchToastNotificationAtom,
+  getNotificationId,
 } from "atoms/notifications";
 import { getDisposableSigner } from "atoms/transfer/services";
 import invariant from "invariant";
@@ -15,6 +15,7 @@ import {
   TransactionPair,
 } from "lib/query";
 import { BuildTxAtomParams, ToastNotification } from "types";
+import { TransactionError } from "types/errors";
 import { TransactionEventTypes } from "types/events";
 import { TransactionFeeProps, useTransactionFee } from "./useTransactionFee";
 
@@ -60,14 +61,6 @@ export type UseTransactionOutput<T> = {
   Partial<BuildTxAtomParams<T>> | undefined,
   unknown
 >;
-
-const getNotificationId = <T,>(tx: TransactionPair<T>): string => {
-  const notificationId = createNotificationId(
-    tx.encodedTxData.txs.map((tx) => tx.hash)
-  );
-
-  return notificationId;
-};
 
 export const useTransaction = <T,>({
   params,
@@ -132,19 +125,6 @@ export const useTransaction = <T,>({
       type: "error",
     });
   };
-
-  class TransactionError<T> extends Error {
-    public cause: { originalError: unknown; context: TransactionPair<T> };
-    constructor(
-      public message: string,
-      options: {
-        cause: { originalError: unknown; context: TransactionPair<T> };
-      }
-    ) {
-      super(message);
-      this.cause = options.cause;
-    }
-  }
 
   const transactionQuery = useMutation({
     mutationFn: async (

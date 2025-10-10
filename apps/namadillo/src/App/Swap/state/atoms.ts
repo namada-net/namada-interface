@@ -125,7 +125,7 @@ export const swapQuoteAtom = atomWithQuery((get) => {
   const swapState = get(debouncedSwapStateAtom);
   const { sellAsset, buyAsset } = swapState;
 
-  // TODO: osmosis-1 should be dynamic
+  // TODO: this should be configurable once we support osmosis testnet
   const osmosisAssets =
     getChainRegistryByChainId("osmosis-1")?.assets.assets || [];
 
