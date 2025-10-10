@@ -1,6 +1,8 @@
 import { ActionButton, Stack } from "@namada/components";
 import { mapUndefined } from "@namada/utils";
+import { ConnectProviderButton } from "App/Common/ConnectProviderButton";
 import { SelectAssetModal } from "App/Common/SelectAssetModal";
+import { SelectWalletModal } from "App/Common/SelectWalletModal";
 import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
 import { SwapArrowsIcon } from "App/Icons/SwapArrowsIcon";
 import { defaultShieldedAccountAtom } from "atoms/accounts";
@@ -12,7 +14,9 @@ import { tokenPricesFamily } from "atoms/prices/atoms";
 import BigNumber from "bignumber.js";
 import { TransactionFeeProps, useTransactionFee } from "hooks";
 import { useAvailableAmountMinusFees } from "hooks/useAvailableAmountMinusFee";
+import { useWalletManager } from "hooks/useWalletManager";
 import { wallets } from "integrations";
+import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NamadaAsset } from "types";
@@ -27,12 +31,17 @@ import {
   swapStatusAtom,
 } from "./state/atoms";
 
+const keplr = new KeplrWalletManager();
+
 export const SwapCalculations = (): JSX.Element => {
   // Local state
   const [sellAssetSelectorModalOpen, setSellAssetSelectorModalOpen] =
     useState(false);
   const [buyAssetSelectorModalOpen, setBuyAssetSelectorModalOpen] =
     useState(false);
+  const [showConnectToWalletButton, setShowConnectToWalletButton] =
+    useState(false);
+  const [walletSelectorModalOpen, setWalletSelectorModalOpen] = useState(false);
 
   // Feature state
   const [swapState, setSwapState] = useAtom(swapStateAtom);
@@ -57,6 +66,8 @@ export const SwapCalculations = (): JSX.Element => {
     quote,
   });
 
+  const { walletAddress, connectToChainId, registry } = useWalletManager(keplr);
+
   // Derived state
   const { sellAsset, buyAsset } = swapState;
   const availableAmount = mapUndefined(
@@ -73,6 +84,7 @@ export const SwapCalculations = (): JSX.Element => {
     sellAsset,
     buyAsset,
     availableAmountMinusFees,
+    walletAddress,
   });
 
   const balances = Object.entries(assetsWithBalance || {}).reduce(
@@ -170,20 +182,48 @@ export const SwapCalculations = (): JSX.Element => {
     [sortedAssets.length, buyAsset?.symbol, sellAsset?.symbol]
   );
 
+  useEffect(() => {
+    // Because of the current bug with connectedWallets, this prevents button flash
+    const handler = setTimeout(() => {
+      setShowConnectToWalletButton(!walletAddress);
+    }, 500);
+
+    return () => clearTimeout(handler);
+  }, [walletAddress]);
+
+  const onChangeWallet = useCallback((): void => {
+    if (registry) {
+      connectToChainId(registry.chain.chain_id);
+      return;
+    }
+    connectToChainId("osmosis-1");
+  }, []);
+
   return (
     <>
       <Stack>
-        <SwapSource
-          asset={sellAsset}
-          isLoadingAssets={false}
-          openAssetSelector={() => setSellAssetSelectorModalOpen(true)}
-          availableAmount={availableAmount}
-          availableAmountMinusFees={availableAmountMinusFees}
-          amount={swapState.sellAmount}
-          onChangeAmount={onChangeSellAmount}
-          isSubmitting={false}
-          label="Sell"
-        />
+        <div className="relative">
+          <SwapSource
+            asset={sellAsset}
+            isLoadingAssets={false}
+            openAssetSelector={() => setSellAssetSelectorModalOpen(true)}
+            availableAmount={availableAmount}
+            availableAmountMinusFees={availableAmountMinusFees}
+            amount={swapState.sellAmount}
+            onChangeAmount={onChangeSellAmount}
+            isSubmitting={false}
+            label="Sell"
+          />
+          {showConnectToWalletButton && (
+            <div className="absolute top-4 right-4 h-[30px]">
+              <ConnectProviderButton
+                onClick={() => {
+                  setWalletSelectorModalOpen(true);
+                }}
+              />
+            </div>
+          )}
+        </div>
         <i
           className="flex items-center justify-center w-13 mx-auto relative z-10 -my-8 cursor-pointer duration-300 hover:rotate-180 transition-transform ease-in-out"
           onClick={onSwapArrowsClick}
@@ -248,6 +288,13 @@ export const SwapCalculations = (): JSX.Element => {
           wallet={wallets.namada}
         />
       )}
+      {walletSelectorModalOpen && (
+        <SelectWalletModal
+          availableWallets={[wallets.keplr]}
+          onClose={() => setWalletSelectorModalOpen(false)}
+          onConnect={onChangeWallet}
+        />
+      )}
     </>
   );
 };
@@ -309,8 +356,10 @@ const SwapCalculationsFooter = ({
 const ValidationMessages: Record<string, string> = {
   NoSellAssetSelected: "Select a token to sell",
   NoBuyAssetSelected: "Select a token to buy",
-  SellAmountIsZero: "Enter an amount to sell",
-  BuyAmountIsZero: "Enter an amount to buy",
+  SwapModeNone: "Enter an amount to swap",
+  SellAmountIsZero: "Calculating amount to sell",
+  BuyAmountIsZero: "Calculating amount to buy",
   SellAmountExceedsBalance: "Insufficient balance",
+  NoWalletConnected: "Connect Keplr Wallet",
   Ok: "Review",
 };
