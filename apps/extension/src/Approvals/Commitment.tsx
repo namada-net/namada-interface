@@ -1,4 +1,4 @@
-import { TxType } from "@namada/sdk";
+import { IbcTransferProps, TxType } from "@namada/sdk";
 import {
   BondProps,
   ClaimRewardsProps,
@@ -12,6 +12,9 @@ import {
 } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { NamCurrency } from "App/Common/NamCurrency";
+import * as J from "fp-ts/Json";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/Option";
 import { ReactNode } from "react";
 import { FaVoteYea } from "react-icons/fa";
 import { FaRegEye, FaWallet } from "react-icons/fa6";
@@ -19,6 +22,7 @@ import { GoStack } from "react-icons/go";
 import { PiDotsNineBold } from "react-icons/pi";
 import { isShieldedPool, parseTransferType, ShieldedPoolLabel } from "utils";
 import { TransactionCard } from "./TransactionCard";
+import { OsmosisSwapMemo } from "./types";
 
 type CommitmentProps = {
   commitment: CommitmentDetailProps;
@@ -37,6 +41,7 @@ const IconMap: Record<TxType, React.ReactNode> = {
   [TxType.VoteProposal]: <FaVoteYea />,
   [TxType.Batch]: <PiDotsNineBold />,
   [TxType.ClaimRewards]: <GoStack />,
+  [TxType.OsmosisSwap]: <FaWallet />,
 };
 
 const TitleMap: Record<TxType, string> = {
@@ -51,6 +56,7 @@ const TitleMap: Record<TxType, string> = {
   [TxType.VoteProposal]: "Vote",
   [TxType.Batch]: "Batch",
   [TxType.ClaimRewards]: "Claim Rewards",
+  [TxType.OsmosisSwap]: "Shielded Swap",
 };
 
 const formatAddress = (address: string): string =>
@@ -147,6 +153,27 @@ export const Commitment = ({
       wrapperFeePayer
     );
     title = `${type} ${title}`;
+  } else if (commitment.txType === TxType.IBCTransfer) {
+    const ibcTx = commitment as CommitmentDetailProps<IbcTransferProps>;
+
+    // It's fine not to handle errors here as memo can be optional and not JSON at all
+    const maybeMemo = pipe(
+      O.fromNullable(ibcTx.memo),
+      O.map((memo) => J.parse(memo)),
+      O.map(O.fromEither),
+      O.flatten
+    );
+
+    const maybeOsmosisSwapMemo = pipe(
+      maybeMemo,
+      O.map(OsmosisSwapMemo.decode),
+      O.map(O.fromEither),
+      O.flatten
+    );
+
+    if (O.isSome(maybeOsmosisSwapMemo)) {
+      title = TitleMap[TxType.OsmosisSwap];
+    }
   }
 
   return (
