@@ -24,12 +24,7 @@ import { SwapSource } from "./SwapSource";
 import { useSwapSimulation } from "./hooks/useSwapSimulation";
 import { useSwapValidation } from "./hooks/useSwapValidation";
 import { SwapQuote, SwapState, SwapStatus } from "./state";
-import {
-  setInternalSwapStateAtom,
-  swapQuoteAtom,
-  swapStateAtom,
-  swapStatusAtom,
-} from "./state/atoms";
+import { swapQuoteAtom, swapStateAtom, swapStatusAtom } from "./state/atoms";
 
 const keplr = new KeplrWalletManager();
 
@@ -45,7 +40,6 @@ export const SwapCalculations = (): JSX.Element => {
 
   // Feature state
   const [swapState, setSwapState] = useAtom(swapStateAtom);
-  const setInternalSwapState = useSetAtom(setInternalSwapStateAtom);
   const { data: quote } = useAtomValue(swapQuoteAtom);
   const setStatus = useSetAtom(swapStatusAtom);
 
@@ -60,11 +54,7 @@ export const SwapCalculations = (): JSX.Element => {
     defaultShieldedAccountAtom
   )?.address;
 
-  useSwapSimulation({
-    swapState,
-    setInternalSwapState,
-    quote,
-  });
+  useSwapSimulation();
 
   const { walletAddress, connectToChainId, registry } = useWalletManager(keplr);
 

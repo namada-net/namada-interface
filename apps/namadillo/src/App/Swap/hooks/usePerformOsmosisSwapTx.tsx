@@ -3,8 +3,8 @@ import { AccountType } from "@namada/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { chainAtom } from "atoms/chain";
 import {
-  createNotificationId,
   dispatchToastNotificationAtom,
+  getNotificationId,
 } from "atoms/notifications";
 import { createOsmosisSwapTxAtom } from "atoms/transfer/atoms";
 import {
@@ -20,34 +20,12 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { broadcastTxWithEvents, signTx, TransactionPair } from "lib/query";
 import { useCallback, useState } from "react";
 import { NamadaAsset, OsmosisSwapTransactionData, TransferStep } from "types";
+import { TransactionError } from "types/errors";
 import { toBaseAmount } from "utils";
 import { SwapStatus } from "../state";
 import { swapQuoteAtom, swapStateAtom, swapStatusAtom } from "../state/atoms";
 
-// TODO: reused - unify
-class TransactionError<T> extends Error {
-  public cause: { originalError: unknown; context: TransactionPair<T> };
-  constructor(
-    public message: string,
-    options: {
-      cause: { originalError: unknown; context: TransactionPair<T> };
-    }
-  ) {
-    super(message);
-    this.cause = options.cause;
-  }
-}
-
-// TODO: reused - unify;
-const getNotificationId = <T,>(tx: TransactionPair<T>): string => {
-  const notificationId = createNotificationId(
-    tx.encodedTxData.txs.map((tx) => tx.hash)
-  );
-
-  return notificationId;
-};
-
-// TODO: configurable
+// TODO: Should be a different address for housefire
 const SWAP_CONTRACT_ADDRESS =
   "osmo14q5zmg3fp774kpz2j8c52q7gqjn0dnm3vcj3guqpj4p9xylqpc7s2ezh0h";
 

@@ -1,23 +1,20 @@
 import invariant from "invariant";
-import { useEffect, useRef } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import { useEffect } from "react";
 import { toDisplayAmount } from "utils";
 import { SwapQuote, SwapState } from "../state";
+import {
+  internalSwapStateAtom,
+  swapQuoteAtom,
+  swapStateAtom,
+} from "../state/atoms";
 
-// TODO: no need to pass props, use atoms directly
-export const useSwapSimulation = ({
-  swapState,
-  setInternalSwapState,
-  quote,
-}: {
-  swapState: SwapState;
-  setInternalSwapState: React.Dispatch<React.SetStateAction<SwapState>>;
-  quote?: SwapQuote;
-}): void => {
-  const swapStateRef = useRef(swapState);
-
-  useEffect(() => {
-    swapStateRef.current = swapState;
-  }, [swapState]);
+export const useSwapSimulation = (): void => {
+  const { data: quote } = useAtomValue(swapQuoteAtom);
+  const [internalSwapState, setInternalSwapState] = useAtom(
+    internalSwapStateAtom
+  );
+  const swapState = useAtomValue(swapStateAtom);
 
   useEffect(() => {
     const simulate = (quote: SwapQuote, swapState: SwapState): void => {
@@ -39,7 +36,7 @@ export const useSwapSimulation = ({
       const simulateBuy = swapState.mode === "buy";
 
       if (simulateSell && sellAsset) {
-        if (swapState.sellAmount === swapStateRef.current.sellAmount) {
+        if (swapState.sellAmount === internalSwapState.sellAmount) {
           setInternalSwapState((s) => ({
             ...s,
             buyAmount: toDisplayAmount(buyAsset, quote.amountOut),
@@ -47,7 +44,7 @@ export const useSwapSimulation = ({
           }));
         }
       } else if (simulateBuy && buyAsset) {
-        if (swapState.buyAmount === swapStateRef.current.buyAmount) {
+        if (swapState.buyAmount === internalSwapState.buyAmount) {
           setInternalSwapState((s) => ({
             ...s,
             sellAmount: toDisplayAmount(sellAsset, quote.amountIn),
