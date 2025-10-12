@@ -74,7 +74,7 @@ export const IbcWithdraw = ({
   const [amount, setAmount] = useState<BigNumber | undefined>();
   const [customAddress, setCustomAddress] = useState<string>("");
   const [sourceChannel, setSourceChannel] = useState("");
-  const [destinationChain, setDestinationChain] = useState<Chain | undefined>();
+  const [destinationChain] = useState<Chain | undefined>();
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [txHash, setTxHash] = useState<string | undefined>();
   //  ERROR & STATUS STATE
@@ -83,12 +83,8 @@ export const IbcWithdraw = ({
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   //  GLOBAL STATE
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
-  const {
-    walletAddress: keplrAddress,
-    connectToChainId,
-    chainId,
-    loadWalletAddress,
-  } = useWalletManager(keplrWalletManager);
+  const { walletAddress: keplrAddress, chainId } =
+    useWalletManager(keplrWalletManager);
   const transparentAccount = useAtomValue(defaultAccountAtom);
   const namadaChain = useAtomValue(chainAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
