@@ -1,5 +1,4 @@
 import { Chain } from "@chain-registry/types";
-import namadaChain from "@namada/chain-registry/namada/chain.json";
 import { Modal, Stack } from "@namada/components";
 import { ModalTransition } from "App/Common/ModalTransition";
 import { Search } from "App/Common/Search";
@@ -7,18 +6,20 @@ import {
   connectedWalletsAtom,
   getAvailableChains,
   getChainRegistryByChainName,
+  getNamadaChainRegistry,
   namadaRegistryChainAssetsMapAtom,
 } from "atoms/integrations";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import clsx from "clsx";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
-import { getChainFromAsset, getChainImageUrl } from "integrations/utils";
+import { getChainFromAsset } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { AssetWithAmount } from "types";
 import { AddressDropdown } from "./AddressDropdown";
+import { ChainBadge } from "./ChainBadge";
 import { isNamadaAddress } from "./common";
 
 type SelectTokenProps = {
@@ -51,7 +52,8 @@ export const SelectToken = ({
   const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const chainAssetsMap = Object.values(chainAssets.data ?? {});
   const ibcChains = useMemo(getAvailableChains, []);
-  const allChains = [...ibcChains, namadaChain as unknown as Chain];
+
+  const allChains = [...ibcChains, getNamadaChainRegistry(false).chain];
 
   // Create KeplrWalletManager instance and use with useWalletManager hook
   const keplrWallet = keplrWalletManager ?? new KeplrWalletManager();
@@ -174,17 +176,13 @@ export const SelectToken = ({
 
   const getOverlayChainLogo = (token: AssetWithAmount): JSX.Element | null => {
     const chain = getChainFromAsset(token);
-    const chainImageUrl = getChainImageUrl(chain);
     const isNamada = token.asset.symbol === "NAM";
     if (isNamada) return null;
     return (
-      <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-black border-2 border-neutral-600 flex items-center justify-center overflow-hidden z-10">
-        <img
-          src={chainImageUrl}
-          alt={chain?.chain_name || "chain"}
-          className="w-4 h-4 object-cover rounded-full"
-        />
-      </div>
+      <ChainBadge
+        chain={chain}
+        className="absolute -bottom-0.5 -right-0.5 w-5 h-5 border border-neutral-600"
+      />
     );
   };
 
@@ -237,19 +235,7 @@ export const SelectToken = ({
                         : "hover:bg-neutral-800"
                       }`}
                     >
-                      <div className="w-7 h-7 rounded-sm flex items-center justify-center overflow-hidden">
-                        {network.logo_URIs?.svg ?
-                          <img
-                            src={network.logo_URIs?.svg}
-                            alt={network.chain_name}
-                            className="w-full h-full object-contain !rounded-none"
-                            draggable={false}
-                          />
-                        : <span className="text-white">
-                            {network.chain_name?.charAt(0)}
-                          </span>
-                        }
-                      </div>
+                      <ChainBadge chain={network} />
                       <span
                         className={clsx("capitalize font-normal text-white")}
                       >
