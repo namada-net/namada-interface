@@ -2,7 +2,7 @@ import { isTransparentAddress } from "App/Transfer/common";
 import BigNumber from "bignumber.js";
 import namadaAssets from "chain-registry/mainnet/namada/assets";
 import { Address, Asset, GasConfig, GasConfigToDisplay } from "types";
-import { isNamadaAsset, toDisplayAmount } from "utils";
+import { toDisplayAmount } from "utils";
 import { unknownAsset } from "./assets";
 
 export const calculateGasFee = (gasConfig: GasConfig): BigNumber => {
@@ -35,12 +35,11 @@ export const getDisplayGasFee = (
       ) ?? unknownAsset(gasToken);
   }
 
-  const totalDisplayAmount = calculateGasFee(gasConfig);
+  const totalInMinDenom = calculateGasFee(gasConfig);
+  const totalDisplayAmount = toDisplayAmount(asset, totalInMinDenom);
+
   return {
-    totalDisplayAmount:
-      isNamadaAsset(asset) ? totalDisplayAmount : (
-        toDisplayAmount(asset, totalDisplayAmount).decimalPlaces(6)
-      ),
+    totalDisplayAmount: totalDisplayAmount.decimalPlaces(6),
     asset,
   };
 };
