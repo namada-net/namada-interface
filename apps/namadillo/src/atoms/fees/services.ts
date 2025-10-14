@@ -1,4 +1,8 @@
-import { DefaultApi, GasEstimate } from "@namada/indexer-client";
+import {
+  DefaultApi,
+  GasEstimate,
+  GasPriceTableInner,
+} from "@namada/indexer-client";
 import { TxKind } from "types/txKind";
 
 // Type for the actual API response where token is now just an address string
@@ -48,5 +52,10 @@ export const fetchGasEstimate = async (
 export const fetchTokensGasPrice = async (
   api: DefaultApi
 ): Promise<GasPriceResponse[]> => {
-  return (await api.apiV1GasPriceGet()).data;
+  const response = await api.apiV1GasPriceGet();
+  // Transform the API response to extract the token address string
+  return response.data.map((item: GasPriceTableInner) => ({
+    token: item.token,
+    minDenomAmount: item.minDenomAmount,
+  }));
 };
