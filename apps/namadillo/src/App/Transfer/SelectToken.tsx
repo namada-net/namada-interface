@@ -97,11 +97,12 @@ export const SelectToken = ({
             .toLowerCase()
             .includes(filter.toLowerCase());
 
-        // Filter by selected network (if any)
-        const tokenNetworkName =
-          assetToNetworkMap[assetWithAmount.asset.address || ""];
+        const chainName =
+          assetWithAmount.asset.name === "Namada" ?
+            "namada"
+          : assetWithAmount.asset.traces?.[0].counterparty?.chain_name;
         const matchesNetwork =
-          selectedNetwork === null || tokenNetworkName === selectedNetwork;
+          !selectedNetwork || selectedNetwork === chainName;
 
         return matchesSearch && matchesNetwork;
       })
