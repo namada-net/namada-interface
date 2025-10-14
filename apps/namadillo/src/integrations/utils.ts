@@ -3,6 +3,7 @@ import { FeeToken } from "@chain-registry/types/chain.schema";
 import { Bech32Config, ChainInfo, Currency } from "@keplr-wallet/types";
 import namadaChain from "@namada/chain-registry/namada/chain.json";
 import tokenImage from "App/Common/assets/token.svg";
+import namadaTransparentSvg from "App/Transfer/assets/namada-transparent.svg";
 import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
 import {
   getChainRegistryByChainName,
@@ -82,6 +83,8 @@ export const getChainFromAsset = (
 
 export const getChainImageUrl = (chain?: Chain): string => {
   if (!chain) return tokenImage;
+  // If chain name is "Namada Transparent" I want you to find the white namada svg
+  if (chain.pretty_name === "Namada Transparent") return namadaTransparentSvg;
   return (
     getSvgOrPng(chain.images?.find((i) => i.theme?.circle)) ||
     getSvgOrPng(chain.images?.[0]) ||
