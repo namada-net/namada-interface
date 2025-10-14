@@ -1,4 +1,3 @@
-import { Chain } from "@chain-registry/types";
 import { IbcTransferProps } from "@namada/sdk-multicore";
 import { AccountType } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
@@ -74,7 +73,6 @@ export const IbcWithdraw = ({
   const [amount, setAmount] = useState<BigNumber | undefined>();
   const [customAddress, setCustomAddress] = useState<string>("");
   const [sourceChannel, setSourceChannel] = useState("");
-  const [destinationChain] = useState<Chain | undefined>();
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [txHash, setTxHash] = useState<string | undefined>();
   //  ERROR & STATUS STATE
@@ -83,8 +81,11 @@ export const IbcWithdraw = ({
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   //  GLOBAL STATE
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
-  const { walletAddress: keplrAddress, chainId } =
-    useWalletManager(keplrWalletManager);
+  const {
+    walletAddress: keplrAddress,
+    chainId,
+    registry,
+  } = useWalletManager(keplrWalletManager);
   const transparentAccount = useAtomValue(defaultAccountAtom);
   const namadaChain = useAtomValue(chainAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
@@ -145,7 +146,7 @@ export const IbcWithdraw = ({
     data: ibcChannels,
     isError: unknownIbcChannels,
     isLoading: isLoadingIbcChannels,
-  } = useAtomValue(ibcChannelsFamily(destinationChain?.chain_name));
+  } = useAtomValue(ibcChannelsFamily(registry?.chain.chain_name));
 
   useEffect(() => {
     setSourceChannel(ibcChannels?.namadaChannel || "");
