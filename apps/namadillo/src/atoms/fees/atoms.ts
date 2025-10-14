@@ -71,7 +71,7 @@ export const gasPriceTableAtom = atomWithQuery<GasPriceTable>((get) => {
           .filter(({ token }) => Boolean(chainAssetsMap.data[token]))
           .map(({ token, minDenomAmount }) => {
             const baseAmount = BigNumber(minDenomAmount);
-            // Transform string address to NativeToken format
+            // Transform string address to token object format
             return {
               token: { address: token } as ApiV1ChainTokenGet200ResponseInner,
               gasPriceInMinDenom: baseAmount,
