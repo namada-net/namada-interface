@@ -5,11 +5,9 @@ import {
   IBCInfo,
 } from "@chain-registry/types";
 import { ValidatorStatus } from "@namada/indexer-client";
-import { ClaimRewardsMsgValue } from "@namada/sdk-multicore";
 import { Account, ChainKey, ExtensionKey } from "@namada/types";
 import { MutationStatus } from "@tanstack/query-core";
 import BigNumber from "bignumber.js";
-import { TxKind } from "types/txKind";
 
 declare module "*.module.css" {
   const content: Record<string, string>;
@@ -22,20 +20,18 @@ type Unique = {
   uuid: string;
 };
 
-export type PublicKey = string;
-
 export type Address = string;
 
 export type BaseDenom = string;
 
 export type ChainId = string;
 
-export type GasLimit = BigNumber;
+type GasLimit = BigNumber;
 
-export type GasPrice = BigNumber;
+type GasPrice = BigNumber;
 
 // For Namada chain, it should be the address. For Ibc, it should be the base denom
-export type GasToken = Address | BaseDenom;
+type GasToken = Address | BaseDenom;
 
 export type AddressBalance = Record<Address, BigNumber>;
 
@@ -49,10 +45,6 @@ export type GasConfigToDisplay = {
   totalDisplayAmount: BigNumber;
   asset: Asset;
 };
-
-export type TxGas = Record<Address, GasLimit>;
-
-export type GasTable = Record<TxKind, TxGas>;
 
 export type ChainSettings = {
   id: ChainKey;
@@ -138,21 +130,9 @@ export type StakingTotals = {
   totalWithdrawable: BigNumber;
 };
 
-export type ChangeInStakingProps = {
-  account: Account;
-  changes: ChangeInStakingPosition[];
-  gasConfig: GasConfig;
-};
-
 export type ChangeInStakingPosition = {
   validatorId: Address;
   amount: BigNumber;
-};
-
-export type RedelegateChangesProps = {
-  account: Account;
-  changes: RedelegateChange[];
-  gasConfig: GasConfig;
 };
 
 export type RedelegateChange = {
@@ -161,13 +141,7 @@ export type RedelegateChange = {
   amount: BigNumber;
 };
 
-export type ClaimRewardsProps = {
-  account: Account;
-  params: ClaimRewardsMsgValue[];
-  gasConfig: GasConfig;
-};
-
-export type Signer = {
+type Signer = {
   publicKey: string;
   address: string;
 };
@@ -193,10 +167,6 @@ export type ToastNotification = {
   details?: React.ReactNode;
   timeout?: number;
 };
-
-export type ToastNotificationEntryFilter = (
-  notification: ToastNotification
-) => boolean;
 
 export type WalletProvider = {
   id: ExtensionKey;
@@ -231,11 +201,6 @@ export type AssetWithAmount = {
 export type NamadaAssetWithAmount = {
   asset: NamadaAsset;
   amount: BigNumber;
-};
-
-export type AssetWithMinDenomAmount = {
-  asset: Asset;
-  minDenomAmount: BigNumber;
 };
 
 export type Coin = {
@@ -331,21 +296,16 @@ export const allTransferStages = {
   ...ibcTransferStages,
 };
 
-export const transferPossibleStages = [
-  ...new Set(Object.values(allTransferStages).flat()),
-] as const;
-
 type NamadaTransferStages = typeof namadaTransferStages;
 type IbcTransferStages = typeof ibcTransferStages;
-export type AllTransferStages = typeof allTransferStages;
 
 export type NamadaTransferTxKind = keyof NamadaTransferStages;
 
-export type IbcTransferTxKind = keyof IbcTransferStages;
+type IbcTransferTxKind = keyof IbcTransferStages;
 
 export type AllTransferTxKind = NamadaTransferTxKind | IbcTransferTxKind;
 
-export type NamadaTransferStage = {
+type NamadaTransferStage = {
   [P in NamadaTransferTxKind]: {
     type: P;
     currentStep: TransferStep;
@@ -359,9 +319,9 @@ export type IbcTransferStage = {
   };
 }[IbcTransferTxKind];
 
-export type TransferStage = IbcTransferStage | NamadaTransferStage;
+type TransferStage = IbcTransferStage | NamadaTransferStage;
 
-export type BaseTransferTransaction = TransferStage & {
+type BaseTransferTransaction = TransferStage & {
   rpc: string;
   asset: Asset;
   hash: string;

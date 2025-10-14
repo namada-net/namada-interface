@@ -334,7 +334,7 @@ export const storageShieldedRewardsAtom = atomWithStorage<
   Record<Address, { minDenomAmount: string }>
 >("namadillo:shieldedRewards", {});
 
-export const shieldRewardsAtom = atomWithQuery((get) => {
+const shieldRewardsAtom = atomWithQuery((get) => {
   const viewingKeysQuery = get(viewingKeysAtom);
   const chainParametersQuery = get(chainParametersAtom);
   const rpcUrl = get(rpcUrlAtom);

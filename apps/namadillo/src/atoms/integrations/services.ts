@@ -1,5 +1,4 @@
 import { Chain, IBCInfo } from "@chain-registry/types";
-import { OfflineSigner } from "@cosmjs/launchpad";
 import {
   assertIsDeliverTxSuccess,
   calculateFee,
@@ -24,14 +23,11 @@ import { TxRaw } from "cosmjs-types/cosmos/tx/v1beta1/tx";
 import { differenceInMinutes } from "date-fns";
 import invariant from "invariant";
 import { getDefaultStore } from "jotai";
-import toml from "toml";
 import {
-  Asset,
   Coin,
   GasConfig,
   IbcChannels,
   IbcTransferTransactionData,
-  LocalnetToml,
   TransferStep,
   TransferTransactionData,
 } from "types";
@@ -43,25 +39,6 @@ import { Worker as MaspTxWorkerApi } from "workers/MaspTxWorker";
 import MaspTxWorker from "workers/MaspTxWorker?worker";
 import { rpcByChainAtom } from "./atoms";
 import { getChannelFromIbcInfo, getRpcByIndex } from "./functions";
-
-type CommonParams = {
-  signer: OfflineSigner;
-  chainId: string;
-  sourceAddress: string;
-  destinationAddress: string;
-  amount: BigNumber;
-  asset: Asset;
-  sourceChannelId: string;
-  gasConfig: GasConfig;
-};
-
-type TransparentParams = CommonParams & { isShielded: false };
-type ShieldedParams = CommonParams & {
-  isShielded: true;
-  destinationChannelId: string;
-};
-
-export type IbcTransferParams = TransparentParams | ShieldedParams;
 
 export const getShieldedArgs = async (
   target: string,
@@ -322,11 +299,6 @@ export const handleStandardTransfer = async (
   }
 
   return { ...tx };
-};
-
-export const fetchLocalnetTomlConfig = async (): Promise<LocalnetToml> => {
-  const response = await fetch("/localnet-config.toml");
-  return toml.parse(await response.text()) as LocalnetToml;
 };
 
 export const fetchIbcChannelFromRegistry = async (

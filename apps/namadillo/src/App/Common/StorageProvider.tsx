@@ -11,7 +11,7 @@ const HydrateAtoms = (props: { children: JSX.Element }): JSX.Element => {
   return props.children;
 };
 
-export const defaultStore = getDefaultStore();
+const defaultStore = getDefaultStore();
 
 export const StorageProvider = ({
   children,

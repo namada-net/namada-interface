@@ -45,9 +45,7 @@ export const SubmitVote: React.FC = () => {
     );
 };
 
-export const WithProposalId: React.FC<{ proposalId: bigint }> = ({
-  proposalId,
-}) => {
+const WithProposalId: React.FC<{ proposalId: bigint }> = ({ proposalId }) => {
   const navigate = useNavigate();
   const {
     mutate: createVoteTx,

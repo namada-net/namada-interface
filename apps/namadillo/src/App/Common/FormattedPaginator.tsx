@@ -19,5 +19,3 @@ export const FormattedPaginator = (
     />
   );
 };
-
-export default FormattedPaginator;

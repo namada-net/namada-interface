@@ -24,7 +24,7 @@ interface PaginatedTx {
   pagination: Pagination;
 }
 
-export const transactionStorageKey = "namadillo:transactions";
+const transactionStorageKey = "namadillo:transactions";
 
 export const transactionHistoryAtom = atomWithStorage<
   Record<Address, TransferTransactionData[]>

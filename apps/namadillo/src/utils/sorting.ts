@@ -12,7 +12,7 @@ export const compareBigNumbers = (
   return isDescending ? n2.minus(n1).toNumber() : n1.minus(n2).toNumber();
 };
 
-export const compareStrings = (
+const compareStrings = (
   str1: string,
   str2: string,
   isDescending: boolean

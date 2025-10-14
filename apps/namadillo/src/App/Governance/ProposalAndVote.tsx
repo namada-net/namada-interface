@@ -16,9 +16,7 @@ export const ProposalAndVote: React.FC = () => {
     );
 };
 
-export const WithProposalId: React.FC<{ proposalId: bigint }> = ({
-  proposalId,
-}) => (
+const WithProposalId: React.FC<{ proposalId: bigint }> = ({ proposalId }) => (
   <PageWithSidebar>
     <div className="flex flex-col gap-2">
       <Panel className="px-3">

@@ -19,7 +19,7 @@ import { PendingTransactionCard } from "./PendingTransactionCard";
 import { TransactionCard } from "./TransactionCard";
 
 const ITEMS_PER_PAGE = 30;
-export const transferKindOptions = [
+const transferKindOptions = [
   "transparentTransfer",
   "shieldingTransfer",
   "unshieldingTransfer",

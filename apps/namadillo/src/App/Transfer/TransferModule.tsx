@@ -56,7 +56,7 @@ type TransferModuleConfig = {
   ledgerAccountInfo?: LedgerAccountInfo;
 };
 
-export type TransferSourceProps = TransferModuleConfig & {
+type TransferSourceProps = TransferModuleConfig & {
   availableAssets?: Record<BaseDenom | Address, AssetWithAmount>;
   isLoadingAssets?: boolean;
   selectedAssetAddress?: Address;
@@ -66,14 +66,14 @@ export type TransferSourceProps = TransferModuleConfig & {
   onChangeAmount?: (amount: BigNumber | undefined) => void;
 };
 
-export type IbcOptions = {
+type IbcOptions = {
   sourceChannel: string;
   onChangeSourceChannel: (channel: string) => void;
   destinationChannel?: string;
   onChangeDestinationChannel?: (channel: string) => void;
 };
 
-export type TransferDestinationProps = TransferModuleConfig & {
+type TransferDestinationProps = TransferModuleConfig & {
   enableCustomAddress?: boolean;
   customAddress?: Address;
   onChangeCustomAddress?: (address: Address) => void;
@@ -86,7 +86,7 @@ export type OnSubmitTransferParams = {
   memo?: string;
 };
 
-export type TransferModuleProps = {
+type TransferModuleProps = {
   source: TransferSourceProps;
   destination: TransferDestinationProps;
   onSubmitTransfer?: (params: OnSubmitTransferParams) => void;

@@ -9,7 +9,6 @@ import {
   WrapperTxProps,
 } from "@namada/sdk-multicore";
 import { Account } from "@namada/types";
-import { queryClient } from "App/Common/QueryProvider";
 import { EncodedTxData, buildTx } from "lib/query";
 import { Address, AddressBalance, ChainSettings, GasConfig } from "types";
 import { getSdkInstance } from "utils/sdk";
@@ -157,14 +156,6 @@ export const createClaimAndStakeTx = async (
     chain,
     claimAndStakingParams,
     buildClaimRewardsAndStake
-  );
-};
-
-export const clearClaimRewards = (accountAddress: string): void => {
-  const emptyClaimRewards = {};
-  queryClient.setQueryData(
-    ["claim-rewards", accountAddress],
-    () => emptyClaimRewards
   );
 };
 

@@ -48,7 +48,7 @@ import { TransactionDetails } from "./Transactions/TransactionDetails";
 import { TransactionHistory } from "./Transactions/TransactionHistory";
 import { TransferLayout } from "./Transfer/TransferLayout";
 
-export const MainRoutes = (): JSX.Element => {
+const MainRoutes = (): JSX.Element => {
   const location = useLocation();
   const state = location.state as { backgroundLocation?: Location };
   const features = useAtomValue(applicationFeaturesAtom);

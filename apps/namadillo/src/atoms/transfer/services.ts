@@ -12,7 +12,6 @@ import {
   AccountType,
   GenDisposableSignerResponse,
 } from "@namada/types";
-import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { NamadaKeychain } from "hooks/useNamadaKeychain";
 import { buildTx, EncodedTxData, isPublicKeyRevealed } from "lib/query";
@@ -29,14 +28,6 @@ import {
   Worker as MaspTxWorkerApi,
 } from "workers/MaspTxWorker";
 import MaspTxWorker from "workers/MaspTxWorker?worker";
-
-export type WorkerTransferParams = {
-  sourceAddress: Address;
-  destinationAddress: Address;
-  tokenAddress: Address;
-  amount: BigNumber;
-  gasConfig: GasConfig;
-};
 
 const workerBuildTxPair = async <T>({
   rpcUrl,

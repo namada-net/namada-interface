@@ -49,7 +49,7 @@ export const ProposalDescription: React.FC<{
   );
 };
 
-export const Loaded: React.FC<{
+const Loaded: React.FC<{
   proposal: Proposal;
 }> = ({ proposal }) => {
   const [expanded, setExpanded] = useState(false);

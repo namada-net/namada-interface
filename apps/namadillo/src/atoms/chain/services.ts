@@ -37,11 +37,6 @@ export const fetchChainTokens = async (
   return (await api.apiV1ChainTokenGet()).data;
 };
 
-export const clearShieldedContext = async (chainId: string): Promise<void> => {
-  const sdk = await getSdkInstance();
-  await sdk.getMasp().clearShieldedContext(chainId);
-};
-
 export const fetchMaspRewards = async (
   assets: NamadaAsset[]
 ): Promise<MaspAssetRewards[]> => {

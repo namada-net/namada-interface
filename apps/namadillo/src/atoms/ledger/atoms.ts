@@ -6,14 +6,14 @@ import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { getSdkInstance } from "utils/sdk";
 
-export type LedgerStatus = {
+type LedgerStatus = {
   connected: boolean;
   errorMessage: string;
 };
 
 const ledgerStatusStopAtom = atom(false);
 
-export const ledgerStatusAtom = atomWithQuery<LedgerStatus | undefined>(() => {
+const ledgerStatusAtom = atomWithQuery<LedgerStatus | undefined>(() => {
   return {
     refetchInterval: 1000,
     queryKey: ["ledger-status"],

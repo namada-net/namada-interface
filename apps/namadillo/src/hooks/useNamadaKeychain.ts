@@ -8,7 +8,7 @@ import { Wallet } from "integrations/types";
 import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
 
-export type InjectedNamada = WindowWithNamada["namada"];
+type InjectedNamada = WindowWithNamada["namada"];
 
 const notAvailableError = "Namada Keychain is not available.";
 

@@ -34,9 +34,6 @@ export const proposalTypeStringToString = (type: ProposalType): string => {
   return typeText[type];
 };
 
-export const epochToString = (epoch: bigint): string =>
-  `Epoch ${epoch.toString()}`;
-
 export const proposalIdToString = (proposalId: bigint): string =>
   `#${proposalId.toString()}`;
 
@@ -110,7 +107,7 @@ export const toBaseAmount = (
   return displayAmount.shiftedBy(displayUnit.exponent);
 };
 
-export const toGasMsg = (gasLimit: BigNumber): string => {
+const toGasMsg = (gasLimit: BigNumber): string => {
   return `Please raise the Gas Amount above the previously provided ${gasLimit} in the fee options for your transaction.`;
 };
 
