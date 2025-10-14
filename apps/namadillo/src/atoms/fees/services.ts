@@ -1,12 +1,9 @@
-import { DefaultApi, GasEstimate } from "@namada/indexer-client";
+import {
+  DefaultApi,
+  GasEstimate,
+  GasPriceTableInner,
+} from "@namada/indexer-client";
 import { TxKind } from "types/txKind";
-
-// Type for the actual API response - token is a string address
-// Note: The API type definition is incorrect (says it's an object), but server returns a string
-export type GasPriceResponse = {
-  token: string;
-  minDenomAmount: string;
-};
 
 export const fetchGasEstimate = async (
   api: DefaultApi,
@@ -48,9 +45,7 @@ export const fetchGasEstimate = async (
 
 export const fetchTokensGasPrice = async (
   api: DefaultApi
-): Promise<GasPriceResponse[]> => {
+): Promise<GasPriceTableInner[]> => {
   const response = await api.apiV1GasPriceGet();
-  // The API type definition is wrong - it says token is an object, but server returns a string
-  // Cast the response to match the actual runtime data
-  return response.data as unknown as GasPriceResponse[];
+  return response.data;
 };

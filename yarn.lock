@@ -3717,12 +3717,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/indexer-client@npm:4.0.3":
-  version: 4.0.3
-  resolution: "@namada/indexer-client@npm:4.0.3"
+"@namada/indexer-client@npm:4.0.5":
+  version: 4.0.5
+  resolution: "@namada/indexer-client@npm:4.0.5"
   dependencies:
     axios: "npm:^1.6.1"
-  checksum: 10c0/de3e9d8375797826c37f4e5b90e55311ddbbffc8f0f1319fcb0f1b59e2aa17805c8b8eb010aee5fe68d9457300e95dfc935447ee627c30fe57ee9ffb3832cd03
+  checksum: 10c0/4e1c66c57745808bc985740fd9fff220065f0d449478f98b9f811b3dfc27fe0e3604f81f7feb79cde45720ba7d78a5208098a0057963ef47c9283802fb35ab8d
   languageName: node
   linkType: hard
 
@@ -3764,7 +3764,7 @@ __metadata:
     "@eslint/js": "npm:^9.9.1"
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.3.0"
-    "@namada/indexer-client": "npm:4.0.3"
+    "@namada/indexer-client": "npm:4.0.5"
     "@namada/sdk-multicore": "npm:^0.20.8"
     "@namada/sdk-node": "npm:^0.20.8"
     "@namada/vite-esbuild-plugin": "npm:^1.0.1"
@@ -6858,13 +6858,13 @@ __metadata:
   linkType: hard
 
 "axios@npm:^1.6.0, axios@npm:^1.6.1":
-  version: 1.7.9
-  resolution: "axios@npm:1.7.9"
+  version: 1.12.2
+  resolution: "axios@npm:1.12.2"
   dependencies:
     follow-redirects: "npm:^1.15.6"
-    form-data: "npm:^4.0.0"
+    form-data: "npm:^4.0.4"
     proxy-from-env: "npm:^1.1.0"
-  checksum: 10c0/b7a41e24b59fee5f0f26c1fc844b45b17442832eb3a0fb42dd4f1430eb4abc571fe168e67913e8a1d91c993232bd1d1ab03e20e4d1fee8c6147649b576fc1b0b
+  checksum: 10c0/80b063e318cf05cd33a4d991cea0162f3573481946f9129efb7766f38fde4c061c34f41a93a9f9521f02b7c9565ccbc197c099b0186543ac84a24580017adfed
   languageName: node
   linkType: hard
 
@@ -10712,6 +10712,19 @@ __metadata:
     combined-stream: "npm:^1.0.8"
     mime-types: "npm:^2.1.12"
   checksum: 10c0/bb102d570be8592c23f4ea72d7df9daa50c7792eb0cf1c5d7e506c1706e7426a4e4ae48a35b109e91c85f1c0ec63774a21ae252b66f4eb981cb8efef7d0463c8
+  languageName: node
+  linkType: hard
+
+"form-data@npm:^4.0.4":
+  version: 4.0.4
+  resolution: "form-data@npm:4.0.4"
+  dependencies:
+    asynckit: "npm:^0.4.0"
+    combined-stream: "npm:^1.0.8"
+    es-set-tostringtag: "npm:^2.1.0"
+    hasown: "npm:^2.0.2"
+    mime-types: "npm:^2.1.12"
+  checksum: 10c0/373525a9a034b9d57073e55eab79e501a714ffac02e7a9b01be1c820780652b16e4101819785e1e18f8d98f0aee866cc654d660a435c378e16a72f2e7cac9695
   languageName: node
   linkType: hard
 
