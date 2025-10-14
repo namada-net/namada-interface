@@ -18,7 +18,6 @@ import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import { maspIndexerUrlAtom, rpcUrlAtom } from "atoms/settings";
 import { queryDependentFn } from "atoms/utils";
-import { isAxiosError } from "axios";
 import BigNumber from "bignumber.js";
 import { sequenceT } from "fp-ts/lib/Apply";
 import { pipe } from "fp-ts/lib/function";
@@ -29,6 +28,7 @@ import { atomWithQuery } from "jotai-tanstack-query";
 import { atomWithStorage } from "jotai/utils";
 import { Address, TokenBalance } from "types";
 import { namadaAsset, toDisplayAmount } from "utils";
+import { isError404 } from "utils/http";
 import {
   mapNamadaAddressesToAssets,
   mapNamadaAssetsToTokenBalances,
@@ -59,7 +59,7 @@ const toDatedKeypair = async (
     try {
       height = await fetchBlockHeightByTimestamp(api, timestamp);
     } catch (e) {
-      if (isAxiosError(e) && e.status === 404) {
+      if (isError404(e)) {
         console.warn(
           "Failed to fetch block height by timestamp, falling back to height 0",
           e
