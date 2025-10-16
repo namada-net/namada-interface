@@ -2,7 +2,6 @@ import {
   Sdk,
   TxProps,
   TxResponseProps,
-  UnshieldingTransferProps,
   WrapperTxProps,
 } from "@namada/sdk-multicore";
 import { Account, AccountType } from "@namada/types";
@@ -62,7 +61,7 @@ const getTxProps = (
 
   return {
     token: gasConfig.gasToken,
-    feeAmount: gasConfig.gasPriceInMinDenom,
+    feeAmount: gasConfig.gasPriceInMinDenom.div(1000000),
     gasLimit: gasConfig.gasLimit,
     chainId: chain.chainId,
     publicKey: account.publicKey!,
@@ -96,8 +95,7 @@ export const buildTx = async <T>(
   queryProps: T[],
   txFn: (wrapperTxProps: WrapperTxProps, props: T) => Promise<TxProps>,
   memo?: string,
-  shouldRevealPk: boolean = true,
-  maspFeePaymentProps?: UnshieldingTransferProps & { memo: string } // Optional masp fee payment properties
+  shouldRevealPk: boolean = true
 ): Promise<EncodedTxData<T>> => {
   const txs: TxProps[] = [];
   const txProps: TxProps[] = [];
@@ -110,20 +108,6 @@ export const buildTx = async <T>(
       const revealPkTx = await sdk.tx.buildRevealPk(wrapperTxProps);
       txs.push(revealPkTx);
     }
-  }
-
-  if (maspFeePaymentProps) {
-    const wrapperTxProps = getTxProps(
-      account,
-      gasConfig,
-      chain,
-      maspFeePaymentProps.memo
-    );
-    const maspFeePaymentTx = await sdk.tx.buildUnshieldingTransfer(
-      wrapperTxProps,
-      maspFeePaymentProps
-    );
-    txs.push(maspFeePaymentTx);
   }
 
   for (const props of queryProps) {

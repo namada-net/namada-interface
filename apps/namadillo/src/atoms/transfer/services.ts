@@ -102,33 +102,6 @@ export const createTransparentTransferTx = async (
   );
 };
 
-const getMaspFeePaymentProps = (
-  source: string,
-  signerAddress: string,
-  gasConfig: GasConfig,
-  bparams?: BparamsMsgValue[]
-): UnshieldingTransferProps & {
-  memo: string;
-} => {
-  const feePaymentMsgValue: UnshieldingTransferProps = {
-    source,
-    data: [
-      {
-        target: signerAddress,
-        token: gasConfig.gasToken,
-        amount: gasConfig.gasPriceInMinDenom.times(gasConfig.gasLimit),
-      },
-    ],
-    bparams,
-    skipFeeCheck: true,
-  };
-  const feePaymentMsgValueWithMemo = {
-    ...feePaymentMsgValue,
-    memo: "MASP_FEE_PAYMENT",
-  };
-  return feePaymentMsgValueWithMemo;
-};
-
 /**
  * "Shielded transfer" refers to transfers between two shielded addresses.
  */
@@ -141,8 +114,7 @@ export const createShieldedTransferTx = async (
   disposableSigner: GenDisposableSignerResponse,
   memo?: string
 ): Promise<EncodedTxData<ShieldedTransferProps> | undefined> => {
-  const { publicKey: signerPublicKey, address: signerAddress } =
-    disposableSigner;
+  const { publicKey: signerPublicKey } = disposableSigner;
   const source = props[0]?.data[0]?.source;
   const destination = props[0]?.data[0]?.target;
   const token = props[0]?.data[0]?.token;
@@ -167,18 +139,6 @@ export const createShieldedTransferTx = async (
         bparams,
       };
 
-      const maspFeePaymentProps = (() => {
-        if (!isLedgerAccount) {
-          msgValue.skipFeeCheck = true;
-          return getMaspFeePaymentProps(
-            source,
-            signerAddress,
-            gasConfig,
-            bparams
-          );
-        }
-      })();
-
       const msg: ShieldedTransfer = {
         type: "shielded-transfer",
         payload: {
@@ -190,7 +150,6 @@ export const createShieldedTransferTx = async (
           props: [msgValue],
           chain,
           memo,
-          maspFeePaymentProps,
         },
       };
       return (await workerLink.shieldedTransfer(msg)).payload;
@@ -261,8 +220,7 @@ export const createUnshieldingTransferTx = async (
   disposableSigner: GenDisposableSignerResponse,
   memo?: string
 ): Promise<EncodedTxData<UnshieldingTransferProps> | undefined> => {
-  const { publicKey: signerPublicKey, address: signerAddress } =
-    disposableSigner;
+  const { publicKey: signerPublicKey } = disposableSigner;
 
   const source = props[0]?.source;
   const destination = props[0]?.data[0]?.target;
@@ -289,18 +247,6 @@ export const createUnshieldingTransferTx = async (
         bparams,
       };
 
-      const maspFeePaymentProps = (() => {
-        if (!isLedgerAccount) {
-          msgValue.skipFeeCheck = true;
-          return getMaspFeePaymentProps(
-            source,
-            signerAddress,
-            gasConfig,
-            bparams
-          );
-        }
-      })();
-
       const msg: Unshield = {
         type: "unshield",
         payload: {
@@ -312,7 +258,6 @@ export const createUnshieldingTransferTx = async (
           props: [msgValue],
           chain,
           memo,
-          maspFeePaymentProps,
         },
       };
       return (await workerLink.unshield(msg)).payload;

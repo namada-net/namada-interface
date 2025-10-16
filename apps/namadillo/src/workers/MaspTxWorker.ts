@@ -164,7 +164,7 @@ async function unshield(
   sdk: Sdk,
   payload: Unshield["payload"]
 ): Promise<EncodedTxData<UnshieldingTransferProps>> {
-  const { account, gasConfig, chain, props, maspFeePaymentProps } = payload;
+  const { account, gasConfig, chain, props } = payload;
   await sdk.masp.loadMaspParams("", chain.chainId);
   const encodedTxData = await buildTx<UnshieldingTransferProps>(
     sdk,
@@ -174,8 +174,7 @@ async function unshield(
     props,
     sdk.tx.buildUnshieldingTransfer,
     undefined,
-    false,
-    maspFeePaymentProps
+    false
   );
 
   return encodedTxData;
@@ -185,7 +184,7 @@ async function shieldedTransfer(
   sdk: Sdk,
   payload: ShieldedTransfer["payload"]
 ): Promise<EncodedTxData<ShieldedTransferProps>> {
-  const { account, gasConfig, chain, props, maspFeePaymentProps } = payload;
+  const { account, gasConfig, chain, props } = payload;
   await sdk.masp.loadMaspParams("", chain.chainId);
   const encodedTxData = await buildTx<ShieldedTransferProps>(
     sdk,
@@ -195,8 +194,7 @@ async function shieldedTransfer(
     props,
     sdk.tx.buildShieldedTransfer,
     undefined,
-    false,
-    maspFeePaymentProps
+    false
   );
 
   return encodedTxData;
