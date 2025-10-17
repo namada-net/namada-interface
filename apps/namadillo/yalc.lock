@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "packages": {
+    "@namada/sdk-multicore": {
+      "signature": "5e649124531057122ede49b009abcad1",
+      "file": true
+    }
+  }
+}
