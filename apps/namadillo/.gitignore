@@ -9,3 +9,5 @@
 /playwright-report/
 /playwright/.cache/
 /public/localnet-config.toml
+.yalc
+yalc.lock
