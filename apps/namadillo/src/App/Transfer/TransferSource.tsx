@@ -12,6 +12,10 @@ import { SelectedChain } from "./SelectedChain";
 import { SelectedWallet } from "./SelectedWallet";
 import { TokenAmountCard } from "./TokenAmountCard";
 
+export const isNamada = (chain: Chain): boolean => {
+  return ["namada", "namadahousefire"].includes(chain.chain_name);
+};
+
 export type TransferSourceProps = {
   isConnected: boolean;
   wallet?: WalletProvider;
@@ -64,7 +68,7 @@ export const TransferSource = ({
   return (
     <div className="relative bg-neutral-800 rounded-lg px-4 py-5">
       {/** Intro header - Ex: "IBC To Namada" */}
-      {onChangeShielded && chain?.chain_name === "namada" && !isSubmitting && (
+      {onChangeShielded && chain && isNamada(chain) && !isSubmitting && (
         <nav className="relative z-10 mb-6">
           <TabSelector
             active={isShieldedAddress ? "shielded" : "transparent"}

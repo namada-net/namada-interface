@@ -3508,10 +3508,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@namada/chain-registry@npm:^1.3.0":
-  version: 1.3.0
-  resolution: "@namada/chain-registry@npm:1.3.0"
-  checksum: 10c0/4cde05f35e9bbf94bfa18a43e17ba14e04d8517bd32b11918a4b58f9d5a6ed05b1901f4369617efd8adf8dc2647e91148ce53b16ff79206f7b06986a4a8f1bb8
+"@namada/chain-registry@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "@namada/chain-registry@npm:1.4.0"
+  checksum: 10c0/6a7af676582760081cb5eca832b036ea413dde9f1f94f99a080abded3d6893255256d79cc77a8758353895fe2ce45206aba097fbe84025044bf3cff815590fc0
   languageName: node
   linkType: hard
 
@@ -3763,7 +3763,7 @@ __metadata:
     "@cosmjs/encoding": "npm:^0.32.3"
     "@eslint/js": "npm:^9.9.1"
     "@keplr-wallet/types": "npm:^0.12.136"
-    "@namada/chain-registry": "npm:^1.3.0"
+    "@namada/chain-registry": "npm:^1.4.0"
     "@namada/indexer-client": "npm:4.0.5"
     "@namada/sdk-multicore": "file:.yalc/@namada/sdk-multicore"
     "@namada/sdk-node": "npm:^0.20.8"
