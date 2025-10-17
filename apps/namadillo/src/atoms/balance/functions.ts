@@ -17,43 +17,24 @@ export const getTotalDollar = (list?: TokenBalance[]): BigNumber =>
 export const getTotalNam = (list?: TokenBalance[]): BigNumber =>
   list?.find((i) => isNamadaAsset(i.asset))?.amount ?? new BigNumber(0);
 
-// Type to handle both balance data structures
-type BalanceItem = Balance | { tokenAddress: string; minDenomAmount: string };
-
 export const mapNamadaAddressesToAssets = ({
   balances,
   assets,
 }: {
-  balances: BalanceItem[];
+  balances: Balance[];
   assets: NamadaAsset[];
 }): Record<Address, NamadaAssetWithAmount> => {
   const map: Record<Address, NamadaAssetWithAmount> = {};
   balances.forEach((item) => {
-    // Handle both data structures temporarily:
-    // 1. {token: {address: '...'}, minDenomAmount: '...'}
-    // 2. {tokenAddress: '...', minDenomAmount: '...'}
-    let tokenAddress: string | undefined;
-
-    if ("token" in item && item.token?.address) {
-      tokenAddress = item.token.address;
-    } else if ("tokenAddress" in item) {
-      tokenAddress = item.tokenAddress;
-    }
-
-    if (!tokenAddress) {
-      return;
-    }
-
-    const asset = assets.find((asset) => asset.address === tokenAddress);
+    const asset = assets.find((asset) => asset.address === item.token.address);
 
     if (asset) {
-      map[tokenAddress] = {
+      map[item.token.address] = {
         amount: toDisplayAmount(asset, BigNumber(item.minDenomAmount)),
         asset,
       };
     }
   });
-
   return map;
 };
 

@@ -13,10 +13,12 @@ import { atomFamily } from "jotai/utils";
 import { isPublicKeyRevealed } from "lib/query";
 import isEqual from "lodash.isequal";
 import { TxKind } from "types/txKind";
+import { isNamadaAsset, toDisplayAmount } from "utils";
 import { fetchGasEstimate, fetchTokensGasPrice } from "./services";
 
 export type GasPriceTableItem = {
   token: ApiV1ChainTokenGet200ResponseInner;
+  gasPrice: BigNumber;
   gasPriceInMinDenom: BigNumber;
 };
 
@@ -70,10 +72,14 @@ export const gasPriceTableAtom = atomWithQuery<GasPriceTable>((get) => {
           // filter only tokens that exists on the chain
           .filter(({ token }) => Boolean(chainAssetsMap.data[token.address]))
           .map(({ token, minDenomAmount }) => {
+            const asset = chainAssetsMap.data[token.address];
             const baseAmount = BigNumber(minDenomAmount);
-            // Transform string address to token object format
             return {
               token,
+              gasPrice:
+                asset && isNamadaAsset(asset) ?
+                  toDisplayAmount(asset, baseAmount)
+                : baseAmount,
               gasPriceInMinDenom: baseAmount,
             };
           })

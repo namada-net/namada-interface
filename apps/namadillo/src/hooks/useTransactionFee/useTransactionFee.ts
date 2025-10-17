@@ -90,7 +90,7 @@ export const useTransactionFee = (
       // Find gas price for native token, should be always present
       const gasPrice = gasPriceTable.find(
         ({ token }) => token.address === nativeToken
-      )?.gasPriceInMinDenom;
+      )?.gasPrice;
       invariant(gasPrice, "Gas price for native token is not found");
 
       const requiredBalance = BigNumber(gasLimit).times(gasPrice);
@@ -128,8 +128,8 @@ export const useTransactionFee = (
 
   const gasToken = gasTokenValue ?? availableGasTokenAddress ?? "";
   const gasPrice =
-    gasPriceTable?.find((i) => i.token.address === gasToken)
-      ?.gasPriceInMinDenom ?? BigNumber(0);
+    gasPriceTable?.find((i) => i.token.address === gasToken)?.gasPrice ??
+    BigNumber(0);
 
   const gasConfig: GasConfig = {
     gasLimit,

@@ -46,6 +46,5 @@ export const fetchGasEstimate = async (
 export const fetchTokensGasPrice = async (
   api: DefaultApi
 ): Promise<GasPriceTableInner[]> => {
-  const response = await api.apiV1GasPriceGet();
-  return response.data;
+  return (await api.apiV1GasPriceGet()).data;
 };

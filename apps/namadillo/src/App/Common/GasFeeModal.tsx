@@ -252,7 +252,7 @@ export const GasFeeModal = ({
                   totalInDollars,
                   unitValueInDollars,
                 } = buildGasOption({
-                  gasPriceInMinDenom: item.gasPriceInMinDenom,
+                  gasPriceInMinDenom: item.gasPrice,
                   gasToken: item.token.address,
                 });
 
