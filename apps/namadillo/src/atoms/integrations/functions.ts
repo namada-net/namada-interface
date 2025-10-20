@@ -27,7 +27,6 @@ import {
 // this way for example we could add housefire nam to osmosis testnet registry
 import housefireIbcCelestia from "@namada/chain-registry/_testnets/_IBC/namadahousefire-celestia.json";
 import housefireIbcCosmoshub from "@namada/chain-registry/_testnets/_IBC/namadahousefire-cosmoshub.json";
-import housefireIbcNoble from "@namada/chain-registry/_testnets/_IBC/namadahousefire-nobletestnet.json";
 import housefireIbcOsmosis from "@namada/chain-registry/_testnets/_IBC/namadahousefire-osmosis.json";
 import housefireIbcStride from "@namada/chain-registry/_testnets/_IBC/namadahousefire-stride.json";
 import housefireAssets from "@namada/chain-registry/_testnets/namadahousefire/assetlist.json";
@@ -40,7 +39,6 @@ const housefire: ChainRegistryEntry = {
     housefireIbcCelestia,
     housefireIbcCosmoshub,
     housefireIbcStride,
-    housefireIbcNoble,
     housefireIbcOsmosis,
   ] as IBCInfo[],
 };
