@@ -88,7 +88,7 @@ export const UnstakeBondingTable = ({
           className="relative"
         >
           <AmountField
-            placeholder="Select to increase stake"
+            placeholder="Select to decrease stake"
             value={amountToUnstake.eq(0) ? undefined : amountToUnstake}
             updated={hasNewAmounts}
             forceActive={true}
