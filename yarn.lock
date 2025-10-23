@@ -3578,8 +3578,8 @@ __metadata:
     "@dao-xyz/borsh": "npm:^5.1.5"
     "@ledgerhq/hw-transport": "npm:^6.31.4"
     "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
-    "@namada/sdk": "npm:0.21.1-beta.1"
-    "@namada/sdk-node": "npm:^0.20.7"
+    "@namada/sdk": "npm:0.22.0"
+    "@namada/sdk-node": "npm:^0.22.0"
     "@svgr/webpack": "npm:^6.3.1"
     "@types/chrome": "npm:^0.0.237"
     "@types/firefox-webext-browser": "npm:^94.0.1"
@@ -3765,8 +3765,8 @@ __metadata:
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.5.0"
     "@namada/indexer-client": "npm:4.0.5"
-    "@namada/sdk-multicore": "npm:0.21.1-beta.1"
-    "@namada/sdk-node": "npm:^0.20.8"
+    "@namada/sdk-multicore": "npm:0.22.0"
+    "@namada/sdk-node": "npm:^0.22.0"
     "@namada/vite-esbuild-plugin": "npm:^1.0.1"
     "@playwright/test": "npm:^1.24.1"
     "@svgr/webpack": "npm:^6.5.1"
@@ -3851,9 +3851,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/sdk-multicore@npm:0.21.1-beta.1":
-  version: 0.21.1-beta.1
-  resolution: "@namada/sdk-multicore@npm:0.21.1-beta.1"
+"@namada/sdk-multicore@npm:0.22.0":
+  version: 0.22.0
+  resolution: "@namada/sdk-multicore@npm:0.22.0"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3864,13 +3864,13 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/84b4d4e573e58eb31b60849838abafc41fac3d4dc695f276d94502932b74528e65c74abe0b87f21a5a841dc9274ecb63e04c48f4d3b3270972d8c7d8694cae5a
+  checksum: 10c0/50c1a125ba744c4d3cb06c0249c21f654e8725a5a858a3d27c802738dc4164aa1e7fa645b241671edfc5a8cb571b6d45ae92cf2ea253ff9bfc459159c47f8ad1
   languageName: node
   linkType: hard
 
-"@namada/sdk-node@npm:^0.20.7":
-  version: 0.20.7
-  resolution: "@namada/sdk-node@npm:0.20.7"
+"@namada/sdk-node@npm:^0.22.0":
+  version: 0.22.0
+  resolution: "@namada/sdk-node@npm:0.22.0"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3881,30 +3881,13 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/8050ed2b5882945eae9100b8bcfa4c43764d95a19a50965c99dec1df36e71558bcf1ca8b7e983cf099871426d886d8bd06fa18079b9079a07c2a144106d23c33
+  checksum: 10c0/603b795182563d95d5ec7c4e315c391b52adb33af418d9ab7ff36d78ba67396b5f860e0f2fe216a9785a6da97a0712ef5fe964ee5f25fc2bb7fce757d803814d
   languageName: node
   linkType: hard
 
-"@namada/sdk-node@npm:^0.20.8":
-  version: 0.20.8
-  resolution: "@namada/sdk-node@npm:0.20.8"
-  dependencies:
-    "@cosmjs/encoding": "npm:^0.29.0"
-    "@dao-xyz/borsh": "npm:^5.1.5"
-    "@ledgerhq/hw-transport": "npm:^6.31.4"
-    "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
-    "@zondax/ledger-namada": "npm:^2.0.0"
-    bignumber.js: "npm:^9.1.1"
-    buffer: "npm:^6.0.3"
-    semver: "npm:^7.7.2"
-    slip44: "npm:^3.0.18"
-  checksum: 10c0/8632dd2a5995f310d0aa7ad5c11ef8b50a71ca83da33560ff688231c35312e4ed59234aa32b5bc336767917930e20a3ae30538a6bb73eb9825f2196dd5e8c427
-  languageName: node
-  linkType: hard
-
-"@namada/sdk@npm:0.21.1-beta.1":
-  version: 0.21.1-beta.1
-  resolution: "@namada/sdk@npm:0.21.1-beta.1"
+"@namada/sdk@npm:0.22.0":
+  version: 0.22.0
+  resolution: "@namada/sdk@npm:0.22.0"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3915,7 +3898,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.6.3"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/e4ed38fb7e2134bac960621ef6a561a236252be0248ebe29aff8a53c39ed10357c047bd6de99a300c764b3d145cd13369f66a5f0efb89fb40045095eb96c98b9
+  checksum: 10c0/549442a97e7e0230ae005745f35ae163bdd5e3dc865ff8175f226358f232a878624cd52b2bc4249f58d43a959872516bc1de2aebeb6b01603fd08184e4646d94
   languageName: node
   linkType: hard
 
