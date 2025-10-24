@@ -128,7 +128,10 @@ export const GasFeeModal = ({
           minDenomAmount: balance.minDenomAmount,
           token: balance.address,
         }))
-      : transparentAmount.data;
+      : transparentAmount.data?.map((balance) => ({
+          minDenomAmount: balance.minDenomAmount,
+          token: balance.token.address,
+        }));
 
     return new BigNumber(
       balances?.find((token) => token.token === tokenAddres)?.minDenomAmount ||
