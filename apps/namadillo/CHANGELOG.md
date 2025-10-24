@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.32.1](https://github.com/namada-net/namada-interface/compare/namadillo@v1.32.0...namadillo@v1.32.1) (2025-10-24)
+
+
+### Bug Fixes
+
+* Disconnecting keplr ([#2308](https://github.com/namada-net/namada-interface/issues/2308)) ([10a9c66](https://github.com/namada-net/namada-interface/commit/10a9c66aa941bdf7daa1d3de32836fbd7c7a8ff3))
+* Gas token picker ([#2306](https://github.com/namada-net/namada-interface/issues/2306)) ([8f46299](https://github.com/namada-net/namada-interface/commit/8f46299ee9989ba5e9765ff8030c05aee059e038))
+
 ## [1.32.0](https://github.com/namada-net/namada-interface/compare/namadillo@v1.31.3...namadillo@v1.32.0) (2025-10-23)
 
 
