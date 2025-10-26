@@ -8,6 +8,7 @@ import { isUrlValid } from "@namada/utils";
 import toml from "toml";
 import { SettingsTomlOptions } from "types";
 import { getSdkInstance } from "utils/sdk";
+const { VITE_TAG: tag = "" } = import.meta.env;
 
 export const getIndexerHealth = async (
   api: DefaultApi
@@ -70,7 +71,7 @@ export const isRpcAlive = async (url: string): Promise<boolean> => {
 
 export const fetchDefaultTomlConfig =
   async (): Promise<SettingsTomlOptions> => {
-    const response = await fetch("/config.toml");
+    const response = await fetch(`/config.toml?v=${tag}`);
     return toml.parse(await response.text()) as SettingsTomlOptions;
   };
 

@@ -43,6 +43,7 @@ import { Worker as MaspTxWorkerApi } from "workers/MaspTxWorker";
 import MaspTxWorker from "workers/MaspTxWorker?worker";
 import { rpcByChainAtom } from "./atoms";
 import { getChannelFromIbcInfo, getRpcByIndex } from "./functions";
+const { VITE_TAG: tag = "" } = import.meta.env;
 
 type CommonParams = {
   signer: OfflineSigner;
@@ -325,7 +326,7 @@ export const handleStandardTransfer = async (
 };
 
 export const fetchLocalnetTomlConfig = async (): Promise<LocalnetToml> => {
-  const response = await fetch("/localnet-config.toml");
+  const response = await fetch(`/localnet-config.toml?v=${tag}`);
   return toml.parse(await response.text()) as LocalnetToml;
 };
 
