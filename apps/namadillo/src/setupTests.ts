@@ -5,6 +5,16 @@ import { TextDecoder, TextEncoder } from "util";
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 
+// Mock the services module that uses import.meta.env
+jest.mock("atoms/settings/services", () => ({
+  getIndexerHealth: jest.fn(),
+  getIndexerCrawlerInfo: jest.fn(),
+  getMaspIndexerHealth: jest.fn(),
+  isRpcAlive: jest.fn(),
+  fetchDefaultTomlConfig: jest.fn(),
+  clearShieldedContext: jest.fn(),
+}));
+
 jest.mock("atoms/integrations", () => ({
   getRestApiAddressByIndex: jest.fn(),
   getRpcByIndex: jest.fn(),
