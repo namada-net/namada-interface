@@ -49,10 +49,10 @@
   "scripts": {
     "start:proxy": "node ./scripts/startProxies.js",
     "preview": "vite preview",
-    "dev": "VITE_REVISION=$(git rev-parse HEAD) VITE_TAG=$(git describe --tags --always --abbrev=0) vite",
+    "dev": "VITE_REVISION=$(git rev-parse HEAD) vite",
     "dev:local": "NODE_ENV=development NAMADA_INTERFACE_LOCAL=\"true\" yarn dev",
     "dev:proxy": "VITE_PROXY=true && ./scripts/start-proxies.sh && yarn dev:local",
-    "build": "NODE_ENV=production VITE_REVISION=$(git rev-parse HEAD) VITE_TAG=$(git describe --tags --always --abbrev=0) vite build",
+    "build": "NODE_ENV=production VITE_REVISION=$(git rev-parse HEAD) vite build",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "yarn lint -- --fix",
     "lint:ci": "yarn lint --max-warnings 0",
