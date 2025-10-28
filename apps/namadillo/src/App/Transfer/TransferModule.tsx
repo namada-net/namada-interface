@@ -137,7 +137,7 @@ export const TransferModule = ({
   const validationResult = useMemo((): ValidationResult => {
     return validateTransferForm({
       source: {
-        assetAddress: selectedAsset?.asset.address,
+        asset: selectedAsset?.asset,
         address: source.address,
         isShieldedAddress: isShieldedAddress(source.address ?? ""),
         selectedAssetAddress: selectedAsset?.asset.address,

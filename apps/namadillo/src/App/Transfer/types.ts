@@ -14,7 +14,7 @@ import {
 } from "types";
 
 export type ValidateTransferFormSource = {
-  assetAddress: string | undefined;
+  asset: Asset | undefined;
   address: string | undefined;
   isShieldedAddress: boolean;
   amount: BigNumber | undefined;
