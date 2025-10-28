@@ -1,3 +1,4 @@
+import { Chain } from "@chain-registry/types";
 import {
   isIbcAddress,
   isNamadaAddress,
@@ -10,6 +11,7 @@ import {
 } from "atoms/integrations";
 import BigNumber from "bignumber.js";
 import { KeplrWalletManager } from "integrations/Keplr";
+import { getChainFromAsset } from "integrations/utils";
 import { Asset, AssetWithAmount, GasConfig } from "types";
 import { checkKeychainCompatibleWithMasp } from "utils/compatibility";
 import {
@@ -22,23 +24,20 @@ import {
 
 // This function only used to make sure users aren't sending Nam OSMO to IBC Cosmos etc.
 export const isValidDestinationAddress = ({
-  assetAddress,
+  chain,
   destinationAddress,
 }: {
-  assetAddress: string;
+  chain: Chain | undefined;
   destinationAddress: string;
 }): boolean => {
   // Skip validation if it's not an IBC destination address
   if (isNamadaAddress(destinationAddress)) return true;
   const chainAssets = getNamadaChainAssetsMap(false);
-  const asset = chainAssets[assetAddress];
+  const asset = chainAssets[chain?.chain_id ?? ""];
   // Allow for sending NAM to Osmosis
   const isNamadaAsset = asset?.symbol === "NAM";
   if (isNamadaAsset && destinationAddress.startsWith("osmo")) return true;
 
-  const ibcTrace = asset?.traces?.find((trace) => trace.type === "ibc");
-  const chainName = ibcTrace?.counterparty.chain_name;
-  const chain = getChainRegistryByChainName(chainName ?? "")?.chain;
   if (!chain || !destinationAddress) return false;
   // For non-Namada chains, validate using prefix
   return destinationAddress.startsWith(chain?.bech32_prefix ?? "");
@@ -99,7 +98,7 @@ export const validateTransferForm = ({
     return "NoSelectedAsset";
   } else if (
     !isValidDestinationAddress({
-      assetAddress: source.assetAddress ?? "",
+      chain: source.asset ? getChainFromAsset(source.asset) : undefined,
       destinationAddress: destination.address ?? "",
     })
   ) {

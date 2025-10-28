@@ -64,15 +64,18 @@ const getSvgOrPng = (image?: {
 
 // Helper function to get chain from token
 export const getChainFromAsset = (
-  token: AssetWithAmount
+  token: AssetWithAmount | Asset
 ): Chain | undefined => {
+  // Determine if token is AssetWithAmount or Asset
+  const asset = "asset" in token ? token.asset : token;
+
   // For NAM token, we want to show Osmosis chain logo since it's bridged there
-  if (token.asset.base === "unam") {
+  if (asset.base === "unam") {
     return getChainRegistryByChainName("osmosis")?.chain;
   }
 
   // For other tokens, get chain from traces
-  const chainName = token.asset.traces?.[0]?.counterparty?.chain_name;
+  const chainName = asset.traces?.[0]?.counterparty?.chain_name;
   if (chainName) {
     return getChainRegistryByChainName(chainName)?.chain;
   }
