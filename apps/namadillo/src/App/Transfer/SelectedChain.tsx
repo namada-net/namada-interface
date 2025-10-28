@@ -25,7 +25,6 @@ export const SelectedChain = ({
 
   const isDisabled = !wallet;
   const logoUrl = getChainImageUrl(chain);
-  console.log(logoUrl, "logoUrl", chain);
   return (
     <button
       type="button"
