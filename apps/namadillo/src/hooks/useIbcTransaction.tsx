@@ -198,16 +198,15 @@ export const useIbcTransaction = ({
             (trace) => trace.type === "ibc"
           );
 
-          // For genShieldedArgs we have to pass the ibc trace path on destination chain,
-          // for native assets we use the base denom
-          const assetTracePath =
-            assetTrace ? assetTrace.chain.path : selectedAsset.base;
-          invariant(assetTracePath, "Asset trace path is required");
+          // For genShieldedArgs we pass the ibc trace path on destination chain (Namada)
+          // This should be the path as it appears on Namada, e.g. "transfer/channel-XXX/uatom"
+          const token = assetTrace ? assetTrace.chain.path : selectedAsset.base;
+          invariant(token, "Asset token is required");
 
           return shielded ?
               await getShieldedArgs(
                 destinationAddress,
-                assetTracePath,
+                token,
                 baseAmount,
                 destinationChannel!
               )
