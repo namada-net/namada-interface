@@ -222,29 +222,32 @@ export const SelectToken = ({
                     <span className="text-white">All Networks</span>
                   </button>
                 </li>
-                {allNetworks.map((network) => (
-                  <li key={network.chain_name}>
-                    <button
-                      onClick={() =>
-                        handleNetworkSelect(
-                          network.chain_name?.toLowerCase() || ""
-                        )
-                      }
-                      className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
-                        selectedNetwork === network.chain_name ?
-                          "bg-white/5 border border-white/20"
-                        : "hover:bg-neutral-800"
-                      }`}
-                    >
-                      <ChainBadge chain={network} />
-                      <span
-                        className={clsx("capitalize font-normal text-white")}
+                {allNetworks.map((network) => {
+                  if (network.chain_name.includes("namada")) return null;
+                  return (
+                    <li key={network.chain_name}>
+                      <button
+                        onClick={() =>
+                          handleNetworkSelect(
+                            network.chain_name?.toLowerCase() || ""
+                          )
+                        }
+                        className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
+                          selectedNetwork === network.chain_name ?
+                            "bg-white/5 border border-white/20"
+                          : "hover:bg-neutral-800"
+                        }`}
                       >
-                        {network.chain_name}
-                      </span>
-                    </button>
-                  </li>
-                ))}
+                        <ChainBadge chain={network} />
+                        <span
+                          className={clsx("capitalize font-normal text-white")}
+                        >
+                          {network.chain_name}
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
               </Stack>
             </div>
 
