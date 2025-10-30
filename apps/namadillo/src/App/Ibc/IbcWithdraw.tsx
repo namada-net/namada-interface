@@ -35,7 +35,7 @@ import { useEffect, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
 import {
   Asset,
-  AssetWithAmount,
+  AssetWithAmountAndChain,
   IbcTransferTransactionData,
   TransferStep,
 } from "types";
@@ -67,7 +67,7 @@ export const IbcWithdraw = ({
 }: IbcWithdrawProps): JSX.Element => {
   //  COMPONENT STATE
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmount | undefined
+    AssetWithAmountAndChain | undefined
   >();
   const [refundTarget, setRefundTarget] = useState<string>();
   const [amount, setAmount] = useState<BigNumber | undefined>();

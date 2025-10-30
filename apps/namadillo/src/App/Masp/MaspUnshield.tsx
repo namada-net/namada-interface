@@ -14,7 +14,7 @@ import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useState } from "react";
-import { AssetWithAmount } from "types";
+import { AssetWithAmountAndChain } from "types";
 
 interface MaspUnshieldProps {
   sourceAddress: string | undefined;
@@ -36,7 +36,7 @@ export const MaspUnshield = ({
   //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmount | undefined
+    AssetWithAmountAndChain | undefined
   >();
   //  ERROR & STATUS STATE
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");

@@ -13,11 +13,10 @@ import { tokenPricesFamily } from "atoms/prices/atoms";
 import clsx from "clsx";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
-import { getChainFromAsset } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
-import { AssetWithAmount } from "types";
+import { AssetWithAmountAndChain } from "types";
 import { AddressDropdown } from "./AddressDropdown";
 import { ChainBadge } from "./ChainBadge";
 import { isNamadaAddress } from "./common";
@@ -29,10 +28,13 @@ type SelectTokenProps = {
   isOpen: boolean;
   onClose: () => void;
   onSelect:
-    | ((selectedAsset: AssetWithAmount, newSourceAddress?: string) => void)
+    | ((
+        selectedAsset: AssetWithAmountAndChain,
+        newSourceAddress?: string
+      ) => void)
     | undefined;
   keplrWalletManager?: KeplrWalletManager | undefined;
-  assetsWithAmounts: AssetWithAmount[];
+  assetsWithAmounts: AssetWithAmountAndChain[];
 };
 
 export const SelectToken = ({
@@ -97,12 +99,8 @@ export const SelectToken = ({
             .toLowerCase()
             .includes(filter.toLowerCase());
 
-        const chainName =
-          assetWithAmount.asset.name === "Namada" ?
-            "namada"
-          : assetWithAmount.asset.traces?.[0].counterparty?.chain_name;
         const matchesNetwork =
-          !selectedNetwork || selectedNetwork === chainName;
+          !selectedNetwork || selectedNetwork === assetWithAmount.chainName;
 
         return matchesSearch && matchesNetwork;
       })
@@ -122,7 +120,9 @@ export const SelectToken = ({
     onClose();
   };
 
-  const handleTokenSelect = async (token: AssetWithAmount): Promise<void> => {
+  const handleTokenSelect = async (
+    token: AssetWithAmountAndChain
+  ): Promise<void> => {
     // Check if current address is Keplr and if we need to connect to specific chain for this token
     const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
     let newSourceAddress: string | undefined;
@@ -175,9 +175,12 @@ export const SelectToken = ({
     }
   };
 
-  const getOverlayChainLogo = (token: AssetWithAmount): JSX.Element | null => {
-    const chain = getChainFromAsset(token);
-    const isNamada = token.asset.symbol === "NAM";
+  const getOverlayChainLogo = (
+    token: AssetWithAmountAndChain
+  ): JSX.Element | null => {
+    const chain = getChainRegistryByChainName(token.chainName)?.chain;
+    const isNamada = token.chainName === "namada";
+
     if (isNamada) return null;
     return (
       <ChainBadge
@@ -321,13 +324,9 @@ export const SelectToken = ({
                                   <span className="text-white font-medium">
                                     {token.asset.symbol}
                                   </span>
-                                  {token.asset.traces?.[0]?.counterparty
-                                    .chain_name && (
-                                    <span className="text-xs capitalize text-neutral-400">
-                                      {token.asset.traces?.[0]?.counterparty
-                                        .chain_name ?? ""}
-                                    </span>
-                                  )}
+                                  <span className="text-xs capitalize text-neutral-400">
+                                    {token.chainName ?? ""}
+                                  </span>
                                 </div>
                               </div>
                               <div className="text-right">

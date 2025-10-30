@@ -228,6 +228,12 @@ export type AssetWithAmount = {
   amount: BigNumber;
 };
 
+export type AssetWithAmountAndChain = {
+  asset: Asset;
+  amount: BigNumber;
+  chainName: string;
+};
+
 export type NamadaAssetWithAmount = {
   asset: NamadaAsset;
   amount: BigNumber;

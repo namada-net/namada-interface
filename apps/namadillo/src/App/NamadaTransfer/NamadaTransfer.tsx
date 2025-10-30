@@ -16,7 +16,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AssetWithAmount } from "types";
+import { AssetWithAmountAndChain } from "types";
 import { NamadaTransferTopHeader } from "./NamadaTransferTopHeader";
 
 interface NamadaTransferProps {
@@ -44,7 +44,7 @@ export const NamadaTransfer = ({
   const [customAddress] = useState<string>("");
   const [memo, setMemo] = useState<string>("");
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmount | undefined
+    AssetWithAmountAndChain | undefined
   >();
   //  ERROR & STATUS STATE
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");

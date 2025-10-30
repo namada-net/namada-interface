@@ -94,7 +94,7 @@ export const validateTransferForm = ({
 }): ValidationResult => {
   if (source.address === destination.address) {
     return "TheSameAddress";
-  } else if (!source.selectedAssetAddress) {
+  } else if (!source.selectedAssetSymbol) {
     return "NoSelectedAsset";
   } else if (
     !isValidDestinationAddress({

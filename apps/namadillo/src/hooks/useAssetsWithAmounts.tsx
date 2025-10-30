@@ -7,15 +7,14 @@ import {
   allKeplrAssetsBalanceAtom,
   namadaRegistryChainAssetsMapAtom,
 } from "atoms/integrations";
-import BigNumber from "bignumber.js";
 import { useAtomValue } from "jotai";
 import { useMemo } from "react";
-import { Asset, AssetWithAmount } from "types";
+import { AssetWithAmountAndChain } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 
 export const useAssetsWithAmounts = (
   sourceAddress: string
-): AssetWithAmount[] => {
+): AssetWithAmountAndChain[] => {
   const isShielded = isShieldedAddress(sourceAddress);
   const { data: usersAssets } = useAtomValue(
     isShielded ? namadaShieldedAssetsAtom : namadaTransparentAssetsAtom
@@ -25,45 +24,26 @@ export const useAssetsWithAmounts = (
   const keplrBalances = useAtomValue(allKeplrAssetsBalanceAtom);
 
   return useMemo(() => {
-    const chainAssetsMap = Object.values(chainAssets.data ?? {}) as Asset[];
-    const result: AssetWithAmount[] = [];
+    const result: AssetWithAmountAndChain[] = [];
     // Check if current address is a Keplr address (not shielded or transparent Namada)
     const isKeplrAddress = !isNamadaAddress(sourceAddress);
 
-    if (isKeplrAddress) {
+    if (isKeplrAddress && keplrBalances.data) {
       // For Keplr addresses, show all available chain assets with balance data from allKeplrBalances
-      chainAssetsMap.forEach((asset: Asset) => {
-        let amount = BigNumber(0);
-        // Look for balance in allKeplrBalances using the known key format
-        if (keplrBalances.data) {
-          const trace = asset.traces?.find((t) => t.type === "ibc");
-          if (trace?.counterparty) {
-            // For IBC assets
-            const baseDenom = trace.counterparty.base_denom;
-            if (keplrBalances.data[baseDenom])
-              amount = keplrBalances.data[baseDenom].amount;
-          } else {
-            // For native assets: chainName:base
-            const chainName = asset.name?.toLowerCase();
-            if (chainName) {
-              const key = `${asset.base}`;
-              if (keplrBalances.data[key]) {
-                amount = keplrBalances.data[key].amount;
-              }
-            }
-          }
-
+      Object.values(keplrBalances.data).forEach(
+        ({ asset, amount, chainName }) => {
           result.push({
             asset,
             amount,
+            chainName,
           });
         }
-      });
+      );
     } else {
       // For Namada addresses, use the appropriate assets atom
       Object.values(availableAssets ?? {}).forEach((item) => {
         if (item.asset && item.asset.address) {
-          result.push(item);
+          result.push({ ...item, chainName: "namada" });
         }
       });
     }
