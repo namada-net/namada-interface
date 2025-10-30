@@ -167,13 +167,10 @@ export const TransferDestination = ({
       >
         {!isSubmitting && (
           <div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="ml-2 text-neutral-500 mb-0.5 font-normal">
-                Destination
-              </span>
+            <div className="flex justify-between items-center mb-5">
               {isShieldedTransfer ||
                 (isShieldingTransfer && (
-                  <div className="relative w-fit group/tooltip">
+                  <div className="relative w-fit group/tooltip ml-auto">
                     <img
                       src={shieldedEye}
                       alt="Shielded Logo"
@@ -193,7 +190,7 @@ export const TransferDestination = ({
                   <div className="flex">
                     <div className="flex flex-col ml-4">
                       <span className="text-neutral-500 font-normal">
-                        Select address
+                        Destination address
                       </span>
                     </div>
                   </div>
