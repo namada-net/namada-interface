@@ -18,7 +18,7 @@ export const ConnectProviderButton = ({
       size="xs"
       backgroundColor="white"
     >
-      Connect Wallet
+      Select Address
     </ActionButton>
   );
 };

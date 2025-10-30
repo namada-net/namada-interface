@@ -6,7 +6,7 @@ import { Dispatch, SetStateAction } from "react";
 import {
   Address,
   Asset,
-  AssetWithAmount,
+  AssetWithAmountAndChain,
   ChainRegistryEntry,
   GasConfig,
   LedgerAccountInfo,
@@ -19,7 +19,7 @@ export type ValidateTransferFormSource = {
   isShieldedAddress: boolean;
   amount: BigNumber | undefined;
   ledgerAccountInfo: LedgerAccountInfo | undefined;
-  selectedAssetAddress: string | undefined;
+  selectedAssetSymbol: string | undefined;
 };
 
 export type ValidateTransferFormDestination = {
@@ -32,8 +32,8 @@ export type TransferModuleProps = {
     address: string | undefined;
     availableAmount: BigNumber | undefined;
     amount: BigNumber | undefined;
-    selectedAssetWithAmount: AssetWithAmount | undefined;
-    onChangeSelectedAsset: (asset: AssetWithAmount | undefined) => void;
+    selectedAssetWithAmount: AssetWithAmountAndChain | undefined;
+    onChangeSelectedAsset: (asset: AssetWithAmountAndChain | undefined) => void;
     onChangeAmount: (amount: BigNumber | undefined) => void;
     ledgerAccountInfo?: LedgerAccountInfo | undefined;
     onChangeAddress: (sourceAddress: string) => void;

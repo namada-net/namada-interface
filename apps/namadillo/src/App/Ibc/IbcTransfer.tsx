@@ -16,7 +16,7 @@ import invariant from "invariant";
 import { useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
-import { AssetWithAmount } from "types";
+import { AssetWithAmountAndChain } from "types";
 import { useTransactionEventListener } from "utils";
 import { IbcTopHeader } from "./IbcTopHeader";
 
@@ -44,7 +44,7 @@ export const IbcTransfer = ({
   const [sourceChannel, setSourceChannel] = useState("");
   const [destinationChannel, setDestinationChannel] = useState("");
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmount | undefined
+    AssetWithAmountAndChain | undefined
   >();
   const [amount, setAmount] = useState<BigNumber | undefined>();
   const [txHash, setTxHash] = useState<string | undefined>();

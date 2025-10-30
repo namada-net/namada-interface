@@ -10,6 +10,7 @@ import { chainParametersAtom } from "atoms/chain";
 import {
   broadcastIbcTransactionAtom,
   createStargateClient,
+  getChainRegistryByChainId,
   getShieldedArgs,
   getSignedMessage,
   queryAndStoreRpc,
@@ -190,18 +191,23 @@ export const useIbcTransaction = ({
 
       const baseAmount = toBaseAmount(selectedAsset, displayAmount);
 
+      const sourceChainAssets =
+        getChainRegistryByChainId(registry.chain.chain_id)?.assets.assets || [];
+      // We need to find the token base denom on the source chain
+      const asset = sourceChainAssets.find((asset) => {
+        return asset.symbol === selectedAsset.symbol;
+      });
+      invariant(asset, "Asset is required");
+
       // This step might require a bit of time
       const { memo: maspCompatibleMemo, receiver: maspCompatibleReceiver } =
         await (async () => {
           onUpdateStatus?.("Generating MASP parameters...");
-          const assetTrace = selectedAsset.traces?.find(
-            (trace) => trace.type === "ibc"
-          );
 
-          // For genShieldedArgs we pass the ibc trace path on destination chain (Namada)
-          // This should be the path as it appears on Namada, e.g. "transfer/channel-XXX/uatom"
-          const token = assetTrace ? assetTrace.chain.path : selectedAsset.base;
-          invariant(token, "Asset token is required");
+          // If the asset has ibc trace(NAM on osmosis for example), we need to use the trace path as token
+          const token =
+            asset.traces?.find((trace) => trace.type === "ibc")?.chain.path ||
+            asset.base;
 
           return shielded ?
               await getShieldedArgs(
@@ -212,12 +218,8 @@ export const useIbcTransaction = ({
               )
             : { memo, receiver: destinationAddress };
         })();
-      const assetTrace = selectedAsset.traces?.find(
-        (trace) => trace.type === "ibc"
-      );
       const chainId = registry.chain.chain_id;
-      const denomination =
-        assetTrace?.counterparty?.base_denom || selectedAsset.base;
+      const denomination = asset.base;
 
       const transferMsg = createIbcTransferMessage(
         sanitizeChannel(sourceChannel!),

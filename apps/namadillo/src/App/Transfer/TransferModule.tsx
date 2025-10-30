@@ -20,7 +20,7 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { AssetWithAmount } from "types";
+import { AssetWithAmountAndChain } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
 import { isIbcAddress, isShieldedAddress } from "./common";
@@ -60,11 +60,9 @@ export const TransferModule = ({
   const [searchParams, setSearchParams] = useSearchParams();
   const asset = searchParams.get(params.asset) || "";
   const assetsWithAmounts = useAssetsWithAmounts(source.address ?? "");
-  const selectedAsset =
-    source.selectedAssetWithAmount ??
-    assetsWithAmounts.find(
-      (assetWithAmount) => assetWithAmount.asset.address === asset
-    );
+  const selectedAsset = assetsWithAmounts.find(
+    (assetWithAmount) => assetWithAmount.asset.symbol === asset
+  );
 
   const availableAmount = selectedAsset?.amount;
   const availableAssets = useMemo(() => {
@@ -117,8 +115,8 @@ export const TransferModule = ({
   }, [gasConfig]);
 
   const availableAmountMinusFees = useMemo(() => {
-    if (!selectedAsset?.asset.address || !availableAmount || !availableAssets)
-      return undefined;
+    if (!availableAmount || !availableAssets) return undefined;
+
     if (
       !displayGasFee?.totalDisplayAmount ||
       // Don't subtract if the gas token is different than the selected asset:
@@ -140,7 +138,7 @@ export const TransferModule = ({
         asset: selectedAsset?.asset,
         address: source.address,
         isShieldedAddress: isShieldedAddress(source.address ?? ""),
-        selectedAssetAddress: selectedAsset?.asset.address,
+        selectedAssetSymbol: selectedAsset?.asset.symbol,
         amount: source.amount,
         ledgerAccountInfo: source.ledgerAccountInfo,
       },
@@ -318,7 +316,7 @@ export const TransferModule = ({
         onClose={() => setAssetSelectorModalOpen(false)}
         assetsWithAmounts={assetsWithAmounts}
         onSelect={(
-          selectedAssetWithAmount: AssetWithAmount,
+          selectedAssetWithAmount: AssetWithAmountAndChain,
           newSourceAddress?: string
         ) => {
           // Batch both URL updates together
@@ -329,7 +327,7 @@ export const TransferModule = ({
             }
             newParams.set(
               params.asset,
-              selectedAssetWithAmount.asset.address || ""
+              selectedAssetWithAmount.asset.symbol || ""
             );
             return newParams;
           });

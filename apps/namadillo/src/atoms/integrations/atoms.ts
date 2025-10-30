@@ -12,6 +12,7 @@ import { atomFamily, atomWithStorage } from "jotai/utils";
 import {
   Asset,
   AssetWithAmount,
+  AssetWithAmountAndChain,
   BaseDenom,
   Coin,
   IbcChannels,
@@ -25,6 +26,7 @@ import {
   getNamadaChainAssetsMap,
   getNamadaChainRegistry,
   getNamadaIbcInfo,
+  SUPPORTED_ASSETS_MAP,
 } from "./functions";
 import {
   broadcastIbcTransaction,
@@ -133,7 +135,7 @@ export const assetBalanceAtomFamily = atomFamily(
 /// Balance of ALL KEPLR assets across all supported chains using chainAssetsMap
 /// Automatically discovers wallet addresses for each chain
 export const allKeplrAssetsBalanceAtom = atomWithQuery<
-  Record<BaseDenom, AssetWithAmount>
+  Record<BaseDenom, AssetWithAmountAndChain>
 >((get) => {
   const chainSettings = get(chainAtom);
   const chainAssetsMap = get(namadaRegistryChainAssetsMapAtom);
@@ -155,17 +157,7 @@ export const allKeplrAssetsBalanceAtom = atomWithQuery<
         return {};
       }
 
-      const isHousefire = chainSettings.data.chainId.includes("housefire");
       const availableChains = getAvailableChains();
-
-      // Add housefire chains if needed
-      const supportedChains =
-        isHousefire ?
-          ([
-            ...availableChains,
-            getChainRegistryByChainName("osmosis-housefire")?.chain,
-          ].filter(Boolean) as Chain[])
-        : availableChains;
 
       // Get Keplr wallet instance
       const keplr = getKeplrWallet();
@@ -174,7 +166,7 @@ export const allKeplrAssetsBalanceAtom = atomWithQuery<
       const connectedChains: { chain: Chain; walletAddress: string }[] = [];
 
       await Promise.allSettled(
-        supportedChains.map(async (chain) => {
+        availableChains.map(async (chain) => {
           try {
             // Try to get key - if this throws, we're not connected to this chain
             const key = await keplr.getKey(chain.chain_id);
@@ -201,10 +193,7 @@ export const allKeplrAssetsBalanceAtom = atomWithQuery<
         async ({ chain, walletAddress }) => {
           try {
             return await queryAndStoreRpc(chain, async (rpc: string) => {
-              const chainName =
-                isHousefire && chain.chain_name === "osmosis" ?
-                  `${chain.chain_name}-housefire`
-                : chain.chain_name;
+              const chainName = chain.chain_name;
 
               const assetsBalances = await queryAssetBalances(
                 walletAddress,
@@ -241,52 +230,43 @@ export const allKeplrAssetsBalanceAtom = atomWithQuery<
       type BalanceEntry = {
         asset: Asset;
         balance: Coin;
+        chainName: string;
       };
 
       // Process balances and create entries for ALL assets in chainAssetsMap
       const allChainAssets = Object.values(chainAssetsMap.data);
-      const entries: [string, AssetWithAmount][] = [];
+      const entries: [string, AssetWithAmountAndChain][] = [];
 
       // First, add assets that have actual balances
-      allBalances.forEach(({ asset, balance }: BalanceEntry) => {
-        // Try to find corresponding Namada asset in chainAssetsMap
-        const namadaAsset = allChainAssets.find((namadaAsset) => {
-          // Match by base denom
-          if (asset.base === namadaAsset.base) {
-            return true;
-          }
+      allBalances
+        .filter((item) => {
+          const assets = SUPPORTED_ASSETS_MAP.get(item.chainName);
+          return assets && assets.includes(item.asset.symbol);
+        })
+        .forEach(({ asset, balance, chainName }: BalanceEntry) => {
+          // Try to find corresponding Namada asset in chainAssetsMap
+          const namadaAsset = allChainAssets.find((namadaAsset) => {
+            return asset.symbol === namadaAsset.symbol;
+          });
 
-          // Match by IBC trace counterparty base denom
-          if (
-            namadaAsset.traces?.[0]?.counterparty?.base_denom === asset.base
-          ) {
-            return true;
-          }
+          if (namadaAsset) {
+            const amount = toDisplayAmount(
+              namadaAsset,
+              BigNumber(balance.minDenomAmount)
+            );
 
-          // Match by symbol
-          if (asset.symbol && namadaAsset.symbol === asset.symbol) {
-            return true;
+            if (amount.gt(0)) {
+              entries.push([
+                `${asset.base}`,
+                {
+                  asset: namadaAsset,
+                  amount,
+                  chainName,
+                },
+              ]);
+            }
           }
-
-          return false;
         });
-
-        const finalAsset = namadaAsset || asset;
-        const amount = toDisplayAmount(
-          finalAsset,
-          BigNumber(balance.minDenomAmount)
-        );
-
-        if (amount.gt(0)) {
-          entries.push([
-            `${asset.base}`,
-            {
-              asset: finalAsset,
-              amount,
-            },
-          ]);
-        }
-      });
 
       return Object.fromEntries(entries);
     }, [chainSettings, chainAssetsMap, !!connectedWallets?.keplr]),
