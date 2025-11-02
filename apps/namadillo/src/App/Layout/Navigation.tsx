@@ -11,12 +11,11 @@ import { FaVoteYea } from "react-icons/fa";
 import { FaBug } from "react-icons/fa6";
 import { GoStack } from "react-icons/go";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { DISCORD_URL, TWITTER_URL } from "urls";
 
 export const Navigation = (): JSX.Element => {
   const features = useAtomValue(applicationFeaturesAtom);
-  const location = useLocation();
 
   const menuItems: { label: string; icon: React.ReactNode; url?: string }[] = [
     {

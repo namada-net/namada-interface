@@ -110,18 +110,6 @@ export const NamadaTransfer = ({
   const isSourceShielded = isShieldedAddress(sourceAddress ?? "");
   const isTargetShielded = isShieldedAddress(destinationAddress ?? "");
 
-  // TODO: Add this back in when we have a way to change the shielded param
-  // const onChangeShielded = (isShielded: boolean): void => {
-  //   setSearchParams(
-  //     (currentParams) => {
-  //       const newParams = new URLSearchParams(currentParams);
-  //       newParams.set(params.shielded, isShielded ? "1" : "0");
-  //       return newParams;
-  //     },
-  //     { replace: true }
-  //   );
-  // };
-
   const onSubmitTransfer = async ({
     memo,
   }: OnSubmitTransferParams): Promise<void> => {

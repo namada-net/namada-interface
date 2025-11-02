@@ -1,4 +1,4 @@
-import { Keplr, Window as KeplrWindow, Key } from "@keplr-wallet/types";
+import { Keplr } from "@keplr-wallet/types";
 import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { routes } from "App/routes";
@@ -71,13 +71,11 @@ export const AddressDropdown = ({
     // Fallback to first available chain if we couldn't determine from selectedAddress
     if (!chainId) {
       const availableChains = getAvailableChains();
-      if (availableChains.length > 0) {
-        chainId = availableChains[0].chain_id;
-      }
+      chainId = availableChains.at(0)?.chain_id;
     }
 
     if (chainId) {
-      const key: Key = await keplrInstance.getKey(chainId);
+      const key = await keplrInstance.getKey(chainId);
       setKeplrAddress(key.bech32Address);
       setKeplrAlias(key.name);
     }
@@ -94,7 +92,7 @@ export const AddressDropdown = ({
       if (connectedWallets.keplr) {
         try {
           // Only get Keplr instance if it's already available, don't trigger connection
-          const keplrInstance = (window as KeplrWindow).keplr;
+          const keplrInstance = await keplr.get();
           if (keplrInstance) {
             await fetchKeplrAddressForChain(keplrInstance);
           }
