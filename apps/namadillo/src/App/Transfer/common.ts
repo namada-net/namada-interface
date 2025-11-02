@@ -43,7 +43,7 @@ export const isNamadaAddress = (address: string): boolean => {
 };
 
 export const isIbcAddress = (address: string): boolean => {
-  if (!address?.trim() || isNamadaAddress(address)) return false;
+  if (isNamadaAddress(address)) return false;
   // Check if the address matches a supported IBC chain
   const chain = getChainFromAddress(address.trim());
   if (!chain) return false;

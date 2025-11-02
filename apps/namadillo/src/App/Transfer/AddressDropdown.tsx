@@ -10,7 +10,7 @@ import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { twMerge } from "tailwind-merge";
 import namadaShieldedIcon from "./assets/namada-shielded-square.svg";
@@ -60,30 +60,31 @@ export const AddressDropdown = ({
   const isIbcDestination = isIbcAddress(destinationAddress ?? "");
 
   // Helper function to fetch Keplr address for the appropriate chain
-  const fetchKeplrAddressForChain = async (
-    keplrInstance: Keplr
-  ): Promise<void> => {
-    let chainId: string | undefined;
+  const fetchKeplrAddressForChain = useCallback(
+    async (keplrInstance: Keplr): Promise<void> => {
+      let chainId: string | undefined;
 
-    // If we have a selectedAddress and it's not a Namada address,
-    // determine the chain from that address
-    if (selectedAddress && !isNamadaAddress(selectedAddress)) {
-      const chain = getChainFromAddress(selectedAddress);
-      chainId = chain?.chain_id;
-    }
+      // If we have a selectedAddress and it's not a Namada address,
+      // determine the chain from that address
+      if (selectedAddress && !isNamadaAddress(selectedAddress)) {
+        const chain = getChainFromAddress(selectedAddress);
+        chainId = chain?.chain_id;
+      }
 
-    // Fallback to first available chain if we couldn't determine from selectedAddress
-    if (!chainId) {
-      const availableChains = getAvailableChains();
-      chainId = availableChains.at(0)?.chain_id;
-    }
+      // Fallback to first available chain if we couldn't determine from selectedAddress
+      if (!chainId) {
+        const availableChains = getAvailableChains();
+        chainId = availableChains.at(0)?.chain_id;
+      }
 
-    if (chainId) {
-      const key = await keplrInstance.getKey(chainId);
-      setKeplrAddress(key.bech32Address);
-      setKeplrAlias(key.name);
-    }
-  };
+      if (chainId) {
+        const key = await keplrInstance.getKey(chainId);
+        setKeplrAddress(key.bech32Address);
+        setKeplrAlias(key.name);
+      }
+    },
+    [selectedAddress]
+  );
 
   // Set the default address to the transparent account if no address is selected
   useEffect(() => {
@@ -162,7 +163,7 @@ export const AddressDropdown = ({
     }
   };
 
-  const handleConnectKeplr = async (): Promise<void> => {
+  const handleConnectKeplr = useCallback(async (): Promise<void> => {
     try {
       setIsConnectingKeplr(true);
       const keplrInstance = await keplr.get();
@@ -189,7 +190,7 @@ export const AddressDropdown = ({
     } finally {
       setIsConnectingKeplr(false);
     }
-  };
+  }, [connectedWallets, setConnectedWallets, selectedAddress]);
 
   if (addressOptions.length === 0 && connectedWallets.keplr) return <></>;
 

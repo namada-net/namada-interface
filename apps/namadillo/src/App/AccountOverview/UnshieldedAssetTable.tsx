@@ -4,12 +4,14 @@ import {
   TableRow,
   Tooltip,
 } from "@namada/components";
+import { AccountType } from "@namada/types";
 import { AtomErrorBoundary } from "App/Common/AtomErrorBoundary";
 import { FiatCurrency } from "App/Common/FiatCurrency";
 import { TableWithPaginator } from "App/Common/TableWithPaginator";
 import { TokenCard } from "App/Common/TokenCard";
 import { TokenCurrency } from "App/Common/TokenCurrency";
 import { params, routes } from "App/routes";
+import { allDefaultAccountsAtom } from "atoms/accounts";
 import { transparentTokensAtom } from "atoms/balance/atoms";
 import { tokenPricesFamily } from "atoms/prices/atoms";
 import { applicationFeaturesAtom } from "atoms/settings";
@@ -34,6 +36,15 @@ const TransparentTokensTable = ({
   const [page, setPage] = useState(initialPage);
   const { namTransfersEnabled } = useAtomValue(applicationFeaturesAtom);
   const { bondedAmount } = useBalances();
+  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
+  const transparentAccount = accounts?.find(
+    (account) => account.type !== AccountType.ShieldedKeys
+  );
+  const shieldedAccount = accounts?.find(
+    (account) => account.type === AccountType.ShieldedKeys
+  );
+  const shieldedAddress = shieldedAccount?.address;
+  const destinationAddress = transparentAccount?.address;
 
   // Get token prices for calculating staked balance dollar amounts
   const tokenAddresses = useMemo(
@@ -101,7 +112,7 @@ const TransparentTokensTable = ({
             <div className="relative group/tooltip">
               <ActionButton
                 size="xs"
-                href={`${routes.shield}?${params.asset}=${address}`}
+                href={`${routes.transfer}?${params.asset}=${asset.symbol}&${params.source}=${destinationAddress}&${params.destination}=${shieldedAddress}`}
               >
                 Shield
               </ActionButton>

@@ -4,6 +4,7 @@ import {
   TableRow,
   Tooltip,
 } from "@namada/components";
+import { AccountType } from "@namada/types";
 import { sortedTableData } from "App/AccountOverview/common";
 import { FiatCurrency } from "App/Common/FiatCurrency";
 import { IconTooltip } from "App/Common/IconTooltip";
@@ -11,6 +12,7 @@ import { TableWithPaginator } from "App/Common/TableWithPaginator";
 import { TokenCard } from "App/Common/TokenCard";
 import { TokenCurrency } from "App/Common/TokenCurrency";
 import { params, routes } from "App/routes";
+import { allDefaultAccountsAtom } from "atoms/accounts";
 import { applicationFeaturesAtom } from "atoms/settings/atoms";
 import BigNumber from "bignumber.js";
 import { useAtomValue } from "jotai";
@@ -55,6 +57,7 @@ export const ShieldedFungibleTable = ({
   const [page, setPage] = useState(initialPage);
   const navigate = useNavigate();
   const { shieldingRewardsEnabled } = useAtomValue(applicationFeaturesAtom);
+  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
 
   const headers = ["Token", { children: "Balance", className: "text-right" }];
   if (shieldingRewardsEnabled) {
@@ -72,6 +75,14 @@ export const ShieldedFungibleTable = ({
   }: TokenBalance): TableRow => {
     const reward = rewards?.[address];
     const belowThreshold = isBelowRewardThreshold(asset.symbol, amount);
+    const transparentAccount = accounts?.find(
+      (account) => account.type !== AccountType.ShieldedKeys
+    );
+    const shieldedAccount = accounts?.find(
+      (account) => account.type === AccountType.ShieldedKeys
+    );
+    const shieldedAddress = shieldedAccount?.address;
+    const destinationAddress = transparentAccount?.address;
     return {
       cells: [
         <TokenCard key={`token-${address}`} address={address} asset={asset} />,
@@ -126,7 +137,9 @@ export const ShieldedFungibleTable = ({
             outlineColor="white"
             className="w-fit ml-auto mr-10"
             onClick={() =>
-              navigate(`${routes.maspUnshield}?${params.asset}=${address}`)
+              navigate(
+                `${routes.maspUnshield}?${params.asset}=${asset.symbol}&${params.source}=${shieldedAddress}&${params.destination}=${destinationAddress}`
+              )
             }
           >
             Unshield
