@@ -67,23 +67,6 @@ export const Navigation = (): JSX.Element => {
       <ul className="flex flex-col gap-4">
         {menuItems.map((item) => {
           const shieldingRoute = item.label === "Shield";
-
-          const highlightShieldItem =
-            item.label === "Shield" &&
-            ([routes.maspShield, routes.ibc] as string[]).includes(
-              location.pathname
-            );
-
-          const highlightTransferItem =
-            item.label === "Transfer" &&
-            (
-              [
-                routes.maspUnshield,
-                routes.ibcWithdraw,
-                routes.transfer,
-              ] as string[]
-            ).includes(location.pathname);
-
           const historyRoute = item.label === "History";
           return (
             <li key={item.label}>
@@ -93,16 +76,7 @@ export const Navigation = (): JSX.Element => {
                   <h5 className="text-neutral-500 text-xs mb-2">Move Assets</h5>
                 </>
               )}
-              <SidebarMenuItem
-                url={item.url}
-                shouldHighlight={
-                  !!highlightTransferItem || !!highlightShieldItem
-                }
-                preventNavigationOnSameRoute={
-                  (item.label === "Shield" && highlightShieldItem) ||
-                  (item.label === "Transfer" && highlightTransferItem)
-                }
-              >
+              <SidebarMenuItem url={item.url}>
                 {item.icon}
                 {item.label}
               </SidebarMenuItem>

@@ -52,14 +52,16 @@ export const TransferModule = ({
   assetSelectorModalOpen = false,
   setAssetSelectorModalOpen = () => {},
 }: TransferModuleProps): JSX.Element => {
+  const sourceAddress = source.address ?? "";
+  const destinationAddress = destination.address ?? "";
   const { data: usersAssets, isLoading: isLoadingUsersAssets } = useAtomValue(
-    isShieldedAddress(source.address ?? "") ?
+    isShieldedAddress(sourceAddress) ?
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
   const [searchParams, setSearchParams] = useSearchParams();
   const asset = searchParams.get(params.asset) || "";
-  const assetsWithAmounts = useAssetsWithAmounts(source.address ?? "");
+  const assetsWithAmounts = useAssetsWithAmounts(sourceAddress);
   const selectedAsset = assetsWithAmounts.find(
     (assetWithAmount) => assetWithAmount.asset.symbol === asset
   );
@@ -73,19 +75,16 @@ export const TransferModule = ({
   const navigate = useNavigate();
   const location = useLocation();
   const keychainVersion = useKeychainVersion();
-  const isTargetShielded = isShieldedAddress(destination.address ?? "");
-  const isSourceShielded = isShieldedAddress(source.address ?? "");
+  const isTargetShielded = isShieldedAddress(destinationAddress);
+  const isSourceShielded = isShieldedAddress(sourceAddress);
   const isShielding =
-    isShieldedAddress(destination.address ?? "") &&
-    !isShieldedAddress(source.address ?? "");
+    isShieldedAddress(destinationAddress) && !isShieldedAddress(sourceAddress);
   const isUnshielding =
-    isShieldedAddress(source.address ?? "") &&
-    !isShieldedAddress(destination.address ?? "");
-  const isShieldedTx = isShieldedAddress(source.address ?? "");
+    isShieldedAddress(sourceAddress) && !isShieldedAddress(destinationAddress);
+  const isShieldedTx = isShieldedAddress(sourceAddress);
   const buttonColor = isTargetShielded || isSourceShielded ? "yellow" : "white";
   const ibcTransfer =
-    isIbcAddress(destination.address ?? "") ||
-    isIbcAddress(source.address ?? "");
+    isIbcAddress(destinationAddress) || isIbcAddress(sourceAddress);
 
   const getButtonTextFromValidation = (): string => {
     const buttonTextErrors =
@@ -137,14 +136,14 @@ export const TransferModule = ({
       source: {
         asset: selectedAsset?.asset,
         address: source.address,
-        isShieldedAddress: isShieldedAddress(source.address ?? ""),
+        isShieldedAddress: isShieldedAddress(sourceAddress),
         selectedAssetSymbol: selectedAsset?.asset.symbol,
         amount: source.amount,
         ledgerAccountInfo: source.ledgerAccountInfo,
       },
       destination: {
         address: destination.address,
-        isShieldedAddress: isShieldedAddress(destination.address ?? ""),
+        isShieldedAddress: isShieldedAddress(destinationAddress),
       },
       gasConfig,
       availableAmountMinusFees,
@@ -209,15 +208,13 @@ export const TransferModule = ({
           />
           <i className="flex items-center justify-center w-11 mx-auto -my-8 relative z-10">
             <TransferArrow
-              color={
-                isShieldedAddress(destination.address ?? "") ? "#FF0" : "#FFF"
-              }
+              color={isShieldedAddress(destinationAddress) ? "#FF0" : "#FFF"}
               isAnimating={isSubmitting}
             />
           </i>
           <TransferDestination
             setDestinationAddress={destination.onChangeAddress}
-            isShieldedAddress={isShieldedAddress(destination.address ?? "")}
+            isShieldedAddress={isShieldedAddress(destinationAddress)}
             isShieldedTx={isShieldedTx}
             destinationAddress={destination.address}
             sourceAsset={selectedAsset?.asset}
@@ -235,8 +232,8 @@ export const TransferModule = ({
           {ibcTransfer && requiresIbcChannels && ibcChannels && (
             <IbcChannels
               isShielded={Boolean(
-                isShieldedAddress(source.address ?? "") ||
-                  isShieldedAddress(destination.address ?? "")
+                isShieldedAddress(sourceAddress) ||
+                  isShieldedAddress(destinationAddress)
               )}
               sourceChannel={ibcChannels.sourceChannel}
               onChangeSource={ibcChannels.onChangeSourceChannel}

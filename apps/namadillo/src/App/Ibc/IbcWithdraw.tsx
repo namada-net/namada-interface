@@ -47,7 +47,7 @@ import {
 import { IbcTopHeader } from "./IbcTopHeader";
 
 interface IbcWithdrawProps {
-  sourceAddress: string | undefined;
+  sourceAddress?: string;
   setSourceAddress: (address: string | undefined) => void;
   destinationAddress: string | undefined;
   setDestinationAddress: (address: string | undefined) => void;
@@ -276,6 +276,7 @@ export const IbcWithdraw = ({
     invariant(keplrAddress, "No address is selected");
     invariant(shieldedAccount, "No shielded account is found");
     invariant(transparentAccount.data, "No transparent account is found");
+    invariant(destinationAddress, "No destination address is set");
 
     const amountInBaseDenom = toBaseAmount(
       selectedAsset.asset,
@@ -305,7 +306,7 @@ export const IbcWithdraw = ({
             portId: "transfer",
             token: selectedAsset.asset.address,
             source,
-            receiver: destinationAddress ?? "",
+            receiver: destinationAddress,
             gasSpendingKey,
             memo,
             refundTarget,
