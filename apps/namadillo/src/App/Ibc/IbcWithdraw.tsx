@@ -47,13 +47,13 @@ import {
 import { IbcTopHeader } from "./IbcTopHeader";
 
 interface IbcWithdrawProps {
-  sourceAddress?: string;
+  sourceAddress: string | undefined;
   setSourceAddress: (address: string | undefined) => void;
   destinationAddress: string | undefined;
   setDestinationAddress: (address: string | undefined) => void;
   keplrWalletManager: KeplrWalletManager;
-  assetSelectorModalOpen?: boolean;
-  setAssetSelectorModalOpen?: (open: boolean) => void;
+  assetSelectorModalOpen: boolean | undefined;
+  setAssetSelectorModalOpen: (open: boolean) => void;
 }
 
 export const IbcWithdraw = ({

@@ -1,5 +1,7 @@
 import { SidebarMenuItem } from "App/Common/SidebarMenuItem";
+import { ReceiveIcon } from "App/Icons/ReceiveIcon";
 import { ShieldIcon } from "App/Icons/ShieldIcon";
+import { TransferIcon } from "App/Icons/TransferIcon";
 import { routes } from "App/routes";
 import { applicationFeaturesAtom } from "atoms/settings";
 import { useAtomValue } from "jotai";
@@ -11,8 +13,6 @@ import { GoStack } from "react-icons/go";
 import { MdOutlineKeyboardBackspace } from "react-icons/md";
 import { Link, useLocation } from "react-router-dom";
 import { DISCORD_URL, TWITTER_URL } from "urls";
-import receiveIcon from "./assets/receive-icon.svg";
-import transferIcon from "./assets/transfer-icon.svg";
 
 export const Navigation = (): JSX.Element => {
   const features = useAtomValue(applicationFeaturesAtom);
@@ -41,7 +41,7 @@ export const Navigation = (): JSX.Element => {
     },
     {
       label: "Transfer",
-      icon: <img src={transferIcon} alt="Transfer" />,
+      icon: <TransferIcon />,
       url:
         features.maspEnabled || features.namTransfersEnabled ?
           routes.transfer
@@ -49,7 +49,7 @@ export const Navigation = (): JSX.Element => {
     },
     {
       label: "Receive",
-      icon: <img src={receiveIcon} alt="Receive" />,
+      icon: <ReceiveIcon />,
       url: routes.receive,
     },
     {
