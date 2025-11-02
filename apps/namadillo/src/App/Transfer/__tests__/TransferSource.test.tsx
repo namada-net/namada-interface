@@ -6,14 +6,26 @@ import {
 import BigNumber from "bignumber.js";
 
 describe("Component: TransferSource", () => {
+  it("should render the component with the default props", () => {
+    render(
+      <TransferSource
+        isSubmitting={false}
+        availableAmount={new BigNumber("100")}
+        sourceAddress="tnam1234"
+      />
+    );
+    expect(screen.getByText("tnam1234")).toBeInTheDocument();
+    expect(screen.getByText("Asset")).toBeInTheDocument();
+  });
+
   it("should not render chain selector when openChainSelector is not defined", () => {
-    render(<TransferSource openProviderSelector={jest.fn()} />);
+    render(<TransferSource />);
     const selectChain = screen.queryByText(/selected chain/i);
     expect(selectChain).not.toBeInTheDocument();
   });
 
   const setup = (props: Partial<TransferSourceProps> = {}): void => {
-    render(<TransferSource openProviderSelector={jest.fn()} {...props} />);
+    render(<TransferSource {...props} />);
   };
 
   const getEmptyAsset = (): HTMLElement => {
