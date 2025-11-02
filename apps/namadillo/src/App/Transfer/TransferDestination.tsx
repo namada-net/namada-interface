@@ -17,7 +17,6 @@ import { getAddressLabel } from "atoms/transactions";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
-import { useWalletManager } from "hooks/useWalletManager";
 import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
@@ -76,7 +75,6 @@ export const TransferDestination = ({
   const location = useLocation();
   const connectedWallets = useAtomValue(connectedWalletsAtom);
   const keplr = new KeplrWalletManager();
-  const { connectAllKeplrChains } = useWalletManager(keplr);
 
   const isIbcTransfer = isIbcAddress(sourceAddress ?? "");
   const changeFeeEnabled = !isIbcTransfer;
@@ -105,7 +103,7 @@ export const TransferDestination = ({
   ): Promise<void> => {
     const isIbcAsset = !isNamadaAddress(selectedAddress);
     if (isIbcAsset) {
-      await connectAllKeplrChains();
+      await keplr.connectAllKeplrChains();
     }
     setDestinationAddress?.(selectedAddress);
   };

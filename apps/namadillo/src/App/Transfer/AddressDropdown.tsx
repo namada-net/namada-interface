@@ -6,7 +6,6 @@ import { allDefaultAccountsAtom } from "atoms/accounts";
 import { connectedWalletsAtom } from "atoms/integrations";
 import { getAvailableChains } from "atoms/integrations/functions";
 import clsx from "clsx";
-import { useWalletManager } from "hooks/useWalletManager";
 import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress } from "integrations/utils";
@@ -47,14 +46,19 @@ export const AddressDropdown = ({
   const [keplrAlias, setKeplrAlias] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
-  const [connectedWallets] = useAtom(connectedWalletsAtom);
-  const { connectAllKeplrChains } = useWalletManager(keplr);
+  const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
+  const location = useLocation();
   const transparentAccount = accounts?.find(
     (account) => account.type !== AccountType.ShieldedKeys
   );
   const shieldedAccount = accounts?.find(
     (account) => account.type === AccountType.ShieldedKeys
   );
+  const isShieldingTxn = [routes.maspShield, routes.ibc].includes(
+    location.pathname as "/masp/shield" | "/ibc"
+  );
+  const isIbcDestination = isIbcAddress(destinationAddress ?? "");
+
   // Helper function to fetch Keplr address for the appropriate chain
   const fetchKeplrAddressForChain = async (
     keplrInstance: Keplr
@@ -112,7 +116,6 @@ export const AddressDropdown = ({
 
   // Build available address options
   const addressOptions: AddressOption[] = [];
-  const location = useLocation();
 
   // Add Namada accounts
   if (accounts) {
@@ -170,8 +173,11 @@ export const AddressDropdown = ({
         return;
       }
 
-      await connectAllKeplrChains();
-
+      await keplr.connectAllKeplrChains();
+      setConnectedWallets((connectedWallets) => ({
+        ...connectedWallets,
+        [keplr.key]: true,
+      }));
       // Fetch the Keplr address for the correct chain after successful connection
       try {
         await fetchKeplrAddressForChain(keplrInstance);
@@ -194,10 +200,6 @@ export const AddressDropdown = ({
         {addressOptions.map((option) => {
           const shielded = option.id === "namada-shielded";
           const keplr = option.id === "keplr";
-          const isShieldingTxn = [routes.maspShield, routes.ibc].includes(
-            location.pathname as "/masp/shield" | "/ibc"
-          );
-          const isIbcDestination = isIbcAddress(destinationAddress ?? "");
           const disabled =
             (shielded && isShieldingTxn) || (keplr && isIbcDestination);
           const isSelected = option.address === selectedAddress;

@@ -5,6 +5,7 @@ import {
   OfflineDirectSigner,
 } from "@keplr-wallet/types";
 import { ExtensionKey } from "@namada/types";
+import { getAvailableChains } from "atoms/integrations";
 import { ChainRegistryEntry } from "types";
 import { WalletConnector } from "./types";
 import { basicConvertToKeplrChain } from "./utils";
@@ -60,6 +61,27 @@ export class KeplrWalletManager implements WalletConnector {
     await keplr.experimentalSuggestChain(
       basicConvertToKeplrChain(registry.chain, registry.assets.assets)
     );
+  }
+
+  async connectAllKeplrChains(): Promise<void> {
+    const keplr = await this.get();
+    if (!keplr) return this.install();
+
+    // Get all available chains
+    const availableChains = getAvailableChains();
+
+    // Enable Keplr for all supported chains
+    const enablePromises = availableChains.map(async (chain) => {
+      try {
+        await keplr.enable(chain.chain_id);
+        return { chainId: chain.chain_id, success: true };
+      } catch (error) {
+        console.warn(`Failed to enable chain ${chain.chain_id}:`, error);
+        return { chainId: chain.chain_id, success: false, error };
+      }
+    });
+
+    await Promise.allSettled(enablePromises);
   }
 
   async getAddress(chainId: string): Promise<string> {
