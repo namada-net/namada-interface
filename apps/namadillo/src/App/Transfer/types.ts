@@ -36,14 +36,14 @@ export type TransferModuleProps = {
     onChangeSelectedAsset: (asset: AssetWithAmountAndChain | undefined) => void;
     onChangeAmount: (amount: BigNumber | undefined) => void;
     ledgerAccountInfo?: LedgerAccountInfo | undefined;
-    onChangeAddress: (sourceAddress: string) => void;
+    onChangeAddress: Dispatch<SetStateAction<string>>;
   };
   destination: {
     address: string | undefined;
     customAddress?: string;
     isShieldedAddress: boolean;
     memo?: string;
-    onChangeAddress?: (sourceAddress: string) => void;
+    onChangeAddress: Dispatch<SetStateAction<string>>;
     onChangeMemo?: Dispatch<SetStateAction<string>>;
   };
   requiresIbcChannels?: boolean;

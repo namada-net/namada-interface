@@ -14,7 +14,13 @@ import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
-import { useCallback, useMemo, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import { IoClose } from "react-icons/io5";
 import { AssetWithAmountAndChain } from "types";
 import { AddressDropdown } from "./AddressDropdown";
@@ -22,7 +28,8 @@ import { ChainBadge } from "./ChainBadge";
 import { isNamadaAddress } from "./common";
 
 type SelectTokenProps = {
-  setSourceAddress: (address: string) => void;
+  setSourceAddress: Dispatch<SetStateAction<string>>;
+  setDestinationAddress: Dispatch<SetStateAction<string>>;
   sourceAddress: string;
   destinationAddress: string;
   isOpen: boolean;
@@ -41,6 +48,7 @@ export const SelectToken = ({
   sourceAddress,
   destinationAddress,
   setSourceAddress,
+  setDestinationAddress,
   isOpen,
   onClose,
   onSelect,
@@ -112,7 +120,7 @@ export const SelectToken = ({
     setSelectedNetwork(selectedNetwork === networkName ? null : networkName);
   };
 
-  const handleAddressChange = (address: string): void => {
+  const handleWalletAddressChange = (address: string): void => {
     setSourceAddress(address); // Only update local state
     setSelectedNetwork(null); // Reset network filter when address changes
   };
@@ -203,7 +211,7 @@ export const SelectToken = ({
               <AddressDropdown
                 destinationAddress={destinationAddress}
                 selectedAddress={sourceAddress}
-                onSelectAddress={handleAddressChange}
+                onSelectAddress={handleWalletAddressChange}
               />
               <h2 className="text-neutral-500 text-sm mb-1">From A to Z</h2>
               <Stack

@@ -14,14 +14,14 @@ import { useTransfer } from "hooks/useTransfer";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
-import { useState } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
 import { AssetWithAmountAndChain } from "types";
 
 interface MaspUnshieldProps {
-  sourceAddress: string | undefined;
-  setSourceAddress: (address: string | undefined) => void;
-  destinationAddress: string | undefined;
-  setDestinationAddress: (address: string | undefined) => void;
+  sourceAddress: string;
+  setSourceAddress: Dispatch<SetStateAction<string>>;
+  destinationAddress: string;
+  setDestinationAddress: Dispatch<SetStateAction<string>>;
   assetSelectorModalOpen?: boolean;
   setAssetSelectorModalOpen?: (open: boolean) => void;
 }
