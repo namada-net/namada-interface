@@ -2,12 +2,10 @@ import { Chain } from "@chain-registry/types";
 import { Modal, Stack } from "@namada/components";
 import { ModalTransition } from "App/Common/ModalTransition";
 import { Search } from "App/Common/Search";
-import { chainAtom } from "atoms/chain";
 import {
+  allChainsAtom,
   connectedWalletsAtom,
-  getAvailableChains,
   getChainRegistryByChainName,
-  getNamadaChainRegistry,
   namadaRegistryChainAssetsMapAtom,
 } from "atoms/integrations";
 import { tokenPricesFamily } from "atoms/prices/atoms";
@@ -55,10 +53,7 @@ export const SelectToken = ({
   const [_, setConnectedWallets] = useAtom(connectedWalletsAtom);
   const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const chainAssetsMap = Object.values(chainAssets.data ?? {});
-  const ibcChains = useMemo(getAvailableChains, []);
-  const chainSettings = useAtomValue(chainAtom);
-  const isHousefire = chainSettings.data?.chainId.includes("housefire");
-  const allChains = [...ibcChains, getNamadaChainRegistry(!!isHousefire).chain];
+  const allChains = useAtomValue(allChainsAtom);
 
   // Create KeplrWalletManager instance and use with useWalletManager hook
   const keplrWallet = keplrWalletManager ?? new KeplrWalletManager();
@@ -66,13 +61,13 @@ export const SelectToken = ({
 
   // Get balances for connected chains
   const allNetworks: Chain[] = useMemo(() => {
-    return allChains
+    return (allChains.data ?? [])
       .filter(
         (chain) =>
           chain.network_type !== "testnet" && chain.chain_name !== "namada"
       )
       .sort((a, b) => a.chain_name.localeCompare(b.chain_name));
-  }, [chainAssetsMap]);
+  }, [allChains.data]);
 
   // Create a mapping of assets to their network names for better filtering
   const assetToNetworkMap = useMemo(() => {

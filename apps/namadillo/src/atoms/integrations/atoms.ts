@@ -329,3 +329,19 @@ export const namadaRegistryChainAssetsMapAtom = atomWithQuery((get) => {
     }, [chainSettings]),
   };
 });
+
+export const allChainsAtom = atomWithQuery<Chain[]>((get) => {
+  const chainSettings = get(chainAtom);
+
+  return {
+    queryKey: ["all-chains", chainSettings.data?.chainId],
+    ...queryDependentFn(async () => {
+      invariant(chainSettings.data, "No chain settings");
+      const isHousefire = chainSettings.data.chainId.includes("housefire");
+      const ibcChains = getAvailableChains();
+      const namadaChain = getNamadaChainRegistry(isHousefire).chain;
+
+      return [...ibcChains, namadaChain];
+    }, [chainSettings]),
+  };
+});
