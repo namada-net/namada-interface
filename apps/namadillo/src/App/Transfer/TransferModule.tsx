@@ -114,7 +114,7 @@ export const TransferModule = ({
   }, [gasConfig]);
 
   const availableAmountMinusFees = useMemo(() => {
-    if (!availableAmount || !availableAssets) return undefined;
+    if (!availableAmount || !availableAssets) return;
 
     if (
       !displayGasFee?.totalDisplayAmount ||
