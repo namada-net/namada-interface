@@ -92,19 +92,18 @@ export const SelectToken = ({
     return assetsWithAmounts
       .filter((assetWithAmount) => {
         if (assetWithAmount.amount.eq(0)) return false;
+
         // Filter by search term
         const matchesSearch =
+          !!filter &&
           assetWithAmount.asset.name
-            .toLowerCase()
-            .includes(filter.toLowerCase()) ||
-          assetWithAmount.asset.symbol
             .toLowerCase()
             .includes(filter.toLowerCase());
 
         const matchesNetwork =
-          !selectedNetwork || selectedNetwork === assetWithAmount.chainName;
-
-        return matchesSearch && matchesNetwork;
+          selectedNetwork ===
+          assetWithAmount.asset.traces?.[0]?.counterparty?.chain_name;
+        return !selectedNetwork ? true : matchesSearch || matchesNetwork;
       })
       .sort((a, b) => Number(b.amount) - Number(a.amount));
   }, [assetsWithAmounts, filter, selectedNetwork, assetToNetworkMap]);
