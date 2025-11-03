@@ -92,7 +92,7 @@ export type TransferDestinationProps = TransferModuleConfig & {
   onChangeCustomAddress?: (address: Address) => void;
 };
 export interface OnSubmitTransferParams {
-  displayAmount?: string;
+  displayAmount?: BigNumber;
   destinationAddress?: string;
   sourceAddress?: string;
   memo?: string;

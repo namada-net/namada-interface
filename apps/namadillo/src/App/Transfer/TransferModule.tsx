@@ -166,7 +166,7 @@ export const TransferModule = ({
   const onSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     onSubmitTransfer({
-      displayAmount: source.amount?.toString() ?? "",
+      displayAmount: source.amount,
       destinationAddress: destination.address,
       sourceAddress: source.address,
       memo: destination.memo,
