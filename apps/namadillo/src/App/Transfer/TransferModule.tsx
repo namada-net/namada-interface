@@ -322,10 +322,7 @@ export const TransferModule = ({
             if (newSourceAddress) {
               newParams.set("source", newSourceAddress);
             }
-            newParams.set(
-              params.asset,
-              selectedAssetWithAmount.asset.symbol || ""
-            );
+            newParams.set(params.asset, selectedAssetWithAmount.asset.symbol);
             return newParams;
           });
           source.onChangeAmount(undefined);
