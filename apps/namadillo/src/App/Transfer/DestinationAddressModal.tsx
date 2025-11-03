@@ -5,6 +5,7 @@ import { SelectModal } from "App/Common/SelectModal";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { getChainRegistryByChainId } from "atoms/integrations";
 import { RecentAddress, recentAddressesAtom } from "atoms/transactions";
+import { getAddressLabel } from "atoms/transfer/functions";
 import clsx from "clsx";
 import { useKeplrAddressForAsset } from "hooks/useKeplrAddressForAsset";
 import { wallets } from "integrations";
@@ -205,21 +206,6 @@ export const DestinationAddressModal = ({
 
     // Keep only the last 10 recent addresses
     return [newEntry, ...filtered].slice(0, 10);
-  };
-
-  const getAddressLabel = (
-    address: Address,
-    type: "transparent" | "shielded" | "ibc"
-  ): string => {
-    switch (type) {
-      case "transparent":
-        return "Namada Transparent";
-      case "shielded":
-        return "Namada Shielded";
-      case "ibc":
-        const chain = getChainFromAddress(address);
-        return chain?.pretty_name || chain?.chain_name || "IBC Address";
-    }
   };
 
   const handleAddressClick = (address: string): void => {

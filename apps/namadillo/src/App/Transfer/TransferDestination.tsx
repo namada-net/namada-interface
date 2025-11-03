@@ -13,7 +13,7 @@ import {
 } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { connectedWalletsAtom } from "atoms/integrations";
-import { getAddressLabel } from "atoms/transactions";
+import { getAddressLabel } from "atoms/transfer/functions";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
