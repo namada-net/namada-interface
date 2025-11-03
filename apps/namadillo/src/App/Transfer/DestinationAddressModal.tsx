@@ -3,13 +3,8 @@ import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { SelectModal } from "App/Common/SelectModal";
 import { allDefaultAccountsAtom } from "atoms/accounts";
-import {
-  addToRecentAddresses,
-  getAddressLabel,
-  recentAddressesAtom,
-  validateAddress,
-  type ValidationResult,
-} from "atoms/transactions";
+import { getChainRegistryByChainId } from "atoms/integrations";
+import { RecentAddress, recentAddressesAtom } from "atoms/transactions";
 import clsx from "clsx";
 import { useKeplrAddressForAsset } from "hooks/useKeplrAddressForAsset";
 import { wallets } from "integrations";
@@ -19,6 +14,18 @@ import { useCallback, useState } from "react";
 import { Address, Asset } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
+import { isShieldedAddress, isTransparentAddress } from "./common";
+
+export type ValidationError = {
+  type: "invalid-format" | "unsupported-chain" | "empty";
+  message: string;
+};
+
+export type ValidationResult = {
+  isValid: boolean;
+  error?: ValidationError;
+  addressType?: "transparent" | "shielded" | "ibc";
+};
 
 type AddressOption = {
   id: string;
@@ -113,6 +120,107 @@ export const DestinationAddressModal = ({
       type: recent.type,
     })
   );
+
+  const validateAddress = (address: string): ValidationResult => {
+    // Check if address is empty
+    if (!address.trim()) {
+      return {
+        isValid: false,
+        error: {
+          type: "empty",
+          message: "Address cannot be empty",
+        },
+      };
+    }
+
+    const trimmedAddress = address.trim();
+
+    // Check for Namada transparent address
+    if (isTransparentAddress(trimmedAddress)) {
+      return {
+        isValid: true,
+        addressType: "transparent",
+      };
+    }
+
+    // Check for Namada shielded address
+    if (isShieldedAddress(trimmedAddress)) {
+      return {
+        isValid: true,
+        addressType: "shielded",
+      };
+    }
+
+    // Check for IBC address
+    const chain = getChainFromAddress(trimmedAddress);
+    if (chain) {
+      // Check if the chain is supported by using the registry function
+      const registry = getChainRegistryByChainId(chain.chain_id);
+
+      if (registry) {
+        return {
+          isValid: true,
+          addressType: "ibc",
+        };
+      } else {
+        return {
+          isValid: false,
+          error: {
+            type: "unsupported-chain",
+            message: `Chain ${chain.pretty_name || chain.chain_name} is not supported`,
+          },
+        };
+      }
+    }
+
+    // If we reach here, the address format is invalid
+    return {
+      isValid: false,
+      error: {
+        type: "invalid-format",
+        message:
+          "Invalid address format. Please enter a valid Namada or IBC address",
+      },
+    };
+  };
+
+  const addToRecentAddresses = (
+    recentAddresses: RecentAddress[],
+    address: Address,
+    type: "transparent" | "shielded" | "ibc",
+    label?: string
+  ): RecentAddress[] => {
+    // Remove existing entry if it exists
+    const filtered = recentAddresses.filter(
+      (recent) => recent.address !== address
+    );
+
+    // Add new entry at the beginning
+    const newEntry: RecentAddress = {
+      address,
+      type,
+      label,
+      timestamp: Date.now(),
+    };
+
+    // Keep only the last 10 recent addresses
+    return [newEntry, ...filtered].slice(0, 10);
+  };
+
+  const getAddressLabel = (
+    address: Address,
+    type: "transparent" | "shielded" | "ibc"
+  ): string => {
+    switch (type) {
+      case "transparent":
+        return "Namada Transparent";
+      case "shielded":
+        return "Namada Shielded";
+      case "ibc":
+        const chain = getChainFromAddress(address);
+        return chain?.pretty_name || chain?.chain_name || "IBC Address";
+    }
+  };
 
   const handleAddressClick = (address: string): void => {
     onSelectAddress(address);
