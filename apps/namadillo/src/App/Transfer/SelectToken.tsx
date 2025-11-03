@@ -34,7 +34,7 @@ type SelectTokenProps = {
         newSourceAddress?: string
       ) => void)
     | undefined;
-  keplrWalletManager?: KeplrWalletManager | undefined;
+  keplrWalletManager?: KeplrWalletManager;
   assetsWithAmounts: AssetWithAmountAndChain[];
 };
 
