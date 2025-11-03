@@ -2,6 +2,7 @@ import { Chain } from "@chain-registry/types";
 import { Modal, Stack } from "@namada/components";
 import { ModalTransition } from "App/Common/ModalTransition";
 import { Search } from "App/Common/Search";
+import { chainAtom } from "atoms/chain";
 import {
   connectedWalletsAtom,
   getAvailableChains,
@@ -55,7 +56,9 @@ export const SelectToken = ({
   const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const chainAssetsMap = Object.values(chainAssets.data ?? {});
   const ibcChains = useMemo(getAvailableChains, []);
-  const allChains = [...ibcChains, getNamadaChainRegistry(false).chain];
+  const chainSettings = useAtomValue(chainAtom);
+  const isHousefire = chainSettings.data?.chainId.includes("housefire");
+  const allChains = [...ibcChains, getNamadaChainRegistry(!!isHousefire).chain];
 
   // Create KeplrWalletManager instance and use with useWalletManager hook
   const keplrWallet = keplrWalletManager ?? new KeplrWalletManager();
