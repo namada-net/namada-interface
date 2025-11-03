@@ -14,7 +14,6 @@ import { NamadaTransfer } from "App/NamadaTransfer/NamadaTransfer";
 import { MaspAssetRewards } from "App/Sidebars/MaspAssetRewards";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance";
-import { applicationFeaturesAtom } from "atoms/settings";
 import { useUserHasAccount } from "hooks/useIsAuthenticated";
 import { useUrlState } from "hooks/useUrlState";
 import { KeplrWalletManager } from "integrations/Keplr";
@@ -26,7 +25,6 @@ import { determineTransferType } from "./utils";
 export const TransferLayout: React.FC = () => {
   const keplrWalletManager = new KeplrWalletManager();
   const userHasAccount = useUserHasAccount();
-  const features = useAtomValue(applicationFeaturesAtom);
   const [sourceAddress, setSourceAddress] = useUrlState("source");
   const [destinationAddress, setDestinationAddress] =
     useUrlState("destination");
@@ -163,7 +161,7 @@ export const TransferLayout: React.FC = () => {
     if (isMaspTransfer) {
       return (
         <>
-          {features.shieldingRewardsEnabled && <MaspAssetRewards />}
+          <MaspAssetRewards />
           <LearnAboutMasp />
         </>
       );

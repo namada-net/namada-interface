@@ -17,7 +17,7 @@ import {
 import { chainAtom } from "atoms/chain";
 import { ibcChannelsFamily } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
-import { createIbcTxAtom } from "atoms/transfer/atoms";
+import { createIbcTxAtom, transferAmountAtom } from "atoms/transfer/atoms";
 import {
   clearDisposableSigner,
   persistDisposableSigner,
@@ -70,7 +70,7 @@ export const IbcWithdraw = ({
     AssetWithAmountAndChain | undefined
   >();
   const [refundTarget, setRefundTarget] = useState<string>();
-  const [amount, setAmount] = useState<BigNumber | undefined>();
+  const [amount, setAmount] = useAtom(transferAmountAtom);
   const [customAddress, setCustomAddress] = useState<string>("");
   const [sourceChannel, setSourceChannel] = useState("");
   const [completedAt, setCompletedAt] = useState<Date | undefined>();

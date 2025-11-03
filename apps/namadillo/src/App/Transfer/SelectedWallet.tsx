@@ -22,8 +22,8 @@ export const SelectedWallet = ({
   if (!address) return <></>;
 
   const wallet =
-    isNamadaAddress(address || "") ? wallets.namada
-    : isIbcAddress(address || "") ? wallets.keplr
+    isNamadaAddress(address) ? wallets.namada
+    : isIbcAddress(address) ? wallets.keplr
     : wallets.namada;
 
   return (

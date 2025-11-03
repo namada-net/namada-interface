@@ -3,7 +3,6 @@ import { ModalContainer } from "App/Common/ModalContainer";
 import { NamCurrency } from "App/Common/NamCurrency";
 import { MaspRewardCalculator } from "App/Sidebars/MaspRewardCalculator";
 import { cachedShieldedRewardsAtom } from "atoms/balance";
-import { applicationFeaturesAtom } from "atoms/settings";
 import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { useState } from "react";
@@ -12,7 +11,6 @@ import { FaCalculator } from "react-icons/fa6";
 export const EstimateShieldingRewardsCard = (): JSX.Element => {
   const shieldedRewards = useAtomValue(cachedShieldedRewardsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const features = useAtomValue(applicationFeaturesAtom);
 
   const handleCloseModal = (): void => {
     setIsModalOpen(false);
@@ -47,18 +45,16 @@ export const EstimateShieldingRewardsCard = (): JSX.Element => {
             </div>
           }
         </span>
-        {features.shieldingRewardsEnabled && (
-          <div
-            className="group group/tooltip relative p-2 bg-black border border-yellow rounded-full cursor-pointer hover:bg-yellow hover:border-yellow transition-colors"
-            onClick={handleOpenModal}
-          >
-            <Tooltip position="top" className="w-[120px] text-center -mt-1">
-              Masp Rewards Calculator
-            </Tooltip>
+        <div
+          className="group group/tooltip relative p-2 bg-black border border-yellow rounded-full cursor-pointer hover:bg-yellow hover:border-yellow transition-colors"
+          onClick={handleOpenModal}
+        >
+          <Tooltip position="top" className="w-[120px] text-center -mt-1">
+            Masp Rewards Calculator
+          </Tooltip>
 
-            <FaCalculator className="text-3xl text-yellow group-hover:text-black p-1 transition-colors" />
-          </div>
-        )}
+          <FaCalculator className="text-3xl text-yellow group-hover:text-black p-1 transition-colors" />
+        </div>
       </div>
 
       {isModalOpen && (

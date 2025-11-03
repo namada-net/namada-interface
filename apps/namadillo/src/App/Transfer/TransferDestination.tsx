@@ -21,7 +21,7 @@ import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
 import { useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { useLocation } from "react-router-dom";
 import { Address } from "types";
@@ -98,15 +98,16 @@ export const TransferDestination = ({
     setIsModalOpen(false);
   };
 
-  const handleSelectAddress = async (
-    selectedAddress: Address
-  ): Promise<void> => {
-    const isIbcAsset = !isNamadaAddress(selectedAddress);
-    if (isIbcAsset) {
-      await keplr.connectAllKeplrChains();
-    }
-    setDestinationAddress?.(selectedAddress);
-  };
+  const handleSelectAddress = useCallback(
+    async (selectedAddress: Address): Promise<void> => {
+      const isIbcAsset = !isNamadaAddress(selectedAddress);
+      if (isIbcAsset) {
+        await keplr.connectAllKeplrChains();
+      }
+      setDestinationAddress?.(selectedAddress);
+    },
+    [keplr, setDestinationAddress]
+  );
 
   const isShieldingTransaction =
     routes.maspShield === location.pathname || routes.ibc === location.pathname;

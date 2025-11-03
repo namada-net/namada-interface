@@ -13,8 +13,9 @@ import { tokenPricesFamily } from "atoms/prices/atoms";
 import clsx from "clsx";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
+import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { AssetWithAmountAndChain } from "types";
 import { AddressDropdown } from "./AddressDropdown";
@@ -50,11 +51,10 @@ export const SelectToken = ({
   const [filter, setFilter] = useState("");
   const [selectedNetwork, setSelectedNetwork] = useState<string | null>(null);
   const [isConnectingKeplr, setIsConnectingKeplr] = useState(false);
-  const [connectedWallets, setConnectedWallets] = useAtom(connectedWalletsAtom);
+  const [_, setConnectedWallets] = useAtom(connectedWalletsAtom);
   const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
   const chainAssetsMap = Object.values(chainAssets.data ?? {});
   const ibcChains = useMemo(getAvailableChains, []);
-
   const allChains = [...ibcChains, getNamadaChainRegistry(false).chain];
 
   // Create KeplrWalletManager instance and use with useWalletManager hook
@@ -64,7 +64,10 @@ export const SelectToken = ({
   // Get balances for connected chains
   const allNetworks: Chain[] = useMemo(() => {
     return allChains
-      .filter((chain) => chain.network_type !== "testnet")
+      .filter(
+        (chain) =>
+          chain.network_type !== "testnet" && chain.chain_name !== "namada"
+      )
       .sort((a, b) => a.chain_name.localeCompare(b.chain_name));
   }, [chainAssetsMap]);
 
@@ -82,14 +85,15 @@ export const SelectToken = ({
 
   // Get token prices for USD calculation
   const tokenAddresses = assetsWithAmounts
-    .map((assetWithAmount) => assetWithAmount.asset.address)
-    .filter((address): address is string => Boolean(address));
+    .map((assetWithAmount) => assetWithAmount.asset.address ?? "")
+    .filter((address) => !!address);
 
   const tokenPrices = useAtomValue(tokenPricesFamily(tokenAddresses));
 
   const filteredTokens = useMemo(() => {
     return assetsWithAmounts
       .filter((assetWithAmount) => {
+        if (assetWithAmount.amount.eq(0)) return false;
         // Filter by search term
         const matchesSearch =
           assetWithAmount.asset.name
@@ -120,60 +124,60 @@ export const SelectToken = ({
     onClose();
   };
 
-  const handleTokenSelect = async (
-    token: AssetWithAmountAndChain
-  ): Promise<void> => {
-    // Check if current address is Keplr and if we need to connect to specific chain for this token
-    const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
-    let newSourceAddress: string | undefined;
-    try {
-      if (isIbcOrKeplrToken) {
-        setIsConnectingKeplr(true);
+  const handleTokenSelect = useCallback(
+    async (token: AssetWithAmountAndChain): Promise<void> => {
+      // Check if current address is Keplr and if we need to connect to specific chain for this token
+      const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
+      let newSourceAddress: string | undefined;
+      try {
+        if (isIbcOrKeplrToken) {
+          setIsConnectingKeplr(true);
 
-        try {
-          const keplrInstance = await keplrWallet.get();
-          // Keplr is not installed, redirect to download page
-          if (!keplrInstance) {
-            keplrWallet.install();
-            return;
+          try {
+            const keplrInstance = await keplrWallet.get();
+            // Keplr is not installed, redirect to download page
+            if (!keplrInstance) {
+              keplrWallet.install();
+              return;
+            }
+
+            const targetChainRegistry = getChainRegistryByChainName(
+              token.chainName
+            );
+            invariant(targetChainRegistry, "Target chain registry not found");
+            const chainId = targetChainRegistry.chain.chain_id;
+            await connectToChainId(chainId);
+
+            // Update connected wallets state only after successful connection
+            setConnectedWallets((obj: Record<string, boolean>) => ({
+              ...obj,
+              [keplrWallet.key]: true,
+            }));
+            const key = await keplrInstance.getKey(chainId);
+            newSourceAddress = key.bech32Address;
+          } catch (error) {
+            console.error(
+              "Failed to connect to Keplr for token:",
+              token.asset.symbol,
+              error
+            );
+            // Continue with token selection even if Keplr connection fails
+          } finally {
+            setIsConnectingKeplr(false);
           }
-
-          const chainName =
-            token.asset.base === "unam" ?
-              "osmosis"
-            : token.asset.traces?.[0]?.counterparty?.chain_name;
-          const targetChainRegistry = getChainRegistryByChainName(chainName!);
-          const chainId = targetChainRegistry?.chain.chain_id as string;
-          await connectToChainId(chainId);
-
-          // Update connected wallets state only after successful connection
-          setConnectedWallets((obj: Record<string, boolean>) => ({
-            ...obj,
-            [keplrWallet.key]: true,
-          }));
-          const key = await keplrInstance.getKey(chainId);
-          newSourceAddress = key.bech32Address;
-        } catch (error) {
-          console.error(
-            "Failed to connect to Keplr for token:",
-            token.asset.symbol,
-            error
-          );
-          // Continue with token selection even if Keplr connection fails
-        } finally {
-          setIsConnectingKeplr(false);
         }
-      }
 
-      onSelect?.(token, newSourceAddress);
-      onClose();
-    } catch (error) {
-      console.error("Error in token selection:", error);
-      setIsConnectingKeplr(false);
-      onSelect?.(token, newSourceAddress);
-      onClose();
-    }
-  };
+        onSelect?.(token, newSourceAddress);
+        onClose();
+      } catch (error) {
+        console.error("Error in token selection:", error);
+        setIsConnectingKeplr(false);
+        onSelect?.(token, newSourceAddress);
+        onClose();
+      }
+    },
+    [sourceAddress]
+  );
 
   const getOverlayChainLogo = (
     token: AssetWithAmountAndChain
@@ -225,32 +229,29 @@ export const SelectToken = ({
                     <span className="text-white">All Networks</span>
                   </button>
                 </li>
-                {allNetworks.map((network) => {
-                  if (network.chain_name.includes("namada")) return null;
-                  return (
-                    <li key={network.chain_name}>
-                      <button
-                        onClick={() =>
-                          handleNetworkSelect(
-                            network.chain_name?.toLowerCase() || ""
-                          )
-                        }
-                        className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
-                          selectedNetwork === network.chain_name ?
-                            "bg-white/5 border border-white/20"
-                          : "hover:bg-neutral-800"
-                        }`}
+                {allNetworks.map((network) => (
+                  <li key={network.chain_name}>
+                    <button
+                      onClick={() =>
+                        handleNetworkSelect(
+                          network.chain_name.toLowerCase() || ""
+                        )
+                      }
+                      className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
+                        selectedNetwork === network.chain_name ?
+                          "bg-white/5 border border-white/20"
+                        : "hover:bg-neutral-800"
+                      }`}
+                    >
+                      <ChainBadge chain={network} />
+                      <span
+                        className={clsx("capitalize font-normal text-white")}
                       >
-                        <ChainBadge chain={network} />
-                        <span
-                          className={clsx("capitalize font-normal text-white")}
-                        >
-                          {network.chain_name}
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
+                        {network.chain_name}
+                      </span>
+                    </button>
+                  </li>
+                ))}
               </Stack>
             </div>
 
@@ -281,15 +282,10 @@ export const SelectToken = ({
                     </span>
                     {filteredTokens.length > 0 ?
                       filteredTokens.map((token) => {
-                        if (token.amount.eq(0)) return null;
-                        const isKeplrAddress = !isNamadaAddress(sourceAddress);
-
-                        // For Keplr addresses, only show amounts if we have balance data and it's > 0
-                        // For Namada addresses, show amounts if > 0
-                        const showAmount =
-                          isKeplrAddress ?
-                            token.amount.gt(0) && connectedWallets.keplr
-                          : token.amount.gt(0);
+                        const tokenPrice =
+                          token.asset.address ?
+                            tokenPrices.data?.[token.asset.address]
+                          : undefined;
                         return (
                           <li key={token.asset.address}>
                             <button
@@ -330,31 +326,13 @@ export const SelectToken = ({
                                 </div>
                               </div>
                               <div className="text-right">
-                                {showAmount && (
-                                  <>
-                                    <div className="text-white">
-                                      {token.amount.toString()}
-                                    </div>
-                                    <div className="text-neutral-400 text-sm">
-                                      {(() => {
-                                        const tokenPrice =
-                                          token.asset.address ?
-                                            tokenPrices.data?.[
-                                              token.asset.address
-                                            ]
-                                          : undefined;
-                                        if (tokenPrice) {
-                                          const usdValue =
-                                            token.amount.multipliedBy(
-                                              tokenPrice
-                                            );
-                                          return `$${usdValue.toFixed(2)}`;
-                                        }
-                                        return null;
-                                      })()}
-                                    </div>
-                                  </>
-                                )}
+                                <div className="text-white">
+                                  {token.amount.toString()}
+                                </div>
+                                <div className="text-neutral-400 text-sm">
+                                  {tokenPrice &&
+                                    `$${token.amount.multipliedBy(tokenPrice).toFixed(2)}`}
+                                </div>
                               </div>
                             </button>
                           </li>

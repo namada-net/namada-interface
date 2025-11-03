@@ -11,15 +11,15 @@ export const ShieldLayout = (): JSX.Element => {
     return <ConnectPanel actionText="To Shield" />;
   }
 
-  const renderOutletContent = (): JSX.Element => (
-    <Panel className="">
+  const renderOutletContent = (
+    <Panel>
       <Outlet />
     </Panel>
   );
 
   return (
     <Panel className="min-h-full flex items-center justify-center flex-col">
-      <div className="flex flex-col flex-1">{renderOutletContent()}</div>
+      <div className="flex flex-col flex-1">{renderOutletContent}</div>
       <NavigationFooter className="flex-none h-16 mt-10" />
     </Panel>
   );

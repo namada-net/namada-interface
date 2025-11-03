@@ -15,8 +15,9 @@ import {
   nativeTokenAddressAtom,
 } from "atoms/chain";
 import { maspIndexerUrlAtom, rpcUrlAtom } from "atoms/settings";
+import BigNumber from "bignumber.js";
 import invariant from "invariant";
-import { getDefaultStore, Getter } from "jotai";
+import { atom, getDefaultStore, Getter } from "jotai";
 import { atomWithMutation } from "jotai-tanstack-query";
 import { BuildTxAtomParams } from "types";
 import {
@@ -26,6 +27,8 @@ import {
   createTransparentTransferTx,
   createUnshieldingTransferTx,
 } from "./services";
+
+export const transferAmountAtom = atom<BigNumber | undefined>(undefined);
 
 export const createTransparentTransferAtom = atomWithMutation((get) => {
   const chain = get(chainAtom);

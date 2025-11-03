@@ -1,4 +1,5 @@
 import { Tooltip } from "@namada/components";
+import { useMemo } from "react";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
 import { isShieldedAddress } from "./common";
 
@@ -9,23 +10,23 @@ export const ShieldedPropertiesTooltip = ({
   sourceAddress: string | undefined;
   destinationAddress: string | undefined;
 }): JSX.Element => {
-  const visible = (): JSX.Element => {
+  const visible = useMemo((): JSX.Element => {
     return (
       <span className="flex items-center gap-2">
         <span className="text-white text-sm font-medium">Visible</span>
         <BsEye className="text-white w-4 h-4" />
       </span>
     );
-  };
+  }, []);
 
-  const hidden = (): JSX.Element => {
+  const hidden = useMemo(() => {
     return (
       <span className="flex items-center gap-2">
         <span className="text-yellow-400 text-sm font-medium">Hidden</span>
         <BsEyeSlash className="text-yellow-400 w-4 h-4" />
       </span>
     );
-  };
+  }, []);
 
   const shieldedTransfer =
     isShieldedAddress(sourceAddress ?? "") &&
@@ -40,19 +41,19 @@ export const ShieldedPropertiesTooltip = ({
         <p className="text-white text-sm font-medium">Transaction Privacy:</p>
         <div className="flex w-full items-center justify-between">
           <span className="text-neutral-400 text-sm">Sender address</span>
-          {shieldedTransfer ? hidden() : visible()}
+          {shieldedTransfer ? hidden : visible}
         </div>
         <div className="flex w-full items-center justify-between">
           <span className="text-neutral-400 text-sm">Recipient address</span>
-          {shieldingTransfer || shieldedTransfer ? hidden() : visible()}
+          {shieldingTransfer || shieldedTransfer ? hidden : visible}
         </div>
         <div className="flex w-full items-center justify-between">
           <span className="text-neutral-400 text-sm">Asset</span>
-          {shieldedTransfer ? hidden() : visible()}
+          {shieldedTransfer ? hidden : visible}
         </div>
         <div className="flex w-full items-center justify-between">
           <span className="text-neutral-400 text-sm">Amount</span>
-          {shieldedTransfer ? hidden() : visible()}
+          {shieldedTransfer ? hidden : visible}
         </div>
       </div>
     </Tooltip>

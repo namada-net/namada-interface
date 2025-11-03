@@ -7,6 +7,7 @@ import { allDefaultAccountsAtom } from "atoms/accounts";
 import { chainParametersAtom } from "atoms/chain/atoms";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
+import { transferAmountAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useTransfer } from "hooks/useTransfer";
@@ -34,7 +35,7 @@ export const MaspShield = ({
   setAssetSelectorModalOpen,
 }: MaspShieldProps): JSX.Element => {
   //  COMPONENT STATE
-  const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
+  const [displayAmount, setDisplayAmount] = useAtom(transferAmountAtom);
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmountAndChain | undefined
   >();

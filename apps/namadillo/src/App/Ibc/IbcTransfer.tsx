@@ -6,6 +6,7 @@ import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
 import { assetBalanceAtomFamily, ibcChannelsFamily } from "atoms/integrations";
+import { transferAmountAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
 import { useFathomTracker } from "hooks/useFathomTracker";
 import { useIbcTransaction } from "hooks/useIbcTransaction";
@@ -13,7 +14,7 @@ import { useTransactionActions } from "hooks/useTransactionActions";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
 import { AssetWithAmountAndChain } from "types";
@@ -46,7 +47,7 @@ export const IbcTransfer = ({
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmountAndChain | undefined
   >();
-  const [amount, setAmount] = useState<BigNumber | undefined>();
+  const [amount, setAmount] = useAtom(transferAmountAtom);
   const [txHash, setTxHash] = useState<string | undefined>();
   //  ERROR & STATUS STATE
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");

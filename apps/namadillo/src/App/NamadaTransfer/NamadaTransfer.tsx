@@ -6,6 +6,7 @@ import { OnSubmitTransferParams } from "App/Transfer/types";
 import { chainParametersAtom } from "atoms/chain/atoms";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
+import { transferAmountAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
 import { useFathomTracker } from "hooks/useFathomTracker";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
@@ -40,7 +41,7 @@ export const NamadaTransfer = ({
   const [searchParams] = useSearchParams();
   const shieldedParam = searchParams.get(params.shielded);
   //  COMPONENT STATE
-  const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
+  const [displayAmount, setDisplayAmount] = useAtom(transferAmountAtom);
   const [customAddress] = useState<string>("");
   const [memo, setMemo] = useState<string>("");
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<

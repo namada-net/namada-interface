@@ -15,7 +15,7 @@ import { useKeplrAddressForAsset } from "hooks/useKeplrAddressForAsset";
 import { wallets } from "integrations";
 import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Address, Asset } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
@@ -165,19 +165,16 @@ export const DestinationAddressModal = ({
   };
 
   // Determine input styling based on validation
-  const getInputClassName = (): string => {
-    if (!customAddress.trim()) {
-      return "text-sm border-neutral-500";
-    }
-
+  const getInputClassName = useCallback((): string => {
     if (validationResult?.isValid) {
       return "text-sm border-green-500 focus:border-green-500";
-    } else if (validationResult?.error) {
+    }
+    if (validationResult?.error) {
       return "text-sm border-red-500 focus:border-red-500";
     }
 
     return "text-sm border-neutral-500";
-  };
+  }, [customAddress]);
 
   return (
     <SelectModal

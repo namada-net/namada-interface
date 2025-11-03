@@ -6,6 +6,7 @@ import { OnSubmitTransferParams } from "App/Transfer/types";
 import { lastCompletedShieldedSyncAtom } from "atoms/balance/atoms";
 import { ledgerStatusDataAtom } from "atoms/ledger/atoms";
 import { rpcUrlAtom } from "atoms/settings";
+import { transferAmountAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
 import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useTransactionActions } from "hooks/useTransactionActions";
@@ -34,7 +35,7 @@ export const MaspUnshield = ({
   setAssetSelectorModalOpen,
 }: MaspUnshieldProps): JSX.Element => {
   //  COMPONENT STATE
-  const [displayAmount, setDisplayAmount] = useState<BigNumber | undefined>();
+  const [displayAmount, setDisplayAmount] = useAtom(transferAmountAtom);
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmountAndChain | undefined
   >();
