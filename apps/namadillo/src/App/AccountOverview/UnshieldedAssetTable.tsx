@@ -112,7 +112,7 @@ const TransparentTokensTable = ({
             <div className="relative group/tooltip">
               <ActionButton
                 size="xs"
-                href={`${routes.transfer}?${params.asset}=${asset.symbol}&${params.source}=${destinationAddress}&${params.destination}=${shieldedAddress}`}
+                href={`${routes.maspShield}?${params.asset}=${asset.symbol}&${params.source}=${destinationAddress}&${params.destination}=${shieldedAddress}`}
               >
                 Shield
               </ActionButton>

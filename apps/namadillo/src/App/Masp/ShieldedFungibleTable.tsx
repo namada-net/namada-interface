@@ -138,7 +138,7 @@ export const ShieldedFungibleTable = ({
             className="w-fit ml-auto mr-10"
             onClick={() =>
               navigate(
-                `${routes.maspUnshield}?${params.asset}=${asset.symbol}&${params.source}=${shieldedAddress}&${params.destination}=${destinationAddress}`
+                `${routes.transfer}?${params.asset}=${asset.symbol}&${params.source}=${shieldedAddress}&${params.destination}=${destinationAddress}`
               )
             }
           >
