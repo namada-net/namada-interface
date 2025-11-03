@@ -15,16 +15,16 @@ import { useTransfer } from "hooks/useTransfer";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
-import { Dispatch, SetStateAction, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AssetWithAmountAndChain } from "types";
 import { NamadaTransferTopHeader } from "./NamadaTransferTopHeader";
 
 interface NamadaTransferProps {
   sourceAddress: string;
-  setSourceAddress: Dispatch<SetStateAction<string>>;
+  setSourceAddress: (address?: string) => void;
   destinationAddress: string;
-  setDestinationAddress: Dispatch<SetStateAction<string>>;
+  setDestinationAddress: (address?: string) => void;
   assetSelectorModalOpen?: boolean;
   setAssetSelectorModalOpen?: (open: boolean) => void;
 }

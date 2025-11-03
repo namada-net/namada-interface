@@ -135,14 +135,14 @@ export const TransferModule = ({
     return validateTransferForm({
       source: {
         asset: selectedAsset?.asset,
-        address: source.address,
+        address: sourceAddress,
         isShieldedAddress: isShieldedAddress(sourceAddress),
         selectedAssetSymbol: selectedAsset?.asset.symbol,
         amount: source.amount,
         ledgerAccountInfo: source.ledgerAccountInfo,
       },
       destination: {
-        address: destination.address,
+        address: destinationAddress,
         isShieldedAddress: isShieldedAddress(destinationAddress),
       },
       gasConfig,
@@ -152,7 +152,7 @@ export const TransferModule = ({
       displayGasFeeAmount: displayGasFee?.totalDisplayAmount,
     });
   }, [
-    source.address,
+    sourceAddress,
     selectedAsset?.asset.address,
     source.amount,
     source.ledgerAccountInfo,
@@ -167,8 +167,8 @@ export const TransferModule = ({
     e.preventDefault();
     onSubmitTransfer({
       displayAmount: source.amount,
-      destinationAddress: destination.address,
-      sourceAddress: source.address,
+      destinationAddress,
+      sourceAddress,
       memo: destination.memo,
     });
   };
@@ -192,7 +192,7 @@ export const TransferModule = ({
           onSubmit={onSubmit}
         >
           <TransferSource
-            sourceAddress={source.address}
+            sourceAddress={sourceAddress}
             asset={selectedAsset?.asset}
             originalAddress={selectedAsset?.asset?.address}
             isLoadingAssets={isLoadingUsersAssets}
@@ -216,9 +216,9 @@ export const TransferModule = ({
             setDestinationAddress={destination.onChangeAddress}
             isShieldedAddress={isShieldedAddress(destinationAddress)}
             isShieldedTx={isShieldedTx}
-            destinationAddress={destination.address}
+            destinationAddress={destinationAddress}
             sourceAsset={selectedAsset?.asset}
-            sourceAddress={source.address}
+            sourceAddress={sourceAddress}
             onChangeAddress={destination.onChangeAddress}
             memo={destination.memo}
             onChangeMemo={destination.onChangeMemo}
@@ -306,8 +306,8 @@ export const TransferModule = ({
       </section>
       <SelectToken
         keplrWalletManager={keplrWalletManager}
-        sourceAddress={source.address || ""}
-        destinationAddress={destination.address || ""}
+        sourceAddress={sourceAddress}
+        destinationAddress={destinationAddress}
         setSourceAddress={source.onChangeAddress}
         isOpen={assetSelectorModalOpen}
         onClose={() => setAssetSelectorModalOpen(false)}
@@ -325,6 +325,7 @@ export const TransferModule = ({
             newParams.set(params.asset, selectedAssetWithAmount.asset.symbol);
             return newParams;
           });
+
           source.onChangeAmount(undefined);
           source.onChangeSelectedAsset(selectedAssetWithAmount);
           setAssetSelectorModalOpen(false);

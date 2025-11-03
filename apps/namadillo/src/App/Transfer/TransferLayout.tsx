@@ -25,13 +25,15 @@ import { determineTransferType } from "./utils";
 export const TransferLayout: React.FC = () => {
   const keplrWalletManager = new KeplrWalletManager();
   const userHasAccount = useUserHasAccount();
-  const [sourceAddress, setSourceAddress] = useUrlState("source");
-  const [destinationAddress, setDestinationAddress] =
+  const [sourceAddressUrl, setSourceAddressUrl] = useUrlState("source");
+  const [destinationAddressUrl, setDestinationAddressUrl] =
     useUrlState("destination");
   const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
 
   const { refetch: refetchShieldedBalance } = useAtomValue(shieldedBalanceAtom);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
+  const sourceAddress = sourceAddressUrl ?? "";
+  const destinationAddress = destinationAddressUrl ?? "";
 
   const transferType = determineTransferType({
     sourceAddress,
@@ -44,7 +46,7 @@ export const TransferLayout: React.FC = () => {
   // Initialize source address
   useEffect(() => {
     if (!sourceAddress && transparentAddress) {
-      setSourceAddress(transparentAddress);
+      setSourceAddressUrl(transparentAddress);
     }
   }, [transparentAddress]);
 
@@ -76,9 +78,9 @@ export const TransferLayout: React.FC = () => {
         <Panel className="py-8 rounded-t-none h-full w-full">
           <IbcTransfer
             sourceAddress={sourceAddress}
-            setSourceAddress={setSourceAddress}
+            setSourceAddress={setSourceAddressUrl}
             destinationAddress={destinationAddress}
-            setDestinationAddress={setDestinationAddress}
+            setDestinationAddress={setDestinationAddressUrl}
             keplrWalletManager={keplrWalletManager}
             assetSelectorModalOpen={assetSelectorModalOpen}
             setAssetSelectorModalOpen={setAssetSelectorModalOpen}
@@ -92,9 +94,9 @@ export const TransferLayout: React.FC = () => {
         <Panel className="py-8 rounded-t-none h-full w-full">
           <IbcWithdraw
             sourceAddress={sourceAddress}
-            setSourceAddress={setSourceAddress}
+            setSourceAddress={setSourceAddressUrl}
             destinationAddress={destinationAddress}
-            setDestinationAddress={setDestinationAddress}
+            setDestinationAddress={setDestinationAddressUrl}
             keplrWalletManager={keplrWalletManager}
             assetSelectorModalOpen={assetSelectorModalOpen}
             setAssetSelectorModalOpen={setAssetSelectorModalOpen}
@@ -108,9 +110,9 @@ export const TransferLayout: React.FC = () => {
         <div className="flex relative flex-col flex-1">
           <MaspShield
             sourceAddress={sourceAddress}
-            setSourceAddress={setSourceAddress}
+            setSourceAddress={setSourceAddressUrl}
             destinationAddress={destinationAddress}
-            setDestinationAddress={setDestinationAddress}
+            setDestinationAddress={setDestinationAddressUrl}
             assetSelectorModalOpen={assetSelectorModalOpen}
             setAssetSelectorModalOpen={setAssetSelectorModalOpen}
           />
@@ -123,9 +125,9 @@ export const TransferLayout: React.FC = () => {
         <div className="flex relative flex-col flex-1">
           <MaspUnshield
             sourceAddress={sourceAddress}
-            setSourceAddress={setSourceAddress}
+            setSourceAddress={setSourceAddressUrl}
             destinationAddress={destinationAddress}
-            setDestinationAddress={setDestinationAddress}
+            setDestinationAddress={setDestinationAddressUrl}
             assetSelectorModalOpen={assetSelectorModalOpen}
             setAssetSelectorModalOpen={setAssetSelectorModalOpen}
           />
@@ -137,9 +139,9 @@ export const TransferLayout: React.FC = () => {
       <div className="flex relative flex-col flex-1">
         <NamadaTransfer
           sourceAddress={sourceAddress}
-          setSourceAddress={setSourceAddress}
+          setSourceAddress={setSourceAddressUrl}
           destinationAddress={destinationAddress}
-          setDestinationAddress={setDestinationAddress}
+          setDestinationAddress={setDestinationAddressUrl}
           assetSelectorModalOpen={assetSelectorModalOpen}
           setAssetSelectorModalOpen={setAssetSelectorModalOpen}
         />
@@ -154,10 +156,7 @@ export const TransferLayout: React.FC = () => {
     const isMaspTransfer =
       transferType === "shield" || transferType === "unshield";
 
-    if (isIbcTransfer) {
-      return <LearnAboutIbc />;
-    }
-
+    if (isIbcTransfer) return <LearnAboutIbc />;
     if (isMaspTransfer) {
       return (
         <>
@@ -166,7 +165,6 @@ export const TransferLayout: React.FC = () => {
         </>
       );
     }
-
     return <LearnAboutTransfer />;
   };
 

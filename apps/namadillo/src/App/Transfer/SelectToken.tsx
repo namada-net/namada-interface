@@ -14,13 +14,7 @@ import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
-import {
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useMemo, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { AssetWithAmountAndChain } from "types";
 import { AddressDropdown } from "./AddressDropdown";
@@ -28,8 +22,7 @@ import { ChainBadge } from "./ChainBadge";
 import { isNamadaAddress } from "./common";
 
 type SelectTokenProps = {
-  setSourceAddress: Dispatch<SetStateAction<string>>;
-  setDestinationAddress: Dispatch<SetStateAction<string>>;
+  setSourceAddress: (address?: string) => void;
   sourceAddress: string;
   destinationAddress: string;
   isOpen: boolean;
@@ -48,7 +41,6 @@ export const SelectToken = ({
   sourceAddress,
   destinationAddress,
   setSourceAddress,
-  setDestinationAddress,
   isOpen,
   onClose,
   onSelect,
@@ -133,6 +125,7 @@ export const SelectToken = ({
     async (token: AssetWithAmountAndChain): Promise<void> => {
       // Check if current address is Keplr and if we need to connect to specific chain for this token
       const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
+      // only used for IBC tokens
       let newSourceAddress: string | undefined;
       try {
         if (isIbcOrKeplrToken) {

@@ -15,7 +15,7 @@ import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
 import { AssetWithAmountAndChain } from "types";
 import { useTransactionEventListener } from "utils";
@@ -23,9 +23,9 @@ import { IbcTopHeader } from "./IbcTopHeader";
 
 interface IbcTransferProps {
   sourceAddress: string;
-  setSourceAddress: Dispatch<SetStateAction<string>>;
+  setSourceAddress: (address?: string) => void;
   destinationAddress: string;
-  setDestinationAddress: Dispatch<SetStateAction<string>>;
+  setDestinationAddress: (address?: string) => void;
   keplrWalletManager: KeplrWalletManager;
   assetSelectorModalOpen?: boolean;
   setAssetSelectorModalOpen?: (open: boolean) => void;

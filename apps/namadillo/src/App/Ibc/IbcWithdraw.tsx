@@ -31,7 +31,7 @@ import { KeplrWalletManager } from "integrations/Keplr";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { TransactionPair } from "lib/query";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
 import {
   Asset,
@@ -48,9 +48,9 @@ import { IbcTopHeader } from "./IbcTopHeader";
 
 interface IbcWithdrawProps {
   sourceAddress: string;
-  setSourceAddress: Dispatch<SetStateAction<string>>;
+  setSourceAddress: (address?: string) => void;
   destinationAddress: string;
-  setDestinationAddress: Dispatch<SetStateAction<string>>;
+  setDestinationAddress: (address?: string) => void;
   keplrWalletManager: KeplrWalletManager;
   assetSelectorModalOpen: boolean | undefined;
   setAssetSelectorModalOpen: (open: boolean) => void;

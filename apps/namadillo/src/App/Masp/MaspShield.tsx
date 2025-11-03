@@ -14,14 +14,14 @@ import { useTransfer } from "hooks/useTransfer";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { AssetWithAmountAndChain } from "types";
 
 interface MaspShieldProps {
   sourceAddress: string;
-  setSourceAddress: Dispatch<SetStateAction<string>>;
+  setSourceAddress: (address?: string) => void;
   destinationAddress: string;
-  setDestinationAddress: Dispatch<SetStateAction<string>>;
+  setDestinationAddress: (address?: string) => void;
   assetSelectorModalOpen?: boolean;
   setAssetSelectorModalOpen?: (open: boolean) => void;
 }
