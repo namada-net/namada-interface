@@ -125,6 +125,7 @@ export const IbcWithdraw = ({
           await clearDisposableSigner(refundTarget);
         }
         trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx complete`);
+        setAmount(undefined);
       }
     }
   );

@@ -143,6 +143,7 @@ export const NamadaTransfer = ({
         // We have to use the last element from list in case we revealPK
         const tx = txList.pop()!;
         storeTransaction(tx);
+        setDisplayAmount(undefined);
         trackEvent(
           `${shielded ? "Shielded" : "Transparent"} Transfer: complete`
         );

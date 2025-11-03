@@ -130,6 +130,7 @@ export const MaspShield = ({
         // We have to use the last element from list in case we revealPK
         const tx = txList.pop()!;
         storeTransaction(tx);
+        setDisplayAmount(undefined);
       } else {
         throw "Invalid transaction response";
       }

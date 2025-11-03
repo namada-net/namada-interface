@@ -109,6 +109,8 @@ export const IbcTransfer = ({
       trackEvent(
         `${shielded ? "Shielded " : ""}IbcTransfer: tx complete (${e.detail.asset.symbol})`
       );
+      // Reset the amount after successful transaction
+      setAmount(undefined);
     }
   });
 
