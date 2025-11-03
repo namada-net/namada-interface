@@ -341,7 +341,9 @@ export const IbcWithdraw = ({
           customAddress,
           address: destinationAddress,
           onChangeAddress:
-            customAddress ? setCustomAddress : setDestinationAddress,
+            customAddress ?
+              (address) => setCustomAddress(address ?? "")
+            : setDestinationAddress,
           isShieldedAddress: false,
         }}
         errorMessage={generalErrorMessage || error?.message || ""}
