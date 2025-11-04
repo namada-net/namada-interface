@@ -46,6 +46,7 @@ export const AvailableAmountFooter = ({
         <div className="cursor-pointer" onClick={onClickMax}>
           Available:{" "}
           <TokenCurrency
+            className="underline"
             amount={availableAmountMinusFees}
             symbol={asset.symbol}
           />
