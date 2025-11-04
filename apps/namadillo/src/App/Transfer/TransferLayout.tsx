@@ -12,7 +12,7 @@ import { MaspUnshield } from "App/Masp/MaspUnshield";
 import { LearnAboutTransfer } from "App/NamadaTransfer/LearnAboutTransfer";
 import { NamadaTransfer } from "App/NamadaTransfer/NamadaTransfer";
 import { MaspAssetRewards } from "App/Sidebars/MaspAssetRewards";
-import { allDefaultAccountsAtom } from "atoms/accounts";
+import { allDefaultAccountsAtom, defaultAccountAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance";
 import { useUserHasAccount } from "hooks/useIsAuthenticated";
 import { useUrlState } from "hooks/useUrlState";
@@ -32,6 +32,7 @@ export const TransferLayout: React.FC = () => {
 
   const { refetch: refetchShieldedBalance } = useAtomValue(shieldedBalanceAtom);
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
+  const { data: defaultAccount } = useAtomValue(defaultAccountAtom);
   const sourceAddress = sourceAddressUrl ?? "";
   const destinationAddress = destinationAddressUrl ?? "";
 
@@ -42,6 +43,12 @@ export const TransferLayout: React.FC = () => {
 
   const transparentAddress =
     accounts?.find((acc) => isTransparentAddress(acc.address))?.address ?? "";
+
+  // Reset addresses when account changes in extension
+  useEffect(() => {
+    setSourceAddressUrl(undefined);
+    setDestinationAddressUrl(undefined);
+  }, [defaultAccount]);
 
   // Initialize source address
   useEffect(() => {
