@@ -13,6 +13,7 @@ import {
   createShieldingTransferAtom,
   createTransparentTransferAtom,
   createUnshieldingTransferAtom,
+  transferAmountAtom,
 } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
 import {
@@ -20,7 +21,7 @@ import {
   UseTransactionOutput,
   UseTransactionPropsEvents,
 } from "hooks/useTransaction";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { TransactionPair } from "lib/query";
 import { useMemo, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
@@ -64,6 +65,8 @@ export const useTransfer = ({
   );
   const pseudoExtendedKey = shieldedAccount?.pseudoExtendedKey ?? "";
   const optimisticTransferUpdate = useOptimisticTransferUpdate();
+  const setTransferAmount = useSetAtom(transferAmountAtom);
+
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [txHash, setTxHash] = useState<string | undefined>();
   const navigate = useNavigate();
@@ -175,7 +178,10 @@ export const useTransfer = ({
     completedAt,
     txHash,
     redirectToTransactionPage: () => {
-      txHash && navigate(generatePath(routes.transaction, { hash: txHash }));
+      if (txHash) {
+        setTransferAmount(undefined);
+        navigate(generatePath(routes.transaction, { hash: txHash }));
+      }
     },
   };
 };

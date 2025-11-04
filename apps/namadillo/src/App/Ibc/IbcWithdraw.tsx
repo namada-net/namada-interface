@@ -125,7 +125,6 @@ export const IbcWithdraw = ({
           await clearDisposableSigner(refundTarget);
         }
         trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx complete`);
-        setAmount(undefined);
       }
     }
   );
@@ -139,6 +138,7 @@ export const IbcWithdraw = ({
 
   const redirectToTimeline = (): void => {
     if (txHash) {
+      setAmount(undefined);
       navigate(generatePath(routes.transaction, { hash: txHash }));
     }
   };

@@ -109,8 +109,6 @@ export const IbcTransfer = ({
       trackEvent(
         `${shielded ? "Shielded " : ""}IbcTransfer: tx complete (${e.detail.asset.symbol})`
       );
-      // Reset the amount after successful transaction
-      setAmount(undefined);
     }
   });
 
@@ -186,8 +184,10 @@ export const IbcTransfer = ({
         errorMessage={generalErrorMessage || transferToNamada.error?.message}
         onSubmitTransfer={onSubmitTransfer}
         onComplete={() => {
-          txHash &&
+          if (txHash) {
+            setAmount(undefined);
             navigate(generatePath(routes.transaction, { hash: txHash }));
+          }
         }}
         keplrWalletManager={keplrWalletManager}
         assetSelectorModalOpen={assetSelectorModalOpen}
