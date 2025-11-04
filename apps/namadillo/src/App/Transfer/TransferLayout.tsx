@@ -15,11 +15,11 @@ import { MaspAssetRewards } from "App/Sidebars/MaspAssetRewards";
 import { allDefaultAccountsAtom, defaultAccountAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance";
 import { useUserHasAccount } from "hooks/useIsAuthenticated";
-import { useUrlState } from "hooks/useUrlState";
+import { useUrlState, useUrlStateBatch } from "hooks/useUrlState";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { isTransparentAddress } from ".";
+import { isNamadaAddress, isShieldedAddress, isTransparentAddress } from ".";
 import { determineTransferType } from "./utils";
 
 export const TransferLayout: React.FC = () => {
@@ -28,6 +28,8 @@ export const TransferLayout: React.FC = () => {
   const [sourceAddressUrl, setSourceAddressUrl] = useUrlState("source");
   const [destinationAddressUrl, setDestinationAddressUrl] =
     useUrlState("destination");
+  const [assetSymbolUrl, setAssetSymbolUrl] = useUrlState("asset");
+  const setUrlBatchParams = useUrlStateBatch();
   const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
 
   const { refetch: refetchShieldedBalance } = useAtomValue(shieldedBalanceAtom);
@@ -41,14 +43,44 @@ export const TransferLayout: React.FC = () => {
     destinationAddress,
   });
 
-  const transparentAddress =
-    accounts?.find((acc) => isTransparentAddress(acc.address))?.address ?? "";
+  const transparentAddress = accounts?.find((acc) =>
+    isTransparentAddress(acc.address)
+  )?.address;
+  const shieldedAddress = accounts?.find((acc) =>
+    isShieldedAddress(acc.address)
+  )?.address;
 
   // Reset addresses when account changes in extension
   useEffect(() => {
-    setSourceAddressUrl(undefined);
-    setDestinationAddressUrl(undefined);
-  }, [defaultAccount]);
+    if (!transparentAddress || !shieldedAddress) return;
+
+    // TODO: this can be simplified probably
+    if (transferType === "shield") {
+      // If we shield replace namada addresses if source is namada account
+      if (isNamadaAddress(sourceAddress)) {
+        setUrlBatchParams({
+          source: transparentAddress,
+          destination: shieldedAddress,
+        });
+      } else {
+        // If source is not namada account, only set destination
+        setDestinationAddressUrl(shieldedAddress);
+      }
+    } else {
+      // For other transfer types, reset source address only and clear the target
+      if (isTransparentAddress(sourceAddress)) {
+        setUrlBatchParams({
+          source: transparentAddress,
+          destination: undefined,
+        });
+      } else if (isShieldedAddress(sourceAddress)) {
+        setUrlBatchParams({
+          source: shieldedAddress,
+          destination: undefined,
+        });
+      }
+    }
+  }, [defaultAccount?.address]);
 
   // Initialize source address
   useEffect(() => {
@@ -116,6 +148,7 @@ export const TransferLayout: React.FC = () => {
       return (
         <div className="flex relative flex-col flex-1">
           <MaspShield
+            assetSymbol={assetSymbolUrl}
             sourceAddress={sourceAddress}
             setSourceAddress={setSourceAddressUrl}
             destinationAddress={destinationAddress}
@@ -149,6 +182,8 @@ export const TransferLayout: React.FC = () => {
           setSourceAddress={setSourceAddressUrl}
           destinationAddress={destinationAddress}
           setDestinationAddress={setDestinationAddressUrl}
+          assetSymbol={assetSymbolUrl}
+          setAssetSymbol={setAssetSymbolUrl}
           assetSelectorModalOpen={assetSelectorModalOpen}
           setAssetSelectorModalOpen={setAssetSelectorModalOpen}
         />

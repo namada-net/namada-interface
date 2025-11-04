@@ -4,6 +4,7 @@ import { isShieldedAddress } from "App/Transfer/common";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { chainParametersAtom } from "atoms/chain/atoms";
+import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { rpcUrlAtom } from "atoms/settings";
 import { transferAmountAtom } from "atoms/transfer/atoms";
@@ -17,7 +18,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { AssetWithAmountAndChain } from "types";
+import { Asset } from "types";
 import { NamadaTransferTopHeader } from "./NamadaTransferTopHeader";
 
 interface NamadaTransferProps {
@@ -27,6 +28,8 @@ interface NamadaTransferProps {
   setDestinationAddress: (address?: string) => void;
   assetSelectorModalOpen?: boolean;
   setAssetSelectorModalOpen?: (open: boolean) => void;
+  assetSymbol?: string;
+  setAssetSymbol: (symbol: string) => void;
 }
 
 export const NamadaTransfer = ({
@@ -36,6 +39,7 @@ export const NamadaTransfer = ({
   setDestinationAddress,
   assetSelectorModalOpen,
   setAssetSelectorModalOpen,
+  assetSymbol,
 }: NamadaTransferProps): JSX.Element => {
   //  URL STATE
   const [searchParams] = useSearchParams();
@@ -44,9 +48,11 @@ export const NamadaTransfer = ({
   const [displayAmount, setDisplayAmount] = useAtom(transferAmountAtom);
   const [customAddress] = useState<string>("");
   const [memo, setMemo] = useState<string>("");
-  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmountAndChain | undefined
-  >();
+  const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
+  const asset = Object.values(chainAssets.data || {})?.find(
+    (a) => a.symbol === assetSymbol
+  );
+  const [selectedAsset, setSelectedAsset] = useState<Asset | undefined>(asset);
   //  ERROR & STATUS STATE
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
@@ -81,7 +87,7 @@ export const NamadaTransfer = ({
   } = useTransfer({
     source: sourceAddress ?? "",
     target: destinationAddress ?? "",
-    token: selectedAssetWithAmount?.asset.address ?? "",
+    token: asset?.address ?? "",
     displayAmount: displayAmount ?? new BigNumber(0),
     onBeforeBuildTx: () => {
       if (isSourceShielded) {
@@ -105,7 +111,7 @@ export const NamadaTransfer = ({
       setCurrentStatusExplanation("");
       setGeneralErrorMessage((originalError as Error).message);
     },
-    asset: selectedAssetWithAmount?.asset,
+    asset,
   });
 
   const isSourceShielded = isShieldedAddress(sourceAddress ?? "");
@@ -118,7 +124,7 @@ export const NamadaTransfer = ({
       setGeneralErrorMessage("");
       invariant(sourceAddress, "Source address is not defined");
       invariant(chainParameters.data?.chainId, "Chain ID is undefined");
-      invariant(selectedAssetWithAmount, "No asset is selected");
+      invariant(asset, "No asset is selected");
       invariant(
         sourceAddress !== customAddress,
         "The recipient address must differ from the sender address"
@@ -128,7 +134,7 @@ export const NamadaTransfer = ({
       if (txResponse) {
         const txList = createTransferDataFromNamada(
           txKind,
-          selectedAssetWithAmount.asset,
+          asset,
           rpcUrl,
           isTargetShielded,
           txResponse,
@@ -175,13 +181,12 @@ export const NamadaTransfer = ({
       </header>
       <TransferModule
         source={{
-          availableAmount: selectedAssetWithAmount?.amount,
           address: sourceAddress,
-          selectedAssetWithAmount,
+          selectedAsset,
           amount: displayAmount,
           ledgerAccountInfo,
           onChangeAddress: setSourceAddress,
-          onChangeSelectedAsset: setSelectedAssetWithAmount,
+          onChangeSelectedAsset: setSelectedAsset,
           onChangeAmount: setDisplayAmount,
         }}
         destination={{

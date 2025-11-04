@@ -1,6 +1,5 @@
 import { IbcTransferProps } from "@namada/sdk-multicore";
 import { AccountType } from "@namada/types";
-import { mapUndefined } from "@namada/utils";
 import { routes } from "App/routes";
 import { isShieldedAddress } from "App/Transfer/common";
 import { TransferModule } from "App/Transfer/TransferModule";
@@ -10,12 +9,11 @@ import {
   defaultAccountAtom,
   disposableSignerAtom,
 } from "atoms/accounts";
-import {
-  namadaShieldedAssetsAtom,
-  namadaTransparentAssetsAtom,
-} from "atoms/balance";
 import { chainAtom } from "atoms/chain";
-import { ibcChannelsFamily } from "atoms/integrations";
+import {
+  ibcChannelsFamily,
+  namadaRegistryChainAssetsMapAtom,
+} from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger";
 import { createIbcTxAtom, transferAmountAtom } from "atoms/transfer/atoms";
 import {
@@ -33,12 +31,7 @@ import { useAtom, useAtomValue } from "jotai";
 import { TransactionPair } from "lib/query";
 import { useEffect, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
-import {
-  Asset,
-  AssetWithAmountAndChain,
-  IbcTransferTransactionData,
-  TransferStep,
-} from "types";
+import { Asset, IbcTransferTransactionData, TransferStep } from "types";
 import {
   toBaseAmount,
   toDisplayAmount,
@@ -54,6 +47,7 @@ interface IbcWithdrawProps {
   keplrWalletManager: KeplrWalletManager;
   assetSelectorModalOpen: boolean | undefined;
   setAssetSelectorModalOpen: (open: boolean) => void;
+  assetSymbol?: string;
 }
 
 export const IbcWithdraw = ({
@@ -64,11 +58,14 @@ export const IbcWithdraw = ({
   keplrWalletManager,
   assetSelectorModalOpen,
   setAssetSelectorModalOpen,
+  assetSymbol,
 }: IbcWithdrawProps): JSX.Element => {
   //  COMPONENT STATE
-  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmountAndChain | undefined
-  >();
+  const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
+  const asset = Object.values(chainAssets.data || {})?.find(
+    (a) => a.symbol === assetSymbol
+  );
+  const [selectedAsset, setSelectedAsset] = useState<Asset | undefined>(asset);
   const [refundTarget, setRefundTarget] = useState<string>();
   const [amount, setAmount] = useAtom(transferAmountAtom);
   const [customAddress, setCustomAddress] = useState<string>("");
@@ -99,21 +96,10 @@ export const IbcWithdraw = ({
   );
   const alias = shieldedAccount?.alias ?? transparentAccount.data?.alias;
   const shielded = isShieldedAddress(sourceAddress ?? "");
-  const { data: availableAssets } = useAtomValue(
-    shielded ? namadaShieldedAssetsAtom : namadaTransparentAssetsAtom
-  );
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-  const availableAmount = mapUndefined(
-    (address) => availableAssets?.[address]?.amount,
-    selectedAssetWithAmount?.asset.address
-  );
-  const selectedAsset =
-    selectedAssetWithAmount?.asset.address ?
-      availableAssets?.[selectedAssetWithAmount?.asset.address]
-    : undefined;
 
   useTransactionEventListener(
     ["IbcWithdraw.Success", "ShieldedIbcWithdraw.Success"],
@@ -201,14 +187,14 @@ export const IbcWithdraw = ({
       invariant(selectedAsset, "Selected asset is not defined");
       invariant(chainId, "Chain ID is not provided");
       const displayAmount = toDisplayAmount(
-        selectedAsset.asset,
+        selectedAsset,
         props.amountInBaseDenom
       );
       const ibcTxData = storeTransferTransaction(
         tx,
         displayAmount,
         chainId,
-        selectedAsset.asset
+        selectedAsset
       );
       setTxHash(ibcTxData.hash);
       trackEvent(`${shielded ? "Shielded " : ""}IbcWithdraw: tx submitted`);
@@ -278,9 +264,10 @@ export const IbcWithdraw = ({
     invariant(shieldedAccount, "No shielded account is found");
     invariant(transparentAccount.data, "No transparent account is found");
     invariant(destinationAddress, "No destination address is set");
+    invariant(selectedAsset, "Selected asset is not defined");
 
     const amountInBaseDenom = toBaseAmount(
-      selectedAsset.asset,
+      selectedAsset,
       BigNumber(displayAmount ?? 0)
     );
     const source =
@@ -305,7 +292,8 @@ export const IbcWithdraw = ({
             amountInBaseDenom,
             channelId: sourceChannel.trim(),
             portId: "transfer",
-            token: selectedAsset.asset.address,
+            // TODO: this should be NamadaAsset not Asset
+            token: selectedAsset.address!,
             source,
             receiver: destinationAddress,
             gasSpendingKey,
@@ -329,12 +317,11 @@ export const IbcWithdraw = ({
       <TransferModule
         source={{
           address: sourceAddress,
-          availableAmount,
-          selectedAssetWithAmount,
+          selectedAsset,
           amount,
           ledgerAccountInfo,
           onChangeAddress: setSourceAddress,
-          onChangeSelectedAsset: setSelectedAssetWithAmount,
+          onChangeSelectedAsset: setSelectedAsset,
           onChangeAmount: setAmount,
         }}
         destination={{

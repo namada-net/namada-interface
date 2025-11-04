@@ -11,7 +11,8 @@ export const useModalCloseEvent = (): useModalCloseEventProps => {
 
   const onCloseModal = (): void => {
     if (location.state?.backgroundLocation) {
-      navigate((location.state.backgroundLocation as Location).pathname, {
+      const backgroundLocation = location.state.backgroundLocation as Location;
+      navigate(backgroundLocation.pathname + backgroundLocation.search, {
         replace: true,
       });
     } else {

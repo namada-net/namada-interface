@@ -175,8 +175,8 @@ export const TransferModule = ({
 
   // Set the selected asset in the parent component from the URL state if it's not set
   useEffect(() => {
-    if (!source.selectedAssetWithAmount && selectedAsset) {
-      source.onChangeSelectedAsset(selectedAsset);
+    if (!source.selectedAsset && selectedAsset) {
+      source.onChangeSelectedAsset(selectedAsset.asset);
     }
   }, [selectedAsset]);
 
@@ -327,7 +327,7 @@ export const TransferModule = ({
           });
 
           source.onChangeAmount(undefined);
-          source.onChangeSelectedAsset(selectedAssetWithAmount);
+          source.onChangeSelectedAsset(selectedAssetWithAmount.asset);
           setAssetSelectorModalOpen(false);
         }}
       />

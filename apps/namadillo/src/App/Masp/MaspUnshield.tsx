@@ -4,6 +4,7 @@ import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHea
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { lastCompletedShieldedSyncAtom } from "atoms/balance/atoms";
+import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
 import { ledgerStatusDataAtom } from "atoms/ledger/atoms";
 import { rpcUrlAtom } from "atoms/settings";
 import { transferAmountAtom } from "atoms/transfer/atoms";
@@ -15,7 +16,7 @@ import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useState } from "react";
-import { AssetWithAmountAndChain } from "types";
+import { Asset } from "types";
 
 interface MaspUnshieldProps {
   sourceAddress: string;
@@ -24,6 +25,7 @@ interface MaspUnshieldProps {
   setDestinationAddress: (address?: string) => void;
   assetSelectorModalOpen?: boolean;
   setAssetSelectorModalOpen?: (open: boolean) => void;
+  assetSymbol?: string;
 }
 
 export const MaspUnshield = ({
@@ -33,12 +35,15 @@ export const MaspUnshield = ({
   setDestinationAddress,
   assetSelectorModalOpen,
   setAssetSelectorModalOpen,
+  assetSymbol,
 }: MaspUnshieldProps): JSX.Element => {
   //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useAtom(transferAmountAtom);
-  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmountAndChain | undefined
-  >();
+  const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
+  const asset = Object.values(chainAssets.data || {})?.find(
+    (a) => a.symbol === assetSymbol
+  );
+  const [selectedAsset, setSelectedAsset] = useState<Asset | undefined>(asset);
   //  ERROR & STATUS STATE
   const [generalErrorMessage, setGeneralErrorMessage] = useState("");
   const [currentStatus, setCurrentStatus] = useState("");
@@ -66,7 +71,7 @@ export const MaspUnshield = ({
   } = useTransfer({
     source: sourceAddress ?? "",
     target: destinationAddress ?? "",
-    token: selectedAssetWithAmount?.asset.address ?? "",
+    token: asset?.address ?? "",
     displayAmount: displayAmount ?? new BigNumber(0),
     onBeforeBuildTx: () => {
       setCurrentStatus("Generating MASP Parameters...");
@@ -85,7 +90,7 @@ export const MaspUnshield = ({
       setCurrentStatusExplanation("");
       setGeneralErrorMessage((originalError as Error).message);
     },
-    asset: selectedAssetWithAmount?.asset,
+    asset,
   });
 
   const onSubmitTransfer = async ({
@@ -95,14 +100,14 @@ export const MaspUnshield = ({
       setGeneralErrorMessage("");
 
       invariant(sourceAddress, "Source address is not defined");
-      invariant(selectedAssetWithAmount, "No asset is selected");
+      invariant(asset, "No asset is selected");
 
       const txResponse = await performTransfer({ memo });
 
       if (txResponse) {
         const txList = createTransferDataFromNamada(
           txKind,
-          selectedAssetWithAmount.asset,
+          asset,
           rpcUrl,
           false,
           txResponse,
@@ -142,11 +147,10 @@ export const MaspUnshield = ({
       <TransferModule
         source={{
           address: sourceAddress,
-          selectedAssetWithAmount,
-          availableAmount: selectedAssetWithAmount?.amount,
+          selectedAsset,
           amount: displayAmount,
           ledgerAccountInfo,
-          onChangeSelectedAsset: setSelectedAssetWithAmount,
+          onChangeSelectedAsset: setSelectedAsset,
           onChangeAmount: setDisplayAmount,
           onChangeAddress: setSourceAddress,
         }}

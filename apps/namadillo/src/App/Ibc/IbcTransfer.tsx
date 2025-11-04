@@ -1,11 +1,13 @@
 import { AccountType } from "@namada/types";
-import { mapUndefined } from "@namada/utils";
 import { routes } from "App/routes";
 import { isShieldedAddress } from "App/Transfer/common";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
-import { assetBalanceAtomFamily, ibcChannelsFamily } from "atoms/integrations";
+import {
+  ibcChannelsFamily,
+  namadaRegistryChainAssetsMapAtom,
+} from "atoms/integrations";
 import { transferAmountAtom } from "atoms/transfer/atoms";
 import BigNumber from "bignumber.js";
 import { useFathomTracker } from "hooks/useFathomTracker";
@@ -17,7 +19,7 @@ import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { useEffect, useMemo, useState } from "react";
 import { generatePath, useNavigate } from "react-router-dom";
-import { AssetWithAmountAndChain } from "types";
+import { Asset } from "types";
 import { useTransactionEventListener } from "utils";
 import { IbcTopHeader } from "./IbcTopHeader";
 
@@ -29,6 +31,7 @@ interface IbcTransferProps {
   keplrWalletManager: KeplrWalletManager;
   assetSelectorModalOpen?: boolean;
   setAssetSelectorModalOpen?: (open: boolean) => void;
+  assetSymbol?: string;
 }
 
 export const IbcTransfer = ({
@@ -39,14 +42,17 @@ export const IbcTransfer = ({
   keplrWalletManager,
   assetSelectorModalOpen,
   setAssetSelectorModalOpen,
+  assetSymbol,
 }: IbcTransferProps): JSX.Element => {
   //  COMPONENT STATE
   const [completedAt, setCompletedAt] = useState<Date | undefined>();
   const [sourceChannel, setSourceChannel] = useState("");
   const [destinationChannel, setDestinationChannel] = useState("");
-  const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
-    AssetWithAmountAndChain | undefined
-  >();
+  const chainAssets = useAtomValue(namadaRegistryChainAssetsMapAtom);
+  const asset = Object.values(chainAssets.data || {})?.find(
+    (a) => a.symbol === assetSymbol
+  );
+  const [selectedAsset, setSelectedAsset] = useState<Asset | undefined>(asset);
   const [amount, setAmount] = useAtom(transferAmountAtom);
   const [txHash, setTxHash] = useState<string | undefined>();
   //  ERROR & STATUS STATE
@@ -61,12 +67,6 @@ export const IbcTransfer = ({
     isError: unknownIbcChannels,
     isLoading: isLoadingIbcChannels,
   } = useAtomValue(ibcChannelsFamily(registry?.chain.chain_name));
-  const { data: userAssets } = useAtomValue(
-    assetBalanceAtomFamily({
-      chain: registry?.chain,
-      walletAddress: sourceAddress,
-    })
-  );
   const { trackEvent } = useFathomTracker();
   const { storeTransaction } = useTransactionActions();
 
@@ -76,14 +76,11 @@ export const IbcTransfer = ({
     sourceChannel,
     destinationChannel,
     shielded: isShieldedAddress(destinationAddress ?? ""),
-    selectedAsset: selectedAssetWithAmount?.asset,
+    selectedAsset,
   });
 
   // DERIVED VALUES
   const shielded = isShieldedAddress(destinationAddress ?? "");
-  const availableDisplayAmount = mapUndefined((baseDenom) => {
-    return userAssets ? userAssets[baseDenom]?.amount : undefined;
-  }, selectedAssetWithAmount?.asset?.address);
   const namadaAddress = useMemo(() => {
     return (
       defaultAccounts.data?.find(
@@ -151,11 +148,10 @@ export const IbcTransfer = ({
       </header>
       <TransferModule
         source={{
-          selectedAssetWithAmount,
-          availableAmount: availableDisplayAmount,
+          selectedAsset,
           address: sourceAddress,
           amount,
-          onChangeSelectedAsset: setSelectedAssetWithAmount,
+          onChangeSelectedAsset: setSelectedAsset,
           onChangeAddress: setSourceAddress,
           onChangeAmount: setAmount,
         }}
