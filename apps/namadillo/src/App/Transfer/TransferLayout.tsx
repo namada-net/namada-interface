@@ -12,7 +12,7 @@ import { MaspUnshield } from "App/Masp/MaspUnshield";
 import { LearnAboutTransfer } from "App/NamadaTransfer/LearnAboutTransfer";
 import { NamadaTransfer } from "App/NamadaTransfer/NamadaTransfer";
 import { MaspAssetRewards } from "App/Sidebars/MaspAssetRewards";
-import { allDefaultAccountsAtom, defaultAccountAtom } from "atoms/accounts";
+import { defaultAccountAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance";
 import { useUserHasAccount } from "hooks/useIsAuthenticated";
 import { useUrlState, useUrlStateBatch } from "hooks/useUrlState";
@@ -32,7 +32,6 @@ export const TransferLayout: React.FC = () => {
   const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
 
   const { refetch: refetchShieldedBalance } = useAtomValue(shieldedBalanceAtom);
-  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const { data: defaultAccount } = useAtomValue(defaultAccountAtom);
   const sourceAddress = sourceAddressUrl ?? "";
   const destinationAddress = destinationAddressUrl ?? "";
