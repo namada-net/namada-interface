@@ -18,7 +18,7 @@ import { useUserHasAccount } from "hooks/useIsAuthenticated";
 import { useUrlState, useUrlStateBatch } from "hooks/useUrlState";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtomValue } from "jotai";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { determineTransferType } from "./utils";
 
 export const TransferLayout: React.FC = () => {
@@ -34,6 +34,9 @@ export const TransferLayout: React.FC = () => {
   const { data: defaultAccount } = useAtomValue(defaultAccountAtom);
   const sourceAddress = sourceAddressUrl ?? "";
   const destinationAddress = destinationAddressUrl ?? "";
+  const previousAccountAddressRef = useRef<string | undefined>(
+    defaultAccount?.address
+  );
 
   const transferType = determineTransferType({
     sourceAddress,
@@ -42,17 +45,17 @@ export const TransferLayout: React.FC = () => {
 
   // Reset addresses when account changes in extension
   useEffect(() => {
-    setSourceAddressUrl(undefined);
-    setDestinationAddressUrl(undefined);
-  }, [defaultAccount]);
-
-  // Reset addresses when account changes in extension
-  useEffect(() => {
-    setUrlBatchParams({
-      source: undefined,
-      destination: undefined,
-      asset: undefined,
-    });
+    if (
+      previousAccountAddressRef.current &&
+      previousAccountAddressRef.current !== defaultAccount?.address
+    ) {
+      setUrlBatchParams({
+        source: undefined,
+        destination: undefined,
+        asset: undefined,
+      });
+    }
+    previousAccountAddressRef.current = defaultAccount?.address;
   }, [defaultAccount?.address]);
 
   // Refetch shielded balance for MASP operations
