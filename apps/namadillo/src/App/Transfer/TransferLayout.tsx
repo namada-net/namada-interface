@@ -12,14 +12,13 @@ import { MaspUnshield } from "App/Masp/MaspUnshield";
 import { LearnAboutTransfer } from "App/NamadaTransfer/LearnAboutTransfer";
 import { NamadaTransfer } from "App/NamadaTransfer/NamadaTransfer";
 import { MaspAssetRewards } from "App/Sidebars/MaspAssetRewards";
-import { allDefaultAccountsAtom, defaultAccountAtom } from "atoms/accounts";
+import { defaultAccountAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance";
 import { useUserHasAccount } from "hooks/useIsAuthenticated";
-import { useUrlState } from "hooks/useUrlState";
+import { useUrlState, useUrlStateBatch } from "hooks/useUrlState";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { isTransparentAddress } from ".";
 import { determineTransferType } from "./utils";
 
 export const TransferLayout: React.FC = () => {
@@ -29,9 +28,9 @@ export const TransferLayout: React.FC = () => {
   const [destinationAddressUrl, setDestinationAddressUrl] =
     useUrlState("destination");
   const [assetSelectorModalOpen, setAssetSelectorModalOpen] = useState(false);
+  const setUrlBatchParams = useUrlStateBatch();
 
   const { refetch: refetchShieldedBalance } = useAtomValue(shieldedBalanceAtom);
-  const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const { data: defaultAccount } = useAtomValue(defaultAccountAtom);
   const sourceAddress = sourceAddressUrl ?? "";
   const destinationAddress = destinationAddressUrl ?? "";
@@ -41,21 +40,20 @@ export const TransferLayout: React.FC = () => {
     destinationAddress,
   });
 
-  const transparentAddress =
-    accounts?.find((acc) => isTransparentAddress(acc.address))?.address ?? "";
-
   // Reset addresses when account changes in extension
   useEffect(() => {
     setSourceAddressUrl(undefined);
     setDestinationAddressUrl(undefined);
   }, [defaultAccount]);
 
-  // Initialize source address
+  // Reset addresses when account changes in extension
   useEffect(() => {
-    if (!sourceAddress && transparentAddress) {
-      setSourceAddressUrl(transparentAddress);
-    }
-  }, [transparentAddress]);
+    setUrlBatchParams({
+      source: undefined,
+      destination: undefined,
+      asset: undefined,
+    });
+  }, [defaultAccount?.address]);
 
   // Refetch shielded balance for MASP operations
   useEffect(() => {

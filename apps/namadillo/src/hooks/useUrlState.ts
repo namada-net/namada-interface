@@ -29,3 +29,31 @@ export const useUrlState = (
 
   return [value, setValue];
 };
+
+export const useUrlStateBatch = (): ((
+  updates: Record<string, string | undefined>
+) => void) => {
+  const [, setSearchParams] = useSearchParams();
+
+  const setBatchParams = useCallback(
+    (updates: Record<string, string | undefined>) => {
+      setSearchParams(
+        (prev) => {
+          const newParams = new URLSearchParams(prev);
+          Object.entries(updates).forEach(([key, value]) => {
+            if (value === undefined) {
+              newParams.delete(key);
+            } else {
+              newParams.set(key, value);
+            }
+          });
+          return newParams;
+        },
+        { replace: true }
+      );
+    },
+    [setSearchParams]
+  );
+
+  return setBatchParams;
+};
