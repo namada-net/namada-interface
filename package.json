@@ -36,6 +36,6 @@
   },
   "packageManager": "yarn@4.6.0",
   "dependencies": {
-    "chain-registry": "^1.69.256"
+    "chain-registry": "^1.69.390"
   }
 }

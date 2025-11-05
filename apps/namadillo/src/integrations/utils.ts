@@ -106,8 +106,10 @@ export const getIbcGasConfig = (
   gasLimit: number = 222_000
 ): GasConfig | undefined => {
   const gasPriceInBaseDenom =
-    feeToken.average_gas_price ??
+    // Switched from average to low gas price as default to reduce fees,
+    // as we are overshooting in most cases with average gas price
     feeToken.low_gas_price ??
+    feeToken.average_gas_price ??
     feeToken.fixed_min_gas_price ??
     feeToken.high_gas_price ??
     feeToken.gas_costs?.ibc_transfer ??
