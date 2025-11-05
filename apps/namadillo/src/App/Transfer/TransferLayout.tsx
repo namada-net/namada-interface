@@ -73,7 +73,7 @@ export const TransferLayout: React.FC = () => {
   // Validate source address - check if it's from keyring or Keplr
   useEffect(() => {
     const validateSourceAddress = async (): Promise<void> => {
-      if (!sourceAddressUrl || !userHasAccount) return;
+      if (!sourceAddressUrl || !userHasAccount || !accounts) return;
 
       // Check if address is from keyring accounts
       const isFromKeyring = accounts?.some(
