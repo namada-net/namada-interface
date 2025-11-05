@@ -19,7 +19,6 @@ import { useUrlState, useUrlStateBatch } from "hooks/useUrlState";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { useAtomValue } from "jotai";
 import { useEffect, useState } from "react";
-import { isNamadaAddress, isShieldedAddress, isTransparentAddress } from ".";
 import { determineTransferType } from "./utils";
 
 export const TransferLayout: React.FC = () => {
@@ -43,58 +42,21 @@ export const TransferLayout: React.FC = () => {
     destinationAddress,
   });
 
-  const transparentAddress = accounts?.find((acc) =>
-    isTransparentAddress(acc.address)
-  )?.address;
-  const shieldedAddress = accounts?.find((acc) =>
-    isShieldedAddress(acc.address)
-  )?.address;
-
-  // Reset addresses when account changes in extension
-  useEffect(() => {
-    if (!transparentAddress || !shieldedAddress) return;
-
-    // TODO: this can be simplified probably
-    if (transferType === "shield") {
-      // If we shield replace namada addresses if source is namada account
-      if (isNamadaAddress(sourceAddress)) {
-        setUrlBatchParams({
-          source: transparentAddress,
-          destination: shieldedAddress,
-        });
-      } else {
-        // If source is not namada account, only set destination
-        setDestinationAddressUrl(shieldedAddress);
-      }
-    } else {
-      // For other transfer types, reset source address only and clear the target
-      if (isTransparentAddress(sourceAddress)) {
-        setUrlBatchParams({
-          source: transparentAddress,
-          destination: undefined,
-        });
-      } else if (isShieldedAddress(sourceAddress)) {
-        setUrlBatchParams({
-          source: shieldedAddress,
-          destination: undefined,
-        });
-      }
-    }
-  }, [defaultAccount?.address]);
-
-  // Initialize source address
-  useEffect(() => {
-    if (!sourceAddress && transparentAddress) {
-      setSourceAddressUrl(transparentAddress);
-    }
-  }, [transparentAddress]);
-
   // Refetch shielded balance for MASP operations
   useEffect(() => {
     if (transferType === "shield" || transferType === "unshield") {
       refetchShieldedBalance();
     }
   }, [transferType, refetchShieldedBalance]);
+
+  // Reset addresses when account changes in extension
+  useEffect(() => {
+    setUrlBatchParams({
+      source: undefined,
+      destination: undefined,
+      asset: undefined,
+    });
+  }, [defaultAccount?.address]);
 
   if (!userHasAccount) {
     let actionText = "To transfer assets";
