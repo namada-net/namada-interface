@@ -2,6 +2,8 @@ import { Asset } from "@chain-registry/types";
 import { Stack } from "@namada/components";
 import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
+import { ConnectProviderButton } from "App/Common/ConnectProviderButton";
+import { TokenAmountCard } from "App/Common/TokenAmountCard";
 import { TransactionFee } from "App/Common/TransactionFee";
 import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
 import { routes } from "App/routes";
@@ -26,12 +28,10 @@ import { Address } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 import shieldedEye from "./assets/shielded-eye.svg";
-import { ConnectProviderButton } from "./ConnectProviderButton";
 import { CustomAddressForm } from "./CustomAddressForm";
 import { DestinationAddressModal } from "./DestinationAddressModal";
 import { SelectedWallet } from "./SelectedWallet";
 import { ShieldedPropertiesTooltip } from "./ShieldedPropertiesTooltip";
-import { TokenAmountCard } from "./TokenAmountCard";
 
 type TransferDestinationProps = {
   isShieldedAddress?: boolean;

@@ -1,4 +1,5 @@
 import { ActionButton, Stack } from "@namada/components";
+import { CurrentStatus } from "App/Common/CurrentStatus";
 import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
 import { params, routes } from "App/routes";
@@ -24,7 +25,6 @@ import { AssetWithAmountAndChain } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
 import { getDisplayGasFee } from "utils/gas";
 import { isIbcAddress, isShieldedAddress } from "./common";
-import { CurrentStatus } from "./CurrentStatus";
 import { IbcChannels } from "./IbcChannels";
 import { SelectToken } from "./SelectToken";
 import { SuccessAnimation } from "./SuccessAnimation";

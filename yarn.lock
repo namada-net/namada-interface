@@ -3585,7 +3585,7 @@ __metadata:
     "@dao-xyz/borsh": "npm:^5.1.5"
     "@ledgerhq/hw-transport": "npm:^6.31.4"
     "@ledgerhq/hw-transport-webusb": "npm:^6.29.4"
-    "@namada/sdk": "npm:0.22.0"
+    "@namada/sdk": "file:.yalc/@namada/sdk"
     "@namada/sdk-node": "npm:^0.22.0"
     "@svgr/webpack": "npm:^6.3.1"
     "@types/chrome": "npm:^0.0.237"
@@ -3772,7 +3772,7 @@ __metadata:
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.5.2"
     "@namada/indexer-client": "npm:4.0.5"
-    "@namada/sdk-multicore": "npm:0.22.0"
+    "@namada/sdk-multicore": "file:.yalc/@namada/sdk-multicore"
     "@namada/sdk-node": "npm:^0.22.0"
     "@namada/vite-esbuild-plugin": "npm:^1.0.1"
     "@playwright/test": "npm:^1.24.1"
@@ -3858,9 +3858,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/sdk-multicore@npm:0.22.0":
+"@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo":
   version: 0.22.0
-  resolution: "@namada/sdk-multicore@npm:0.22.0"
+  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=16c38b&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3871,7 +3871,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/50c1a125ba744c4d3cb06c0249c21f654e8725a5a858a3d27c802738dc4164aa1e7fa645b241671edfc5a8cb571b6d45ae92cf2ea253ff9bfc459159c47f8ad1
+  checksum: 10c0/a925fa993e2c34e85191aa8fcd99c10ab7e50a7b6e2f2595963b4b88a4a6df3bb0a7cb3042814bbebd791184067ffb2d99faf6fd8fc925f7e4bee2ea88cf870b
   languageName: node
   linkType: hard
 
@@ -3892,9 +3892,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@namada/sdk@npm:0.22.0":
+"@namada/sdk@file:.yalc/@namada/sdk::locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension":
   version: 0.22.0
-  resolution: "@namada/sdk@npm:0.22.0"
+  resolution: "@namada/sdk@file:.yalc/@namada/sdk#.yalc/@namada/sdk::hash=52a123&locator=%40namada%2Fextension%40workspace%3Aapps%2Fextension"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3905,7 +3905,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.6.3"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/549442a97e7e0230ae005745f35ae163bdd5e3dc865ff8175f226358f232a878624cd52b2bc4249f58d43a959872516bc1de2aebeb6b01603fd08184e4646d94
+  checksum: 10c0/a0da550630ffee30931eacb0ab86a35ccc6a4fc21d1f5fcd40b75f52f056998d0888d8afecf1b4cd25f10938b424e2d7dbb46060c483523ec5c2cc998c66db15
   languageName: node
   linkType: hard
 

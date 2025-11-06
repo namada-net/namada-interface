@@ -1,6 +1,9 @@
 import { Asset } from "@chain-registry/types";
 import { AmountInput, Tooltip } from "@namada/components";
 import { copyToClipboard, shortenAddress } from "@namada/utils";
+import { AvailableAmountFooter } from "App/Common/AvailableAmountFooter";
+import { SelectedAsset } from "App/Common/SelectedAsset";
+import { TokenAmountCard } from "App/Common/TokenAmountCard";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { wallets } from "integrations";
@@ -9,10 +12,7 @@ import { GoCheck } from "react-icons/go";
 import { Address } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
-import { AvailableAmountFooter } from "./AvailableAmountFooter";
 import { isShieldedAddress, isTransparentAddress } from "./common";
-import { SelectedAsset } from "./SelectedAsset";
-import { TokenAmountCard } from "./TokenAmountCard";
 
 export type TransferSourceProps = {
   isLoadingAssets?: boolean;
