@@ -8,6 +8,7 @@ global.TextDecoder = TextDecoder as typeof global.TextDecoder;
 jest.mock("atoms/integrations", () => ({
   getRestApiAddressByIndex: jest.fn(),
   getRpcByIndex: jest.fn(),
+  namadaRegistryChainAssetsMapAtom: atom({ data: undefined }),
 }));
 
 jest.mock("atoms/integrations/atoms", () => ({

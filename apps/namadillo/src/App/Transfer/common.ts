@@ -1,5 +1,5 @@
 import { Chain } from "@chain-registry/types";
-import { getChainRegistryByChainId } from "atoms/integrations";
+import { getChainRegistryByChainId } from "atoms/integrations/functions";
 import { getChainFromAddress } from "integrations/utils";
 import namadaShieldedSvg from "./assets/namada-shielded.svg";
 import namadaTransparentSvg from "./assets/namada-transparent.svg";

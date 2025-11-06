@@ -20,10 +20,8 @@ describe("Component: AvailableAmountFooter", () => {
       />
     );
     const amount = screen.getByText("1,234");
-    const button = screen.getByRole("button");
     expect(amount.parentNode?.textContent).toContain("1,234.456 ETH");
-    expect(button).toBeEnabled();
-    fireEvent.click(button);
+    fireEvent.click(amount.parentNode!);
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
@@ -41,19 +39,18 @@ describe("Component: AvailableAmountFooter", () => {
     const callback = jest.fn();
     render(
       <AvailableAmountFooter
-        availableAmount={new BigNumber(1)}
+        availableAmount={new BigNumber(123)}
         availableAmountMinusFees={new BigNumber(0)}
         asset={assetMock as Asset}
         onClickMax={callback}
       />
     );
-    const button = screen.getByRole("button");
-    expect(button).toBeDisabled();
-    fireEvent.click(button);
-    expect(callback).not.toHaveBeenCalled();
+    const amount = screen.getByText("123");
+    fireEvent.click(amount.parentNode!);
+    expect(callback).toHaveBeenCalled();
     const warning = screen.getByText("Insufficient balance to cover the fee");
     expect(warning).toBeVisible();
-    const balance = screen.getByText("1 ETH");
+    const balance = screen.getByText("123 ETH");
     expect(balance).toBeVisible();
   });
 });
