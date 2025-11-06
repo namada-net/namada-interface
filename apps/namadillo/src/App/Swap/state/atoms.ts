@@ -20,10 +20,7 @@ import { SwapStatus } from "./types";
 
 const swapStorageAtom = atomWithStorage<SwapStorage>(
   "namadillo:swap",
-  {
-    assetSymbolBuy: undefined,
-    assetSymbolSell: undefined,
-  },
+  {},
   undefined,
   { getOnInit: true }
 );

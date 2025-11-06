@@ -114,7 +114,6 @@ export const fetchShieldedRewards = async (
   const sdk = await getSdkInstance();
   const worker = new MaspTxWorker();
   const workerLink = Comlink.wrap<MaspTxWorkerApi>(worker);
-  console.log("initiating worker2");
   await workerLink.init({
     type: "init",
     payload: { rpcUrl, token: sdk.nativeToken, maspIndexerUrl: "" },
@@ -142,7 +141,6 @@ export const fetchShieldedRewardsPerToken = async (
   const sdk = await getSdkInstance();
   const worker = new MaspTxWorker();
   const workerLink = Comlink.wrap<MaspTxWorkerApi>(worker);
-  console.log("initiating worker3");
   await workerLink.init({
     type: "init",
     payload: { rpcUrl, token: sdk.nativeToken, maspIndexerUrl: "" },

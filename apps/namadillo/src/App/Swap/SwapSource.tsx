@@ -27,7 +27,7 @@ const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
       }
     }
   }
-  return undefined;
+  return;
 };
 
 export const SwapSource = ({

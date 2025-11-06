@@ -173,7 +173,7 @@ export const SwapCalculations = (): JSX.Element => {
   );
 
   useEffect(() => {
-    // Because of the current bug with connectedWallets, this prevents button flash
+    // This prevents button flash
     const handler = setTimeout(() => {
       setShowConnectToWalletButton(!walletAddress);
     }, 500);

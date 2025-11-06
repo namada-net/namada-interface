@@ -101,11 +101,9 @@ export const MainRoutes = (): JSX.Element => {
           </Route>
 
           {/* Swapping */}
-          {true && (
-            <>
-              <Route path={routes.swap} element={<SwapModule />} />
-            </>
-          )}
+          <>
+            <Route path={routes.swap} element={<SwapModule />} />
+          </>
 
           {/* Transaction History */}
           {(features.namTransfersEnabled || features.ibcTransfersEnabled) && (
