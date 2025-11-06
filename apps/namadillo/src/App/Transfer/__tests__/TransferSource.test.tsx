@@ -1,6 +1,4 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { namadaChainMock } from "App/Common/__mocks__/chains";
-import { walletMock } from "App/Common/__mocks__/providers";
 import {
   TransferSource,
   TransferSourceProps,

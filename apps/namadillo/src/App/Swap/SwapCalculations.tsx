@@ -265,7 +265,6 @@ export const SwapCalculations = (): JSX.Element => {
           balances={balances}
           onSelect={onChangeSellSelectedAsset}
           walletAddress={shieldedAccountAddress}
-          wallet={wallets.namada}
         />
       )}
       {buyAssetSelectorModalOpen && shieldedAccountAddress && (
@@ -275,7 +274,6 @@ export const SwapCalculations = (): JSX.Element => {
           balances={balances}
           onSelect={onChangeBuySelectedAsset}
           walletAddress={shieldedAccountAddress}
-          wallet={wallets.namada}
         />
       )}
       {walletSelectorModalOpen && (

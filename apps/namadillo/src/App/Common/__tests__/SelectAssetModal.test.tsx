@@ -1,6 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { assetMockList } from "../__mocks__/assets";
-import { walletMock } from "../__mocks__/providers";
 import { SelectAssetModal } from "../SelectAssetModal";
 
 jest.mock("hooks/useIsChannelInactive", () => ({
@@ -21,7 +20,6 @@ describe("SelectAssetModal", () => {
         onClose={onCloseMock}
         onSelect={onSelectMock}
         assets={assetMockList}
-        wallet={walletMock}
         walletAddress={mockAddress}
       />
     );
@@ -34,7 +32,6 @@ describe("SelectAssetModal", () => {
         onClose={onCloseMock}
         onSelect={onSelectMock}
         assets={assetMockList}
-        wallet={walletMock}
         walletAddress={mockAddress}
       />
     );
@@ -48,7 +45,6 @@ describe("SelectAssetModal", () => {
         onClose={onCloseMock}
         onSelect={onSelectMock}
         assets={assetMockList}
-        wallet={walletMock}
         walletAddress={mockAddress}
       />
     );
@@ -69,7 +65,6 @@ describe("SelectAssetModal", () => {
         onClose={onCloseMock}
         onSelect={onSelectMock}
         assets={assetMockList}
-        wallet={walletMock}
         walletAddress={mockAddress}
       />
     );

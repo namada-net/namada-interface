@@ -42,6 +42,7 @@ export const TransactionFeeButton = ({
         )}
       >
         <TransactionFee
+          compact={compact}
           displayAmount={gasDisplayAmount?.totalDisplayAmount || BigNumber(0)}
           symbol={(!compact && gasDisplayAmount?.asset.symbol) || ""}
         />

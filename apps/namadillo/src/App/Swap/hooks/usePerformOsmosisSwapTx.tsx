@@ -127,8 +127,10 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
         invariant(buyAmount, "No buy amount");
         invariant(sellAsset && buyAsset, "Missing swap assets");
 
-        const toTrace = buyAsset.traces?.find((t) => t.type === "ibc")?.chain
-          .path;
+        const toTrace =
+          buyAsset.traces?.find((t) => t.type === "ibc")?.chain.path ||
+          // For NAM token, we want to use address directly
+          buyAsset.address;
         invariant(toTrace, "No IBC trace found");
 
         const route = quote.routes[0]?.pools;

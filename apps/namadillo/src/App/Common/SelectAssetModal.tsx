@@ -10,7 +10,7 @@ import clsx from "clsx";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
 import { twMerge } from "tailwind-merge";
-import { Address, Asset, NamadaAsset, WalletProvider } from "types";
+import { Address, Asset, NamadaAsset } from "types";
 
 type DisplayAmount = BigNumber;
 type FiatAmount = BigNumber;
@@ -18,7 +18,6 @@ type SelectWalletModalProps = {
   onClose: () => void;
   onSelect: (address: Address) => void;
   assets: Asset[];
-  wallet: WalletProvider;
   walletAddress: string;
   ibcTransfer?: "deposit" | "withdraw";
   balances?: Record<Address, [DisplayAmount, FiatAmount?]>;
@@ -28,7 +27,6 @@ export const SelectAssetModal = ({
   onClose,
   onSelect,
   assets,
-  wallet,
   walletAddress,
   ibcTransfer,
   balances,
@@ -48,7 +46,7 @@ export const SelectAssetModal = ({
 
   return (
     <SelectModal title="Select Asset" onClose={onClose}>
-      <ConnectedWalletInfo wallet={wallet} walletAddress={walletAddress} />
+      <ConnectedWalletInfo walletAddress={walletAddress} />
       <div className="my-4">
         <Search placeholder="Search asset" onChange={setFilter} />
       </div>
