@@ -108,7 +108,7 @@ export const SwapSuccess = (): JSX.Element => {
   }, []);
 
   return (
-    <Stack className="mt-[200px]" gap={0}>
+    <Stack className="mt-[150px]" gap={0}>
       <div ref={headerRef}>
         <Heading className="heading text-center text-2xl font-normal text-yellow">
           Complete

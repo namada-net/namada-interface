@@ -83,7 +83,7 @@ export const SwapInProgress = (): JSX.Element => {
   }, []);
 
   return (
-    <Stack className="mt-[200px]">
+    <Stack className="mt-[150px]">
       <div ref={headerRef}>
         <Heading className="text-center text-2xl font-normal text-yellow">
           Shielded swap in
