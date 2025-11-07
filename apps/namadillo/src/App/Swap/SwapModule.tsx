@@ -1,5 +1,6 @@
 import { Panel } from "@namada/components";
 import { useAtomValue } from "jotai";
+import { Link } from "react-router-dom";
 import { swapStatusAtom } from "./state/atoms";
 import { SwapCalculations } from "./SwapCalculations";
 import { SwapHeader } from "./SwapHeader";
@@ -32,8 +33,14 @@ export const SwapModule = (): JSX.Element => {
         {!["Broadcasting", "Confirming", "Completed", "Error"].includes(
           status.t
         ) && (
-          <p className="w-full mt-6 text-center font-light">
-            Powered by Osmosis
+          <p className="w-full mt-6 text-center font-light hover:text-purple-500 transition-colors">
+            <Link
+              to="https://osmosis.zone"
+              target="_blank"
+              rel="noreferrer nofollow"
+            >
+              Powered by Osmosis
+            </Link>
           </p>
         )}
       </section>
