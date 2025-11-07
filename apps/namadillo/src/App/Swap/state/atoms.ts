@@ -96,6 +96,18 @@ export const internalSwapStateAtom = atom(
 // We use debounced version of the swap state for fetching quotes to avoid excessive requests
 const debouncedSwapStateAtom = atom<SwapState>(defaultSwapState);
 
+const internalDebouncedSwapStateAtom = atom((get) => {
+  const sellAsset = get(sellAssetAtom);
+  const buyAsset = get(buyAssetAtom);
+  const baseState = get(debouncedSwapStateAtom);
+
+  return {
+    ...baseState,
+    sellAsset: baseState.sellAsset || sellAsset,
+    buyAsset: baseState.buyAsset || buyAsset,
+  };
+});
+
 const debouncedSet = debounce((set: Setter, value: SwapState) => {
   set(debouncedSwapStateAtom, value);
 }, 300);
@@ -119,7 +131,7 @@ export const setInternalSwapStateAtom = atom(
 export const swapStatusAtom = atom<SwapStatusType>(SwapStatus.idle());
 
 export const swapQuoteAtom = atomWithQuery((get) => {
-  const swapState = get(debouncedSwapStateAtom);
+  const swapState = get(internalDebouncedSwapStateAtom);
   const { sellAsset, buyAsset } = swapState;
 
   // TODO: this should be configurable once we support osmosis testnet
@@ -165,7 +177,7 @@ export const swapQuoteAtom = atomWithQuery((get) => {
       const simulateSell =
         swapState.mode === "sell" || swapState.mode === "none";
 
-      const params: Record<string, string> =
+      const params =
         simulateSell ?
           {
             tokenIn: `${baseAmount}${fromOsmosis.base}`,

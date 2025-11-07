@@ -26,6 +26,17 @@ import { useSwapValidation } from "./hooks/useSwapValidation";
 import { SwapQuote, SwapState, SwapStatus } from "./state";
 import { swapQuoteAtom, swapStateAtom, swapStatusAtom } from "./state/atoms";
 
+const ValidationMessages: Record<string, string> = {
+  NoSellAssetSelected: "Select a token to sell",
+  NoBuyAssetSelected: "Select a token to buy",
+  SwapModeNone: "Enter an amount to swap",
+  SellAmountIsZero: "Calculating amount to sell",
+  BuyAmountIsZero: "Calculating amount to buy",
+  SellAmountExceedsBalance: "Insufficient balance",
+  NoWalletConnected: "Connect Keplr Wallet",
+  Ok: "Review",
+};
+
 const keplr = new KeplrWalletManager();
 
 export const SwapCalculations = (): JSX.Element => {
@@ -307,7 +318,7 @@ const SwapCalculationsFooter = ({
   // Quote cache, prevents blinking when quote is temporarily undefined
   const lastValidQuoteRef = useRef<typeof quote>();
   useEffect(() => {
-    if (quote !== undefined) {
+    if (typeof quote !== "undefined") {
       lastValidQuoteRef.current = quote;
     }
   }, [quote]);
@@ -339,15 +350,4 @@ const SwapCalculationsFooter = ({
       </Stack>
     </Stack>
   );
-};
-
-const ValidationMessages: Record<string, string> = {
-  NoSellAssetSelected: "Select a token to sell",
-  NoBuyAssetSelected: "Select a token to buy",
-  SwapModeNone: "Enter an amount to swap",
-  SellAmountIsZero: "Calculating amount to sell",
-  BuyAmountIsZero: "Calculating amount to buy",
-  SellAmountExceedsBalance: "Insufficient balance",
-  NoWalletConnected: "Connect Keplr Wallet",
-  Ok: "Review",
 };

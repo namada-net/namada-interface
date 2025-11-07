@@ -54,8 +54,18 @@ const isSwapResponseSellOk = (
 
 export const SLIPPAGE = 0.005;
 
+export type FetchQuoteParams =
+  | {
+      tokenIn: string;
+      tokenOutDenom: string;
+    }
+  | {
+      tokenOut: string;
+      tokenInDenom: string;
+    };
+
 export const fetchQuote = async (
-  params: Record<string, string>
+  params: FetchQuoteParams
 ): Promise<SwapQuote> => {
   const quote = await fetch(
     "https://sqs.osmosis.zone/router/quote?" +

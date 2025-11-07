@@ -14,7 +14,7 @@ import { KeplrWalletManager } from "integrations/Keplr";
 import { getAssetImageUrl } from "integrations/utils";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { toDisplayAmount } from "utils";
 import { usePerformOsmosisSwapTx } from "./hooks/usePerformOsmosisSwapTx";
@@ -42,8 +42,8 @@ export const SwapReview = (): JSX.Element => {
   ];
 
   invariant(quote, "Quote is required");
-  invariant(swapState.sellAmount, "Swap state is required");
-  invariant(swapState.buyAmount, "Swap state is required");
+  invariant(swapState.sellAmount, "Swap sell amount is required");
+  invariant(swapState.buyAmount, "Swap buy amount is required");
 
   // Global state
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
@@ -84,7 +84,9 @@ export const SwapReview = (): JSX.Element => {
   });
 
   // We stop the ledger status check when the transfer is in progress
-  setLedgerStatusStop(["Building", "AwaitingSignature"].includes(status.t));
+  useEffect(() => {
+    setLedgerStatusStop(["Building", "AwaitingSignature"].includes(status.t));
+  }, [status.t]);
 
   return (
     <>
@@ -202,18 +204,12 @@ export const SwapReview = (): JSX.Element => {
             )}
           </div>
         )}
-        {["Building", "AwaitingSignature", "Broadcasting"].includes(
-          status.t
-        ) && (
+        {["Building", "AwaitingSignature", "Broadcasting"].includes(status.t) ?
           <CurrentStatus
             status={statusMessages[status.t].title}
             explanation={statusMessages[status.t].description}
           />
-        )}
-        {!["Building", "AwaitingSignature", "Broadcasting"].includes(
-          status.t
-        ) && (
-          <ActionButton
+        : <ActionButton
             outlineColor="yellow"
             backgroundColor="transparent"
             backgroundHoverColor="yellow"
@@ -223,7 +219,7 @@ export const SwapReview = (): JSX.Element => {
           >
             Back
           </ActionButton>
-        )}
+        }
       </Stack>
     </>
   );

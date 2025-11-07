@@ -54,3 +54,13 @@ export const filterAvailableAssetsWithBalance = (
     return previous;
   }, {});
 };
+
+export const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
+  if (typeof asset !== "undefined") {
+    for (const { denom, exponent } of asset.denom_units) {
+      if (denom === asset.display) {
+        return exponent;
+      }
+    }
+  }
+};

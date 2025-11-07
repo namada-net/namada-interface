@@ -5,9 +5,9 @@ import { TokenAmountCard } from "App/Common/TokenAmountCard";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { Asset } from "types";
+import { amountMaxDecimalPlaces } from "utils/assets";
 
 export type SwapSourceProps = {
-  walletAddress?: string;
   asset?: Asset;
   isLoadingAssets?: boolean;
   isSubmitting?: boolean;
@@ -15,19 +15,8 @@ export type SwapSourceProps = {
   amount?: BigNumber;
   availableAmount?: BigNumber;
   availableAmountMinusFees?: BigNumber;
-  onChangeAmount?: (amount: BigNumber | undefined) => void;
+  onChangeAmount?: (amount?: BigNumber) => void;
   label?: string;
-};
-
-const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
-  if (typeof asset !== "undefined") {
-    for (const { denom, exponent } of asset.denom_units) {
-      if (denom === asset.display) {
-        return exponent;
-      }
-    }
-  }
-  return;
 };
 
 export const SwapSource = ({
