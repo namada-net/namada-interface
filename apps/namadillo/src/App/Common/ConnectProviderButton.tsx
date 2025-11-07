@@ -3,11 +3,13 @@ import { ActionButton } from "@namada/components";
 type ConnectProviderButtonProps = {
   onClick?: () => void;
   disabled?: boolean;
+  text?: string;
 };
 
 export const ConnectProviderButton = ({
   onClick,
   disabled,
+  text,
 }: ConnectProviderButtonProps): JSX.Element => {
   return (
     <ActionButton
@@ -18,7 +20,7 @@ export const ConnectProviderButton = ({
       size="xs"
       backgroundColor="white"
     >
-      Select Address
+      {text || "Select Address"}
     </ActionButton>
   );
 };

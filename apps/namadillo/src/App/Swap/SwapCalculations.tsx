@@ -17,6 +17,7 @@ import { useAvailableAmountMinusFees } from "hooks/useAvailableAmountMinusFee";
 import { useWalletManager } from "hooks/useWalletManager";
 import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
+import { getChainFromAddress } from "integrations/utils";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { NamadaAsset } from "types";
@@ -67,7 +68,7 @@ export const SwapCalculations = (): JSX.Element => {
 
   useSwapSimulation();
 
-  const { walletAddress, connectToChainId, registry } = useWalletManager(keplr);
+  const { walletAddress, connectToChainId } = useWalletManager(keplr);
 
   // Derived state
   const { sellAsset, buyAsset } = swapState;
@@ -184,19 +185,16 @@ export const SwapCalculations = (): JSX.Element => {
   );
 
   useEffect(() => {
-    // This prevents button flash
+    // This prevents button flash and makes sure that we are connected to osmosis
     const handler = setTimeout(() => {
-      setShowConnectToWalletButton(!walletAddress);
+      const chain = getChainFromAddress(walletAddress || "");
+      setShowConnectToWalletButton(chain?.chain_id !== "osmosis-1");
     }, 500);
 
     return () => clearTimeout(handler);
   }, [walletAddress]);
 
   const onChangeWallet = useCallback((): void => {
-    if (registry) {
-      connectToChainId(registry.chain.chain_id);
-      return;
-    }
     connectToChainId("osmosis-1");
   }, []);
 
@@ -218,6 +216,7 @@ export const SwapCalculations = (): JSX.Element => {
           {showConnectToWalletButton && (
             <div className="absolute top-4 right-4 h-[30px]">
               <ConnectProviderButton
+                text="Connect to Osmosis"
                 onClick={() => {
                   setWalletSelectorModalOpen(true);
                 }}
