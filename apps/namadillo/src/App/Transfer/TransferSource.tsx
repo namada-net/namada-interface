@@ -10,6 +10,7 @@ import { wallets } from "integrations";
 import { useState } from "react";
 import { GoCheck } from "react-icons/go";
 import { Address } from "types";
+import { amountMaxDecimalPlaces } from "utils/assets";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 import { isShieldedAddress, isTransparentAddress } from "./common";
@@ -28,17 +29,6 @@ export type TransferSourceProps = {
   openAssetSelector?: () => void;
   openProviderSelector?: () => void;
   onChangeAmount?: (amount: BigNumber | undefined) => void;
-};
-
-const amountMaxDecimalPlaces = (asset?: Asset): number | undefined => {
-  if (typeof asset !== "undefined") {
-    for (const { denom, exponent } of asset.denom_units) {
-      if (denom === asset.display) {
-        return exponent;
-      }
-    }
-  }
-  return undefined;
 };
 
 const getWalletIcon = (
