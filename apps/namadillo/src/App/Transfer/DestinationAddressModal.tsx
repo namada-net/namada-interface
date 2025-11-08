@@ -107,10 +107,12 @@ export const DestinationAddressModal = ({
         : getChainImageUrl(getChainFromAddress(keplrAddress ?? "")),
       type: "keplr",
     });
+  const addressOptionsAddresses = addressOptions.map((addr) => addr.address);
 
   // Build recent addresses options
-  const recentAddressOptions: AddressOption[] = recentAddresses.map(
-    (recent) => ({
+  const recentAddressOptions: AddressOption[] = recentAddresses
+    .filter((addresses) => !addressOptionsAddresses.includes(addresses.address))
+    .map((recent) => ({
       id: `recent-${recent.address}`,
       label: recent.label || getAddressLabel(recent.address, recent.type),
       address: recent.address,
@@ -119,8 +121,7 @@ export const DestinationAddressModal = ({
         : recent.type === "transparent" ? namadaTransparentIcon
         : getChainImageUrl(getChainFromAddress(recent.address ?? "")), // fallback for IBC
       type: recent.type,
-    })
-  );
+    }));
 
   const validateAddress = (address: string): ValidationResult => {
     // Check if address is empty

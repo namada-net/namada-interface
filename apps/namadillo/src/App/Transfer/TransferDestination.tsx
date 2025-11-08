@@ -154,6 +154,16 @@ export const TransferDestination = ({
     : isTransparentAddress(destinationAddress ?? "") ? "transparent"
     : "ibc";
 
+  const getDestinationAddressLabel = (): string => {
+    if (!destinationAddress) return "";
+    if (isIbcAddress(destinationAddress ?? "")) return "Keplr";
+    const shieldedAddress = shieldedAccount?.address;
+    const transparentAddress = transparentAccount?.address;
+    if ([shieldedAddress, transparentAddress].includes(destinationAddress))
+      return alias ?? "";
+    return "Custom";
+  };
+
   return (
     <>
       <div
@@ -232,7 +242,7 @@ export const TransferDestination = ({
                     <div className="flex flex-col ml-4">
                       <div className="flex flex-col">
                         <span className="text-neutral-500 text-left font-normal text-xs">
-                          {isIbcAddress(destinationAddress) ? "Keplr" : alias}
+                          {getDestinationAddressLabel()}
                         </span>
                         <span className="text-white text-sm font-normal">
                           {shortenAddress(destinationAddress, 15, 15)}
