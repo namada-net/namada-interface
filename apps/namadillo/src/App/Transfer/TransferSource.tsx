@@ -68,6 +68,12 @@ const getWalletIcon = (
   }
 };
 
+const getSourceAddress = (address: string): string => {
+  if (isShieldedAddress(address))
+    return `${address.slice(0, address.length / 2)}\n${address.slice(address.length / 2)}`;
+  return address;
+};
+
 export const TransferSource = ({
   isLoadingAssets,
   isSubmitting,
@@ -111,7 +117,7 @@ export const TransferSource = ({
                 className="w-7 h-7"
               />
               <Tooltip position="top" className="z-50">
-                {sourceAddress}
+                {getSourceAddress(sourceAddress)}
               </Tooltip>
             </div>
           </div>
