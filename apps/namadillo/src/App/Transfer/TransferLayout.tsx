@@ -1,17 +1,11 @@
 import { Panel } from "@namada/components";
 import { NavigationFooter } from "App/AccountOverview/NavigationFooter";
 import { ConnectPanel } from "App/Common/ConnectPanel";
-import { PageWithSidebar } from "App/Common/PageWithSidebar";
 import { IbcTransfer } from "App/Ibc/IbcTransfer";
 import { IbcWithdraw } from "App/Ibc/IbcWithdraw";
-import { LearnAboutIbc } from "App/Ibc/LearnAboutIbc";
-import { Sidebar } from "App/Layout/Sidebar";
-import { LearnAboutMasp } from "App/Masp/LearnAboutMasp";
 import { MaspShield } from "App/Masp/MaspShield";
 import { MaspUnshield } from "App/Masp/MaspUnshield";
-import { LearnAboutTransfer } from "App/NamadaTransfer/LearnAboutTransfer";
 import { NamadaTransfer } from "App/NamadaTransfer/NamadaTransfer";
-import { MaspAssetRewards } from "App/Sidebars/MaspAssetRewards";
 import { allDefaultAccountsAtom, defaultAccountAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance";
 import { connectedWalletsAtom } from "atoms/integrations";
@@ -214,32 +208,10 @@ export const TransferLayout: React.FC = () => {
     );
   };
 
-  // Render sidebar based on transfer type
-  const renderSidebar = (): JSX.Element => {
-    const isIbcTransfer =
-      transferType === "ibc-deposit" || transferType === "ibc-withdraw";
-    const isMaspTransfer =
-      transferType === "shield" || transferType === "unshield";
-
-    if (isIbcTransfer) return <LearnAboutIbc />;
-    if (isMaspTransfer) {
-      return (
-        <>
-          <MaspAssetRewards />
-          <LearnAboutMasp />
-        </>
-      );
-    }
-    return <LearnAboutTransfer />;
-  };
-
   return (
-    <PageWithSidebar>
-      <div className="flex flex-col min-h-full">
-        <div className="flex flex-1">{renderContent()}</div>
-        <NavigationFooter className="mt-2 flex-none h-16" />
-      </div>
-      <Sidebar>{renderSidebar()}</Sidebar>
-    </PageWithSidebar>
+    <div className="flex flex-col min-h-full">
+      <div className="flex flex-1">{renderContent()}</div>
+      <NavigationFooter className="mt-2 flex-none h-16" />
+    </div>
   );
 };
