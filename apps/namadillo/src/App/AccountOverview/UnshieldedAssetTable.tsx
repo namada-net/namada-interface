@@ -112,7 +112,7 @@ const TransparentTokensTable = ({
             <div className="relative group/tooltip">
               <ActionButton
                 size="xs"
-                href={`${routes.shield}?${params.asset}=${asset.symbol}&${params.source}=${destinationAddress}&${params.destination}=${shieldedAddress}`}
+                href={`${routes.transfer}?${params.asset}=${asset.symbol}&${params.source}=${destinationAddress}&${params.destination}=${shieldedAddress}`}
               >
                 Shield
               </ActionButton>
@@ -135,7 +135,7 @@ const TransparentTokensTable = ({
               <span className="text-xs">NAM Transfer Locked</span>
             : [
                 {
-                  url: `${routes.transfer}?${params.asset}=${address}&${params.shielded}=0`,
+                  url: `${routes.transfer}?${params.asset}=${asset.symbol}&${params.source}=${destinationAddress}`,
                   icon: <IoSwapHorizontal className="h-[20px] w-[20px]" />,
                 },
               ].map(({ url, icon }) => (

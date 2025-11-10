@@ -146,7 +146,7 @@ export const ShieldedFungibleTable = ({
           </ActionButton>
           <div key={`swap-${address}`} className="relative group/tooltip mr-5">
             <Link
-              to={`${routes.transfer}?${params.asset}=${address}&${params.shielded}=0`}
+              to={`${routes.transfer}?${params.asset}=${asset.symbol}&${params.source}=${shieldedAddress}`}
               className={twMerge(
                 "bg-black rounded-full w-10 h-10 flex items-center justify-center p-0",
                 "hover:bg-white hover:text-black transition-all duration-300"
