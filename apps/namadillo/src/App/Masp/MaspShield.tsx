@@ -147,7 +147,7 @@ export const MaspShield = ({
 
   return (
     <Panel className="rounded-sm flex flex-col flex-1 py-9">
-      <header className="flex flex-col text-yellow items-center text-center mb-8 gap-6">
+      <header className="text-yellow text-center mb-8 gap-6">
         Shield Assets
       </header>
       <TransferModule
@@ -177,6 +177,7 @@ export const MaspShield = ({
         assetSelectorModalOpen={assetSelectorModalOpen}
         setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
+      <h4>Looking to Unshield?</h4>
     </Panel>
   );
 };
