@@ -145,9 +145,7 @@ export const IbcTransfer = ({
 
   return (
     <div className="relative min-h-[600px]">
-      <header className="text-yellow text-center mb-8 gap-6">
-        IBC Deposit Assets
-      </header>
+      <header className="text-center mb-8 gap-6">IBC Deposit</header>
       <TransferModule
         source={{
           selectedAssetWithAmount,

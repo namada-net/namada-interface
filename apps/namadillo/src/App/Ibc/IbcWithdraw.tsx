@@ -322,9 +322,7 @@ export const IbcWithdraw = ({
 
   return (
     <div className="relative min-h-[600px]">
-      <header className="text-yellow text-center mb-8 gap-6">
-        IBC Withdraw Assets
-      </header>
+      <header className="text-center mb-8 gap-6">IBC Withdraw</header>
       <TransferModule
         source={{
           address: sourceAddress,
