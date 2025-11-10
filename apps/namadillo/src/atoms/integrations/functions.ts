@@ -266,3 +266,26 @@ export const getNamadaIbcInfo = (isHousefire: boolean): IBCInfo[] => {
 
   return ibcInfo;
 };
+
+export const getCounterpartyChainName = (asset: Asset): string | undefined => {
+  const chainName = asset.traces?.find((trace) => trace.type === "ibc")
+    ?.counterparty.chain_name;
+
+  return chainName;
+};
+
+export const getCorrespondingIbcAsset = (
+  asset: NamadaAsset,
+  ibcAssets: Asset[]
+): Asset | undefined => {
+  const assets = ibcAssets.filter((assets) => assets.symbol === asset.symbol);
+
+  if (assets.length === 1) {
+    return assets[0];
+  } else {
+    const chainName = getCounterpartyChainName(asset);
+    return assets.find(
+      (ibcAsset) => getCounterpartyChainName(ibcAsset) === chainName
+    );
+  }
+};

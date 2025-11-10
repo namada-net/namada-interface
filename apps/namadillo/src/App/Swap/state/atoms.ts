@@ -4,6 +4,7 @@
 //
 import {
   getChainRegistryByChainId,
+  getCorrespondingIbcAsset,
   namadaRegistryChainAssetsMapAtom,
 } from "atoms/integrations";
 import BigNumber from "bignumber.js";
@@ -156,12 +157,8 @@ export const swapQuoteAtom = atomWithQuery((get) => {
       invariant(sellAsset, "Sell asset not found");
       invariant(buyAsset, "Buy asset not found");
 
-      const fromOsmosis = osmosisAssets.find(
-        (assets) => assets.symbol === sellAsset.symbol
-      );
-      const toOsmosis = osmosisAssets.find(
-        (assets) => assets.symbol === buyAsset.symbol
-      );
+      const fromOsmosis = getCorrespondingIbcAsset(sellAsset, osmosisAssets);
+      const toOsmosis = getCorrespondingIbcAsset(buyAsset, osmosisAssets);
 
       invariant(fromOsmosis, "From asset is not found in Osmosis assets");
       invariant(toOsmosis, "To asset is not found in Osmosis assets");

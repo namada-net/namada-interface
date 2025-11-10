@@ -52,7 +52,7 @@ const isSwapResponseSellOk = (
   return typeof (response as SwapResponseSellOk).amount_out === "string";
 };
 
-export const SLIPPAGE = 0.005;
+export const SLIPPAGE = 0.001;
 
 export type FetchQuoteParams =
   | {
