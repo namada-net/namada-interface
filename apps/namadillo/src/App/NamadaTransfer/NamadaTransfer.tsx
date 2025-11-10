@@ -18,7 +18,6 @@ import { createTransferDataFromNamada } from "lib/transactions";
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AssetWithAmountAndChain } from "types";
-import { NamadaTransferTopHeader } from "./NamadaTransferTopHeader";
 
 interface NamadaTransferProps {
   sourceAddress: string;
@@ -165,13 +164,8 @@ export const NamadaTransfer = ({
 
   return (
     <Panel className="min-h-[600px] rounded-sm flex flex-col flex-1 py-9">
-      <header className="flex flex-col items-center text-center mb-8 gap-6">
-        <NamadaTransferTopHeader
-          isSourceShielded={isSourceShielded}
-          isDestinationShielded={
-            destinationAddress ? isTargetShielded : undefined
-          }
-        />
+      <header className="flex flex-col text-yellow items-center text-center mb-8 gap-6">
+        {`${isSourceShielded ? "Shielded" : "Transparent"} Transfer Assets`}
       </header>
       <TransferModule
         source={{

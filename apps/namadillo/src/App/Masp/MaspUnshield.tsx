@@ -1,6 +1,5 @@
 import { Panel } from "@namada/components";
 import { MaspSyncCover } from "App/Common/MaspSyncCover";
-import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { lastCompletedShieldedSyncAtom } from "atoms/balance/atoms";
@@ -133,11 +132,8 @@ export const MaspUnshield = ({
 
   return (
     <Panel className="relative rounded-sm flex flex-col flex-1 pt-9">
-      <header className="flex flex-col items-center text-center mb-8 gap-6">
-        <NamadaTransferTopHeader
-          isSourceShielded={true}
-          isDestinationShielded={false}
-        />
+      <header className="flex flex-col text-yellow items-center text-center mb-8 gap-6">
+        Unshield Assets
       </header>
       <TransferModule
         source={{

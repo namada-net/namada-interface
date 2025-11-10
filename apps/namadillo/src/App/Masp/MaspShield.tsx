@@ -1,6 +1,5 @@
 import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
-import { NamadaTransferTopHeader } from "App/NamadaTransfer/NamadaTransferTopHeader";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -148,11 +147,8 @@ export const MaspShield = ({
 
   return (
     <Panel className="rounded-sm flex flex-col flex-1 py-9">
-      <header className="flex flex-col items-center text-center mb-8 gap-6">
-        <NamadaTransferTopHeader
-          isSourceShielded={false}
-          isDestinationShielded={true}
-        />
+      <header className="flex flex-col text-yellow items-center text-center mb-8 gap-6">
+        Shield Assets
       </header>
       <TransferModule
         source={{
