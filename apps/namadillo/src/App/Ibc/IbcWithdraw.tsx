@@ -44,7 +44,6 @@ import {
   toDisplayAmount,
   useTransactionEventListener,
 } from "utils";
-import { IbcTopHeader } from "./IbcTopHeader";
 
 interface IbcWithdrawProps {
   sourceAddress: string;
@@ -323,8 +322,8 @@ export const IbcWithdraw = ({
 
   return (
     <div className="relative min-h-[600px]">
-      <header className="flex flex-col items-center text-center mb-8 gap-6">
-        <IbcTopHeader type="namToIbc" isShielded={shielded} />
+      <header className="flex flex-col text-yellow items-center text-center mb-8 gap-6">
+        IBC Withdraw Assets
       </header>
       <TransferModule
         source={{
