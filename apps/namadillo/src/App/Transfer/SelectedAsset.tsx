@@ -1,4 +1,4 @@
-import { SkeletonLoading } from "@namada/components";
+import { SkeletonLoading, Tooltip } from "@namada/components";
 import clsx from "clsx";
 import { getAssetImageUrl } from "integrations/utils";
 import { GoChevronDown } from "react-icons/go";
@@ -53,24 +53,29 @@ export const SelectedAsset = ({
         </span>
       )}
       {asset && (
-        <span className={selectorClassList}>
-          <img
-            className={clsx(
-              "w-8 aspect-square object-cover select-none",
-              "object-center bg-neutral-800 rounded-full"
-            )}
-            alt={`${asset.name} image`}
-            src={getAssetImageUrl(asset)}
-          />
-          <span className="flex items-center gap-1 text-md">
-            {asset.symbol}
-            {!isDisabled && (
-              <i className="text-sm">
-                <GoChevronDown />
-              </i>
-            )}
+        <div className="relative group/tooltip">
+          <Tooltip position="top" className="z-50">
+            {asset.address}
+          </Tooltip>
+          <span className={selectorClassList}>
+            <img
+              className={clsx(
+                "w-8 aspect-square object-cover select-none",
+                "object-center bg-neutral-800 rounded-full"
+              )}
+              alt={`${asset.name} image`}
+              src={getAssetImageUrl(asset)}
+            />
+            <span className="flex items-center gap-1 text-md">
+              {asset.symbol}
+              {!isDisabled && (
+                <i className="text-sm">
+                  <GoChevronDown />
+                </i>
+              )}
+            </span>
           </span>
-        </span>
+        </div>
       )}
     </button>
   );
