@@ -1,5 +1,6 @@
 import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
+import { params, routes } from "App/routes";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -14,8 +15,8 @@ import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AssetWithAmountAndChain } from "types";
-
 interface MaspShieldProps {
   sourceAddress: string;
   setSourceAddress: (address?: string) => void;
@@ -51,6 +52,9 @@ export const MaspShield = ({
   // DERIVED VALUES
   const transparentAddress = defaultAccounts.data?.find(
     (account) => account.type !== AccountType.ShieldedKeys
+  )?.address;
+  const shieldedAddress = defaultAccounts.data?.find(
+    (account) => account.type === AccountType.ShieldedKeys
   )?.address;
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
@@ -177,7 +181,16 @@ export const MaspShield = ({
         assetSelectorModalOpen={assetSelectorModalOpen}
         setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
-      <h4>Looking to Unshield?</h4>
+      <div className="flex flex-row font-normal justify-center mt-10 gap-2">
+        <h4>Looking to Unshield tokens?</h4>
+        <Link
+          className="text-yellow underline"
+          to={`${routes.transfer}?${params.source}=${shieldedAddress || ""}&${params.destination}=${transparentAddress}`}
+          title={`View pending transactions`}
+        >
+          Click here.
+        </Link>
+      </div>
     </Panel>
   );
 };
