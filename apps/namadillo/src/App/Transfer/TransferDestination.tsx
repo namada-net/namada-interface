@@ -125,7 +125,8 @@ export const TransferDestination = ({
     : destinationAddress;
 
   const isShieldedTransfer =
-    isShieldedNamAddress(sourceAddress ?? "") && isShieldedAddress;
+    isShieldedNamAddress(sourceAddress ?? "") &&
+    isShieldedNamAddress(destinationAddress ?? "");
   const isShieldingTransfer =
     !isShieldedNamAddress(sourceAddress ?? "") &&
     isShieldedNamAddress(destinationAddress ?? "");
@@ -150,20 +151,20 @@ export const TransferDestination = ({
         {!isSubmitting && (
           <div>
             <div className="flex justify-between items-center mb-5">
-              {isShieldedTransfer ||
-                (isShieldingTransfer && (
-                  <div className="relative w-fit group/tooltip ml-auto">
-                    <img
-                      src={shieldedEye}
-                      alt="Shielded Logo"
-                      className="w-5 mb-2 select-none cursor-pointer"
-                    />
-                    <ShieldedPropertiesTooltip
-                      sourceAddress={sourceAddress}
-                      destinationAddress={destinationAddress}
-                    />
-                  </div>
-                ))}
+              <h4 className="text-neutral-500">Destination</h4>
+              {(isShieldedTransfer || isShieldingTransfer) && (
+                <div className="relative w-fit group/tooltip ml-auto">
+                  <img
+                    src={shieldedEye}
+                    alt="Shielded Logo"
+                    className="w-5 mb-2 select-none cursor-pointer"
+                  />
+                  <ShieldedPropertiesTooltip
+                    sourceAddress={sourceAddress}
+                    destinationAddress={destinationAddress}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="mt-3">
