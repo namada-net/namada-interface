@@ -1,7 +1,5 @@
 import { SidebarMenuItem } from "App/Common/SidebarMenuItem";
-import { ReceiveIcon } from "App/Icons/ReceiveIcon";
 import { ShieldIcon } from "App/Icons/ShieldIcon";
-import { TransferIcon } from "App/Icons/TransferIcon";
 import { routes } from "App/routes";
 import { applicationFeaturesAtom } from "atoms/settings";
 import { useAtomValue } from "jotai";
@@ -9,8 +7,9 @@ import { AiFillHome } from "react-icons/ai";
 import { BsDiscord, BsTwitterX } from "react-icons/bs";
 import { FaVoteYea } from "react-icons/fa";
 import { FaBug } from "react-icons/fa6";
-import { GoStack } from "react-icons/go";
-import { MdOutlineKeyboardBackspace } from "react-icons/md";
+import { GoHistory, GoStack } from "react-icons/go";
+import { IoSwapHorizontal } from "react-icons/io5";
+import { LuArrowDownToLine } from "react-icons/lu";
 import { Link } from "react-router-dom";
 import { DISCORD_URL, TWITTER_URL } from "urls";
 
@@ -40,7 +39,7 @@ export const Navigation = (): JSX.Element => {
     },
     {
       label: "Transfer",
-      icon: <TransferIcon />,
+      icon: <IoSwapHorizontal />,
       url:
         features.maspEnabled || features.namTransfersEnabled ?
           routes.transfer
@@ -48,12 +47,12 @@ export const Navigation = (): JSX.Element => {
     },
     {
       label: "Receive",
-      icon: <ReceiveIcon />,
+      icon: <LuArrowDownToLine />,
       url: routes.receive,
     },
     {
       label: "History",
-      icon: <MdOutlineKeyboardBackspace />,
+      icon: <GoHistory />,
       url:
         features.namTransfersEnabled || features.ibcTransfersEnabled ?
           routes.history
