@@ -179,9 +179,10 @@ export const AddressDropdown = ({
         ...connectedWallets,
         [keplr.key]: true,
       }));
-      // Fetch the Keplr address for the correct chain after successful connection
       try {
-        await fetchKeplrAddressForChain(keplrInstance);
+        // Forces a connect to Keplr and still makes a user select the asset
+        const key = await keplrInstance.getKey("noble-1");
+        onSelectAddress?.(key.bech32Address);
       } catch (error) {
         console.error("Failed to fetch Keplr address after connection:", error);
       }
