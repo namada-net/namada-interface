@@ -12,13 +12,11 @@ import {
   isTransparentAddress,
 } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
-import { connectedWalletsAtom } from "atoms/integrations";
 import { getAddressLabel } from "atoms/transfer/functions";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { TransactionFeeProps } from "hooks/useTransactionFee";
 import { wallets } from "integrations";
-import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
 import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
@@ -51,7 +49,6 @@ type TransferDestinationProps = {
   sourceAsset: Asset | undefined;
   onChangeAddress?: (address: Address) => void;
   onChangeMemo?: (address: string) => void;
-  setDestinationAddress?: (address: string) => void;
 };
 
 export const TransferDestination = ({
@@ -67,14 +64,12 @@ export const TransferDestination = ({
   sourceAddress,
   memo,
   sourceAsset,
-  setDestinationAddress,
+  onChangeAddress,
   onChangeMemo,
 }: TransferDestinationProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const location = useLocation();
-  const connectedWallets = useAtomValue(connectedWalletsAtom);
-  const keplr = new KeplrWalletManager();
 
   const isIbcTransfer = isIbcAddress(sourceAddress ?? "");
   const changeFeeEnabled = !isIbcTransfer;
@@ -99,36 +94,24 @@ export const TransferDestination = ({
   };
 
   const handleSelectAddress = useCallback(
-    async (selectedAddress: Address): Promise<void> => {
-      const isIbcAsset = !isNamadaAddress(selectedAddress);
-      if (isIbcAsset) {
-        await keplr.connectAllKeplrChains();
-      }
-      setDestinationAddress?.(selectedAddress);
-    },
-    [keplr, setDestinationAddress]
+    (selectedAddress: Address): void => onChangeAddress?.(selectedAddress),
+    [onChangeAddress]
   );
 
   const isShieldingTransaction =
     routes.shield === location.pathname || routes.ibc === location.pathname;
 
-  // Make sure destination address isnt ibc if keplr is not connected
-  useEffect(() => {
-    if (isIbcAddress(destinationAddress ?? "") && !connectedWallets.keplr)
-      setDestinationAddress?.("");
-  }, [connectedWallets.keplr, destinationAddress, setDestinationAddress]);
-
   // Make sure destination address is pre-filled if it's a shielding transaction
   useEffect(() => {
     if (destinationAddress) return;
     if (isShieldingTransaction && shieldedAccount?.address) {
-      setDestinationAddress?.(shieldedAccount?.address ?? "");
+      onChangeAddress?.(shieldedAccount?.address ?? "");
     }
   }, [
     isShieldingTransaction,
     shieldedAccount?.address,
     destinationAddress,
-    setDestinationAddress,
+    onChangeAddress,
   ]);
 
   // Write a customAddress variable that checks if the address doesn't come from our transparent or shielded accounts
