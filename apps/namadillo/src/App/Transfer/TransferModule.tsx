@@ -213,7 +213,6 @@ export const TransferModule = ({
             />
           </i>
           <TransferDestination
-            setDestinationAddress={destination.onChangeAddress}
             isShieldedAddress={isShieldedAddress(destinationAddress)}
             isShieldedTx={isShieldedTx}
             destinationAddress={destinationAddress}
