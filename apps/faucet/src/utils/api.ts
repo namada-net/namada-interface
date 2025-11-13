@@ -38,7 +38,7 @@ export class API {
             new TextDecoder().decode(data.value)
           ) as ErrorResponse;
           // If code 429 is received on any request, rate limiting is blocking
-          // requests from this this IP, so provide a specific message:
+          // requests from this IP, so provide a specific message:
           if (response.code === 429) {
             response.message = "Too many requests! Try again in one hour.";
           }
