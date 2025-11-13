@@ -70,15 +70,21 @@ export const ShieldedPropertiesTooltip = ({
             "Semi-transparent"
           : "Transparent"}
         </span>
-        {transactionType === "shielded" ?
-          <img src={shieldedEye} alt="Shielded" className="w-4 h-4" />
-        : transactionType === "semi-transparent" ?
-          <img
-            src={semiTransparentEye}
-            alt="Semi-transparent"
-            className="w-4 h-4"
-          />
-        : <img src={transparentEye} alt="Transparent" className="w-4 h-4" />}
+        <img
+          src={
+            transactionType === "shielded" ? shieldedEye
+            : transactionType === "semi-transparent" ?
+              semiTransparentEye
+            : transparentEye
+          }
+          alt={
+            transactionType === "shielded" ? "Shielded"
+            : transactionType === "semi-transparent" ?
+              "Semi-transparent"
+            : "Transparent"
+          }
+          className="w-4 h-4"
+        />
       </div>
     );
   }, [transactionType]);
