@@ -173,8 +173,11 @@ export const getRestApiAddressByIndex = (chain: Chain, index = 0): string => {
   return randomRestApi.address;
 };
 
+// This only removes the "transfer/channel-X/" prefix from IBC denom traces
+// ex1: "transfer/channel-0/uatom" => "uatom"
+// ex2: "transfer/channel-1/transfer/channel-750/uusdc" => "transfer/channel-750/uusdc" - NOT SUPPORTED
 export const getDenomFromIbcTrace = (ibcAddress: string): string => {
-  return ibcAddress.replaceAll(/(transfer\/|channel-\d+\/)*/gi, "");
+  return ibcAddress.replace(/transfer\/channel-\d+\//i, "");
 };
 
 export const getChannelFromIbcInfo = (
