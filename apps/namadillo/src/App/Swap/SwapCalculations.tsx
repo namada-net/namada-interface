@@ -19,13 +19,18 @@ import { wallets } from "integrations";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress } from "integrations/utils";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { NamadaAsset } from "types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toDisplayAmount } from "utils";
 import { SwapSource } from "./SwapSource";
 import { useSwapSimulation } from "./hooks/useSwapSimulation";
 import { useSwapValidation } from "./hooks/useSwapValidation";
 import { SwapQuote, SwapState, SwapStatus } from "./state";
-import { swapQuoteAtom, swapStateAtom, swapStatusAtom } from "./state/atoms";
+import {
+  swapMinAmountAtom,
+  swapQuoteAtom,
+  swapStateAtom,
+  swapStatusAtom,
+} from "./state/atoms";
 
 const ValidationMessages: Record<string, string> = {
   NoSellAssetSelected: "Select a token to sell",
@@ -54,6 +59,7 @@ export const SwapCalculations = (): JSX.Element => {
   const [swapState, setSwapState] = useAtom(swapStateAtom);
   const { data: quote } = useAtomValue(swapQuoteAtom);
   const setStatus = useSetAtom(swapStatusAtom);
+  const minAmount = useAtomValue(swapMinAmountAtom);
 
   // Global state
   const sortedAssets = useAtomValue(namadaAssetsSortedAtom);
@@ -111,10 +117,9 @@ export const SwapCalculations = (): JSX.Element => {
         sellAmount: a,
       }));
     } else {
-      setSwapState((s) => ({
+      setSwapState({
         mode: "none",
-        sellAmountPerOneBuy: s.sellAmountPerOneBuy,
-      }));
+      });
     }
   }, []);
 
@@ -126,10 +131,9 @@ export const SwapCalculations = (): JSX.Element => {
         buyAmount: a,
       }));
     } else {
-      setSwapState((s) => ({
+      setSwapState({
         mode: "none",
-        sellAmountPerOneBuy: s.sellAmountPerOneBuy,
-      }));
+      });
     }
   }, []);
 
@@ -141,7 +145,6 @@ export const SwapCalculations = (): JSX.Element => {
           mode: newMode,
           sellAmount: s.buyAmount,
           buyAmount: s.sellAmount,
-          sellAmountPerOneBuy: s.sellAmountPerOneBuy,
         };
       }
 
@@ -240,20 +243,15 @@ export const SwapCalculations = (): JSX.Element => {
           isSubmitting={false}
           label="Buy"
         />
-        {feeProps &&
-          swapState.sellAmountPerOneBuy &&
-          sellAsset &&
-          buyAsset &&
-          tokenPrices && (
-            <SwapCalculationsFooter
-              feeProps={feeProps}
-              sellAmountPerOneBuy={swapState.sellAmountPerOneBuy}
-              selectedAsset={sellAsset}
-              selectedTargetAsset={buyAsset}
-              tokenPrice={tokenPrices[buyAsset.address]}
-              quote={quote}
-            />
-          )}
+        {feeProps && sellAsset && buyAsset && tokenPrices && (
+          <SwapCalculationsFooter
+            feeProps={feeProps}
+            swapState={swapState}
+            minAmount={minAmount}
+            tokenPrice={tokenPrices[buyAsset.address]}
+            quote={quote}
+          />
+        )}
 
         <ActionButton
           outlineColor="yellow"
@@ -299,21 +297,20 @@ export const SwapCalculations = (): JSX.Element => {
 
 type SwapCalculationsFooterProps = {
   feeProps: TransactionFeeProps;
-  sellAmountPerOneBuy: BigNumber;
-  selectedAsset: NamadaAsset;
-  selectedTargetAsset: NamadaAsset;
   tokenPrice: BigNumber;
   quote?: SwapQuote;
+  swapState: SwapState;
+  minAmount?: BigNumber;
 };
 
 const SwapCalculationsFooter = ({
   feeProps,
-  sellAmountPerOneBuy,
-  selectedAsset,
-  selectedTargetAsset,
+  swapState,
   tokenPrice,
   quote,
+  minAmount,
 }: SwapCalculationsFooterProps): JSX.Element => {
+  const { sellAsset, buyAsset } = swapState;
   // Quote cache, prevents blinking when quote is temporarily undefined
   const lastValidQuoteRef = useRef<typeof quote>();
   useEffect(() => {
@@ -323,7 +320,24 @@ const SwapCalculationsFooter = ({
   }, [quote]);
 
   const quoteToUse = quote ?? lastValidQuoteRef.current;
-  if (!quoteToUse) {
+
+  const sellAmountPerOneBuy = useMemo(() => {
+    if (!quoteToUse || !buyAsset || !minAmount) {
+      return;
+    }
+
+    const baseAmount =
+      ["sell", "none"].includes(swapState.mode) ?
+        quoteToUse.amountIn
+      : quoteToUse.amountOut;
+
+    return toDisplayAmount(
+      buyAsset,
+      minAmount.div(toDisplayAmount(buyAsset, baseAmount))
+    );
+  }, [buyAsset?.symbol, quoteToUse]);
+
+  if (!quoteToUse || !sellAmountPerOneBuy || !sellAsset || !buyAsset) {
     return <></>;
   }
 
@@ -338,8 +352,8 @@ const SwapCalculationsFooter = ({
         direction="horizontal"
       >
         <div className="underline">
-          1 {selectedAsset.symbol} ≈ {sellAmountPerOneBuy.toFixed(6)}{" "}
-          {selectedTargetAsset.symbol} (${valFiat.toFixed(6)})
+          1 {sellAsset.symbol} ≈ {sellAmountPerOneBuy.toFixed(6)}{" "}
+          {buyAsset.symbol} (${valFiat.toFixed(6)})
         </div>
         <TransactionFeeButton
           compact={true}

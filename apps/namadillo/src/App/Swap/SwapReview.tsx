@@ -14,20 +14,29 @@ import { KeplrWalletManager } from "integrations/Keplr";
 import { getAssetImageUrl } from "integrations/utils";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { toDisplayAmount } from "utils";
 import { usePerformOsmosisSwapTx } from "./hooks/usePerformOsmosisSwapTx";
 import { useSwapReviewValidation } from "./hooks/useSwapReviewValidation";
 import { statusMessages, SwapStatus } from "./state";
-import { swapQuoteAtom, swapStateAtom, swapStatusAtom } from "./state/atoms";
-import { SLIPPAGE } from "./state/functions";
+import {
+  swapMinAmountAtom,
+  swapQuoteAtom,
+  swapSlippageAtom,
+  swapStateAtom,
+  swapStatusAtom,
+} from "./state/atoms";
 
 const keplr = new KeplrWalletManager();
 export const SwapReview = (): JSX.Element => {
+  const [slippageInput, setSlippageInput] = useState("");
   // Feature state  sanity checks
   const [status, setStatus] = useAtom(swapStatusAtom);
   const swapState = useAtomValue(swapStateAtom);
+  const minAmount = useAtomValue(swapMinAmountAtom);
+  const [{ default: slippage, override: slippageOverride }, setSlippage] =
+    useAtom(swapSlippageAtom);
   const { sellAsset, buyAsset } = swapState;
   const { data: quote } = useAtomValue(swapQuoteAtom);
 
@@ -44,6 +53,7 @@ export const SwapReview = (): JSX.Element => {
   invariant(quote, "Quote is required");
   invariant(swapState.sellAmount, "Swap sell amount is required");
   invariant(swapState.buyAmount, "Swap buy amount is required");
+  invariant(minAmount, "Minimum amount is required");
 
   // Global state
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
@@ -58,7 +68,7 @@ export const SwapReview = (): JSX.Element => {
     buyPrice && buyPrice.times(BigNumber(1).plus(quote.priceImpact));
   const buyAmountFiat =
     buyPriceImpact && buyPriceImpact.times(swapState.buyAmount);
-  const receiveAtLeastDenominated = toDisplayAmount(buyAsset, quote.minAmount);
+  const receiveAtLeastDenominated = toDisplayAmount(buyAsset, minAmount);
 
   const swapFee = quote.effectiveFee
     .times(100)
@@ -76,12 +86,30 @@ export const SwapReview = (): JSX.Element => {
   const { error: _err, performSwap } = usePerformOsmosisSwapTx();
   const onSwap = useCallback(async (): Promise<void> => {
     await performSwap({ localRecoveryAddr: walletAddress });
-  }, [walletAddress]);
+  }, [walletAddress, performSwap]);
 
   const validationResult = useSwapReviewValidation({
     walletAddress,
     ledgerAccountInfo,
   });
+
+  const onSlippageChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      if (val === "" || val.match(/^\d{1}(\.\d{0,1})?$/)) {
+        setSlippageInput(val);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!BigNumber(slippageInput).isNaN()) {
+      setSlippage(BigNumber(slippageInput).div(100));
+    } else {
+      setSlippage(null);
+    }
+  }, [slippageInput]);
 
   // We stop the ledger status check when the transfer is in progress
   useEffect(() => {
@@ -147,13 +175,36 @@ export const SwapReview = (): JSX.Element => {
               </p>
             </ReviewRow>
             <ReviewRow>
-              <div>Slippage tolerance</div>
-              <div>{SLIPPAGE * 100}%</div>
+              <div className="self-center">Slippage tolerance</div>
+              <div className="relative inline-block">
+                <input
+                  type="text"
+                  placeholder={slippage.times(100).toString()}
+                  className={clsx(
+                    "peer h-full pl-3 pr-4 w-16 placeholder-yellow-600 text-yellow text-right bg-transparent",
+                    "outline-none border border-transparent rounded-sm focus:py-2 focus:pr-7 focus:border-yellow transition-all"
+                  )}
+                  onChange={onSlippageChange}
+                  value={slippageInput}
+                />
+                <span
+                  className={clsx(
+                    "absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none peer-focus:right-3 transition-all",
+                    { "text-yellow": !!slippageOverride },
+                    { "text-yellow-600": !slippageOverride }
+                  )}
+                >
+                  %
+                </span>
+              </div>
             </ReviewRow>
             <ReviewRow>
               <div>Receive at least</div>
               <div>
-                {receiveAtLeastDenominated.toString()} {buyAsset.symbol}
+                {receiveAtLeastDenominated
+                  .decimalPlaces(6, BigNumber.ROUND_DOWN)
+                  .toString()}{" "}
+                {buyAsset.symbol}
               </div>
             </ReviewRow>
             {walletAddress && (

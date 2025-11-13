@@ -15,7 +15,7 @@ import { atomWithStorage } from "jotai/utils";
 import debounce from "lodash.debounce";
 import { SwapStorage } from "types";
 import { toBaseAmount } from "utils";
-import { fetchQuote } from "./functions";
+import { fetchQuote, SLIPPAGE } from "./functions";
 import type { SwapState, SwapStatusType } from "./types";
 import { SwapStatus } from "./types";
 
@@ -188,4 +188,28 @@ export const swapQuoteAtom = atomWithQuery((get) => {
       return await fetchQuote(params);
     },
   };
+});
+
+const internalSwapSlippageAtom = atom<{
+  default: BigNumber;
+  override: BigNumber | null;
+}>({ default: BigNumber(SLIPPAGE), override: null });
+
+export const swapSlippageAtom = atom(
+  (get) => get(internalSwapSlippageAtom),
+  (_get, set, slippage: BigNumber | null) => {
+    set(internalSwapSlippageAtom, (s) => ({
+      ...s,
+      override: slippage,
+    }));
+  }
+);
+
+export const swapMinAmountAtom = atom<BigNumber | undefined>((get) => {
+  const quote = get(swapQuoteAtom).data;
+  const slippage = get(swapSlippageAtom);
+  const slippageValue = slippage.override || slippage.default;
+
+  if (!quote) return;
+  return quote.amount.times(BigNumber(1).minus(slippageValue));
 });

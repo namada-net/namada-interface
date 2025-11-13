@@ -23,14 +23,6 @@ export const useSwapSimulation = (): void => {
       invariant(buyAsset, "Buy asset is required for simulation");
       invariant(sellAsset, "Sell asset is required for simulation");
 
-      const baseAmount =
-        swapState.mode === "sell" ? quote.amountIn : quote.amountOut;
-
-      const sellAmountPerOneBuy = toDisplayAmount(
-        buyAsset,
-        quote.minAmount.div(toDisplayAmount(buyAsset, baseAmount))
-      );
-
       const simulateSell =
         swapState.mode === "sell" || swapState.mode === "none";
       const simulateBuy = swapState.mode === "buy";
@@ -40,7 +32,6 @@ export const useSwapSimulation = (): void => {
           setInternalSwapState((s) => ({
             ...s,
             buyAmount: toDisplayAmount(buyAsset, quote.amountOut),
-            sellAmountPerOneBuy,
           }));
         }
       } else if (simulateBuy && buyAsset) {
@@ -48,7 +39,6 @@ export const useSwapSimulation = (): void => {
           setInternalSwapState((s) => ({
             ...s,
             sellAmount: toDisplayAmount(sellAsset, quote.amountIn),
-            sellAmountPerOneBuy,
           }));
         }
       }

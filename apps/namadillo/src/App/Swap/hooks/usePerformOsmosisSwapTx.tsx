@@ -23,7 +23,12 @@ import { NamadaAsset, OsmosisSwapTransactionData, TransferStep } from "types";
 import { TransactionError } from "types/errors";
 import { toBaseAmount } from "utils";
 import { SwapStatus } from "../state";
-import { swapQuoteAtom, swapStateAtom, swapStatusAtom } from "../state/atoms";
+import {
+  swapMinAmountAtom,
+  swapQuoteAtom,
+  swapStateAtom,
+  swapStatusAtom,
+} from "../state/atoms";
 
 // TODO: Should be a different address for housefire
 const SWAP_CONTRACT_ADDRESS =
@@ -50,6 +55,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
   const { buyAmount, sellAmount, buyAsset, sellAsset } =
     useAtomValue(swapStateAtom);
   const quoteQuery = useAtomValue(swapQuoteAtom);
+  const minAmount = useAtomValue(swapMinAmountAtom);
 
   // Global state
   const namadaChain = useAtomValue(chainAtom);
@@ -126,6 +132,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
         invariant(sellAmount, "No sell amount");
         invariant(buyAmount, "No buy amount");
         invariant(sellAsset && buyAsset, "Missing swap assets");
+        invariant(minAmount, "No minimum amount calculated");
 
         const toTrace =
           buyAsset.traces?.find((t) => t.type === "ibc")?.chain.path ||
@@ -154,9 +161,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
           recipient: shieldedAccount.address,
           overflow: transparentAccount.address,
           slippage: {
-            0: BigNumber(quote.minAmount)
-              .integerValue(BigNumber.ROUND_DOWN)
-              .toString(),
+            0: minAmount.integerValue(BigNumber.ROUND_DOWN).toString(),
           },
           localRecoveryAddr,
           route,
@@ -245,6 +250,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
       transparentAccount?.address,
       shieldedAccount?.address,
       feeProps.gasConfig.gasLimit,
+      minAmount,
     ]
   );
 

@@ -609,7 +609,14 @@ export const useTransactionNotifications = (): void => {
           <b>Open the Namada extension to access the refund account.</b>
         </>
       ),
-      details: tx.errorMessage,
+      details: (
+        <>
+          {tx.errorMessage}
+          <br />
+          Liquidity might not be sufficient.{" "}
+          <b>Please try adjusting the allowed slippage.</b>
+        </>
+      ),
       type: "error",
     });
   });

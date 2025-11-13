@@ -70,7 +70,6 @@ export type SwapState = {
   mode: "sell" | "buy" | "none";
   sellAmount?: BigNumber;
   buyAmount?: BigNumber;
-  sellAmountPerOneBuy?: BigNumber;
   sellAsset?: NamadaAsset;
   buyAsset?: NamadaAsset;
 };
@@ -78,7 +77,7 @@ export type SwapState = {
 export type SwapQuote = {
   amountIn: BigNumber;
   amountOut: BigNumber;
-  minAmount: BigNumber;
+  amount: BigNumber;
   effectiveFee: BigNumber;
   priceImpact: BigNumber;
   routes: {

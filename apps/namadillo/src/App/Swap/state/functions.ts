@@ -76,9 +76,9 @@ export const fetchQuote = async (
   );
   const data: SwapResponseOk | SwapResponseError = await quote.json();
   if (isSwapResponseOk(data)) {
-    const minAmount = BigNumber(
+    const amount = BigNumber(
       isSwapResponseSellOk(data) ? data.amount_out : data.amount_in
-    ).times(BigNumber(1).minus(SLIPPAGE));
+    );
     const amountIn = BigNumber(
       isSwapResponseSellOk(data) ? data.amount_in.amount : data.amount_in
     );
@@ -89,7 +89,7 @@ export const fetchQuote = async (
     return {
       amountIn,
       amountOut,
-      minAmount,
+      amount,
       priceImpact: BigNumber(data.price_impact),
       effectiveFee: BigNumber(data.effective_fee),
       routes: data.route.map((hop) => ({
