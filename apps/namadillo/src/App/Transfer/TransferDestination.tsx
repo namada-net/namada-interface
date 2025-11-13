@@ -10,7 +10,6 @@ import { routes } from "App/routes";
 import {
   isIbcAddress,
   isNamadaAddress,
-  isShieldedAddress as isShieldedNamAddress,
   isTransparentAddress,
 } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -124,13 +123,6 @@ export const TransferDestination = ({
       undefined
     : destinationAddress;
 
-  const isShieldedTransfer =
-    isShieldedNamAddress(sourceAddress ?? "") &&
-    isShieldedNamAddress(destinationAddress ?? "");
-  const isShieldingTransfer =
-    !isShieldedNamAddress(sourceAddress ?? "") &&
-    isShieldedNamAddress(destinationAddress ?? "");
-
   const sourceWallet =
     isNamadaAddress(destinationAddress || "") ? wallets.namada : wallets.keplr;
   const addressType =
@@ -162,11 +154,11 @@ export const TransferDestination = ({
           <div>
             <div className="flex justify-between items-center mb-5">
               <h4 className="text-neutral-500">Destination</h4>
-              {(isShieldedTransfer || isShieldingTransfer) && (
+              {sourceAddress && destinationAddress && (
                 <div className="relative w-fit group/tooltip ml-auto">
                   <img
                     src={shieldedEye}
-                    alt="Shielded Logo"
+                    alt="Privacy Info"
                     className="w-5 mb-2 select-none cursor-pointer"
                   />
                   <ShieldedPropertiesTooltip

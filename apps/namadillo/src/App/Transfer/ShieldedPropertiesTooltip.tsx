@@ -1,7 +1,13 @@
 import { Tooltip } from "@namada/components";
+import clsx from "clsx";
 import { useMemo } from "react";
 import { BsEye, BsEyeSlash } from "react-icons/bs";
+import semiTransparentEye from "./assets/semi-transparent-eye.svg";
+import shieldedEye from "./assets/shielded-eye.svg";
+import transparentEye from "./assets/transparent-eye.svg";
 import { isShieldedAddress } from "./common";
+
+type TransactionType = "transparent" | "semi-transparent" | "shielded";
 
 export const ShieldedPropertiesTooltip = ({
   sourceAddress,
@@ -10,6 +16,20 @@ export const ShieldedPropertiesTooltip = ({
   sourceAddress: string | undefined;
   destinationAddress: string | undefined;
 }): JSX.Element => {
+  const isSourceShielded = isShieldedAddress(sourceAddress ?? "");
+  const isDestShielded = isShieldedAddress(destinationAddress ?? "");
+  console.log(isSourceShielded, isDestShielded);
+  // Determine transaction type
+  const transactionType: TransactionType = useMemo(() => {
+    if (isSourceShielded && isDestShielded) {
+      return "shielded";
+    } else if (!isSourceShielded && !isDestShielded) {
+      return "transparent";
+    } else {
+      return "semi-transparent";
+    }
+  }, [isSourceShielded, isDestShielded]);
+
   const visible = useMemo((): JSX.Element => {
     return (
       <span className="flex items-center gap-2">
@@ -28,32 +48,61 @@ export const ShieldedPropertiesTooltip = ({
     );
   }, []);
 
-  const shieldedTransfer =
-    isShieldedAddress(sourceAddress ?? "") &&
-    isShieldedAddress(destinationAddress ?? "");
-  const shieldingTransfer =
-    isShieldedAddress(destinationAddress ?? "") &&
-    !isShieldedAddress(sourceAddress ?? "");
+  // Determine visibility for each property based on transaction type
+  const senderVisible = transactionType !== "shielded" && !isSourceShielded;
+  const recipientVisible = transactionType === "transparent" || !isDestShielded;
+  const assetVisible = transactionType !== "shielded";
+  const amountVisible = transactionType !== "shielded";
+
+  // Transaction type header
+  const transactionTypeHeader = useMemo(() => {
+    return (
+      <div className="flex items-center justify-center gap-2 bg-neutral-800 rounded-sm py-2 px-4">
+        <span
+          className={clsx(
+            "text-sm font-medium",
+            transactionType === "shielded" && "text-yellow-400"
+          )}
+        >
+          {transactionType === "shielded" ?
+            "Shielded"
+          : transactionType === "semi-transparent" ?
+            "Semi-transparent"
+          : "Transparent"}
+        </span>
+        {transactionType === "shielded" ?
+          <img src={shieldedEye} alt="Shielded" className="w-4 h-4" />
+        : transactionType === "semi-transparent" ?
+          <img
+            src={semiTransparentEye}
+            alt="Semi-transparent"
+            className="w-4 h-4"
+          />
+        : <img src={transparentEye} alt="Transparent" className="w-4 h-4" />}
+      </div>
+    );
+  }, [transactionType]);
 
   return (
     <Tooltip position="top" className="z-50 rounded-lg -mt-2">
-      <div className="min-w-[15rem] py-2 space-y-3">
-        <p className="text-white text-sm font-medium">Transaction Privacy:</p>
+      <div className="min-w-[18rem] py-3 space-y-3">
+        {transactionTypeHeader}
+
         <div className="flex w-full items-center justify-between">
           <span className="text-neutral-400 text-sm">Sender address</span>
-          {shieldedTransfer ? hidden : visible}
-        </div>
-        <div className="flex w-full items-center justify-between">
-          <span className="text-neutral-400 text-sm">Recipient address</span>
-          {shieldingTransfer || shieldedTransfer ? hidden : visible}
+          {senderVisible ? visible : hidden}
         </div>
         <div className="flex w-full items-center justify-between">
           <span className="text-neutral-400 text-sm">Asset</span>
-          {shieldedTransfer ? hidden : visible}
+          {assetVisible ? visible : hidden}
         </div>
         <div className="flex w-full items-center justify-between">
           <span className="text-neutral-400 text-sm">Amount</span>
-          {shieldedTransfer ? hidden : visible}
+          {amountVisible ? visible : hidden}
+        </div>
+        <div className="flex w-full items-center justify-between">
+          <span className="text-neutral-400 text-sm">Destination address</span>
+          {recipientVisible ? visible : hidden}
         </div>
       </div>
     </Tooltip>
