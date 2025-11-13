@@ -133,6 +133,7 @@ export const swapStatusAtom = atom<SwapStatusType>(SwapStatus.idle());
 
 export const swapQuoteAtom = atomWithQuery((get) => {
   const swapState = get(internalDebouncedSwapStateAtom);
+  const swapStatus = get(swapStatusAtom);
   const { sellAsset, buyAsset } = swapState;
 
   // TODO: this should be configurable once we support osmosis testnet
@@ -142,15 +143,22 @@ export const swapQuoteAtom = atomWithQuery((get) => {
   //We only want to refetch when sellAmount changes when selling, and buyAmount when buying
   const sellKey =
     swapState.mode === "sell" ?
-      `${swapState.sellAmount}-${swapState.sellAsset?.symbol}`
+      `${swapState.sellAmount}-${swapState.sellAsset?.symbol}-${swapState.buyAsset?.symbol}`
     : "sell";
   const buyKey =
     swapState.mode === "buy" ?
-      `${swapState.buyAmount}-${swapState.buyAsset?.symbol}`
+      `${swapState.buyAmount}-${swapState.buyAsset?.symbol}-${swapState.sellAsset?.symbol}`
     : "buy";
+
+  // We do not want to refetch during the actual swap process,
+  // to not confuse the user with changing quotes
+  const refetchOnStatus = ["Idle", "Review"].includes(swapStatus.t);
 
   return {
     enabled: Boolean(sellAsset && buyAsset),
+    // We are refetching every 5 seconds to keep the quote up to date,
+    // in case someone keeps the swap screen open for a long time
+    refetchInterval: refetchOnStatus && 5000,
     queryKey: ["swapQuote", sellKey, buyKey],
     queryFn: async () => {
       // Sanity checks

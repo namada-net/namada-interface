@@ -22,8 +22,11 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toDisplayAmount } from "utils";
 import { SwapSource } from "./SwapSource";
-import { useSwapSimulation } from "./hooks/useSwapSimulation";
-import { useSwapValidation } from "./hooks/useSwapValidation";
+import {
+  useSwapBuyAmount,
+  useSwapSellAmount,
+  useSwapValidation,
+} from "./hooks";
 import { SwapQuote, SwapState, SwapStatus } from "./state";
 import {
   swapMinAmountAtom,
@@ -60,6 +63,8 @@ export const SwapCalculations = (): JSX.Element => {
   const { data: quote } = useAtomValue(swapQuoteAtom);
   const setStatus = useSetAtom(swapStatusAtom);
   const minAmount = useAtomValue(swapMinAmountAtom);
+  const sellAmount = useSwapSellAmount();
+  const buyAmount = useSwapBuyAmount();
 
   // Global state
   const sortedAssets = useAtomValue(namadaAssetsSortedAtom);
@@ -71,8 +76,6 @@ export const SwapCalculations = (): JSX.Element => {
   const shieldedAccountAddress = useAtomValue(
     defaultShieldedAccountAtom
   )?.address;
-
-  useSwapSimulation();
 
   const { walletAddress, connectToChainId } = useWalletManager(keplr);
 
@@ -88,7 +91,9 @@ export const SwapCalculations = (): JSX.Element => {
     availableAmount
   );
   const validationResult = useSwapValidation({
-    swapState,
+    mode: swapState.mode,
+    sellAmount,
+    buyAmount,
     sellAsset,
     buyAsset,
     availableAmountMinusFees,
@@ -170,7 +175,7 @@ export const SwapCalculations = (): JSX.Element => {
         buyAsset: asset?.address === buyAsset?.address ? sellAsset : s.buyAsset,
       }));
     },
-    [sortedAssets.length, sellAsset?.symbol, sellAsset?.symbol]
+    [sortedAssets.length, sellAsset?.symbol, buyAsset?.symbol]
   );
 
   const onChangeBuySelectedAsset = useCallback(
@@ -211,7 +216,7 @@ export const SwapCalculations = (): JSX.Element => {
             openAssetSelector={() => setSellAssetSelectorModalOpen(true)}
             availableAmount={availableAmount}
             availableAmountMinusFees={availableAmountMinusFees}
-            amount={swapState.sellAmount}
+            amount={sellAmount}
             onChangeAmount={onChangeSellAmount}
             isSubmitting={false}
             label="Sell"
@@ -238,7 +243,7 @@ export const SwapCalculations = (): JSX.Element => {
           isLoadingAssets={false}
           openAssetSelector={() => setBuyAssetSelectorModalOpen(true)}
           // To not show buy amount if sell amount is empty
-          amount={swapState.sellAmount && swapState.buyAmount}
+          amount={sellAmount && buyAmount}
           onChangeAmount={onChangeBuyAmount}
           isSubmitting={false}
           label="Buy"

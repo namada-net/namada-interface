@@ -29,6 +29,8 @@ import {
   swapStateAtom,
   swapStatusAtom,
 } from "../state/atoms";
+import { useSwapBuyAmount } from "./useSwapBuyAmount";
+import { useSwapSellAmount } from "./useSwapSellAmount";
 
 // TODO: Should be a different address for housefire
 const SWAP_CONTRACT_ADDRESS =
@@ -52,8 +54,9 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
 
   // Feature state
   const setStatus = useSetAtom(swapStatusAtom);
-  const { buyAmount, sellAmount, buyAsset, sellAsset } =
-    useAtomValue(swapStateAtom);
+  const { buyAsset, sellAsset } = useAtomValue(swapStateAtom);
+  const sellAmount = useSwapSellAmount();
+  const buyAmount = useSwapBuyAmount();
   const quoteQuery = useAtomValue(swapQuoteAtom);
   const minAmount = useAtomValue(swapMinAmountAtom);
 

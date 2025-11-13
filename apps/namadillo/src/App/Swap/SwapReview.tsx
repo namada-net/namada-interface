@@ -17,7 +17,11 @@ import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import { BsQuestionCircleFill } from "react-icons/bs";
 import { toDisplayAmount } from "utils";
-import { usePerformOsmosisSwapTx } from "./hooks/usePerformOsmosisSwapTx";
+import {
+  usePerformOsmosisSwapTx,
+  useSwapBuyAmount,
+  useSwapSellAmount,
+} from "./hooks";
 import { useSwapReviewValidation } from "./hooks/useSwapReviewValidation";
 import { statusMessages, SwapStatus } from "./state";
 import {
@@ -33,11 +37,12 @@ export const SwapReview = (): JSX.Element => {
   const [slippageInput, setSlippageInput] = useState("");
   // Feature state  sanity checks
   const [status, setStatus] = useAtom(swapStatusAtom);
-  const swapState = useAtomValue(swapStateAtom);
+  const { sellAsset, buyAsset } = useAtomValue(swapStateAtom);
+  const sellAmount = useSwapSellAmount();
+  const buyAmount = useSwapBuyAmount();
   const minAmount = useAtomValue(swapMinAmountAtom);
   const [{ default: slippage, override: slippageOverride }, setSlippage] =
     useAtom(swapSlippageAtom);
-  const { sellAsset, buyAsset } = swapState;
   const { data: quote } = useAtomValue(swapQuoteAtom);
 
   invariant(sellAsset, "Sell asset is required");
@@ -51,8 +56,8 @@ export const SwapReview = (): JSX.Element => {
   ];
 
   invariant(quote, "Quote is required");
-  invariant(swapState.sellAmount, "Swap sell amount is required");
-  invariant(swapState.buyAmount, "Swap buy amount is required");
+  invariant(sellAmount, "Swap sell amount is required");
+  invariant(buyAmount, "Swap buy amount is required");
   invariant(minAmount, "Minimum amount is required");
 
   // Global state
@@ -63,11 +68,10 @@ export const SwapReview = (): JSX.Element => {
     deviceConnected: ledgerStatus.connected,
     errorMessage: ledgerStatus.errorMessage,
   };
-  const sellAmountFiat = sellPrice && sellPrice.times(swapState.sellAmount);
+  const sellAmountFiat = sellPrice && sellPrice.times(sellAmount);
   const buyPriceImpact =
     buyPrice && buyPrice.times(BigNumber(1).plus(quote.priceImpact));
-  const buyAmountFiat =
-    buyPriceImpact && buyPriceImpact.times(swapState.buyAmount);
+  const buyAmountFiat = buyPriceImpact && buyPriceImpact.times(buyAmount);
   const receiveAtLeastDenominated = toDisplayAmount(buyAsset, minAmount);
 
   const swapFee = quote.effectiveFee
@@ -111,6 +115,8 @@ export const SwapReview = (): JSX.Element => {
     }
   }, [slippageInput]);
 
+  const isProcessing = ["Building", "AwaitingSignature"].includes(status.t);
+
   // We stop the ledger status check when the transfer is in progress
   useEffect(() => {
     setLedgerStatusStop(["Building", "AwaitingSignature"].includes(status.t));
@@ -135,7 +141,7 @@ export const SwapReview = (): JSX.Element => {
             <Stack gap={0} className="justify-center grow">
               <Text className="text-sm my-0">Sell</Text>
               <Text className="text-lg my-0">
-                {swapState.sellAmount.toString()} {sellAsset.symbol}
+                {sellAmount.toString()} {sellAsset.symbol}
               </Text>
             </Stack>
             <Text className="my-0 mb-2 self-end">
@@ -159,7 +165,7 @@ export const SwapReview = (): JSX.Element => {
             <Stack gap={0} className="justify-center grow">
               <Text className="text-sm my-0">Buy</Text>
               <Text className="text-lg my-0">
-                {swapState.buyAmount.toString()} {buyAsset.symbol}
+                {buyAmount.toString()} {buyAsset.symbol}
               </Text>
             </Stack>
             <Text className="my-0 mb-2 self-end">
@@ -182,14 +188,17 @@ export const SwapReview = (): JSX.Element => {
                   placeholder={slippage.times(100).toString()}
                   className={clsx(
                     "peer h-full pl-3 pr-4 w-16 placeholder-yellow-600 text-yellow text-right bg-transparent",
-                    "outline-none border border-transparent rounded-sm focus:py-2 focus:pr-7 focus:border-yellow transition-all"
+                    "outline-none border border-transparent rounded-sm focus:py-2 focus:pr-7 focus:border-yellow transition-all",
+                    "disabled:cursor-not-allowed disabled:opacity-50"
                   )}
                   onChange={onSlippageChange}
                   value={slippageInput}
+                  disabled={isProcessing}
                 />
                 <span
                   className={clsx(
                     "absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none peer-focus:right-3 transition-all",
+                    "peer-disabled:opacity-50",
                     { "text-yellow": !!slippageOverride },
                     { "text-yellow-600": !slippageOverride }
                   )}
