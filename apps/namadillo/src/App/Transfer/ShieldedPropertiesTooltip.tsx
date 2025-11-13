@@ -18,7 +18,7 @@ export const ShieldedPropertiesTooltip = ({
 }): JSX.Element => {
   const isSourceShielded = isShieldedAddress(sourceAddress ?? "");
   const isDestShielded = isShieldedAddress(destinationAddress ?? "");
-  console.log(isSourceShielded, isDestShielded);
+
   // Determine transaction type
   const transactionType: TransactionType = useMemo(() => {
     if (isSourceShielded && isDestShielded) {
