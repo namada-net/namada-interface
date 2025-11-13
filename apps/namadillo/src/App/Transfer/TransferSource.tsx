@@ -1,8 +1,11 @@
 import { Asset } from "@chain-registry/types";
 import { AmountInput, Tooltip } from "@namada/components";
+import { copyToClipboard, shortenAddress } from "@namada/utils";
 import BigNumber from "bignumber.js";
 import clsx from "clsx";
 import { wallets } from "integrations";
+import { useState } from "react";
+import { GoCheck } from "react-icons/go";
 import { Address } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
@@ -68,12 +71,6 @@ const getWalletIcon = (
   }
 };
 
-const getSourceAddress = (address: string): string => {
-  if (isShieldedAddress(address))
-    return `${address.slice(0, address.length / 2)}\n${address.slice(address.length / 2)}`;
-  return address;
-};
-
 export const TransferSource = ({
   isLoadingAssets,
   isSubmitting,
@@ -86,10 +83,20 @@ export const TransferSource = ({
   openAssetSelector,
   onChangeAmount,
 }: TransferSourceProps): JSX.Element => {
+  const [isCopied, setIsCopied] = useState(false);
+
   const selectedTokenType =
     isTransparentAddress(sourceAddress ?? "") ? "transparent"
     : isShieldedAddress(sourceAddress ?? "") ? "shielded"
     : "keplr";
+
+  const handleCopyAddress = (): void => {
+    if (sourceAddress) {
+      copyToClipboard(sourceAddress);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 500);
+    }
+  };
 
   return (
     <div
@@ -114,10 +121,17 @@ export const TransferSource = ({
               <img
                 src={getWalletIcon(sourceAddress, selectedTokenType)}
                 alt="Wallet icon"
-                className="w-7 h-7"
+                className="cursor-pointer w-7 h-7"
+                onClick={handleCopyAddress}
+                title="Copy address"
               />
               <Tooltip position="top" className="z-50">
-                {getSourceAddress(sourceAddress)}
+                {isCopied ?
+                  <>
+                    Copied
+                    <GoCheck className="mt-0.5 ml-1 text-green-500" />
+                  </>
+                : shortenAddress(sourceAddress)}
               </Tooltip>
             </div>
           </div>
