@@ -10,6 +10,7 @@ import { routes } from "App/routes";
 import {
   isIbcAddress,
   isNamadaAddress,
+  isShieldedAddress as isShieldedNamAddress,
   isTransparentAddress,
 } from "App/Transfer/common";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -26,7 +27,9 @@ import { useLocation } from "react-router-dom";
 import { Address } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
+import semiTransparentEye from "./assets/semi-transparent-eye.svg";
 import shieldedEye from "./assets/shielded-eye.svg";
+import transparentEye from "./assets/transparent-eye.svg";
 import { CustomAddressForm } from "./CustomAddressForm";
 import { DestinationAddressModal } from "./DestinationAddressModal";
 import { SelectedWallet } from "./SelectedWallet";
@@ -139,6 +142,18 @@ export const TransferDestination = ({
       return alias ?? "";
     return "Custom";
   };
+  // Determine transaction type for eye icon
+  const isSourceShielded = isShieldedNamAddress(sourceAddress ?? "");
+  const isDestShielded = isShieldedNamAddress(destinationAddress ?? "");
+  const transactionType =
+    isSourceShielded && isDestShielded ? "shielded"
+    : !isSourceShielded && !isDestShielded ? "transparent"
+    : "semi-transparent";
+
+  const eyeIcon =
+    transactionType === "shielded" ? shieldedEye
+    : transactionType === "semi-transparent" ? semiTransparentEye
+    : transparentEye;
 
   return (
     <>
@@ -157,7 +172,7 @@ export const TransferDestination = ({
               {sourceAddress && destinationAddress && (
                 <div className="relative w-fit group/tooltip ml-auto">
                   <img
-                    src={shieldedEye}
+                    src={eyeIcon}
                     alt="Privacy Info"
                     className="w-5 mb-2 select-none cursor-pointer"
                   />
