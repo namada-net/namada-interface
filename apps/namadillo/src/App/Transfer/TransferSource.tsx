@@ -135,7 +135,6 @@ export const TransferSource = ({
               "text-center [&_input]:text-center [&_input]:text-3xl [&_input]:bg-transparent",
               "[&_input]:!border-0 [&_input]:px-0"
             )}
-            disabled={!asset}
             value={amount}
             onChange={(e) => onChangeAmount?.(e.target.value)}
             placeholder="Amount"
