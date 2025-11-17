@@ -36,13 +36,74 @@ export const SelectAssetModal = ({
 
   const [filter, setFilter] = useState("");
 
-  const filteredAssets = useMemo(() => {
-    return assets.filter(
+  const { assetsWithBalance, assetsWithoutBalance } = useMemo(() => {
+    const filtered = assets.filter(
       (asset) =>
         asset.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 ||
         asset.symbol.toLowerCase().indexOf(filter.toLowerCase()) >= 0
     );
-  }, [assets, filter]);
+
+    const withBalance: Asset[] = [];
+    const withoutBalance: Asset[] = [];
+
+    filtered.forEach((asset) => {
+      const tokenAddress =
+        ibcTransfer === "deposit" ? asset.base : (asset as NamadaAsset).address;
+
+      const balance = balances?.[tokenAddress];
+      const hasBalance = balance && balance[0].gt(0);
+
+      if (hasBalance) {
+        withBalance.push(asset);
+      } else {
+        withoutBalance.push(asset);
+      }
+    });
+
+    return {
+      assetsWithBalance: withBalance,
+      assetsWithoutBalance: withoutBalance,
+    };
+  }, [assets, filter, balances, ibcTransfer]);
+
+  const renderAssetItem = (asset: Asset): JSX.Element => {
+    // Fpr IbcTransfer(Deposits), we consider base denom as a token address.
+    const tokenAddress =
+      ibcTransfer === "deposit" ? asset.base : (asset as NamadaAsset).address;
+
+    const disabled =
+      !namTransfersEnabled && asset.address === nativeTokenAddress;
+
+    return (
+      <li key={asset.base} className="text-sm">
+        <button
+          onClick={() => {
+            onSelect(tokenAddress);
+            onClose();
+          }}
+          className={twMerge(
+            clsx(
+              "text-left px-4 py-2.5",
+              "w-full rounded-sm border border-transparent",
+              "hover:border-neutral-400 transition-colors duration-150",
+              { "pointer-events-none opacity-50": disabled }
+            )
+          )}
+          disabled={disabled}
+        >
+          <TokenCard
+            asset={asset}
+            address={tokenAddress}
+            disabled={disabled}
+            balance={balances?.[tokenAddress]}
+          />
+        </button>
+      </li>
+    );
+  };
+
+  const hasAnyAssets =
+    assetsWithBalance.length > 0 || assetsWithoutBalance.length > 0;
 
   return (
     <SelectModal title="Select Asset" onClose={onClose}>
@@ -50,51 +111,33 @@ export const SelectAssetModal = ({
       <div className="my-4">
         <Search placeholder="Search asset" onChange={setFilter} />
       </div>
-      <Stack
-        as="ul"
-        gap={0}
-        className="max-h-[400px] overflow-auto dark-scrollbar pb-4 mr-[-0.5rem]"
-      >
-        {filteredAssets.map((asset) => {
-          // Fpr IbcTransfer(Deposits), we consider base denom as a token address.
-          const tokenAddress =
-            ibcTransfer === "deposit" ?
-              asset.base
-            : (asset as NamadaAsset).address;
-
-          const disabled =
-            !namTransfersEnabled && asset.address === nativeTokenAddress;
-          return (
-            <li key={asset.base} className="text-sm">
-              <button
-                onClick={() => {
-                  onSelect(tokenAddress);
-                  onClose();
-                }}
-                className={twMerge(
-                  clsx(
-                    "text-left px-4 py-2.5",
-                    "w-full rounded-sm border border-transparent",
-                    "hover:border-neutral-400 transition-colors duration-150",
-                    { "pointer-events-none opacity-50": disabled }
-                  )
-                )}
-                disabled={disabled}
-              >
-                <TokenCard
-                  asset={asset}
-                  address={tokenAddress}
-                  disabled={disabled}
-                  balance={balances?.[tokenAddress]}
-                />
-              </button>
-            </li>
-          );
-        })}
-        {filteredAssets.length === 0 && (
-          <p className="py-2 font-light">There are no available assets</p>
+      <div className="max-h-[400px] overflow-auto dark-scrollbar pb-4 mr-[-0.5rem]">
+        {assetsWithBalance.length > 0 && (
+          <>
+            <h3 className="text-xs font-medium text-neutral-500 px-4 py-2 uppercase tracking-wide">
+              Your tokens
+            </h3>
+            <Stack as="ul" gap={0}>
+              {assetsWithBalance.map(renderAssetItem)}
+            </Stack>
+          </>
         )}
-      </Stack>
+
+        {assetsWithoutBalance.length > 0 && (
+          <>
+            <h3 className="text-xs font-medium text-neutral-500 px-4 py-2 mt-4 uppercase tracking-wide">
+              All tokens
+            </h3>
+            <Stack as="ul" gap={0}>
+              {assetsWithoutBalance.map(renderAssetItem)}
+            </Stack>
+          </>
+        )}
+
+        {!hasAnyAssets && (
+          <p className="py-2 px-4 font-light">There are no available assets</p>
+        )}
+      </div>
     </SelectModal>
   );
 };
