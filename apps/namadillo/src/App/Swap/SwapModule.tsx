@@ -1,4 +1,6 @@
 import { Panel } from "@namada/components";
+import { MaspSyncCover } from "App/Common/MaspSyncCover";
+import { useRequiresNewShieldedSync } from "hooks/useRequiresNewShieldedSync";
 import { useAtomValue } from "jotai";
 import { Link } from "react-router-dom";
 import { swapStatusAtom } from "./state/atoms";
@@ -12,6 +14,7 @@ import { SwapSuccess } from "./SwapSuccess";
 // and pass the shared state(accounts, fees, etc.) as props to the module components
 export const SwapModule = (): JSX.Element => {
   const status = useAtomValue(swapStatusAtom);
+  const requiresNewShieldedSync = useRequiresNewShieldedSync();
 
   return (
     <Panel className="relative rounded-sm flex flex-col flex-1 pt-9">
@@ -44,6 +47,7 @@ export const SwapModule = (): JSX.Element => {
           </p>
         )}
       </section>
+      {requiresNewShieldedSync && <MaspSyncCover />}
     </Panel>
   );
 };
