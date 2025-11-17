@@ -8,6 +8,7 @@ import { Asset } from "types";
 type SelectedAssetProps = {
   asset?: Asset;
   isLoading?: boolean;
+  imageSize?: "small" | "large";
   isDisabled?: boolean;
   onClick?: () => void;
 };
@@ -15,6 +16,7 @@ type SelectedAssetProps = {
 export const SelectedAsset = ({
   asset,
   isLoading,
+  imageSize = "small",
   isDisabled,
   onClick,
 }: SelectedAssetProps): JSX.Element => {
@@ -56,7 +58,8 @@ export const SelectedAsset = ({
         <span className={selectorClassList}>
           <img
             className={clsx(
-              "w-8 aspect-square object-cover select-none",
+              imageSize === "small" ? "w-8" : "w-16",
+              "aspect-square object-cover select-none",
               "object-center bg-neutral-800 rounded-full"
             )}
             alt={`${asset.name} image`}

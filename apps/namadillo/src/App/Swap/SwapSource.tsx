@@ -41,6 +41,7 @@ export const SwapSource = ({
       {!isSubmitting && (
         <div className="grid grid-cols-[max-content_auto] gap-5 mb-3">
           <SelectedAsset
+            imageSize="large"
             asset={asset}
             isLoading={isLoadingAssets}
             onClick={openAssetSelector}
