@@ -24,16 +24,6 @@ export const Navigation = (): JSX.Element => {
       url: routes.root,
     },
     {
-      label: "Staking",
-      icon: <GoStack />,
-      url: routes.staking,
-    },
-    {
-      label: "Governance",
-      icon: <FaVoteYea />,
-      url: routes.governance,
-    },
-    {
       label: "Shield",
       icon: <ShieldIcon />,
       url: routes.shield,
@@ -52,9 +42,19 @@ export const Navigation = (): JSX.Element => {
       url: routes.receive,
     },
     {
-      label: "Shielded Swaps",
+      label: "Swap",
       icon: <SwapIcon className="w-[18px]" />,
       url: routes.swap,
+    },
+    {
+      label: "Staking",
+      icon: <GoStack />,
+      url: routes.staking,
+    },
+    {
+      label: "Governance",
+      icon: <FaVoteYea />,
+      url: routes.governance,
     },
     {
       label: "History",
@@ -69,27 +69,14 @@ export const Navigation = (): JSX.Element => {
   return (
     <div className="min-h-full flex flex-col justify-between gap-10 p-6 pb-8">
       <ul className="flex flex-col gap-4">
-        {menuItems.map((item) => {
-          const shieldingRoute = item.label === "Shield";
-          const historyRoute = item.label === "History";
-          return (
-            <li key={item.label}>
-              {shieldingRoute && (
-                <>
-                  <hr className="border-neutral-300 border-t-1 w-full mb-2" />
-                  <h5 className="text-neutral-500 text-xs mb-2">Move Assets</h5>
-                </>
-              )}
-              <SidebarMenuItem url={item.url}>
-                {item.icon}
-                {item.label}
-              </SidebarMenuItem>
-              {historyRoute && (
-                <hr className="border-neutral-300 border-t-1 w-full mt-3" />
-              )}
-            </li>
-          );
-        })}
+        {menuItems.map((item) => (
+          <li key={item.label}>
+            <SidebarMenuItem url={item.url}>
+              {item.icon}
+              {item.label}
+            </SidebarMenuItem>
+          </li>
+        ))}
       </ul>
       <footer className="flex flex-col gap-10">
         <ul className="flex flex-col gap-1 text-neutral-300 text-sm">
