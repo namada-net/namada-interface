@@ -201,9 +201,19 @@ export const LocalStorageTransactionCard = ({
         <h4 className="text-neutral-400">To</h4>
         <div className="flex items-center justify-between">
           <h4
-            className={isShieldedAddress(receiver ?? "") ? "text-yellow" : ""}
+            className={
+              (
+                isShieldedAddress(receiver ?? "") ||
+                transaction.type === "ShieldedOsmosisSwap"
+              ) ?
+                "text-yellow"
+              : ""
+            }
           >
-            {isShieldedAddress(receiver ?? "") ?
+            {(
+              isShieldedAddress(receiver ?? "") ||
+              transaction.type === "ShieldedOsmosisSwap"
+            ) ?
               <span className="flex items-center gap-1">
                 <FaLock className="w-4 h-4" /> Shielded
               </span>
