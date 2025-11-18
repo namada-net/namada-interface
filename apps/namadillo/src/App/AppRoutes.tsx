@@ -36,7 +36,6 @@ import { StakingOverview } from "./Staking/StakingOverview";
 import { StakingRewards } from "./Staking/StakingRewards";
 import { StakingWithdrawModal } from "./Staking/StakingWithdrawModal";
 import { Unstake } from "./Staking/Unstake";
-import { SwapModule } from "./Swap/SwapModule";
 import { SwitchAccountPanel } from "./SwitchAccount/SwitchAccountPanel";
 import { TransactionDetails } from "./Transactions/TransactionDetails";
 import { TransactionHistory } from "./Transactions/TransactionHistory";
@@ -101,7 +100,8 @@ export const MainRoutes = (): JSX.Element => {
           </Route>
 
           {/* Swapping */}
-          <Route path={routes.swap} element={<SwapModule />} />
+          {/* TODO: Re-enable swaps after v2 release */}
+          {/* <Route path={routes.swap} element={<SwapModule />} /> */}
 
           {/* Transaction History */}
           {(features.namTransfersEnabled || features.ibcTransfersEnabled) && (

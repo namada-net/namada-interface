@@ -37,11 +37,20 @@ export const SelectAssetModal = ({
   const [filter, setFilter] = useState("");
 
   const { assetsWithBalance, assetsWithoutBalance } = useMemo(() => {
-    const filtered = assets.filter(
-      (asset) =>
-        asset.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 ||
-        asset.symbol.toLowerCase().indexOf(filter.toLowerCase()) >= 0
-    );
+    const filtered = assets
+      .filter(
+        (asset) =>
+          asset.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 ||
+          asset.symbol.toLowerCase().indexOf(filter.toLowerCase()) >= 0
+      )
+      // We temporarily hide stride assets until we support them fully
+      .filter(
+        (asset) =>
+          !asset.traces?.find(
+            (trace) =>
+              trace.type === "ibc" && trace.counterparty.chain_name === "stride"
+          )
+      );
 
     const withBalance: Asset[] = [];
     const withoutBalance: Asset[] = [];
