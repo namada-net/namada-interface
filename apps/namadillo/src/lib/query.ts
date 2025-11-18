@@ -18,6 +18,8 @@ import {
 import { textToErrorDetail, toErrorDetail } from "utils";
 import { getSdkInstance } from "utils/sdk";
 
+const DEFAULT_TRANSACTION_MEMO = "Powered by Namadillo";
+
 export type TransactionPair<T> = {
   encodedTxData: EncodedTxData<T>;
   signedTxs: Uint8Array[];
@@ -65,7 +67,8 @@ const getTxProps = (
     gasLimit: gasConfig.gasLimit,
     chainId: chain.chainId,
     publicKey: account.publicKey!,
-    memo,
+    memo:
+      memo ? `${memo} ${DEFAULT_TRANSACTION_MEMO}` : DEFAULT_TRANSACTION_MEMO,
   };
 };
 

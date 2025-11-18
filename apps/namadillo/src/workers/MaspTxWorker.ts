@@ -178,7 +178,7 @@ async function unshield(
   sdk: Sdk,
   payload: Unshield["payload"]
 ): Promise<EncodedTxData<UnshieldingTransferProps>> {
-  const { account, gasConfig, chain, props } = payload;
+  const { account, gasConfig, chain, props, memo } = payload;
   await sdk.masp.loadMaspParams("", chain.chainId);
   const encodedTxData = await buildTx<UnshieldingTransferProps>(
     sdk,
@@ -187,7 +187,7 @@ async function unshield(
     chain,
     props,
     sdk.tx.buildUnshieldingTransfer,
-    undefined,
+    memo,
     false
   );
 
@@ -198,7 +198,7 @@ async function shieldedTransfer(
   sdk: Sdk,
   payload: ShieldedTransfer["payload"]
 ): Promise<EncodedTxData<ShieldedTransferProps>> {
-  const { account, gasConfig, chain, props } = payload;
+  const { account, gasConfig, chain, props, memo } = payload;
   await sdk.masp.loadMaspParams("", chain.chainId);
   const encodedTxData = await buildTx<ShieldedTransferProps>(
     sdk,
@@ -207,7 +207,7 @@ async function shieldedTransfer(
     chain,
     props,
     sdk.tx.buildShieldedTransfer,
-    undefined,
+    memo,
     false
   );
 
@@ -218,7 +218,7 @@ async function ibcTransfer(
   sdk: Sdk,
   payload: IbcTransfer["payload"]
 ): Promise<EncodedTxData<IbcTransferProps>> {
-  const { account, gasConfig, chain, props, publicKeyRevealed } = payload;
+  const { account, gasConfig, chain, props, publicKeyRevealed, memo } = payload;
 
   await sdk.masp.loadMaspParams("", chain.chainId);
   const encodedTxData = await buildTx<IbcTransferProps>(
@@ -228,7 +228,7 @@ async function ibcTransfer(
     chain,
     props,
     sdk.tx.buildIbcTransfer,
-    undefined,
+    memo,
     !publicKeyRevealed
   );
 
@@ -239,7 +239,7 @@ async function osmosisSwap(
   sdk: Sdk,
   payload: OsmosisSwap["payload"]
 ): Promise<EncodedTxData<OsmosisSwapMsgValue>> {
-  const { account, gasConfig, chain, props } = payload;
+  const { account, gasConfig, chain, props, memo } = payload;
 
   await sdk.masp.loadMaspParams("", chain.chainId);
   const encodedTxData = await buildTx<OsmosisSwapMsgValue>(
@@ -249,7 +249,7 @@ async function osmosisSwap(
     chain,
     props,
     sdk.tx.buildOsmosisSwap,
-    undefined,
+    memo,
     false
   );
 
