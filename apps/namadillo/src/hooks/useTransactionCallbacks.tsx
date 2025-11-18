@@ -55,6 +55,9 @@ export const useTransactionCallback = (): void => {
     shouldUpdateBalance(true);
     refetchBalances();
     refetchShieldedBalance();
+
+    const timePolling = 6 * 1000;
+    setTimeout(() => shouldUpdateBalance(false), timePolling);
   };
 
   const onTransferError = (e: CustomEvent<TransferTransactionData>): void => {
