@@ -23,7 +23,7 @@ type SelectWalletModalProps = {
   balances?: Record<Address, [DisplayAmount, FiatAmount?]>;
 };
 
-export const SelectAssetModal = ({
+export const SwapSelectAssetModal = ({
   onClose,
   onSelect,
   assets,

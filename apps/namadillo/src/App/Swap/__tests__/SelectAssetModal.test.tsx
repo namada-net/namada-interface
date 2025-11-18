@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { assetMockList } from "../__mocks__/assets";
-import { SelectAssetModal } from "../SelectAssetModal";
+import { assetMockList } from "App/Common/__mocks__/assets";
+import { SwapSelectAssetModal } from "../SwapSelectAssetModal";
 
 jest.mock("hooks/useIsChannelInactive", () => ({
   useIsChannelInactive: jest.fn(() => ({
@@ -9,14 +9,14 @@ jest.mock("hooks/useIsChannelInactive", () => ({
   })),
 }));
 
-describe("SelectAssetModal", () => {
+describe("SwapSelectAssetModal", () => {
   const onCloseMock = jest.fn();
   const onSelectMock = jest.fn();
   const mockAddress = "cosmos1xnu3p06fkke8hnl7t83hzhggrca59syf0wjqgh";
 
   it("should render the modal title", () => {
     render(
-      <SelectAssetModal
+      <SwapSelectAssetModal
         onClose={onCloseMock}
         onSelect={onSelectMock}
         assets={assetMockList}
@@ -28,7 +28,7 @@ describe("SelectAssetModal", () => {
 
   it("should render all assets", () => {
     render(
-      <SelectAssetModal
+      <SwapSelectAssetModal
         onClose={onCloseMock}
         onSelect={onSelectMock}
         assets={assetMockList}
@@ -41,7 +41,7 @@ describe("SelectAssetModal", () => {
 
   it("should filter assets based on search input", async () => {
     render(
-      <SelectAssetModal
+      <SwapSelectAssetModal
         onClose={onCloseMock}
         onSelect={onSelectMock}
         assets={assetMockList}
@@ -61,7 +61,7 @@ describe("SelectAssetModal", () => {
 
   it("should call onSelect and onClose when an asset is selected", () => {
     render(
-      <SelectAssetModal
+      <SwapSelectAssetModal
         onClose={onCloseMock}
         onSelect={onSelectMock}
         assets={assetMockList}

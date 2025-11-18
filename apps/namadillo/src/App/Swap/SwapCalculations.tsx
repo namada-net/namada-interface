@@ -1,7 +1,6 @@
 import { ActionButton, Stack } from "@namada/components";
 import { mapUndefined } from "@namada/utils";
 import { ConnectProviderButton } from "App/Common/ConnectProviderButton";
-import { SelectAssetModal } from "App/Common/SelectAssetModal";
 import { SelectWalletModal } from "App/Common/SelectWalletModal";
 import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
 import { SwapArrowsIcon } from "App/Icons/SwapArrowsIcon";
@@ -21,7 +20,6 @@ import { getChainFromAddress } from "integrations/utils";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toDisplayAmount } from "utils";
-import { SwapSource } from "./SwapSource";
 import {
   useSwapBuyAmount,
   useSwapSellAmount,
@@ -34,6 +32,8 @@ import {
   swapStateAtom,
   swapStatusAtom,
 } from "./state/atoms";
+import { SwapSelectAssetModal } from "./SwapSelectAssetModal";
+import { SwapSource } from "./SwapSource";
 
 const ValidationMessages: Record<string, string> = {
   NoSellAssetSelected: "Select a token to sell",
@@ -272,7 +272,7 @@ export const SwapCalculations = (): JSX.Element => {
       </Stack>
 
       {sellAssetSelectorModalOpen && shieldedAccountAddress && (
-        <SelectAssetModal
+        <SwapSelectAssetModal
           onClose={() => setSellAssetSelectorModalOpen(false)}
           assets={sortedAssets}
           balances={balances}
@@ -281,7 +281,7 @@ export const SwapCalculations = (): JSX.Element => {
         />
       )}
       {buyAssetSelectorModalOpen && shieldedAccountAddress && (
-        <SelectAssetModal
+        <SwapSelectAssetModal
           onClose={() => setBuyAssetSelectorModalOpen(false)}
           assets={sortedAssets}
           balances={balances}
