@@ -20,7 +20,7 @@
     "docker-build-namadillo": "docker build -f docker/namadillo/Dockerfile ."
   },
   "devDependencies": {
-    "@chain-registry/types": "^0.50.160",
+    "@chain-registry/types": "^0.50.258",
     "@typescript-eslint/eslint-plugin": "^8.4.0",
     "@typescript-eslint/parser": "^8.4.0",
     "eslint": "^8.57.0",
@@ -36,6 +36,6 @@
   },
   "packageManager": "yarn@4.6.0",
   "dependencies": {
-    "chain-registry": "^1.69.390"
+    "chain-registry": "^1.69.404"
   }
 }
