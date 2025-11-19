@@ -71,6 +71,7 @@ export type SettingsTomlOptions = {
   rpc_url?: string;
   localnet_enabled?: boolean;
   fathom_site_id?: string;
+  is_heliax_namadillo?: boolean;
 };
 
 export type ChainParameters = {

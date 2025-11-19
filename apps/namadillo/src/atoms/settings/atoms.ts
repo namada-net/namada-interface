@@ -128,6 +128,10 @@ export const rpcUrlAtom = atom((get) => {
   return "";
 });
 
+export const isHeliaxNamadilloAtom = atom((get) => {
+  return get(defaultServerConfigAtom).data?.is_heliax_namadillo ?? false;
+});
+
 export const updateRpcUrlAtom = atomWithMutation(() => {
   return {
     mutationKey: ["update-rpc-url"],
@@ -277,3 +281,20 @@ export const lastInvalidateShieldedContextAtom = atomWithStorage<{
       }
     | undefined;
 }>("namadillo:last-invalidate-shielded-context", {});
+
+/**
+ * Returns a memo with "Powered by Namadillo" appended if this is a Heliax Namadillo instance.
+ * @param userMemo - Optional user-provided memo text
+ * @returns The final memo to use in transactions
+ */
+export const appendNamadilloBranding = (
+  userMemo?: string
+): string | undefined => {
+  const store = getDefaultStore();
+  const isHeliaxNamadillo = store.get(isHeliaxNamadilloAtom);
+  const branding = "Powered by Namadillo";
+
+  if (!isHeliaxNamadillo) return userMemo;
+  else if (userMemo) return `${userMemo} | ${branding}`;
+  else return branding;
+};

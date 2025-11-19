@@ -25,6 +25,7 @@ import {
   VoteType,
 } from "@namada/types";
 import { assertNever, mapUndefined } from "@namada/utils";
+import { appendNamadilloBranding } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import * as E from "fp-ts/Either";
 import * as t from "io-ts";
@@ -389,6 +390,8 @@ export const createVoteProposalTx = async (
 ): Promise<TransactionPair<VoteProposalProps>> => {
   try {
     const sdk = await getSdkInstance();
+    const memo = appendNamadilloBranding();
+    
     const voteProposalProps = {
       signer: account.address,
       proposalId,
@@ -400,7 +403,8 @@ export const createVoteProposalTx = async (
       gasConfig,
       chain,
       [voteProposalProps],
-      sdk.tx.buildVoteProposal
+      sdk.tx.buildVoteProposal,
+      memo
     );
     return await signEncodedTx(encodedTx, account.address);
   } catch (err) {
