@@ -126,6 +126,7 @@ export const SelectToken = ({
     async (token: AssetWithAmountAndChain): Promise<void> => {
       // Check if current address is Keplr and if we need to connect to specific chain for this token
       const isIbcOrKeplrToken = !isNamadaAddress(sourceAddress);
+      const destinationIsIbcOrKeplrToken = !isNamadaAddress(destinationAddress);
       // only used for IBC tokens
       let newSourceAddress: string | undefined;
       try {
@@ -164,11 +165,10 @@ export const SelectToken = ({
           } finally {
             setIsConnectingKeplr(false);
           }
-        } else {
+        } else if (destinationIsIbcOrKeplrToken) {
           // Because IbcWithdraw uses registry from KeplrWalletManager, we need to connect to
           // the source chain of the selected asset. Otherwise channels may not be correct as
           // ibcChannelsFamily relies on connected registry.
-          // TODO: this will also run if the target chain is namada, which is not necessary
           const chainName = [...SUPPORTED_ASSETS_MAP.entries()].find(
             ([_, assetSymbols]) => {
               return assetSymbols.includes(token.asset.symbol);
