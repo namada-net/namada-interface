@@ -2,7 +2,7 @@ import { IbcTransferProps } from "@namada/sdk-multicore";
 import { AccountType } from "@namada/types";
 import { mapUndefined } from "@namada/utils";
 import { routes } from "App/routes";
-import { isShieldedAddress } from "App/Transfer/common";
+import { isIbcAddress, isShieldedAddress } from "App/Transfer/common";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import {
@@ -28,6 +28,7 @@ import { useTransaction } from "hooks/useTransaction";
 import { useTransactionActions } from "hooks/useTransactionActions";
 import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
+import { getChainFromAddress } from "integrations/utils";
 import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { TransactionPair } from "lib/query";
@@ -84,6 +85,7 @@ export const IbcWithdraw = ({
     walletAddress: keplrAddress,
     chainId,
     registry,
+    connectToChainId,
   } = useWalletManager(keplrWalletManager);
   const transparentAccount = useAtomValue(defaultAccountAtom);
   const namadaChain = useAtomValue(chainAtom);
@@ -141,6 +143,22 @@ export const IbcWithdraw = ({
       navigate(generatePath(routes.transaction, { hash: txHash }));
     }
   };
+
+  // Connect to IBC chain if destination address is an IBC address
+  useEffect(() => {
+    const connectIfIbc = async (address: string): Promise<void> => {
+      const chain = getChainFromAddress(address);
+      if (chain?.chain_id) {
+        try {
+          await connectToChainId(chain.chain_id);
+        } catch (error) {
+          console.error("Failed to connect to IBC chain:", error);
+        }
+      }
+    };
+
+    if (isIbcAddress(destinationAddress)) connectIfIbc(destinationAddress);
+  }, [destinationAddress]);
 
   const {
     data: ibcChannels,

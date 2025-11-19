@@ -11,17 +11,15 @@ import { shieldedBalanceAtom } from "atoms/balance";
 import { connectedWalletsAtom } from "atoms/integrations";
 import { useUserHasAccount } from "hooks/useIsAuthenticated";
 import { useUrlState, useUrlStateBatch } from "hooks/useUrlState";
-import { useWalletManager } from "hooks/useWalletManager";
 import { KeplrWalletManager } from "integrations/Keplr";
 import { getChainFromAddress } from "integrations/utils";
 import { useAtomValue } from "jotai";
 import { useEffect, useRef, useState } from "react";
-import { isIbcAddress, isNamadaAddress } from "./common";
+import { isNamadaAddress } from "./common";
 import { determineTransferType } from "./utils";
 
 export const TransferLayout: React.FC = () => {
   const keplrWalletManager = new KeplrWalletManager();
-  const { connectToChainId } = useWalletManager(keplrWalletManager);
 
   const userHasAccount = useUserHasAccount();
   const [sourceAddressUrl, setSourceAddressUrl] = useUrlState("source");
@@ -64,23 +62,6 @@ export const TransferLayout: React.FC = () => {
   useEffect(() => {
     if (["shield", "unshield"].includes(transferType)) refetchShieldedBalance();
   }, [transferType, refetchShieldedBalance]);
-
-  // Connect to IBC chain if source or destination address is an IBC address
-  useEffect(() => {
-    const connectIfIbc = async (address: string): Promise<void> => {
-      const chain = getChainFromAddress(address);
-      if (chain?.chain_id) {
-        try {
-          await connectToChainId(chain.chain_id);
-        } catch (error) {
-          console.error("Failed to connect to IBC chain:", error);
-        }
-      }
-    };
-
-    if (isIbcAddress(sourceAddress)) connectIfIbc(sourceAddress);
-    else if (isIbcAddress(destinationAddress)) connectIfIbc(destinationAddress);
-  }, [sourceAddress, destinationAddress, connectToChainId]);
 
   // Validate source address - check if it's from keyring or Keplr
   // If not it means the address is invalid at best, poisoned at worst.
