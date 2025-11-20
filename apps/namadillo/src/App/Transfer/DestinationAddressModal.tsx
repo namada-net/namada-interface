@@ -70,11 +70,9 @@ export const DestinationAddressModal = ({
   // Dont display an address if it matches the source address
   const isSourceAddressMatch = (address: string): boolean =>
     address === sourceAddress;
-
   const isSourceIbc = isIbcAddress(sourceAddress);
-  const filterNonIbcIfSourceIbc = <T extends { type: string }>(
-    items: T[]
-  ): T[] => (isSourceIbc ? items.filter((item) => item.type !== "ibc") : items);
+  const filterNonIbcIfSourceIbc = (items: RecentAddress[]): RecentAddress[] =>
+    isSourceIbc ? items.filter((item) => item.type !== "ibc") : items;
 
   // Build your addresses options
   const addressOptions: AddressOption[] = [];
