@@ -227,6 +227,8 @@ export const TransferModule = ({
             destinationAsset={selectedAsset?.asset}
             amount={source.amount}
             isSubmitting={isSubmitting}
+            isShielding={isShielding}
+            isUnshielding={isUnshielding}
           />
           {ibcTransfer && requiresIbcChannels && ibcChannels && (
             <IbcChannels

@@ -34,6 +34,7 @@ export const MaspUnshield = ({
   setAssetSelectorModalOpen,
 }: MaspUnshieldProps): JSX.Element => {
   //  COMPONENT STATE
+  const [memo, setMemo] = useState("");
   const [displayAmount, setDisplayAmount] = useAtom(transferAmountAtom);
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmountAndChain | undefined
@@ -148,6 +149,8 @@ export const MaspUnshield = ({
           address: destinationAddress,
           isShieldedAddress: false,
           onChangeAddress: setDestinationAddress,
+          memo,
+          onChangeMemo: setMemo,
         }}
         feeProps={feeProps}
         isSubmitting={isPerformingTransfer || isSuccess}

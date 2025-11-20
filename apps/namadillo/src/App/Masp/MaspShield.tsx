@@ -15,7 +15,7 @@ import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { AssetWithAmountAndChain } from "types";
 interface MaspShieldProps {
   sourceAddress: string;
@@ -35,6 +35,7 @@ export const MaspShield = ({
   setAssetSelectorModalOpen,
 }: MaspShieldProps): JSX.Element => {
   //  COMPONENT STATE
+  const [memo, setMemo] = useState("");
   const [displayAmount, setDisplayAmount] = useAtom(transferAmountAtom);
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmountAndChain | undefined
@@ -49,6 +50,7 @@ export const MaspShield = ({
   const chainParameters = useAtomValue(chainParametersAtom);
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
+  const { pathname } = useLocation();
   // DERIVED VALUES
   const transparentAddress = defaultAccounts.data?.find(
     (account) => account.type !== AccountType.ShieldedKeys
@@ -167,6 +169,8 @@ export const MaspShield = ({
           address: destinationAddress,
           isShieldedAddress: true,
           onChangeAddress: setDestinationAddress,
+          memo,
+          onChangeMemo: pathname !== routes.shield ? setMemo : undefined,
         }}
         feeProps={feeProps}
         isSubmitting={isPerformingTransfer || isSuccess}
