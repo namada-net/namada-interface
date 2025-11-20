@@ -9,6 +9,12 @@ jest.mock("hooks/useIsChannelInactive", () => ({
   })),
 }));
 
+// Mock the getAvailableChains function
+jest.mock("atoms/integrations", () => ({
+  ...jest.requireActual("atoms/integrations"),
+  getAvailableChains: jest.fn(() => []),
+}));
+
 describe("SwapSelectAssetModal", () => {
   const onCloseMock = jest.fn();
   const onSelectMock = jest.fn();

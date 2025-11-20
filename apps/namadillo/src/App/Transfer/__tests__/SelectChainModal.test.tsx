@@ -4,6 +4,12 @@ import { namadaChainMock, randomChainMock } from "App/Common/__mocks__/chains";
 import { walletMock } from "App/Common/__mocks__/providers";
 import { SelectChainModal } from "App/Transfer/SelectChainModal";
 
+// Mock the getAvailableChains function
+jest.mock("atoms/integrations", () => ({
+  ...jest.requireActual("atoms/integrations"),
+  getAvailableChains: jest.fn(() => []),
+}));
+
 describe("Component: SelectChainModal", () => {
   const mockChains = [randomChainMock, namadaChainMock];
   const mockAddress = "cosmos1xnu3p06fkke8hnl7t83hzhggrca59syf0wjqgh";
