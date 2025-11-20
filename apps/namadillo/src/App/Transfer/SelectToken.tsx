@@ -136,18 +136,13 @@ export const SelectToken = ({
           try {
             const keplrInstance = await keplrWallet.get();
             // Keplr is not installed, redirect to download page
-            if (!keplrInstance) {
-              keplrWallet.install();
-              return;
-            }
-
+            if (!keplrInstance) return keplrWallet.install();
             const targetChainRegistry = getChainRegistryByChainName(
               token.chainName
             );
             invariant(targetChainRegistry, "Target chain registry not found");
             const chainId = targetChainRegistry.chain.chain_id;
             await connectToChainId(chainId);
-
             // Update connected wallets state only after successful connection
             setConnectedWallets((obj: Record<string, boolean>) => ({
               ...obj,

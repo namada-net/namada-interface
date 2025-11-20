@@ -70,7 +70,6 @@ export const AddressDropdown = ({
         const chain = getChainFromAddress(selectedAddress);
         chainId = chain?.chain_id;
       }
-
       // Fallback to first available chain if we couldn't determine from selectedAddress
       if (!chainId) {
         const availableChains = getAvailableChains();
@@ -144,7 +143,6 @@ export const AddressDropdown = ({
       });
     }
   }
-
   // Add Keplr option only if we have a connected address
   if (keplrAddress) {
     addressOptions.push({

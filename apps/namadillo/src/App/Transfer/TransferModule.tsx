@@ -324,7 +324,6 @@ export const TransferModule = ({
             newParams.set(params.asset, selectedAssetWithAmount.asset.symbol);
             return newParams;
           });
-
           source.onChangeAmount(undefined);
           source.onChangeSelectedAsset(selectedAssetWithAmount);
           setAssetSelectorModalOpen(false);

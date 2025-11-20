@@ -6,12 +6,12 @@ import tokenImage from "App/Common/assets/token.svg";
 import namadaTransparentSvg from "App/Transfer/assets/namada-transparent.svg";
 import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
 import {
+  getAvailableChains,
   getChainRegistryByChainName,
   getRestApiAddressByIndex,
   getRpcByIndex,
 } from "atoms/integrations";
 import BigNumber from "bignumber.js";
-import { chains } from "chain-registry";
 
 import {
   Asset,
@@ -44,6 +44,7 @@ export const findRegistryByChainId = (
 };
 
 export const getChainFromAddress = (address: string): Chain | undefined => {
+  const chains = getAvailableChains();
   if (isShieldedAddress(address) || isTransparentAddress(address)) {
     return chains.find((chain) => chain.chain_name === "namada") as Chain;
   } else {
