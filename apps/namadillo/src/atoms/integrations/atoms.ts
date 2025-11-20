@@ -150,20 +150,19 @@ export const allKeplrAssetsBalanceAtom = atomWithQuery<
       chainAssetsMap.data,
       connectedWallets,
     ],
+    staleTime: 30_000, // Consider data fresh for 30 seconds
+    gcTime: 5 * 60_000, // Keep in cache for 5 minutes after last use
+    refetchOnMount: false, // Don't refetch if data is fresh
+    refetchOnWindowFocus: false, // Don't refetch on window focus
     ...queryDependentFn(async () => {
       invariant(chainSettings.data, "No chain settings");
       invariant(chainAssetsMap.data, "No chain assets map");
 
       // Only proceed if Keplr is connected
-      if (!connectedWallets?.keplr) {
-        return {};
-      }
-
+      if (!connectedWallets?.keplr) return {};
       const availableChains = getAvailableChains();
-
       // Get Keplr wallet instance
       const keplr = getKeplrWallet();
-
       // First, silently check which chains we're already connected to
       const connectedChains: { chain: Chain; walletAddress: string }[] = [];
 
