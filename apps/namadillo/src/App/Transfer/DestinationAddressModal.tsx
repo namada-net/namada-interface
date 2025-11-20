@@ -122,6 +122,7 @@ export const DestinationAddressModal = ({
   const filteredRecentAddresses = filterNonIbcIfSourceIbc(recentAddresses);
   const recentAddressOptions: AddressOption[] = filteredRecentAddresses
     .filter((addresses) => !addressOptionsAddresses.includes(addresses.address))
+    .filter((addresses) => addresses.address !== sourceAddress)
     .map((recent) => ({
       id: `recent-${recent.address}`,
       label: recent.label || getAddressLabel(recent.address, recent.type),
