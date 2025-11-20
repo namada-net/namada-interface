@@ -228,7 +228,7 @@ export const TransferDestination = ({
                         getChainFromAddress(destinationAddress ?? "")
                           ?.pretty_name
                       }
-                      className="w-7"
+                      className="w-10"
                     />
                     <div className="flex flex-col ml-4">
                       <div className="flex flex-col">
