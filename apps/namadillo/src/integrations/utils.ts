@@ -49,8 +49,17 @@ export const getChainFromAddress = (address: string): Chain | undefined => {
     return chains.find((chain) => chain.chain_name === "namada") as Chain;
   } else {
     // Connect to IBC chain and then return the registered chain
-    const chain = chains.find(
-      (chain) => chain.bech32_prefix && address.startsWith(chain.bech32_prefix)
+    // Sort chains by bech32_prefix length (longest first) to avoid prefix collision
+    // e.g., "noble" should be checked before "n" (NYM) to prevent mismatches
+    const sortedChains = chains
+      .filter((chain) => chain.bech32_prefix)
+      .sort(
+        (a, b) =>
+          (b.bech32_prefix?.length || 0) - (a.bech32_prefix?.length || 0)
+      );
+
+    const chain = sortedChains.find((chain) =>
+      address.startsWith(chain.bech32_prefix + "1")
     );
     return chain as Chain | undefined;
   }
