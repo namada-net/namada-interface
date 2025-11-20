@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.33.0](https://github.com/namada-net/namada-interface/compare/namadillo@v1.32.1...namadillo@v1.33.0) (2025-11-20)
+
+
+### Features
+
+* Shielded swaps ([#1980](https://github.com/namada-net/namada-interface/issues/1980)) ([30b567e](https://github.com/namada-net/namada-interface/commit/30b567e7002ef658ea1a1a6f0d948466af16acd4))
+
+
+### Bug Fixes
+
+* /shield and /unshield routes ([#2320](https://github.com/namada-net/namada-interface/issues/2320)) ([96b6c35](https://github.com/namada-net/namada-interface/commit/96b6c359b962b23d6237b92f1c9b29e9cefcf4c0))
+* Cache busting ([#2309](https://github.com/namada-net/namada-interface/issues/2309)) ([7d5f5c1](https://github.com/namada-net/namada-interface/commit/7d5f5c1c5049d07189793e843af89a915fb0dd5d))
+* Design feedback part deux ([#2332](https://github.com/namada-net/namada-interface/issues/2332)) ([498142a](https://github.com/namada-net/namada-interface/commit/498142a52911db665613a9bd4f9affb4a885611f))
+* Design tweaks PR  ([#2327](https://github.com/namada-net/namada-interface/issues/2327)) ([da51e26](https://github.com/namada-net/namada-interface/commit/da51e2641b0df53768c2afd0ae4f2abc54c6f6a4))
+* Fix addy length for znam in transfer source ([#2324](https://github.com/namada-net/namada-interface/issues/2324)) ([c9b9d73](https://github.com/namada-net/namada-interface/commit/c9b9d73b95933ae53fe1ff1d3b7a4b5f5513e0d3))
+* **hooks:** Fix TypeScript and ESLint errors in useTransactionWatcher ([#2019](https://github.com/namada-net/namada-interface/issues/2019)) ([54ad21c](https://github.com/namada-net/namada-interface/commit/54ad21c031d6e25760f245fa7f0819cd4cb68f8e))
+* Incorrect inactive channel label ([#2331](https://github.com/namada-net/namada-interface/issues/2331)) ([fa6dc95](https://github.com/namada-net/namada-interface/commit/fa6dc956d5fcb734e3ec23eee55a3c9a82cc68b3))
+* No duplicate address options and make sure alias matches for cus… ([#2323](https://github.com/namada-net/namada-interface/issues/2323)) ([3444d4b](https://github.com/namada-net/namada-interface/commit/3444d4b7d674d2e747f0ff58afaadde7dc38bbbb))
+* Remove issue where unshield is deleting memo ([#2338](https://github.com/namada-net/namada-interface/issues/2338)) ([23c2b05](https://github.com/namada-net/namada-interface/commit/23c2b0534b43af6fc67b78720f9efd9c1f5b5c8b))
+* Remove keplr requirement to receive to an IBC address  ([#2328](https://github.com/namada-net/namada-interface/issues/2328)) ([0c19459](https://github.com/namada-net/namada-interface/commit/0c19459929d80534d5870450ffdd84868cc8fb0c))
+* Side Menu v2 ([#2337](https://github.com/namada-net/namada-interface/issues/2337)) ([4ac55e2](https://github.com/namada-net/namada-interface/commit/4ac55e28a52008f3219466ffa7e0a9a69249c6ef))
+* Swaps UI ([#2336](https://github.com/namada-net/namada-interface/issues/2336)) ([d8c6ea3](https://github.com/namada-net/namada-interface/commit/d8c6ea3d2c53a870918ccc3bc60824061a3fe557))
+* Update chain registry ([#2310](https://github.com/namada-net/namada-interface/issues/2310)) ([43f7bc3](https://github.com/namada-net/namada-interface/commit/43f7bc32a61da0cf626b67f35dcc2e45d55dbc60))
+* Various fixes test suite ([#2343](https://github.com/namada-net/namada-interface/issues/2343)) ([7133c95](https://github.com/namada-net/namada-interface/commit/7133c95445f2d1ebc3e9b91bff23f61ff5be81ed))
+* Wrong ibc channels for withdraw ([#2340](https://github.com/namada-net/namada-interface/issues/2340)) ([99abf3a](https://github.com/namada-net/namada-interface/commit/99abf3ac51d0983e30293c10bfc4385a48f50ada))
+
 ## [1.32.1](https://github.com/namada-net/namada-interface/compare/namadillo@v1.32.0...namadillo@v1.32.1) (2025-10-24)
 
 
