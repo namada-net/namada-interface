@@ -1,4 +1,3 @@
-import { AlphaVersionTopHeader } from "App/Common/AlphaVersionTopHeader";
 import { shouldUpdateBalanceAtom } from "atoms/etc";
 import { useSetAtom } from "jotai";
 import { ReactNode, useEffect, useState } from "react";
@@ -25,7 +24,6 @@ export const AppLayout = ({
   return (
     <>
       <div className="sticky top-0 bg-neutral-800 z-50">
-        <AlphaVersionTopHeader />
         <AppHeader
           burger={
             <span className="sm:px-0 lg:hidden">
