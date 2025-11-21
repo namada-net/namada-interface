@@ -1,6 +1,5 @@
 import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
-import { routes } from "App/routes";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -15,7 +14,6 @@ import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
 import { AssetWithAmountAndChain } from "types";
 interface MaspShieldProps {
   sourceAddress: string;
@@ -50,13 +48,9 @@ export const MaspShield = ({
   const chainParameters = useAtomValue(chainParametersAtom);
   const defaultAccounts = useAtomValue(allDefaultAccountsAtom);
   const [ledgerStatus, setLedgerStatusStop] = useAtom(ledgerStatusDataAtom);
-  const { pathname } = useLocation();
   // DERIVED VALUES
   const transparentAddress = defaultAccounts.data?.find(
     (account) => account.type !== AccountType.ShieldedKeys
-  )?.address;
-  const shieldedAddress = defaultAccounts.data?.find(
-    (account) => account.type === AccountType.ShieldedKeys
   )?.address;
   const ledgerAccountInfo = ledgerStatus && {
     deviceConnected: ledgerStatus.connected,
@@ -170,7 +164,7 @@ export const MaspShield = ({
           isShieldedAddress: true,
           onChangeAddress: setDestinationAddress,
           memo,
-          onChangeMemo: pathname !== routes.shield ? setMemo : undefined,
+          onChangeMemo: setMemo,
         }}
         feeProps={feeProps}
         isSubmitting={isPerformingTransfer || isSuccess}
