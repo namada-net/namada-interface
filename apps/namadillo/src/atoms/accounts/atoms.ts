@@ -84,6 +84,13 @@ export const defaultShieldedAccountAtom = atom((get) => {
   );
 });
 
+export const defaultTransparentAccountAtom = atom((get) => {
+  const defaultAccounts = get(allDefaultAccountsAtom);
+  return defaultAccounts.data?.find(
+    (account) => account.type !== AccountType.ShieldedKeys
+  );
+});
+
 export const isLedgerAccountAtom = atom((get) => {
   const defaultAccounts = get(allDefaultAccountsAtom);
   return Boolean(

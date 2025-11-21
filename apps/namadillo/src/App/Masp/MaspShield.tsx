@@ -1,6 +1,6 @@
 import { Panel } from "@namada/components";
 import { AccountType } from "@namada/types";
-import { params, routes } from "App/routes";
+import { routes } from "App/routes";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { allDefaultAccountsAtom } from "atoms/accounts";
@@ -15,7 +15,7 @@ import invariant from "invariant";
 import { useAtom, useAtomValue } from "jotai";
 import { createTransferDataFromNamada } from "lib/transactions";
 import { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { AssetWithAmountAndChain } from "types";
 interface MaspShieldProps {
   sourceAddress: string;
@@ -183,16 +183,6 @@ export const MaspShield = ({
         assetSelectorModalOpen={assetSelectorModalOpen}
         setAssetSelectorModalOpen={setAssetSelectorModalOpen}
       />
-      <div className="flex flex-row font-normal justify-center mt-10 gap-2">
-        <h4>Looking to Unshield tokens?</h4>
-        <Link
-          className="text-yellow underline"
-          to={`${routes.transfer}?${params.source}=${shieldedAddress || ""}&${params.destination}=${transparentAddress}`}
-          title={`View pending transactions`}
-        >
-          Click here.
-        </Link>
-      </div>
     </Panel>
   );
 };

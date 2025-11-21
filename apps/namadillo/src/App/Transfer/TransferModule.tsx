@@ -4,6 +4,10 @@ import { IconTooltip } from "App/Common/IconTooltip";
 import { InlineError } from "App/Common/InlineError";
 import { params, routes } from "App/routes";
 import {
+  defaultShieldedAccountAtom,
+  defaultTransparentAccountAtom,
+} from "atoms/accounts";
+import {
   namadaShieldedAssetsAtom,
   namadaTransparentAssetsAtom,
 } from "atoms/balance";
@@ -59,6 +63,8 @@ export const TransferModule = ({
       namadaShieldedAssetsAtom
     : namadaTransparentAssetsAtom
   );
+  const shieldedAccount = useAtomValue(defaultShieldedAccountAtom);
+  const transparentAccount = useAtomValue(defaultTransparentAccountAtom);
   const [searchParams, setSearchParams] = useSearchParams();
   const asset = searchParams.get(params.asset) || "";
   const assetsWithAmounts = useAssetsWithAmounts(sourceAddress);
@@ -332,6 +338,18 @@ export const TransferModule = ({
           setAssetSelectorModalOpen(false);
         }}
       />
+      {isShielding && (
+        <div className="flex flex-row font-normal justify-center mt-10 gap-2">
+          <h4>Looking to Unshield tokens?</h4>
+          <Link
+            className="text-yellow underline"
+            to={`${routes.transfer}?${params.source}=${shieldedAccount?.address || ""}&${params.destination}=${transparentAccount?.address || ""}`}
+            title={`View pending transactions`}
+          >
+            Click here.
+          </Link>
+        </div>
+      )}
     </>
   );
 };
