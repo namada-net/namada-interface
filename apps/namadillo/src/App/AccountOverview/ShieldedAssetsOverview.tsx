@@ -1,7 +1,8 @@
 import { ActionButton, Panel } from "@namada/components";
 import { MaspSyncCover } from "App/Common/MaspSyncCover";
 import { ShieldedAssetTable } from "App/Masp/ShieldedAssetTable";
-import { routes } from "App/routes";
+import { params, routes } from "App/routes";
+import { defaultShieldedAccountAtom } from "atoms/accounts";
 import { applicationFeaturesAtom } from "atoms/settings";
 import clsx from "clsx";
 import { useAmountsInFiat } from "hooks/useAmountsInFiat";
@@ -16,6 +17,7 @@ export const ShieldedAssetsOverview = (): JSX.Element => {
     useAmountsInFiat();
   const textContainerClassList = `flex h-full gap-1 items-center justify-center`;
   const requiresNewShieldedSync = useRequiresNewShieldedSync();
+  const shieldedAccount = useAtomValue(defaultShieldedAccountAtom);
 
   // Hide TotalBalanceCard if shielded fiat amount is 0 but shielded assets exist
   const shouldHideBalanceCard =
@@ -31,7 +33,7 @@ export const ShieldedAssetsOverview = (): JSX.Element => {
             footerButtons={
               <>
                 <ActionButton
-                  href={routes.transfer}
+                  href={`${routes.transfer}?${params.source}=${shieldedAccount?.address || ""}`}
                   outlineColor="yellow"
                   size="xs"
                   className="w-auto px-4"
