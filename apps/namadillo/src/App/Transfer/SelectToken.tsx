@@ -92,25 +92,31 @@ export const SelectToken = ({
   const filteredTokens = useMemo(() => {
     return assetsWithAmounts
       .filter((assetWithAmount) => {
-        if (assetWithAmount.amount.eq(0)) return false;
-
-        // Filter by search term
+        // Filter by search term (if provided)
         const matchesSearch =
-          !!filter &&
+          !filter ||
           assetWithAmount.asset.name
             .toLowerCase()
             .includes(filter.toLowerCase());
 
+        // Filter by network (if provided)
         const matchesNetwork =
+          !selectedNetwork ||
           selectedNetwork ===
-          assetWithAmount.asset.traces?.[0]?.counterparty?.chain_name;
-        return !selectedNetwork ? true : matchesSearch || matchesNetwork;
+            assetWithAmount.asset.traces?.[0]?.counterparty?.chain_name;
+
+        // Filter out zero balances
+        const hasBalance = !assetWithAmount.amount.eq(0);
+
+        // All conditions must be true
+        return matchesSearch && matchesNetwork && hasBalance;
       })
       .sort((a, b) => Number(b.amount) - Number(a.amount));
   }, [assetsWithAmounts, filter, selectedNetwork, assetToNetworkMap]);
 
   const handleNetworkSelect = (networkName: string): void => {
     setSelectedNetwork(selectedNetwork === networkName ? null : networkName);
+    setFilter(""); // Clear search input when network is selected
   };
 
   const handleWalletAddressChange = (address: string): void => {
@@ -224,7 +230,10 @@ export const SelectToken = ({
               >
                 <li>
                   <button
-                    onClick={() => setSelectedNetwork(null)}
+                    onClick={() => {
+                      setSelectedNetwork(null);
+                      setFilter(""); // Clear search input when "All Networks" is selected
+                    }}
                     className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
                       selectedNetwork === null ?
                         "bg-white/5 border border-white/20"
