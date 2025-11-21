@@ -7,9 +7,9 @@ export const compareBigNumbers = (
   isDescending: boolean
 ): number => {
   if (n1 === undefined && n2 === undefined) return 0;
-  if (!n1) return isDescending ? 1 : -1;
-  if (!n2) return isDescending ? -1 : 1;
-  return isDescending ? n2.minus(n1).toNumber() : n1.minus(n2).toNumber();
+  if (!n1) return isDescending ? -1 : 1;
+  if (!n2) return isDescending ? 1 : -1;
+  return isDescending ? n1.minus(n2).toNumber() : n2.minus(n1).toNumber();
 };
 
 export const compareStrings = (
@@ -17,7 +17,7 @@ export const compareStrings = (
   str2: string,
   isDescending: boolean
 ): number => {
-  return isDescending ? str2.localeCompare(str1) : str1.localeCompare(str2);
+  return isDescending ? str1.localeCompare(str2) : str2.localeCompare(str1);
 };
 
 const compareNumbers = (
@@ -25,8 +25,8 @@ const compareNumbers = (
   b: number,
   isDescending: boolean
 ): number => {
-  if (a > b) return isDescending ? -1 : 1;
-  if (a < b) return isDescending ? 1 : -1;
+  if (a > b) return isDescending ? 1 : -1;
+  if (a < b) return isDescending ? -1 : 1;
   return 0;
 };
 
