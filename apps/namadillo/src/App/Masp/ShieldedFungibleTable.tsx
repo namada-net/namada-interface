@@ -29,12 +29,6 @@ const initialPage = 0;
 
 // Minimum thresholds to earn rewards for each asset
 const REWARD_THRESHOLDS: Record<string, BigNumber> = {
-  statom: new BigNumber(10),
-  stosmo: new BigNumber(100),
-  sttia: new BigNumber(20),
-  osmo: new BigNumber(100),
-  atom: new BigNumber(10),
-  tia: new BigNumber(20),
   usdc: new BigNumber(50),
 };
 
