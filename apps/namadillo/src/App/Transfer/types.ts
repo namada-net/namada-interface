@@ -44,7 +44,7 @@ export type TransferModuleProps = {
     isShieldedAddress: boolean;
     memo?: string;
     onChangeAddress: (address?: string) => void;
-    onChangeMemo?: Dispatch<SetStateAction<string>>;
+    onChangeMemo?: Dispatch<SetStateAction<string | undefined>>;
   };
   requiresIbcChannels?: boolean;
   feeProps?: TransactionFeeProps;

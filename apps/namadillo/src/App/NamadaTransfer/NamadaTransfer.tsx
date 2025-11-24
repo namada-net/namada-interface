@@ -42,7 +42,7 @@ export const NamadaTransfer = ({
   //  COMPONENT STATE
   const [displayAmount, setDisplayAmount] = useAtom(transferAmountAtom);
   const [customAddress] = useState<string>("");
-  const [memo, setMemo] = useState<string>("");
+  const [memo, setMemo] = useState<string | undefined>();
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmountAndChain | undefined
   >();

@@ -801,7 +801,11 @@ export class KeyRing {
 
     let privateKey: string;
 
-    if (account.public.type === AccountType.PrivateKey) {
+    if (
+      [AccountType.PrivateKey, AccountType.Disposable].includes(
+        account.public.type
+      )
+    ) {
       privateKey = secret;
     } else {
       const sdk = this.sdkService.getSdk();

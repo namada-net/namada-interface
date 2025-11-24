@@ -35,7 +35,7 @@ export const MaspShield = ({
   setAssetSelectorModalOpen,
 }: MaspShieldProps): JSX.Element => {
   //  COMPONENT STATE
-  const [memo, setMemo] = useState("");
+  const [memo, setMemo] = useState<string | undefined>();
   const [displayAmount, setDisplayAmount] = useAtom(transferAmountAtom);
   const [selectedAssetWithAmount, setSelectedAssetWithAmount] = useState<
     AssetWithAmountAndChain | undefined
