@@ -1,5 +1,6 @@
 import { SidebarMenuItem } from "App/Common/SidebarMenuItem";
 import { ShieldIcon } from "App/Icons/ShieldIcon";
+import { SwapIcon } from "App/Icons/SwapIcon";
 import { routes } from "App/routes";
 import { applicationFeaturesAtom } from "atoms/settings";
 import { useAtomValue } from "jotai";
@@ -40,12 +41,11 @@ export const Navigation = (): JSX.Element => {
       icon: <LuArrowDownToLine />,
       url: routes.receive,
     },
-    // TODO: Re-enable swaps after v2 release
-    // {
-    //   label: "Swap",
-    //   icon: <SwapIcon className="w-[18px]" />,
-    //   url: routes.swap,
-    // },
+    {
+      label: "Swap",
+      icon: <SwapIcon className="w-[18px]" />,
+      url: routes.swap,
+    },
     {
       label: "Staking",
       icon: <GoStack />,
