@@ -163,6 +163,12 @@ export const AddressDropdown = ({
     }
   };
 
+  const disconnectKeplr = async (): Promise<void> => {
+    setConnectedWallets((obj) => ({ ...obj, [keplr.key]: false }));
+    const keplrInstance = await keplr.get();
+    if (keplrInstance) await keplrInstance.disable();
+  };
+
   const handleConnectKeplr = useCallback(async (): Promise<void> => {
     try {
       setIsConnectingKeplr(true);
@@ -185,9 +191,11 @@ export const AddressDropdown = ({
         onSelectAddress?.(key.bech32Address);
       } catch (error) {
         console.error("Failed to fetch Keplr address after connection:", error);
+        disconnectKeplr();
       }
     } catch (error) {
       console.error("Failed to connect to Keplr:", error);
+      disconnectKeplr();
     } finally {
       setIsConnectingKeplr(false);
     }
