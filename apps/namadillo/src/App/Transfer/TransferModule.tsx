@@ -36,7 +36,11 @@ import { TransferArrow } from "./TransferArrow";
 import { TransferDestination } from "./TransferDestination";
 import { TransferSource } from "./TransferSource";
 import { TransferModuleProps, ValidationResult } from "./types";
-import { getButtonText, validateTransferForm } from "./utils";
+import {
+  determineTransferType,
+  getButtonText,
+  validateTransferForm,
+} from "./utils";
 
 export const TransferModule = ({
   source,
@@ -108,6 +112,12 @@ export const TransferModule = ({
       validationResult,
       availableAmountMinusFees,
       buttonTextErrors,
+      transactionType: determineTransferType({
+        sourceAddress,
+        destinationAddress,
+      }),
+      sourceAddress,
+      destinationAddress,
     });
   };
 
