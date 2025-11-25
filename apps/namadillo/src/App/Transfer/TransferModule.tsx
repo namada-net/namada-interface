@@ -348,7 +348,7 @@ export const TransferModule = ({
           setAssetSelectorModalOpen(false);
         }}
       />
-      {isShielding && (
+      {isShielding && !isSubmitting && (
         <div className="flex flex-row font-normal justify-center mt-10 gap-2">
           <h4>Looking to Unshield tokens?</h4>
           <Link
