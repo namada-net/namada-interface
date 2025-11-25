@@ -10,17 +10,19 @@ type SearchProps = Omit<
   "onChange" | "onFocus" | "onBlur" | "type"
 > & {
   onChange?: (search: string) => void;
+  debounceTime?: number;
 };
 
 export const Search = ({
   onChange,
   className,
   placeholder,
+  debounceTime = 300,
   ...rest
 }: SearchProps): JSX.Element => {
   const [displaySearchIcon, setDisplaySearchIcon] = useState(true);
   const debouncedSearch = useRef(
-    debounce((value: string) => onChange?.(value), 300)
+    debounce((value: string) => onChange?.(value), debounceTime)
   );
 
   // Hideous hack to add padding to placeholder in Firefox.

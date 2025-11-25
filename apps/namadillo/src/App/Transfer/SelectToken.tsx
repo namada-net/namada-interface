@@ -232,8 +232,8 @@ export const SelectToken = ({
                 <li>
                   <button
                     onClick={() => {
-                      setSelectedNetwork(null);
                       setFilter(""); // Clear search input when "All Networks" is selected
+                      setSelectedNetwork(null);
                     }}
                     className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
                       selectedNetwork === null ?
@@ -251,8 +251,8 @@ export const SelectToken = ({
                   <li key={network.chain_name}>
                     <button
                       onClick={() => {
-                        handleNetworkSelect(network.chain_name.toLowerCase());
                         setFilter("");
+                        handleNetworkSelect(network.chain_name.toLowerCase());
                       }}
                       className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
                         selectedNetwork === network.chain_name ?
@@ -288,6 +288,8 @@ export const SelectToken = ({
                 <Search
                   placeholder="Insert token name or symbol"
                   onChange={setFilter}
+                  value={filter}
+                  debounceTime={0}
                 />
               </div>
 
