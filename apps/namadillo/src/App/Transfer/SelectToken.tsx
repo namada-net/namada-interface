@@ -125,6 +125,7 @@ export const SelectToken = ({
   };
 
   const handleClose = (): void => {
+    setFilter("");
     onClose();
   };
 
