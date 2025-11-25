@@ -211,6 +211,8 @@ export const getButtonText = ({
   }
 
   // Update CTA to match transaction type
+  if (sourceIsShielded && destinationIsShielded)
+    return getText("Shielded Transfer");
   if (transactionType === "shield" || destinationIsShielded)
     return getText("Shield");
   if (
@@ -220,7 +222,8 @@ export const getButtonText = ({
     return getText("Unshield");
   if (transactionType === "ibc-deposit") return getText("IBC Deposit");
   if (transactionType === "ibc-withdraw") return getText("IBC Withdraw");
-  if (transactionType === "namada-transfer") return getText("Transfer");
+  if (transactionType === "namada-transfer")
+    return getText("Transparent Transfer");
 
   return "Submit";
 };
