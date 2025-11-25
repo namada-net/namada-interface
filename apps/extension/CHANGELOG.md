@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0](https://github.com/namada-net/namada-interface/compare/extension@v0.8.1...extension@v0.9.0) (2025-11-25)
+
+
+### Features
+
+* Batch tx to pay fees when unshielding ([#2218](https://github.com/namada-net/namada-interface/issues/2218)) ([aba1977](https://github.com/namada-net/namada-interface/commit/aba19775816796b59e466bc45c9e06da902865c7))
+* Shielded swaps ([#1980](https://github.com/namada-net/namada-interface/issues/1980)) ([30b567e](https://github.com/namada-net/namada-interface/commit/30b567e7002ef658ea1a1a6f0d948466af16acd4))
+
+
+### Bug Fixes
+
+* Refund target signing and empty memo ([#2346](https://github.com/namada-net/namada-interface/issues/2346)) ([6ca91cc](https://github.com/namada-net/namada-interface/commit/6ca91ccb9adf412e52ec201140e16b64e8e822aa))
+* Remove axios ([#2304](https://github.com/namada-net/namada-interface/issues/2304)) ([36249c2](https://github.com/namada-net/namada-interface/commit/36249c27358005b836a10cda9ea311d0a9bb3447))
+
 ## [0.8.1](https://github.com/anoma/namada-interface/compare/extension@v0.8.0...extension@v0.8.1) (2025-06-19)
 
 
