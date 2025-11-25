@@ -211,9 +211,7 @@ export const TransferDestination = ({
                 </div>
               : <button
                   type="button"
-                  disabled={
-                    isShieldingTransaction || isSubmitting || !sourceAsset
-                  }
+                  disabled={isShieldingTransaction || isSubmitting}
                   onClick={handleOpenModal}
                   className={clsx(
                     "flex justify-between items-center bg-neutral-900 p-2 rounded-sm w-full",
