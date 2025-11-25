@@ -1,6 +1,6 @@
 import { Panel } from "@namada/components";
 import { params } from "App/routes";
-import { isShieldedAddress } from "App/Transfer/common";
+import { isShieldedAddress, isTransparentAddress } from "App/Transfer/common";
 import { TransferModule } from "App/Transfer/TransferModule";
 import { OnSubmitTransferParams } from "App/Transfer/types";
 import { chainParametersAtom } from "atoms/chain/atoms";
@@ -108,6 +108,7 @@ export const NamadaTransfer = ({
   });
 
   const isSourceShielded = isShieldedAddress(sourceAddress ?? "");
+  const isSourceTransparent = isTransparentAddress(sourceAddress ?? "");
   const isTargetShielded = isShieldedAddress(destinationAddress ?? "");
 
   const onSubmitTransfer = async ({
@@ -165,7 +166,11 @@ export const NamadaTransfer = ({
   return (
     <Panel className="min-h-[600px] rounded-sm flex flex-col flex-1 py-9">
       <header className="text-yellow text-center mb-8 gap-6">
-        {`${isSourceShielded ? "Shielded" : "Transparent"} Transfer`}
+        {`${
+          isSourceShielded ? "Shielded"
+          : isSourceTransparent ? "Transparent"
+          : ""
+        } Transfer`}
       </header>
       <TransferModule
         source={{
