@@ -13,6 +13,7 @@ import { getChainFromAddress, getChainImageUrl } from "integrations/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { useCallback, useState } from "react";
 import { Address, Asset } from "types";
+import { timestampToRelativeTime } from "utils/dates";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 import {
@@ -38,6 +39,7 @@ type AddressOption = {
   address: string;
   icon: string;
   type: "transparent" | "shielded" | "ibc" | "keplr";
+  timestamp?: number;
 };
 
 type DestinationAddressModalProps = {
@@ -120,7 +122,7 @@ export const DestinationAddressModal = ({
 
   // Build recent addresses options
   const filteredRecentAddresses = filterNonIbcIfSourceIbc(recentAddresses);
-  const recentAddressOptions: AddressOption[] = filteredRecentAddresses
+  const recentAddressOptions = filteredRecentAddresses
     .filter((addresses) => !addressOptionsAddresses.includes(addresses.address))
     .filter((addresses) => addresses.address !== sourceAddress)
     .map((recent) => ({
@@ -132,6 +134,7 @@ export const DestinationAddressModal = ({
         : recent.type === "transparent" ? namadaTransparentIcon
         : getChainImageUrl(getChainFromAddress(recent.address ?? "")), // fallback for IBC
       type: recent.type,
+      timestamp: recent.timestamp,
     }));
 
   const validateAddress = (address: string): ValidationResult => {
@@ -376,6 +379,13 @@ export const DestinationAddressModal = ({
                           </span>
                         </div>
                       </div>
+                      {option.timestamp && (
+                        <div className="flex flex-col items-end">
+                          <span className="text-xs text-neutral-500">
+                            {timestampToRelativeTime(option.timestamp)}
+                          </span>
+                        </div>
+                      )}
                     </button>
                   ))}
                 </Stack>

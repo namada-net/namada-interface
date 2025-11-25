@@ -1,8 +1,15 @@
+import {
+  isIbcAddress,
+  isShieldedAddress,
+  isTransparentAddress,
+} from "App/Transfer/common";
 import { accountBalanceAtom, defaultAccountAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance/atoms";
 import { shouldUpdateBalanceAtom, shouldUpdateProposalAtom } from "atoms/etc";
 import { claimableRewardsAtom } from "atoms/staking";
-import { useAtomValue, useSetAtom } from "jotai";
+import { recentAddressesAtom } from "atoms/transactions";
+import { getAddressLabel } from "atoms/transfer/functions";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { TransferStep, TransferTransactionData } from "types";
 import { useTransactionEventListener } from "utils";
 import { useTransactionActions } from "./useTransactionActions";
@@ -16,6 +23,42 @@ export const useTransactionCallback = (): void => {
   const { changeTransaction } = useTransactionActions();
   const shouldUpdateProposal = useSetAtom(shouldUpdateProposalAtom);
   const shouldUpdateBalance = useSetAtom(shouldUpdateBalanceAtom);
+  const [recentAddresses, setRecentAddresses] = useAtom(recentAddressesAtom);
+
+  const updateRecentAddressTimestamp = (destinationAddress: string): void => {
+    // Determine the address type
+    let addressType: "transparent" | "shielded" | "ibc";
+    if (isTransparentAddress(destinationAddress)) {
+      addressType = "transparent";
+    } else if (isShieldedAddress(destinationAddress)) {
+      addressType = "shielded";
+    } else if (isIbcAddress(destinationAddress)) {
+      addressType = "ibc";
+    } else {
+      return; // Unknown address type, don't update
+    }
+
+    // Find existing entry to preserve its label
+    const existing = recentAddresses.find(
+      (recent) => recent.address === destinationAddress
+    );
+
+    // Add updated entry at the beginning, remove old entry, and keep only last 10
+    setRecentAddresses(
+      [
+        {
+          address: destinationAddress,
+          type: addressType,
+          label:
+            existing?.label || getAddressLabel(destinationAddress, addressType),
+          timestamp: Date.now(),
+        },
+        ...recentAddresses.filter(
+          (recent) => recent.address !== destinationAddress
+        ),
+      ].slice(0, 10)
+    );
+  };
 
   const onBalanceUpdate = (): void => {
     // TODO: refactor this after event subscription is enabled on indexer
@@ -55,6 +98,11 @@ export const useTransactionCallback = (): void => {
     shouldUpdateBalance(true);
     refetchBalances();
     refetchShieldedBalance();
+
+    // Update recent addresses timestamp for the destination
+    if (e.detail.destinationAddress) {
+      updateRecentAddressTimestamp(e.detail.destinationAddress);
+    }
 
     const timePolling = 6 * 1000;
     setTimeout(() => shouldUpdateBalance(false), timePolling);

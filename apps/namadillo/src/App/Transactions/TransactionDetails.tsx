@@ -15,7 +15,6 @@ export const TransactionDetails = (): JSX.Element => {
 
   return (
     <Panel className="flex-1 h-full">
-      <h1 className="mb-12">Transactions</h1>
       <TransactionReceipt transaction={transaction} />
     </Panel>
   );

@@ -25,3 +25,9 @@ export const secondsToTimeRemainingString = (
   secondsToDateTime(endTimeInSeconds)
     .diff(secondsToDateTime(startTimeInSeconds), ["days", "hours", "minutes"])
     .toHuman({ maximumFractionDigits: 0 });
+
+export const timestampToRelativeTime = (timestamp: number): string => {
+  const dateTime = DateTime.fromMillis(timestamp);
+  const relative = dateTime.toRelative();
+  return relative || "1m ago";
+};
