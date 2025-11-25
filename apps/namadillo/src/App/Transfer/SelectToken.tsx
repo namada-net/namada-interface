@@ -250,9 +250,10 @@ export const SelectToken = ({
                 {allNetworks.map((network) => (
                   <li key={network.chain_name}>
                     <button
-                      onClick={() =>
-                        handleNetworkSelect(network.chain_name.toLowerCase())
-                      }
+                      onClick={() => {
+                        handleNetworkSelect(network.chain_name.toLowerCase());
+                        setFilter("");
+                      }}
                       className={`flex items-center gap-3 p-2 w-full rounded-sm transition-colors ${
                         selectedNetwork === network.chain_name ?
                           "bg-white/5 border border-white/20"
