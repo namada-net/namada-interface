@@ -4,3 +4,7 @@
     Cross-Origin-Embedder-Policy = "credentialless"
     Cross-Origin-Opener-Policy = "same-origin"
 
+[build]
+  base = "apps/namadillo"
+  command = "yarn build && ./scripts/copy-config.sh"
+  publish = "dist"
