@@ -354,7 +354,7 @@ export const TransferModule = ({
           <Link
             className="text-yellow underline"
             to={`${routes.transfer}?${params.source}=${shieldedAccount?.address || ""}&${params.destination}=${transparentAccount?.address || ""}`}
-            title={`View pending transactions`}
+            title={`Unshield`}
           >
             Click here.
           </Link>
