@@ -209,6 +209,26 @@ export const broadcastTransaction = async <T>(
   return response;
 };
 
+export const dryRunTransaction = async (
+  signedTxs: Uint8Array[],
+  publicKey: string
+): Promise<bigint> => {
+  const { rpc } = await getSdkInstance();
+  const response = await Promise.allSettled(
+    signedTxs.map((tx) => rpc.dryRunTx(tx, publicKey))
+  );
+
+  const gas = response.reduce((acc, res) => {
+    if (res.status === "fulfilled") {
+      // TODO:
+      acc += res.value as unknown as bigint;
+    }
+    return acc;
+  }, BigInt(0));
+
+  return gas;
+};
+
 // We use this to prevent dispatching events for transfer events
 // as they are handled by useTransactionWatcher
 export const isTransferEventType = (
