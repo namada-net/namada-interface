@@ -6,12 +6,14 @@ type TransactionFeeProps = {
   displayAmount: BigNumber;
   symbol: string;
   compact?: boolean;
+  isLoading?: boolean;
 };
 
 export const TransactionFee = ({
   displayAmount,
   symbol,
   compact = false,
+  isLoading = false,
 }: TransactionFeeProps): JSX.Element => {
   return (
     <div className="flex w-full gap-2">
@@ -24,11 +26,21 @@ export const TransactionFee = ({
       >
         {compact ? "Fee:" : "Transaction Fee"}
       </span>
-      <TokenCurrency
-        symbol={symbol}
-        amount={displayAmount}
-        className="text-sm font-medium"
-      />
+      {isLoading ?
+        <div
+          className={clsx(
+            "w-20 h-5 bg-neutral-700 rounded-sm",
+            "animate-pulse"
+          )}
+        />
+      : <TokenCurrency
+          symbol={symbol}
+          amount={displayAmount}
+          className={clsx("text-sm font-medium", {
+            "animate-pulse": isLoading,
+          })}
+        />
+      }
     </div>
   );
 };

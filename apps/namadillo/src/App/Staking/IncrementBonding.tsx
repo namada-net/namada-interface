@@ -12,7 +12,9 @@ import { accountBalanceAtom, defaultAccountAtom } from "atoms/accounts";
 import { chainParametersAtom } from "atoms/chain";
 import { createBondTxAtom } from "atoms/staking";
 import { allValidatorsAtom } from "atoms/validators";
+import BigNumber from "bignumber.js";
 import clsx from "clsx";
+import { useDryRunGas } from "hooks/useDryRunGas";
 import { useStakeModule } from "hooks/useStakeModule";
 import { useTransaction } from "hooks/useTransaction";
 import { useValidatorFilter } from "hooks/useValidatorFilter";
@@ -91,6 +93,23 @@ const IncrementBonding = (): JSX.Element => {
       onCloseModal();
     },
   });
+
+  const gasQuery = useDryRunGas(
+    createBondTxAtom,
+    parseUpdatedAmounts(),
+    "tpknam1qpf0urw04xpqdu6pt0k0pe9f8krv3j6j4jj57t8vvmqqcxxa9vc3gpk3xgf"
+  );
+
+  const feePropsModified = {
+    ...feeProps,
+    gasConfig: {
+      ...feeProps.gasConfig,
+      gasLimit:
+        gasQuery.data ?
+          BigNumber(gasQuery.data.toString())
+        : feeProps.gasConfig.gasLimit,
+    },
+  };
 
   const filteredValidators = useValidatorFilter({
     validators: validators.isSuccess ? validators.data : [],
@@ -224,6 +243,7 @@ const IncrementBonding = (): JSX.Element => {
             </AtomErrorBoundary>
           </Panel>
           <div className="relative grid grid-cols-[1fr_25%_1fr] items-center">
+            DUPA: {gasQuery.data?.toString() ?? "no data"}
             <ActionButton
               type="submit"
               size="sm"
@@ -236,7 +256,10 @@ const IncrementBonding = (): JSX.Element => {
               {isPerformingBonding ? "Processing..." : errorMessage || "Stake"}
             </ActionButton>
             <div className="justify-self-end px-4">
-              <TransactionFeeButton feeProps={feeProps} />
+              <TransactionFeeButton
+                feeProps={feePropsModified}
+                isLoading={gasQuery.isLoading}
+              />
             </div>
           </div>
         </form>

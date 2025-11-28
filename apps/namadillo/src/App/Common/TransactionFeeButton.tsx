@@ -14,11 +14,13 @@ export const TransactionFeeButton = ({
   className,
   isShieldedTransfer = false,
   compact = false,
+  isLoading = false,
 }: {
   feeProps: TransactionFeeProps;
   className?: string;
   isShieldedTransfer?: boolean;
   compact?: boolean;
+  isLoading?: boolean;
 }): JSX.Element => {
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -45,6 +47,7 @@ export const TransactionFeeButton = ({
           compact={compact}
           displayAmount={gasDisplayAmount?.totalDisplayAmount || BigNumber(0)}
           symbol={(!compact && gasDisplayAmount?.asset.symbol) || ""}
+          isLoading={isLoading}
         />
         <div className="flex items-center gap-2">
           {!compact && <div className="text-neutral-500 text-xs">Fees:</div>}
