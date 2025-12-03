@@ -6,7 +6,7 @@ import {
   shieldedTokensAtom,
 } from "atoms/balance/atoms";
 import { useAtomValue } from "jotai";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShieldedFungibleTable } from "./ShieldedFungibleTable";
 import { ShieldedNFTTable } from "./ShieldedNFTTable";
@@ -31,10 +31,16 @@ const ShieldAssetCta = (): JSX.Element => {
 
 export const ShieldedAssetTable = (): JSX.Element => {
   const [tab, setTab] = useState(tabs[0]);
+  const { refetch: refetchShieldedTokens } = useAtomValue(shieldedTokensAtom);
   const shieldedTokensQuery = useAtomValue(shieldedTokensAtom);
   const shielededTokensRewardsEstQuery = useAtomValue(
     shieldedRewardsPerTokenAtom
   );
+
+  // Refetch shielded tokens on mount
+  useEffect(() => {
+    refetchShieldedTokens();
+  }, []);
 
   if (shieldedTokensQuery.data === undefined) {
     return <SkeletonLoading height="125px" width="100%" />;

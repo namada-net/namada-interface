@@ -576,7 +576,11 @@ export const useTransactionNotifications = (): void => {
               symbol={tx.targetAsset.symbol}
             />
           </b>{" "}
-          has completed
+          has completed.
+          <br />
+          <b>Note:</b> your balance may not immediately reflect this. If
+          that&apos;s the case, plase wait a few seconds and refresh your
+          balance.
         </>
       ),
       type: "success",

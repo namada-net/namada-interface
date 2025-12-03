@@ -43,12 +43,13 @@ export const SwapSelectAssetModal = ({
           asset.name.toLowerCase().indexOf(filter.toLowerCase()) >= 0 ||
           asset.symbol.toLowerCase().indexOf(filter.toLowerCase()) >= 0
       )
-      // We temporarily hide stride assets until we support them fully
+      // We temporarily hide stride and um assets until we support them fully
       .filter(
         (asset) =>
           !asset.traces?.find(
             (trace) =>
-              trace.type === "ibc" && trace.counterparty.chain_name === "stride"
+              trace.type === "ibc" &&
+              ["stride", "penumbra"].includes(trace.counterparty.chain_name)
           )
       );
 

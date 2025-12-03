@@ -20,6 +20,8 @@ export const SwapInProgress = (): JSX.Element => {
       status.txHash &&
       tx.hash === status.txHash
     ) {
+      // TODO: Handle this elswhere, because if we change view before the disposable
+      // signer won't be cleared
       await clearDisposableSigner(tx.refundTarget);
       setStatus({ t: "Completed" });
     }
