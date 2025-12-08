@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/namada-net/namada-interface/compare/extension@v0.9.0...extension@v0.10.0) (2025-12-08)
+
+
+### Features
+
+* Add data collection permissions to the Firefox manifest ([#2358](https://github.com/namada-net/namada-interface/issues/2358)) ([e21c509](https://github.com/namada-net/namada-interface/commit/e21c509a24a718a017628554f203df1b59d07b65))
+
 ## [0.9.0](https://github.com/namada-net/namada-interface/compare/extension@v0.8.1...extension@v0.9.0) (2025-11-25)
 
 
