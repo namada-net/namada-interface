@@ -9,11 +9,12 @@ import {
   isPublicKeyRevealedAtom,
 } from "atoms/fees";
 import { tokenPricesFamily } from "atoms/prices/atoms";
+import { serverFeeAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import { useAtomValue } from "jotai";
 import { useMemo, useState } from "react";
-import { GasConfig } from "types";
+import { FrontendFeeConfig, GasConfig } from "types";
 import { TxKind } from "types/txKind";
 import { findCheapestToken } from "./internal";
 
@@ -24,6 +25,7 @@ export type TransactionFeeProps = {
   gasPriceTable: GasPriceTable | undefined;
   onChangeGasLimit: (value: BigNumber) => void;
   onChangeGasToken: (value: string) => void;
+  frontendFeeConfig?: FrontendFeeConfig;
 };
 
 export const useTransactionFee = (
@@ -35,6 +37,7 @@ export const useTransactionFee = (
   const userTransparentBalances = useAtomValue(transparentBalanceAtom);
   const userShieldedBalances = useAtomValue(shieldedBalanceAtom);
   const isPublicKeyRevealed = useAtomValue(isPublicKeyRevealedAtom);
+  const serverFee = useAtomValue(serverFeeAtom);
 
   const { data: nativeToken, isLoading: isLoadingNativeToken } = useAtomValue(
     nativeTokenAddressAtom
@@ -137,6 +140,13 @@ export const useTransactionFee = (
     gasToken,
   };
 
+  // TODO: mappings
+  const frontendFeeConfig = serverFee && {
+    target: serverFee.target,
+    percentage: serverFee.percentage,
+    maxFeeInMinDenom: serverFee.maxValue,
+  };
+
   const isLoading =
     userTransparentBalances.isLoading ||
     isLoadingNativeToken ||
@@ -145,6 +155,7 @@ export const useTransactionFee = (
 
   return {
     gasConfig,
+    frontendFeeConfig,
     isLoading,
     gasEstimate,
     gasPriceTable,

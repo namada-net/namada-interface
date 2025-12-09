@@ -17,7 +17,7 @@ import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { NamadaKeychain } from "hooks/useNamadaKeychain";
 import { buildTx, EncodedTxData, isPublicKeyRevealed } from "lib/query";
-import { Address, ChainSettings, GasConfig } from "types";
+import { Address, ChainSettings, FrontendFeeConfig, GasConfig } from "types";
 import { getSdkInstance } from "utils/sdk";
 import {
   IbcTransfer,
@@ -168,7 +168,8 @@ export const createShieldingTransferTx = async (
   props: ShieldingTransferProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
-  memo?: string
+  memo?: string,
+  frontendFeeConfig?: FrontendFeeConfig
 ): Promise<EncodedTxData<ShieldingTransferProps> | undefined> => {
   const source = props[0]?.data[0]?.source;
   const destination = props[0]?.target;
@@ -193,6 +194,10 @@ export const createShieldingTransferTx = async (
         target: destination,
         data: [{ source, token, amount }],
         bparams,
+        frontendSusFee: frontendFeeConfig && {
+          address: frontendFeeConfig.target,
+          amount: frontendFeeConfig.percentage.toString(),
+        },
       };
       const msg: Shield = {
         type: "shield",
@@ -220,7 +225,8 @@ export const createUnshieldingTransferTx = async (
   gasConfig: GasConfig,
   rpcUrl: string,
   disposableSigner: GenDisposableSignerResponse,
-  memo?: string
+  memo?: string,
+  frontendFeeConfig?: FrontendFeeConfig
 ): Promise<EncodedTxData<UnshieldingTransferProps> | undefined> => {
   const { publicKey: signerPublicKey } = disposableSigner;
 
@@ -247,6 +253,10 @@ export const createUnshieldingTransferTx = async (
         source,
         data: [{ target: destination, token, amount }],
         bparams,
+        frontendSusFee: frontendFeeConfig && {
+          address: frontendFeeConfig.target,
+          amount: frontendFeeConfig.percentage.toString(),
+        },
       };
 
       const msg: Unshield = {
@@ -274,7 +284,8 @@ export const createIbcTx = async (
   gasConfig: GasConfig,
   rpcUrl: string,
   signerPublicKey: string,
-  memo?: string
+  memo?: string,
+  frontendFeeConfig?: FrontendFeeConfig
 ): Promise<EncodedTxData<IbcTransferProps>> => {
   let bparams: BparamsMsgValue[] | undefined;
   if (account.type === AccountType.Ledger) {
@@ -292,6 +303,10 @@ export const createIbcTx = async (
         ...props[0],
         gasSpendingKey: props[0].gasSpendingKey,
         bparams,
+        frontendSusFee: frontendFeeConfig && {
+          address: frontendFeeConfig.target,
+          amount: frontendFeeConfig.percentage.toString(),
+        },
       };
 
       // We only check if we need to reveal the public key if the gas spending key is not provided
@@ -326,7 +341,8 @@ export const createOsmosisSwapTx = async (
   gasConfig: GasConfig,
   rpcUrl: string,
   disposableSigner: GenDisposableSignerResponse,
-  memo?: string
+  memo?: string,
+  frontendFeeConfig?: FrontendFeeConfig
 ): Promise<EncodedTxData<OsmosisSwapProps>> => {
   const { publicKey: signerPublicKey } = disposableSigner;
 
@@ -349,6 +365,10 @@ export const createOsmosisSwapTx = async (
           ...transfer,
           gasSpendingKey: transfer.gasSpendingKey,
           bparams,
+          frontendSusFee: frontendFeeConfig && {
+            address: frontendFeeConfig.target,
+            amount: frontendFeeConfig.percentage.toString(),
+          },
         },
       };
       const msg: OsmosisSwap = {

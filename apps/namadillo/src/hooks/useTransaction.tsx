@@ -147,6 +147,7 @@ export const useTransaction = <T,>({
           params,
           gasConfig: feeProps.gasConfig,
           account,
+          frontendFeeConfig: feeProps.frontendFeeConfig,
           ...txAdditionalParams,
         };
         const encodedTxData = await performBuildTx(variables);

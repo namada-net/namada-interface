@@ -16,7 +16,7 @@ import {
 } from "@namada/indexer-client";
 import { getIndexerApi } from "atoms/api";
 import { chainParametersAtom } from "atoms/chain";
-import { rpcUrlAtom } from "atoms/settings";
+import { rpcUrlAtom, serverFeeAtom } from "atoms/settings";
 import { queryForAck, queryForIbcTimeout } from "atoms/transactions";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
@@ -73,6 +73,7 @@ export const getShieldedArgs = async (
   const store = getDefaultStore();
   const rpcUrl = store.get(rpcUrlAtom);
   const chain = store.get(chainParametersAtom);
+  const serverFee = store.get(serverFeeAtom);
 
   if (!chain.isSuccess) throw "Chain not loaded";
 
@@ -91,6 +92,7 @@ export const getShieldedArgs = async (
       amount,
       destinationChannelId,
       chainId: chain.data.chainId,
+      frontendFeeConfig: serverFee,
     },
   };
 

@@ -103,6 +103,7 @@ export const createShieldingTransferAtom = atomWithMutation((get) => {
       gasConfig,
       account,
       memo,
+      frontendFeeConfig,
     }: BuildTxAtomParams<ShieldingTransferProps>) =>
       createShieldingTransferTx(
         chain.data!,
@@ -110,7 +111,8 @@ export const createShieldingTransferAtom = atomWithMutation((get) => {
         params,
         gasConfig,
         rpcUrl,
-        memo
+        memo,
+        frontendFeeConfig
       ),
   };
 });

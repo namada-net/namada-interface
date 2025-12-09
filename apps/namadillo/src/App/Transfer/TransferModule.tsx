@@ -130,19 +130,19 @@ export const TransferModule = ({
   }, [gasConfig]);
 
   const availableAmountMinusFees = useMemo(() => {
-    if (!availableAmount || !availableAssets) return;
+    if (!availableAmount || !availableAssets || !displayGasFee) return;
+    let amountMinusFees = availableAmount;
 
-    if (
-      !displayGasFee?.totalDisplayAmount ||
-      // Don't subtract if the gas token is different than the selected asset:
-      gasConfig?.gasToken !== selectedAsset?.asset.address
-    ) {
-      return availableAmount;
+    if (gasConfig?.gasToken === selectedAsset?.asset.address) {
+      amountMinusFees = availableAmount
+        .minus(displayGasFee.totalDisplayAmount)
+        .decimalPlaces(6);
     }
-
-    const amountMinusFees = availableAmount
-      .minus(displayGasFee.totalDisplayAmount)
-      .decimalPlaces(6);
+    if (feeProps?.frontendFeeConfig?.percentage) {
+      amountMinusFees = amountMinusFees
+        .div(feeProps.frontendFeeConfig.percentage.plus(1))
+        .decimalPlaces(6);
+    }
 
     return BigNumber.max(amountMinusFees, 0);
   }, [selectedAsset?.asset.address, availableAmount, displayGasFee]);

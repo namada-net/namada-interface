@@ -3772,7 +3772,7 @@ __metadata:
     "@keplr-wallet/types": "npm:^0.12.136"
     "@namada/chain-registry": "npm:^1.5.2"
     "@namada/indexer-client": "npm:4.0.5"
-    "@namada/sdk-multicore": "npm:0.23.0"
+    "@namada/sdk-multicore": "file:.yalc/@namada/sdk-multicore"
     "@namada/sdk-node": "npm:0.23.0"
     "@namada/vite-esbuild-plugin": "npm:^1.0.1"
     "@playwright/test": "npm:^1.24.1"
@@ -3858,9 +3858,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@namada/sdk-multicore@npm:0.23.0":
+"@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo":
   version: 0.23.0
-  resolution: "@namada/sdk-multicore@npm:0.23.0"
+  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=4a28fd&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3871,7 +3871,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/435a2a08f4abbffbc62ad1f164f8ca5d9700eec53a4930508f73dff09ddcfc06081f6bad1fe6811d18d5ad9695ed2237a559b395eed907327c9a7f955a454723
+  checksum: 10c0/c0e33565a23ac1d3cae71cf150a1f6744f43d511b6c98aa48a8ac840dca626aaa897e4563ad42a4f518d237149936890afce482248c72114eceb23546078cd79
   languageName: node
   linkType: hard
 

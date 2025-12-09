@@ -9,7 +9,7 @@ import {
 import { Account, OsmosisSwapMsgValue } from "@namada/types";
 import BigNumber from "bignumber.js";
 import { EncodedTxData, TransactionPair } from "lib/query";
-import { ChainSettings, GasConfig } from "types";
+import { ChainSettings, FrontendFeeConfig, GasConfig } from "types";
 import { WebWorkerMessage } from "./utils";
 
 export type Init = WebWorkerMessage<"init", SdkWasmOptions>;
@@ -93,6 +93,7 @@ type GenerateIbcShieldingMemoPayload = {
   amount: BigNumber;
   destinationChannelId: string;
   chainId: string;
+  frontendFeeConfig?: FrontendFeeConfig;
 };
 export type GenerateIbcShieldingMemo = WebWorkerMessage<
   "generate-ibc-shielding-memo",

@@ -4,3 +4,12 @@
 #masp_indexer_url = ""
 #localnet_enabled = false
 #fathom_site_id = ""
+
+[server_fee]
+# tnam or znam address
+# target = "znam175uaqlukleyjjyfcccehp2pw3g696a57skewlv0fenldlw702gtjd6qkpjs09zxl6jafsz3e73h"
+target = "tnam1qrku7yxdt6d23nhe826ntukygzkfyczuu5mm0yll"
+# between 0 and 1
+percentage = 0.001
+# raw max value
+max_value = 100

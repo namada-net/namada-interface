@@ -12,7 +12,7 @@
     "@keplr-wallet/types": "^0.12.136",
     "@namada/chain-registry": "^1.5.2",
     "@namada/indexer-client": "4.0.5",
-    "@namada/sdk-multicore": "0.23.0",
+    "@namada/sdk-multicore": "file:.yalc/@namada/sdk-multicore",
     "@tailwindcss/container-queries": "^0.1.1",
     "@tanstack/query-core": "^5.40.0",
     "@tanstack/react-query": "^5.40.0",

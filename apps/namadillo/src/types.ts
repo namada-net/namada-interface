@@ -26,6 +26,7 @@ type Unique = {
 export type PublicKey = string;
 
 export type Address = string;
+export type PaymentAddress = string;
 
 export type BaseDenom = string;
 
@@ -44,6 +45,12 @@ export type GasConfig = {
   gasLimit: GasLimit;
   gasPriceInMinDenom: GasPrice;
   gasToken: GasToken;
+};
+
+export type FrontendFeeConfig = {
+  target: Address | PaymentAddress;
+  percentage: BigNumber;
+  maxValue?: BigNumber;
 };
 
 export type GasConfigToDisplay = {
@@ -71,6 +78,11 @@ export type SettingsTomlOptions = {
   rpc_url?: string;
   localnet_enabled?: boolean;
   fathom_site_id?: string;
+  server_fee?: {
+    target: string;
+    percentage: number;
+    max_value?: number;
+  };
 };
 
 export type ChainParameters = {
@@ -184,6 +196,7 @@ export type BuildTxAtomParams<T> = {
   gasConfig: GasConfig;
   memo?: string;
   signer?: Signer;
+  frontendFeeConfig?: FrontendFeeConfig;
 };
 
 export type SortOptions = "asc" | "desc" | undefined;

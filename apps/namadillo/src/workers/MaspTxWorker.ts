@@ -1,4 +1,5 @@
 import {
+  GenerateIbcShieldingMemoProps,
   IbcTransferProps,
   Sdk,
   ShieldedTransferProps,
@@ -260,14 +261,29 @@ async function generateIbcShieldingMemo(
   sdk: Sdk,
   payload: GenerateIbcShieldingMemo["payload"]
 ): Promise<string> {
-  const { target, token, amount, destinationChannelId, chainId } = payload;
-  await sdk.masp.loadMaspParams("", chainId);
-
-  const memo = await sdk.tx.generateIbcShieldingMemo(
+  const {
     target,
     token,
     amount,
-    destinationChannelId
+    destinationChannelId,
+    chainId,
+    frontendFeeConfig,
+  } = payload;
+  await sdk.masp.loadMaspParams("", chainId);
+
+  const generateIbcShieldingMemoProps: GenerateIbcShieldingMemoProps = {
+    target,
+    token,
+    amount,
+    channelId: destinationChannelId,
+    frontendSusFee: frontendFeeConfig && {
+      address: frontendFeeConfig.target,
+      amount: frontendFeeConfig.percentage.toString(),
+    },
+  };
+
+  const memo = await sdk.tx.generateIbcShieldingMemo(
+    generateIbcShieldingMemoProps
   );
 
   return memo;
