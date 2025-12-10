@@ -131,6 +131,7 @@ export const createUnshieldingTransferAtom = atomWithMutation((get) => {
       account,
       signer,
       memo,
+      frontendFeeConfig,
     }: BuildTxAtomParams<UnshieldingTransferProps>) => {
       invariant(
         signer,
@@ -152,7 +153,8 @@ export const createUnshieldingTransferAtom = atomWithMutation((get) => {
         gasConfig,
         rpcUrl,
         signer,
-        memo
+        memo,
+        frontendFeeConfig
       );
     },
   };

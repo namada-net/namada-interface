@@ -347,8 +347,7 @@ export const createOsmosisSwapTx = async (
   gasConfig: GasConfig,
   rpcUrl: string,
   disposableSigner: GenDisposableSignerResponse,
-  memo?: string,
-  frontendFeeConfig?: FrontendFeeConfig
+  memo?: string
 ): Promise<EncodedTxData<OsmosisSwapProps>> => {
   const { publicKey: signerPublicKey } = disposableSigner;
 
@@ -365,19 +364,12 @@ export const createOsmosisSwapTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      const firstProps = props[0];
-      // TODO: change "default" to a a "*"
-      // TODO: ignore when source is not MASP
-      const frontendSusFee =
-        frontendFeeConfig?.[firstProps.transfer.token] ||
-        frontendFeeConfig?.["default"];
       const msgValue: OsmosisSwapProps = {
         ...props[0],
         transfer: {
           ...transfer,
           gasSpendingKey: transfer.gasSpendingKey,
           bparams,
-          frontendSusFee,
         },
       };
       const msg: OsmosisSwap = {
