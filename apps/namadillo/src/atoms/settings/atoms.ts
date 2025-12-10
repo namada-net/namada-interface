@@ -2,6 +2,8 @@ import { isUrlValid, sanitizeUrl } from "@namada/utils";
 import { getCustomIndexerApi, indexerApiAtom } from "atoms/api";
 import { chainParametersAtom, indexerRpcUrlAtom } from "atoms/chain";
 import BigNumber from "bignumber.js";
+import { pipe } from "fp-ts/lib/function";
+import * as R from "fp-ts/Record";
 import { Getter, Setter, atom, getDefaultStore } from "jotai";
 import { atomWithMutation, atomWithQuery } from "jotai-tanstack-query";
 import { atomWithStorage } from "jotai/utils";
@@ -179,13 +181,12 @@ export const maspIndexerUrlAtom = atom((get) => {
 // TODO: figure out where to have this atom
 export const serverFeeAtom = atom((get) => {
   const serverFee = get(defaultServerConfigAtom).data?.server_fee;
-  return (
-    serverFee && {
-      target: serverFee.target,
-      percentage: BigNumber(serverFee.percentage),
-      maxValue:
-        serverFee.max_value ? BigNumber(serverFee.max_value) : undefined,
-    }
+  return pipe(
+    serverFee ?? {},
+    R.map((fee) => ({
+      target: fee.target,
+      percentage: new BigNumber(fee.percentage),
+    }))
   );
 });
 

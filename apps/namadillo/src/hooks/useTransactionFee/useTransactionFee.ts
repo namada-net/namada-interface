@@ -140,13 +140,6 @@ export const useTransactionFee = (
     gasToken,
   };
 
-  // TODO: mappings
-  const frontendFeeConfig = serverFee && {
-    target: serverFee.target,
-    percentage: serverFee.percentage,
-    maxFeeInMinDenom: serverFee.maxValue,
-  };
-
   const isLoading =
     userTransparentBalances.isLoading ||
     isLoadingNativeToken ||
@@ -155,7 +148,7 @@ export const useTransactionFee = (
 
   return {
     gasConfig,
-    frontendFeeConfig,
+    frontendFeeConfig: serverFee,
     isLoading,
     gasEstimate,
     gasPriceTable,

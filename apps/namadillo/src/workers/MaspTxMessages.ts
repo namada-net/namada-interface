@@ -90,6 +90,7 @@ export type OsmosisSwapDone = WebWorkerMessage<
 type GenerateIbcShieldingMemoPayload = {
   target: string;
   token: string;
+  namadaToken: string;
   amount: BigNumber;
   destinationChannelId: string;
   chainId: string;

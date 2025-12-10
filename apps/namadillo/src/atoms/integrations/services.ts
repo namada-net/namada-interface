@@ -66,6 +66,7 @@ export type IbcTransferParams = TransparentParams | ShieldedParams;
 export const getShieldedArgs = async (
   target: string,
   token: string,
+  namadaToken: string,
   amount: BigNumber,
   destinationChannelId: string
 ): Promise<{ receiver: string; memo: string }> => {
@@ -89,6 +90,7 @@ export const getShieldedArgs = async (
     payload: {
       target,
       token,
+      namadaToken,
       amount,
       destinationChannelId,
       chainId: chain.data.chainId,

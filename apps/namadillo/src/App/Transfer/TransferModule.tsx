@@ -51,6 +51,7 @@ export const TransferModule = ({
   currentStatus,
   currentStatusExplanation,
   gasConfig: gasConfigProp,
+  frontendFeeConfig: frontendFeeConfigProp,
   onSubmitTransfer,
   completedAt,
   onComplete,
@@ -121,7 +122,10 @@ export const TransferModule = ({
     });
   };
 
+  // We have to do this to get correct config for ibc deposits
   const gasConfig = gasConfigProp ?? feeProps?.gasConfig;
+  const frontendFeeConfig =
+    frontendFeeConfigProp ?? feeProps?.frontendFeeConfig;
 
   const displayGasFee = useMemo(() => {
     return gasConfig ?
@@ -138,10 +142,16 @@ export const TransferModule = ({
         .minus(displayGasFee.totalDisplayAmount)
         .decimalPlaces(6);
     }
-    if (feeProps?.frontendFeeConfig?.percentage) {
+
+    const frontendSusFee =
+      frontendFeeConfig?.[selectedAsset.asset.address || "default"];
+
+    if (frontendSusFee && (isShielding || isUnshielding)) {
       amountMinusFees = amountMinusFees
-        .div(feeProps.frontendFeeConfig.percentage.plus(1))
-        .decimalPlaces(6);
+        .div(frontendSusFee.percentage.plus(1))
+        // We have to round UP here as sdk discards the remainder when calculating the fee,
+        // basically rounding down. Otherwise we might end up with remaining dust.
+        .decimalPlaces(6, BigNumber.ROUND_UP);
     }
 
     return BigNumber.max(amountMinusFees, 0);

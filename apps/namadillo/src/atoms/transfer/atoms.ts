@@ -223,6 +223,7 @@ export const createIbcTxAtom = atomWithMutation((get) => {
       account,
       signer,
       memo,
+      frontendFeeConfig,
     }: BuildTxAtomParams<IbcTransferProps>) => {
       invariant(
         signer,
@@ -238,7 +239,8 @@ export const createIbcTxAtom = atomWithMutation((get) => {
         gasConfig,
         rpcUrl,
         signer?.publicKey,
-        memo
+        memo,
+        frontendFeeConfig
       );
     },
   };

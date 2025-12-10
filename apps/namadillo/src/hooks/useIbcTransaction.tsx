@@ -19,6 +19,7 @@ import {
   createNotificationId,
   dispatchToastNotificationAtom,
 } from "atoms/notifications";
+import { serverFeeAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import { useAtomValue, useSetAtom } from "jotai";
@@ -31,6 +32,7 @@ import {
   Address,
   Asset,
   ChainRegistryEntry,
+  FrontendFeeConfig,
   GasConfig,
   IbcTransferStage,
   TransferStep,
@@ -52,6 +54,7 @@ type useIbcTransactionProps = {
 
 type useIbcTransactionOutput = {
   gasConfig: UseQueryResult<GasConfig>;
+  frontendFeeConfig: FrontendFeeConfig;
   transferToNamada: UseMutationResult<
     TransferTransactionData,
     Error,
@@ -77,6 +80,7 @@ export const useIbcTransaction = ({
   const broadcastIbcTx = useAtomValue(broadcastIbcTransactionAtom);
   const dispatchNotification = useSetAtom(dispatchToastNotificationAtom);
   const chainParameters = useAtomValue(chainParametersAtom);
+  const serverFee = useAtomValue(serverFeeAtom);
   const [txHash, setTxHash] = useState<string | undefined>();
   const [rpcUrl, setRpcUrl] = useState<string | undefined>();
   const [stargateClient, setStargateClient] = useState<
@@ -208,11 +212,13 @@ export const useIbcTransaction = ({
           const token =
             asset.traces?.find((trace) => trace.type === "ibc")?.chain.path ||
             asset.base;
+          invariant(selectedAsset.address, "Asset address is required");
 
           return shielded ?
               await getShieldedArgs(
                 destinationAddress,
                 token,
+                selectedAsset.address,
                 baseAmount,
                 destinationChannel!
               )
@@ -271,5 +277,6 @@ export const useIbcTransaction = ({
   return {
     transferToNamada: transferToNamadaQuery,
     gasConfig: gasConfigQuery,
+    frontendFeeConfig: serverFee,
   };
 };

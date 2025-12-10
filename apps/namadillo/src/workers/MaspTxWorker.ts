@@ -264,6 +264,7 @@ async function generateIbcShieldingMemo(
   const {
     target,
     token,
+    namadaToken,
     amount,
     destinationChannelId,
     chainId,
@@ -271,15 +272,16 @@ async function generateIbcShieldingMemo(
   } = payload;
   await sdk.masp.loadMaspParams("", chainId);
 
+  // TODO: change "default" to a a "*"
+  const frontendSusFee =
+    frontendFeeConfig?.[namadaToken] || frontendFeeConfig?.["default"];
+
   const generateIbcShieldingMemoProps: GenerateIbcShieldingMemoProps = {
     target,
     token,
     amount,
     channelId: destinationChannelId,
-    frontendSusFee: frontendFeeConfig && {
-      address: frontendFeeConfig.target,
-      amount: frontendFeeConfig.percentage.toString(),
-    },
+    frontendSusFee,
   };
 
   const memo = await sdk.tx.generateIbcShieldingMemo(

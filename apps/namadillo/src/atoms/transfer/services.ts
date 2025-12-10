@@ -190,14 +190,14 @@ export const createShieldingTransferTx = async (
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
       const publicKeyRevealed = await isPublicKeyRevealed(account.address);
+      // TODO: change "default" to a a "*"
+      const frontendSusFee =
+        frontendFeeConfig?.[token] || frontendFeeConfig?.["default"];
       const msgValue: ShieldingTransferProps = {
         target: destination,
         data: [{ source, token, amount }],
         bparams,
-        frontendSusFee: frontendFeeConfig && {
-          address: frontendFeeConfig.target,
-          amount: frontendFeeConfig.percentage.toString(),
-        },
+        frontendSusFee,
       };
       const msg: Shield = {
         type: "shield",
@@ -249,14 +249,14 @@ export const createUnshieldingTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
+      // TODO: change "default" to a a "*"
+      const frontendSusFee =
+        frontendFeeConfig?.[token] || frontendFeeConfig?.["default"];
       const msgValue: UnshieldingTransferProps = {
         source,
         data: [{ target: destination, token, amount }],
         bparams,
-        frontendSusFee: frontendFeeConfig && {
-          address: frontendFeeConfig.target,
-          amount: frontendFeeConfig.percentage.toString(),
-        },
+        frontendSusFee,
       };
 
       const msg: Unshield = {
@@ -299,14 +299,20 @@ export const createIbcTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
+      const firstProps = props[0];
+      // TODO: change "default" to a a "*"
+      const isUnshielding = firstProps.gasSpendingKey === firstProps.source;
+      const frontendSusFee =
+        isUnshielding ?
+          frontendFeeConfig?.[firstProps.token] ||
+          frontendFeeConfig?.["default"]
+        : undefined;
+
       const msgValue: IbcTransferProps = {
-        ...props[0],
-        gasSpendingKey: props[0].gasSpendingKey,
+        ...firstProps,
+        gasSpendingKey: firstProps.gasSpendingKey,
         bparams,
-        frontendSusFee: frontendFeeConfig && {
-          address: frontendFeeConfig.target,
-          amount: frontendFeeConfig.percentage.toString(),
-        },
+        frontendSusFee,
       };
 
       // We only check if we need to reveal the public key if the gas spending key is not provided
@@ -359,16 +365,19 @@ export const createOsmosisSwapTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
+      const firstProps = props[0];
+      // TODO: change "default" to a a "*"
+      // TODO: ignore when source is not MASP
+      const frontendSusFee =
+        frontendFeeConfig?.[firstProps.transfer.token] ||
+        frontendFeeConfig?.["default"];
       const msgValue: OsmosisSwapProps = {
         ...props[0],
         transfer: {
           ...transfer,
           gasSpendingKey: transfer.gasSpendingKey,
           bparams,
-          frontendSusFee: frontendFeeConfig && {
-            address: frontendFeeConfig.target,
-            amount: frontendFeeConfig.percentage.toString(),
-          },
+          frontendSusFee,
         },
       };
       const msg: OsmosisSwap = {
