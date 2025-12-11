@@ -1,6 +1,5 @@
 import { isTransparentAddress } from "App/Transfer/common";
 import BigNumber from "bignumber.js";
-import namadaAssets from "chain-registry/mainnet/namada/assets";
 import { Address, Asset, GasConfig, GasConfigToDisplay } from "types";
 import { isNamadaAsset, toDisplayAmount } from "utils";
 import { unknownAsset } from "./assets";
@@ -28,7 +27,7 @@ export const getDisplayGasFee = (
     // However, if the gasConfig contains a token used by Keplr, it could be the asset
     // denomination unit, like "uosmo"
     asset =
-      namadaAssets.assets.find((a) =>
+      Object.values(chainAssetsMap).find((a) =>
         a.denom_units.some((d) =>
           d.aliases?.some((alias) => alias === gasToken)
         )

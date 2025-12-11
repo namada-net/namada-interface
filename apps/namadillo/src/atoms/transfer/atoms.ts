@@ -103,7 +103,7 @@ export const createShieldingTransferAtom = atomWithMutation((get) => {
       gasConfig,
       account,
       memo,
-      frontendFeeConfig,
+      frontendFee,
     }: BuildTxAtomParams<ShieldingTransferProps>) =>
       createShieldingTransferTx(
         chain.data!,
@@ -111,8 +111,8 @@ export const createShieldingTransferAtom = atomWithMutation((get) => {
         params,
         gasConfig,
         rpcUrl,
-        memo,
-        frontendFeeConfig
+        frontendFee,
+        memo
       ),
   };
 });
@@ -130,8 +130,8 @@ export const createUnshieldingTransferAtom = atomWithMutation((get) => {
       gasConfig,
       account,
       signer,
+      frontendFee,
       memo,
-      frontendFeeConfig,
     }: BuildTxAtomParams<UnshieldingTransferProps>) => {
       invariant(
         signer,
@@ -153,8 +153,8 @@ export const createUnshieldingTransferAtom = atomWithMutation((get) => {
         gasConfig,
         rpcUrl,
         signer,
-        memo,
-        frontendFeeConfig
+        frontendFee,
+        memo
       );
     },
   };
@@ -225,7 +225,7 @@ export const createIbcTxAtom = atomWithMutation((get) => {
       account,
       signer,
       memo,
-      frontendFeeConfig,
+      frontendFee,
     }: BuildTxAtomParams<IbcTransferProps>) => {
       invariant(
         signer,
@@ -241,8 +241,8 @@ export const createIbcTxAtom = atomWithMutation((get) => {
         gasConfig,
         rpcUrl,
         signer?.publicKey,
-        memo,
-        frontendFeeConfig
+        frontendFee,
+        memo
       );
     },
   };

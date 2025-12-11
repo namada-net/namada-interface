@@ -17,7 +17,7 @@ import {
 import { getIndexerApi } from "atoms/api";
 import { chainParametersAtom } from "atoms/chain";
 import { frontendSusMsgFromConfig } from "atoms/fees";
-import { rpcUrlAtom, serverFeeAtom } from "atoms/settings";
+import { frontendFeeAtom, rpcUrlAtom } from "atoms/settings";
 import { queryForAck, queryForIbcTimeout } from "atoms/transactions";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
@@ -75,7 +75,7 @@ export const getShieldedArgs = async (
   const store = getDefaultStore();
   const rpcUrl = store.get(rpcUrlAtom);
   const chain = store.get(chainParametersAtom);
-  const frontendFeeConfig = store.get(serverFeeAtom);
+  const frontendFee = store.get(frontendFeeAtom);
 
   if (!chain.isSuccess) throw "Chain not loaded";
 
@@ -87,9 +87,10 @@ export const getShieldedArgs = async (
   });
 
   const frontendSusFee = frontendSusMsgFromConfig(
-    frontendFeeConfig,
+    frontendFee,
     namadaToken,
-    "transparent"
+    // For IBC shielding, the fee is always deposited into shielded pool
+    "shielded"
   );
 
   const msg: GenerateIbcShieldingMemo = {

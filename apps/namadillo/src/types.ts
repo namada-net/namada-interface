@@ -48,7 +48,7 @@ export type GasConfig = {
   gasToken: GasToken;
 };
 
-export type FrontendFeeConfig = Record<
+export type FrontendFee = Record<
   TokenAddress,
   {
     transparentTarget: Address;
@@ -82,7 +82,7 @@ export type SettingsTomlOptions = {
   rpc_url?: string;
   localnet_enabled?: boolean;
   fathom_site_id?: string;
-  server_fee?: Record<
+  frontend_fee?: Record<
     string,
     {
       transparent_target: string;
@@ -203,7 +203,7 @@ export type BuildTxAtomParams<T> = {
   gasConfig: GasConfig;
   memo?: string;
   signer?: Signer;
-  frontendFeeConfig?: FrontendFeeConfig;
+  frontendFee: FrontendFee;
 };
 
 export type SortOptions = "asc" | "desc" | undefined;

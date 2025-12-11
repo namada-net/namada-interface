@@ -8,7 +8,7 @@ import {
   Asset,
   AssetWithAmountAndChain,
   ChainRegistryEntry,
-  FrontendFeeConfig,
+  FrontendFee,
   GasConfig,
   LedgerAccountInfo,
   WalletProvider,
@@ -59,7 +59,7 @@ export type TransferModuleProps = {
   errorMessage?: string;
   // Fee overrides - used for IBC deposits only
   gasConfig?: GasConfig;
-  frontendFeeConfig?: FrontendFeeConfig;
+  frontendFee?: FrontendFee;
   currentStatus: string;
   currentStatusExplanation?: string;
   onSubmitTransfer: (params: OnSubmitTransferParams) => Promise<void>;

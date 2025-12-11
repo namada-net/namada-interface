@@ -3860,7 +3860,7 @@ __metadata:
 
 "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore::locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo":
   version: 0.23.0
-  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=1b09c3&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
+  resolution: "@namada/sdk-multicore@file:.yalc/@namada/sdk-multicore#.yalc/@namada/sdk-multicore::hash=1fde1f&locator=%40namada%2Fnamadillo%40workspace%3Aapps%2Fnamadillo"
   dependencies:
     "@cosmjs/encoding": "npm:^0.29.0"
     "@dao-xyz/borsh": "npm:^5.1.5"
@@ -3871,7 +3871,7 @@ __metadata:
     buffer: "npm:^6.0.3"
     semver: "npm:^7.7.2"
     slip44: "npm:^3.0.18"
-  checksum: 10c0/c492801c7b190485187bbd8a50fd575fb66067fc3434dc7094564eb7e35af3b18f9dba552b779abf3ddab60a3cbfec0789d703d799b6ec886144f5055eb712b7
+  checksum: 10c0/fdfe1741ce9974bc438607b633c0bbe7eddf3ed608fed466d356581d0419427fe80559ab99f51f2d8e290352d5271dcbf40ef981fb220f56314e2565e99fdaa7
   languageName: node
   linkType: hard
 

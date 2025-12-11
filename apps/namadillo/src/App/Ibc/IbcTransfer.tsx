@@ -69,11 +69,7 @@ export const IbcTransfer = ({
   const { trackEvent } = useFathomTracker();
   const { storeTransaction } = useTransactionActions();
 
-  const {
-    transferToNamada,
-    gasConfig: gasConfigQuery,
-    frontendFeeConfig,
-  } = useIbcTransaction({
+  const { transferToNamada, gasConfig, frontendFee } = useIbcTransaction({
     registry,
     sourceAddress,
     sourceChannel,
@@ -81,16 +77,6 @@ export const IbcTransfer = ({
     shielded: isShieldedAddress(destinationAddress ?? ""),
     selectedAsset: selectedAssetWithAmount?.asset,
   });
-
-  // Transfer module expects gasToken to be address of the token on the side of namada
-  const gasConfig = useMemo(() => {
-    if (gasConfigQuery.data && selectedAssetWithAmount?.asset.address) {
-      return {
-        ...gasConfigQuery.data,
-        gasToken: selectedAssetWithAmount.asset.address,
-      };
-    }
-  }, [gasConfigQuery.data, selectedAssetWithAmount?.asset.address]);
 
   // DERIVED VALUES
   const shielded = isShieldedAddress(destinationAddress ?? "");
@@ -175,8 +161,8 @@ export const IbcTransfer = ({
           isShieldedAddress: shielded,
           onChangeAddress: setDestinationAddress,
         }}
-        gasConfig={gasConfig}
-        frontendFeeConfig={frontendFeeConfig}
+        gasConfig={gasConfig.data}
+        frontendFee={frontendFee}
         isSubmitting={
           transferToNamada.isPending ||
           /* isSuccess means that the transaction has been broadcasted, but doesn't take

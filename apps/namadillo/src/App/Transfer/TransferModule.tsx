@@ -51,7 +51,7 @@ export const TransferModule = ({
   currentStatus,
   currentStatusExplanation,
   gasConfig: gasConfigProp,
-  frontendFeeConfig: frontendFeeConfigProp,
+  frontendFee: frontendFeeProp,
   onSubmitTransfer,
   completedAt,
   onComplete,
@@ -124,8 +124,7 @@ export const TransferModule = ({
 
   // We have to do this to get correct config for ibc deposits
   const gasConfig = gasConfigProp ?? feeProps?.gasConfig;
-  const frontendFeeConfig =
-    frontendFeeConfigProp ?? feeProps?.frontendFeeConfig;
+  const frontendFee = frontendFeeProp ?? feeProps?.frontendFee;
 
   const displayGasFee = useMemo(() => {
     return gasConfig ?
@@ -143,8 +142,9 @@ export const TransferModule = ({
         .decimalPlaces(6);
     }
 
+    // TODO: move this code
     const frontendSusFee =
-      frontendFeeConfig?.[selectedAsset.asset.address || "default"];
+      frontendFee?.[selectedAsset.asset.address || "default"];
 
     if (frontendSusFee && (isShielding || isUnshielding)) {
       amountMinusFees = amountMinusFees
