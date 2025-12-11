@@ -181,11 +181,13 @@ export const maspIndexerUrlAtom = atom((get) => {
 // TODO: figure out where to have this atom
 export const serverFeeAtom = atom((get) => {
   const serverFee = get(defaultServerConfigAtom).data?.server_fee;
+  // TODO: validate with schema
   return pipe(
     serverFee ?? {},
     R.map((fee) => ({
-      target: fee.target,
-      percentage: new BigNumber(fee.percentage),
+      transparentTarget: fee.transparent_target,
+      shieldedTarget: fee.shielded_target,
+      percentage: BigNumber(fee.percentage),
     }))
   );
 });

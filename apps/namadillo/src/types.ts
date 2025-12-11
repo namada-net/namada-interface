@@ -51,7 +51,8 @@ export type GasConfig = {
 export type FrontendFeeConfig = Record<
   TokenAddress,
   {
-    target: Address | PaymentAddress;
+    transparentTarget: Address;
+    shieldedTarget: PaymentAddress;
     percentage: BigNumber;
   }
 >;
@@ -81,7 +82,14 @@ export type SettingsTomlOptions = {
   rpc_url?: string;
   localnet_enabled?: boolean;
   fathom_site_id?: string;
-  server_fee?: Record<string, { target: string; percentage: number }>;
+  server_fee?: Record<
+    string,
+    {
+      transparent_target: string;
+      shielded_target: string;
+      percentage: number;
+    }
+  >;
 };
 
 export type ChainParameters = {

@@ -5,10 +5,12 @@
 #localnet_enabled = false
 #fathom_site_id = ""
 
-[server_fee.default]
-target = "znam175uaqlukleyjjyfcccehp2pw3g696a57skewlv0fenldlw702gtjd6qkpjs09zxl6jafsz3e73h"
-percentage = 0.005
+[server_fee.*]
+transparent_target = "tnam1qrku7yxdt6d23nhe826ntukygzkfyczuu5mm0yll"
+shielded_target = "znam175uaqlukleyjjyfcccehp2pw3g696a57skewlv0fenldlw702gtjd6qkpjs09zxl6jafsz3e73h"
+percentage = 0.1
 
 [server_fee.tnam1p54697ljxkw3ptffwy8xjhua9uwjc7kk9cc6fxnw]
-target = "znam175uaqlukleyjjyfcccehp2pw3g696a57skewlv0fenldlw702gtjd6qkpjs09zxl6jafsz3e73h"
-percentage = 0.1
+transparent_target = "tnam1qrku7yxdt6d23nhe826ntukygzkfyczuu5mm0yll"
+shielded_target = "znam175uaqlukleyjjyfcccehp2pw3g696a57skewlv0fenldlw702gtjd6qkpjs09zxl6jafsz3e73h"
+percentage = 0.5

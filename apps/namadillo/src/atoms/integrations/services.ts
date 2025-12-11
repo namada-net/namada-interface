@@ -16,6 +16,7 @@ import {
 } from "@namada/indexer-client";
 import { getIndexerApi } from "atoms/api";
 import { chainParametersAtom } from "atoms/chain";
+import { frontendSusMsgFromConfig } from "atoms/fees";
 import { rpcUrlAtom, serverFeeAtom } from "atoms/settings";
 import { queryForAck, queryForIbcTimeout } from "atoms/transactions";
 import BigNumber from "bignumber.js";
@@ -74,7 +75,7 @@ export const getShieldedArgs = async (
   const store = getDefaultStore();
   const rpcUrl = store.get(rpcUrlAtom);
   const chain = store.get(chainParametersAtom);
-  const serverFee = store.get(serverFeeAtom);
+  const frontendFeeConfig = store.get(serverFeeAtom);
 
   if (!chain.isSuccess) throw "Chain not loaded";
 
@@ -85,16 +86,21 @@ export const getShieldedArgs = async (
     payload: { rpcUrl, token: sdk.nativeToken, maspIndexerUrl: "" },
   });
 
+  const frontendSusFee = frontendSusMsgFromConfig(
+    frontendFeeConfig,
+    namadaToken,
+    "transparent"
+  );
+
   const msg: GenerateIbcShieldingMemo = {
     type: "generate-ibc-shielding-memo",
     payload: {
       target,
       token,
-      namadaToken,
       amount,
       destinationChannelId,
       chainId: chain.data.chainId,
-      frontendFeeConfig: serverFee,
+      frontendSusFee,
     },
   };
 

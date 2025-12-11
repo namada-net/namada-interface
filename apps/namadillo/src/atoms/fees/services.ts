@@ -3,6 +3,9 @@ import {
   GasEstimate,
   GasPriceTableInner,
 } from "@namada/indexer-client";
+import { FrontendSusFeeProps } from "@namada/sdk-multicore";
+import { assertNever } from "@namada/utils";
+import { FrontendFeeConfig } from "types";
 import { TxKind } from "types/txKind";
 
 export const fetchGasEstimate = async (
@@ -47,4 +50,25 @@ export const fetchTokensGasPrice = async (
   api: DefaultApi
 ): Promise<GasPriceTableInner[]> => {
   return (await api.apiV1GasPriceGet()).data;
+};
+
+export const frontendSusMsgFromConfig = (
+  frontendFeeConfig: FrontendFeeConfig,
+  token: string,
+  whichTarget: "shielded" | "transparent"
+): FrontendSusFeeProps => {
+  const { percentage, shieldedTarget, transparentTarget } =
+    frontendFeeConfig[token] || frontendFeeConfig["*"];
+
+  const target =
+    whichTarget === "shielded" ? shieldedTarget
+    : whichTarget === "transparent" ? transparentTarget
+    : assertNever(whichTarget);
+
+  const frontendSusFee = {
+    percentage: percentage,
+    target,
+  };
+
+  return frontendSusFee;
 };

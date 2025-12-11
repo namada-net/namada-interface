@@ -13,6 +13,7 @@ import {
   AccountType,
   GenDisposableSignerResponse,
 } from "@namada/types";
+import { frontendSusMsgFromConfig } from "atoms/fees";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { NamadaKeychain } from "hooks/useNamadaKeychain";
@@ -168,8 +169,8 @@ export const createShieldingTransferTx = async (
   props: ShieldingTransferProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
-  memo?: string,
-  frontendFeeConfig?: FrontendFeeConfig
+  frontendFeeConfig: FrontendFeeConfig,
+  memo?: string
 ): Promise<EncodedTxData<ShieldingTransferProps> | undefined> => {
   const source = props[0]?.data[0]?.source;
   const destination = props[0]?.target;
@@ -190,9 +191,11 @@ export const createShieldingTransferTx = async (
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
       const publicKeyRevealed = await isPublicKeyRevealed(account.address);
-      // TODO: change "default" to a a "*"
-      const frontendSusFee =
-        frontendFeeConfig?.[token] || frontendFeeConfig?.["default"];
+      const frontendSusFee = frontendSusMsgFromConfig(
+        frontendFeeConfig,
+        token,
+        "transparent"
+      );
       const msgValue: ShieldingTransferProps = {
         target: destination,
         data: [{ source, token, amount }],
@@ -225,8 +228,8 @@ export const createUnshieldingTransferTx = async (
   gasConfig: GasConfig,
   rpcUrl: string,
   disposableSigner: GenDisposableSignerResponse,
-  memo?: string,
-  frontendFeeConfig?: FrontendFeeConfig
+  frontendFeeConfig: FrontendFeeConfig,
+  memo?: string
 ): Promise<EncodedTxData<UnshieldingTransferProps> | undefined> => {
   const { publicKey: signerPublicKey } = disposableSigner;
 
@@ -249,9 +252,11 @@ export const createUnshieldingTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
-      // TODO: change "default" to a a "*"
-      const frontendSusFee =
-        frontendFeeConfig?.[token] || frontendFeeConfig?.["default"];
+      const frontendSusFee = frontendSusMsgFromConfig(
+        frontendFeeConfig,
+        token,
+        "transparent"
+      );
       const msgValue: UnshieldingTransferProps = {
         source,
         data: [{ target: destination, token, amount }],
@@ -284,8 +289,8 @@ export const createIbcTx = async (
   gasConfig: GasConfig,
   rpcUrl: string,
   signerPublicKey: string,
-  memo?: string,
-  frontendFeeConfig?: FrontendFeeConfig
+  frontendFeeConfig: FrontendFeeConfig,
+  memo?: string
 ): Promise<EncodedTxData<IbcTransferProps>> => {
   let bparams: BparamsMsgValue[] | undefined;
   if (account.type === AccountType.Ledger) {
@@ -300,14 +305,11 @@ export const createIbcTx = async (
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
       const firstProps = props[0];
-      // TODO: change "default" to a a "*"
-      const isUnshielding = firstProps.gasSpendingKey === firstProps.source;
-      const frontendSusFee =
-        isUnshielding ?
-          frontendFeeConfig?.[firstProps.token] ||
-          frontendFeeConfig?.["default"]
-        : undefined;
-
+      const frontendSusFee = frontendSusMsgFromConfig(
+        frontendFeeConfig,
+        firstProps.token,
+        "transparent"
+      );
       const msgValue: IbcTransferProps = {
         ...firstProps,
         gasSpendingKey: firstProps.gasSpendingKey,
