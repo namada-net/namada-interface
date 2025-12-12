@@ -3,13 +3,13 @@ import { transparentBalanceAtom } from "atoms/accounts";
 import { shieldedBalanceAtom } from "atoms/balance";
 import { nativeTokenAddressAtom } from "atoms/chain";
 import {
+  frontendFeeAtom,
   gasEstimateFamily,
   GasPriceTable,
   gasPriceTableAtom,
   isPublicKeyRevealedAtom,
 } from "atoms/fees";
 import { tokenPricesFamily } from "atoms/prices/atoms";
-import { frontendFeeAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import invariant from "invariant";
 import { useAtomValue } from "jotai";

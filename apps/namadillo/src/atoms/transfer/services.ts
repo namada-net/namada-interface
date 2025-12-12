@@ -13,12 +13,12 @@ import {
   AccountType,
   GenDisposableSignerResponse,
 } from "@namada/types";
-import { frontendSusMsgFromConfig } from "atoms/fees";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { NamadaKeychain } from "hooks/useNamadaKeychain";
 import { buildTx, EncodedTxData, isPublicKeyRevealed } from "lib/query";
 import { Address, ChainSettings, FrontendFee, GasConfig } from "types";
+import { frontendSusMsgFromConfig } from "utils/frontendFee";
 import { getSdkInstance } from "utils/sdk";
 import {
   IbcTransfer,

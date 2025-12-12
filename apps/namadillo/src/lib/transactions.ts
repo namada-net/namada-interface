@@ -139,18 +139,24 @@ export const createTransferDataFromIbc = (
   sourceChainId: string,
   destinationChainId: string,
   details: IbcTransferStage,
-  isShieldedTx: boolean
+  isShieldedTx: boolean,
+  // It's needed to calculate real amount if frontend fee is used
+  declaratedBaseAmount: BigNumber
 ): TransferTransactionData => {
   const transferAttributes = getIbcTransferAttributes(tx);
   const packetAttributes = getEventAttribute(tx, "send_packet");
   const feeAttributes = getEventAttribute(tx, "fee_pay");
   const tipAttributes = getEventAttribute(tx, "tip_pay");
   const baseDenom = asset.base;
-
-  const transferAmount = toDisplayAmount(
-    asset,
-    getAmountAttributeValue(transferAttributes, "amount", baseDenom)
+  const attrAmount = getAmountAttributeValue(
+    transferAttributes,
+    "amount",
+    baseDenom
   );
+  const baseAmount =
+    attrAmount.eq(declaratedBaseAmount) ? attrAmount : declaratedBaseAmount;
+
+  const transferAmount = toDisplayAmount(asset, baseAmount);
 
   const tipPaid = toDisplayAmount(
     asset,

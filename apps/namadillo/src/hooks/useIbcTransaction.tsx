@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { TokenCurrency } from "App/Common/TokenCurrency";
 import { chainParametersAtom } from "atoms/chain";
+import { frontendFeeAtom } from "atoms/fees";
 import {
   broadcastIbcTransactionAtom,
   createStargateClient,
@@ -19,8 +20,9 @@ import {
   createNotificationId,
   dispatchToastNotificationAtom,
 } from "atoms/notifications";
-import { frontendFeeAtom } from "atoms/settings";
 import BigNumber from "bignumber.js";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/Option";
 import invariant from "invariant";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
@@ -35,11 +37,16 @@ import {
   FrontendFee,
   GasConfig,
   IbcTransferStage,
+  NamadaAsset,
   TransferStep,
   TransferTransactionData,
 } from "types";
 import { toBaseAmount } from "utils";
 import { sanitizeAddress } from "utils/address";
+import {
+  calculateAmountWithFrontendFee,
+  getFrontendFeeEntry,
+} from "utils/frontendFee";
 import { getKeplrWallet, sanitizeChannel } from "utils/ibc";
 import { useSimulateIbcTransferFee } from "./useSimulateIbcTransferFee";
 
@@ -193,6 +200,11 @@ export const useIbcTransaction = ({
           gasConfigQuery.error?.message
       );
 
+      const frontendFeeEntry = getFrontendFeeEntry(
+        frontendFee,
+        (selectedAsset as NamadaAsset).address
+      );
+
       const baseAmount = toBaseAmount(selectedAsset, displayAmount);
 
       const sourceChainAssets =
@@ -227,11 +239,25 @@ export const useIbcTransaction = ({
       const chainId = registry.chain.chain_id;
       const denomination = asset.base;
 
+      const amount = pipe(
+        frontendFeeEntry,
+        O.fromNullable,
+        O.filter(() => !!shielded),
+        O.fold(
+          () => baseAmount,
+          (fee) =>
+            toBaseAmount(
+              selectedAsset,
+              calculateAmountWithFrontendFee(BigNumber(displayAmount), fee)
+            )
+        )
+      );
+
       const transferMsg = createIbcTransferMessage(
         sanitizeChannel(sourceChannel!),
         sanitizeAddress(sourceAddress),
         sanitizeAddress(maspCompatibleReceiver),
-        baseAmount,
+        amount,
         denomination,
         maspCompatibleMemo
       );
@@ -256,7 +282,8 @@ export const useIbcTransaction = ({
         chainId,
         destinationChainId || "",
         getIbcTransferStage(!!shielded),
-        !!shielded
+        !!shielded,
+        baseAmount
       );
       dispatchPendingTxNotification(tx);
       setTxHash(tx.hash);

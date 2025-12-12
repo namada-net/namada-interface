@@ -25,8 +25,9 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { AssetWithAmountAndChain } from "types";
+import { AssetWithAmountAndChain, NamadaAsset } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
+import { getFrontendFeeEntry } from "utils/frontendFee";
 import { getDisplayGasFee } from "utils/gas";
 import { isIbcAddress, isShieldedAddress } from "./common";
 import { IbcChannels } from "./IbcChannels";
@@ -133,7 +134,14 @@ export const TransferModule = ({
   }, [gasConfig]);
 
   const availableAmountMinusFees = useMemo(() => {
-    if (!availableAmount || !availableAssets || !displayGasFee) return;
+    if (
+      !availableAmount ||
+      !availableAssets ||
+      !displayGasFee ||
+      !gasConfig ||
+      !frontendFee
+    )
+      return;
     let amountMinusFees = availableAmount;
 
     if (gasConfig?.gasToken === selectedAsset?.asset.address) {
@@ -142,9 +150,10 @@ export const TransferModule = ({
         .decimalPlaces(6);
     }
 
-    // TODO: move this code
-    const frontendSusFee =
-      frontendFee?.[selectedAsset.asset.address || "default"];
+    const frontendSusFee = getFrontendFeeEntry(
+      frontendFee,
+      (selectedAsset.asset as NamadaAsset).address
+    );
 
     if (frontendSusFee && (isShielding || isUnshielding)) {
       amountMinusFees = amountMinusFees

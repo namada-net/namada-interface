@@ -68,18 +68,18 @@ export const IbcTransfer = ({
   );
   const { trackEvent } = useFathomTracker();
   const { storeTransaction } = useTransactionActions();
+  const shielded = isShieldedAddress(destinationAddress ?? "");
 
   const { transferToNamada, gasConfig, frontendFee } = useIbcTransaction({
     registry,
     sourceAddress,
     sourceChannel,
     destinationChannel,
-    shielded: isShieldedAddress(destinationAddress ?? ""),
+    shielded,
     selectedAsset: selectedAssetWithAmount?.asset,
   });
 
   // DERIVED VALUES
-  const shielded = isShieldedAddress(destinationAddress ?? "");
   const availableDisplayAmount = mapUndefined((baseDenom) => {
     return userAssets ? userAssets[baseDenom]?.amount : undefined;
   }, selectedAssetWithAmount?.asset?.address);
@@ -124,11 +124,16 @@ export const IbcTransfer = ({
   }: OnSubmitTransferParams): Promise<void> => {
     try {
       invariant(registry?.chain, "Error: Chain not selected");
+      invariant(selectedAssetWithAmount?.asset, "Error: Asset not selected");
+      invariant(displayAmount, "Error: Amount not specified");
+      invariant(destinationAddress, "Error: Destination address not specified");
+
       setGeneralErrorMessage("");
       setCurrentStatus("Submitting...");
+
       const result = await transferToNamada.mutateAsync({
-        destinationAddress: destinationAddress ?? "",
-        displayAmount: new BigNumber(displayAmount ?? "0"),
+        destinationAddress,
+        displayAmount: BigNumber(displayAmount),
         memo,
         onUpdateStatus: setCurrentStatus,
       });

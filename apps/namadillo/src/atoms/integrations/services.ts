@@ -16,8 +16,8 @@ import {
 } from "@namada/indexer-client";
 import { getIndexerApi } from "atoms/api";
 import { chainParametersAtom } from "atoms/chain";
-import { frontendSusMsgFromConfig } from "atoms/fees";
-import { frontendFeeAtom, rpcUrlAtom } from "atoms/settings";
+import { frontendFeeAtom } from "atoms/fees";
+import { rpcUrlAtom } from "atoms/settings";
 import { queryForAck, queryForIbcTimeout } from "atoms/transactions";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
@@ -36,6 +36,7 @@ import {
   TransferStep,
   TransferTransactionData,
 } from "types";
+import { frontendSusMsgFromConfig } from "utils/frontendFee";
 import { isError404 } from "utils/http";
 import { getKeplrWallet } from "utils/ibc";
 import { getSdkInstance } from "utils/sdk";

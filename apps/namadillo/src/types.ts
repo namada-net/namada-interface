@@ -56,6 +56,11 @@ export type FrontendFee = Record<
     percentage: BigNumber;
   }
 >;
+export type FrontendFeeEntry = {
+  transparentTarget: Address;
+  shieldedTarget: PaymentAddress;
+  percentage: BigNumber;
+};
 
 export type GasConfigToDisplay = {
   totalDisplayAmount: BigNumber;

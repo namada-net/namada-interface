@@ -94,7 +94,7 @@ type GenerateIbcShieldingMemoPayload = {
   amount: BigNumber;
   destinationChannelId: string;
   chainId: string;
-  frontendSusFee: FrontendSusFeeProps;
+  frontendSusFee?: FrontendSusFeeProps;
 };
 export type GenerateIbcShieldingMemo = WebWorkerMessage<
   "generate-ibc-shielding-memo",
