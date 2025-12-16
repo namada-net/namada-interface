@@ -5,7 +5,7 @@ import { shortenAddress } from "@namada/utils";
 import { ConnectProviderButton } from "App/Common/ConnectProviderButton";
 import { TokenAmountCard } from "App/Common/TokenAmountCard";
 import { TransactionFee } from "App/Common/TransactionFee";
-import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
+import { TransferFeeButton } from "App/Common/TransferFeeButton";
 import { routes } from "App/routes";
 import {
   isIbcAddress,
@@ -24,7 +24,7 @@ import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { useLocation } from "react-router-dom";
-import { Address } from "types";
+import { Address, FrontendFeeEntry } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 import semiTransparentEye from "./assets/semi-transparent-eye.svg";
@@ -53,6 +53,7 @@ type TransferDestinationProps = {
   onChangeMemo?: (address: string) => void;
   isShielding?: boolean;
   isUnshielding?: boolean;
+  frontendFee?: FrontendFeeEntry;
 };
 
 export const TransferDestination = ({
@@ -72,6 +73,7 @@ export const TransferDestination = ({
   onChangeMemo,
   isShielding = false,
   isUnshielding = false,
+  frontendFee,
 }: TransferDestinationProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -309,9 +311,17 @@ export const TransferDestination = ({
           <footer className="flex mt-10">
             {changeFeeEnabled ?
               feeProps && (
-                <TransactionFeeButton
+                <TransferFeeButton
                   feeProps={feeProps}
                   isShieldedTransfer={isShieldedTx}
+                  inOrOutOfMASP={isShielding || isUnshielding}
+                  frontendFeeInfo={
+                    frontendFee && {
+                      fee: frontendFee,
+                      displayAmount: amount,
+                      token: sourceAsset?.address,
+                    }
+                  }
                 />
               )
             : gasDisplayAmount &&

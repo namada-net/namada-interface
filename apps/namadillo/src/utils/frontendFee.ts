@@ -54,3 +54,12 @@ export const calculateAmountWithFrontendFee = (
     .multipliedBy(frontendFee.percentage.plus(1))
     .decimalPlaces(6, BigNumber.ROUND_DOWN);
 };
+
+export const calculateFrontendFeeAmount = (
+  displayAmount: BigNumber,
+  frontendFee: FrontendFeeEntry
+): BigNumber => {
+  return displayAmount
+    .multipliedBy(frontendFee.percentage)
+    .decimalPlaces(6, BigNumber.ROUND_DOWN);
+};

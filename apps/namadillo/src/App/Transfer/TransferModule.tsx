@@ -133,7 +133,7 @@ export const TransferModule = ({
       : undefined;
   }, [gasConfig]);
 
-  const availableAmountMinusFees = useMemo(() => {
+  const [availableAmountMinusFees, frontendFeeEntry] = useMemo(() => {
     if (
       !availableAmount ||
       !availableAssets ||
@@ -141,7 +141,7 @@ export const TransferModule = ({
       !gasConfig ||
       !frontendFee
     )
-      return;
+      return [];
     let amountMinusFees = availableAmount;
 
     if (gasConfig?.gasToken === selectedAsset?.asset.address) {
@@ -163,7 +163,7 @@ export const TransferModule = ({
         .decimalPlaces(6, BigNumber.ROUND_UP);
     }
 
-    return BigNumber.max(amountMinusFees, 0);
+    return [BigNumber.max(amountMinusFees, 0), frontendSusFee] as const;
   }, [selectedAsset?.asset.address, availableAmount, displayGasFee]);
 
   const validationResult = useMemo((): ValidationResult => {
@@ -264,6 +264,7 @@ export const TransferModule = ({
             isSubmitting={isSubmitting}
             isShielding={isShielding}
             isUnshielding={isUnshielding}
+            frontendFee={frontendFeeEntry}
           />
           {ibcTransfer && requiresIbcChannels && ibcChannels && (
             <IbcChannels
