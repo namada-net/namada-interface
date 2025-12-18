@@ -51,8 +51,6 @@ export const TransferModule = ({
   errorMessage,
   currentStatus,
   currentStatusExplanation,
-  gasConfig: gasConfigProp,
-  frontendFee: frontendFeeProp,
   onSubmitTransfer,
   completedAt,
   onComplete,
@@ -123,9 +121,8 @@ export const TransferModule = ({
     });
   };
 
-  // We have to do this to get correct config for ibc deposits
-  const gasConfig = gasConfigProp ?? feeProps?.gasConfig;
-  const frontendFee = frontendFeeProp ?? feeProps?.frontendFee;
+  const gasConfig = feeProps?.gasConfig;
+  const frontendFee = feeProps?.frontendFee;
 
   const displayGasFee = useMemo(() => {
     return gasConfig ?
@@ -257,8 +254,6 @@ export const TransferModule = ({
             memo={destination.memo}
             onChangeMemo={destination.onChangeMemo}
             feeProps={feeProps}
-            gasDisplayAmount={displayGasFee?.totalDisplayAmount}
-            gasAsset={displayGasFee?.asset}
             destinationAsset={selectedAsset?.asset}
             amount={source.amount}
             isSubmitting={isSubmitting}

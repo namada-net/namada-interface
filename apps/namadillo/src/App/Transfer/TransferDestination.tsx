@@ -4,8 +4,7 @@ import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { ConnectProviderButton } from "App/Common/ConnectProviderButton";
 import { TokenAmountCard } from "App/Common/TokenAmountCard";
-import { TransactionFee } from "App/Common/TransactionFee";
-import { TransferFeeButton } from "App/Common/TransferFeeButton";
+import { TransferFee } from "App/Common/TransferFee";
 import { routes } from "App/routes";
 import {
   isIbcAddress,
@@ -40,8 +39,6 @@ type TransferDestinationProps = {
   isShieldedTx?: boolean;
   isSubmitting?: boolean;
   walletAddress?: string;
-  gasDisplayAmount?: BigNumber;
-  gasAsset?: Asset;
   feeProps?: TransactionFeeProps;
   destinationAsset?: Asset;
   amount?: BigNumber;
@@ -60,8 +57,6 @@ export const TransferDestination = ({
   isShieldedAddress,
   isShieldedTx = false,
   isSubmitting,
-  gasDisplayAmount,
-  gasAsset,
   feeProps,
   destinationAsset,
   amount,
@@ -309,29 +304,21 @@ export const TransferDestination = ({
 
         {!isSubmitting && (
           <footer className="flex mt-10">
-            {changeFeeEnabled ?
-              feeProps && (
-                <TransferFeeButton
-                  feeProps={feeProps}
-                  isShieldedTransfer={isShieldedTx}
-                  inOrOutOfMASP={isShielding || isUnshielding}
-                  frontendFeeInfo={
-                    frontendFee && {
-                      fee: frontendFee,
-                      displayAmount: amount,
-                      token: sourceAsset?.address,
-                    }
+            {feeProps && (
+              <TransferFee
+                feeProps={feeProps}
+                isShieldedTransfer={isShieldedTx}
+                inOrOutOfMASP={isShielding || isUnshielding}
+                showButton={changeFeeEnabled}
+                frontendFeeInfo={
+                  frontendFee && {
+                    fee: frontendFee,
+                    displayAmount: amount,
+                    token: sourceAsset?.address,
                   }
-                />
-              )
-            : gasDisplayAmount &&
-              gasAsset && (
-                <TransactionFee
-                  displayAmount={gasDisplayAmount}
-                  symbol={gasAsset.symbol}
-                />
-              )
-            }
+                }
+              />
+            )}
           </footer>
         )}
       </div>

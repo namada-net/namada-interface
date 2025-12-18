@@ -5,12 +5,12 @@
 #localnet_enabled = false
 #fathom_site_id = ""
 
-[frontend_fee."*"]
-transparent_target = "tnam1qrxsru5rdu4he400xny6p779fcw7xuftsgjnmzup"
-shielded_target = "znam1494fmm9qd4frr7jrydnxlcyt57nhngzutxnzgh6y70mkvh23d9z0jk2aasxh4p8dn2kczlgpans"
-percentage = 0.01
+# [frontend_fee."*"]
+# transparent_target = "tnam1..."
+# shielded_target = "znam1..."
+# percentage = 0.001
 
-# [frontend_fee.tnam1p54697ljxkw3ptffwy8xjhua9uwjc7kk9cc6fxnw]
-# transparent_target = "tnam1qrku7yxdt6d23nhe826ntukygzkfyczuu5mm0yll"
-# shielded_target = "znam175uaqlukleyjjyfcccehp2pw3g696a57skewlv0fenldlw702gtjd6qkpjs09zxl6jafsz3e73h"
-# percentage = 0.5
+# [frontend_fee.tnam1...(TOKEN_ADDRESS)]
+# transparent_target = "tnam1..."
+# shielded_target = "znam1..."
+# percentage = 0.0005

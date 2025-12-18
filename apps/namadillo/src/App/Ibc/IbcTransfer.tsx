@@ -70,7 +70,7 @@ export const IbcTransfer = ({
   const { storeTransaction } = useTransactionActions();
   const shielded = isShieldedAddress(destinationAddress ?? "");
 
-  const { transferToNamada, gasConfig, frontendFee } = useIbcTransaction({
+  const { transferToNamada, transactionFeeProps } = useIbcTransaction({
     registry,
     sourceAddress,
     sourceChannel,
@@ -166,8 +166,7 @@ export const IbcTransfer = ({
           isShieldedAddress: shielded,
           onChangeAddress: setDestinationAddress,
         }}
-        gasConfig={gasConfig.data}
-        frontendFee={frontendFee}
+        feeProps={transactionFeeProps}
         isSubmitting={
           transferToNamada.isPending ||
           /* isSuccess means that the transaction has been broadcasted, but doesn't take

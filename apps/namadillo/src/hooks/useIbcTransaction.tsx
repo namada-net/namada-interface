@@ -3,7 +3,6 @@ import {
   useMutation,
   UseMutationResult,
   useQuery,
-  UseQueryResult,
 } from "@tanstack/react-query";
 import { TokenCurrency } from "App/Common/TokenCurrency";
 import { chainParametersAtom } from "atoms/chain";
@@ -34,8 +33,6 @@ import {
   Address,
   Asset,
   ChainRegistryEntry,
-  FrontendFee,
-  GasConfig,
   IbcTransferStage,
   NamadaAsset,
   TransferStep,
@@ -49,6 +46,7 @@ import {
 } from "utils/frontendFee";
 import { getKeplrWallet, sanitizeChannel } from "utils/ibc";
 import { useSimulateIbcTransferFee } from "./useSimulateIbcTransferFee";
+import { TransactionFeeProps } from "./useTransactionFee";
 
 type useIbcTransactionProps = {
   sourceAddress?: string;
@@ -60,8 +58,7 @@ type useIbcTransactionProps = {
 };
 
 type useIbcTransactionOutput = {
-  gasConfig: UseQueryResult<GasConfig>;
-  frontendFee: FrontendFee;
+  transactionFeeProps?: TransactionFeeProps;
   transferToNamada: UseMutationResult<
     TransferTransactionData,
     Error,
@@ -301,9 +298,19 @@ export const useIbcTransaction = ({
     mutationFn: transferToNamada,
   });
 
+  const transactionFeeProps: TransactionFeeProps | undefined =
+    gasConfigQuery.data && {
+      gasConfig: gasConfigQuery.data,
+      isLoading: gasConfigQuery.isLoading,
+      onChangeGasLimit: () => {},
+      onChangeGasToken: () => {},
+      frontendFee: frontendFee,
+      gasEstimate: undefined,
+      gasPriceTable: undefined,
+    };
+
   return {
     transferToNamada: transferToNamadaQuery,
-    gasConfig: gasConfigQuery,
-    frontendFee: frontendFee,
+    transactionFeeProps,
   };
 };

@@ -19,37 +19,41 @@ type FrontendFeeInfo = {
   displayAmount?: BigNumber;
   token?: Address;
 };
-
-export const TransferFeeButton = ({
+export const TransferFee = ({
   feeProps,
   inOrOutOfMASP,
   isShieldedTransfer = false,
   frontendFeeInfo,
+  showButton = true,
 }: {
   feeProps: TransactionFeeProps;
   inOrOutOfMASP: boolean;
   isShieldedTransfer?: boolean;
   frontendFeeInfo?: FrontendFeeInfo;
+  showButton?: boolean;
 }): JSX.Element => {
   const [modalOpen, setModalOpen] = useState(false);
   const [feeDetailsOpen, setFeeDetailsOpen] = useState(false);
 
   const chainAssetsMap = useAtomValue(namadaRegistryChainAssetsMapAtom);
 
-  const gasDollarMap =
-    useAtomValue(
-      tokenPricesFamily(
-        feeProps.gasPriceTable?.map((item) => item.token.address) ?? []
-      )
-    ).data ?? {};
+  const chainAssetsMapData = chainAssetsMap.data;
 
   const gasDisplayAmount = useMemo(() => {
-    if (!chainAssetsMap.data) {
+    if (!chainAssetsMapData) {
       return;
     }
 
-    return getDisplayGasFee(feeProps.gasConfig, chainAssetsMap.data);
-  }, [feeProps, chainAssetsMap.data]);
+    return getDisplayGasFee(feeProps.gasConfig, chainAssetsMapData);
+  }, [feeProps, chainAssetsMapData]);
+
+  const gasToken = gasDisplayAmount?.asset.address;
+  const frontendFeeToken = frontendFeeInfo?.token;
+  const tokenAddresses =
+    gasToken && frontendFeeToken ? [gasToken, frontendFeeToken] : [];
+
+  const gasDollarMap =
+    useAtomValue(tokenPricesFamily(tokenAddresses)).data ?? {};
 
   const [frontendFeeAmount, frontendFeeFiatAmount, symbol] = useMemo((): [
     BigNumber?,
@@ -67,7 +71,7 @@ export const TransferFeeButton = ({
       );
       const dollarPrice = gasDollarMap[frontendFeeInfo.token];
       const fiatFeeAmount = feeAmount.multipliedBy(dollarPrice);
-      const symbol = chainAssetsMap?.data?.[frontendFeeInfo.token]?.symbol;
+      const symbol = chainAssetsMapData?.[frontendFeeInfo.token]?.symbol;
 
       return [feeAmount, fiatFeeAmount, symbol];
     }
@@ -75,18 +79,18 @@ export const TransferFeeButton = ({
   }, [gasDollarMap, frontendFeeInfo]);
 
   const fiatAmount = useMemo(() => {
-    if (!gasDisplayAmount || !gasDollarMap) {
+    if (!gasDisplayAmount || !gasDollarMap || !gasToken) {
       return;
     }
-    const dollarPrice = gasDollarMap[feeProps.gasConfig.gasToken];
+    const dollarPrice = gasDollarMap[gasToken];
     let fiatAmount =
       gasDisplayAmount.totalDisplayAmount.multipliedBy(dollarPrice);
 
-    if (frontendFeeFiatAmount) {
+    if (inOrOutOfMASP && frontendFeeFiatAmount) {
       fiatAmount = fiatAmount.plus(frontendFeeFiatAmount);
     }
     return fiatAmount;
-  }, [gasDisplayAmount, gasDollarMap, frontendFeeAmount]);
+  }, [gasDisplayAmount, gasDollarMap, inOrOutOfMASP, gasToken]);
 
   return (
     <Stack className="w-full text-sm text-neutral-300">
@@ -114,22 +118,25 @@ export const TransferFeeButton = ({
                   gasDisplayAmount.totalDisplayAmount.toString()
                 : ""}{" "}
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className={twMerge(
-                    "flex items-center gap-1",
-                    "border rounded-sm px-2 py-1 text-xs",
-                    "transition-all cursor-pointer hover:text-yellow"
-                  )}
-                  onClick={() => setModalOpen(true)}
-                >
-                  <span className="text- font-medium">
-                    {gasDisplayAmount?.asset.symbol || ""}
-                  </span>
-                  <IoIosArrowDown />
-                </button>
-              </div>
+              {!showButton && gasDisplayAmount?.asset.symbol}
+              {showButton && (
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className={twMerge(
+                      "flex items-center gap-1",
+                      "border rounded-sm px-2 py-1 text-xs",
+                      "transition-all cursor-pointer hover:text-yellow"
+                    )}
+                    onClick={() => setModalOpen(true)}
+                  >
+                    <span className="text- font-medium">
+                      {gasDisplayAmount?.asset.symbol || ""}
+                    </span>
+                    <IoIosArrowDown />
+                  </button>
+                </div>
+              )}
             </Stack>
           </Stack>
           {inOrOutOfMASP && frontendFeeInfo && (
