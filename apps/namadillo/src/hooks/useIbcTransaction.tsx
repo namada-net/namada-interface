@@ -55,6 +55,7 @@ type useIbcTransactionProps = {
   shielded?: boolean;
   destinationChannel?: Address;
   selectedAsset?: Asset;
+  amount?: BigNumber;
 };
 
 type useIbcTransactionOutput = {
@@ -80,6 +81,7 @@ export const useIbcTransaction = ({
   sourceChannel,
   shielded,
   destinationChannel,
+  amount,
 }: useIbcTransactionProps): useIbcTransactionOutput => {
   const broadcastIbcTx = useAtomValue(broadcastIbcTransactionAtom);
   const dispatchNotification = useSetAtom(dispatchToastNotificationAtom);
@@ -110,6 +112,16 @@ export const useIbcTransaction = ({
     },
   });
 
+  const baseAmount =
+    selectedAsset && amount && toBaseAmount(selectedAsset, amount);
+  const frontendFeeEntry =
+    selectedAsset &&
+    getFrontendFeeEntry(frontendFee, (selectedAsset as NamadaAsset).address);
+  const amountWithFrontendFee =
+    baseAmount &&
+    frontendFeeEntry &&
+    calculateAmountWithFrontendFee(baseAmount, frontendFeeEntry);
+
   const gasConfigQuery = useSimulateIbcTransferFee({
     stargateClient,
     registry,
@@ -117,6 +129,7 @@ export const useIbcTransaction = ({
     isShieldedTransfer: shielded,
     sourceAddress,
     channel: sourceChannel,
+    amount: amountWithFrontendFee || baseAmount,
   });
 
   const dispatchPendingTxNotification = (tx: TransferTransactionData): void => {
@@ -304,7 +317,7 @@ export const useIbcTransaction = ({
       isLoading: gasConfigQuery.isLoading,
       onChangeGasLimit: () => {},
       onChangeGasToken: () => {},
-      frontendFee: frontendFee,
+      frontendFee,
       gasEstimate: undefined,
       gasPriceTable: undefined,
     };

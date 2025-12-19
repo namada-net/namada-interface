@@ -27,7 +27,10 @@ import {
 } from "react-router-dom";
 import { AssetWithAmountAndChain, NamadaAsset } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
-import { getFrontendFeeEntry } from "utils/frontendFee";
+import {
+  calculateAmountWithoutFrontendFee,
+  getFrontendFeeEntry,
+} from "utils/frontendFee";
 import { getDisplayGasFee } from "utils/gas";
 import { isIbcAddress, isShieldedAddress } from "./common";
 import { IbcChannels } from "./IbcChannels";
@@ -152,12 +155,14 @@ export const TransferModule = ({
       (selectedAsset.asset as NamadaAsset).address
     );
 
-    if (frontendSusFee && (isShielding || isUnshielding)) {
-      amountMinusFees = amountMinusFees
-        .div(frontendSusFee.percentage.plus(1))
-        // We have to round UP here as sdk discards the remainder when calculating the fee,
-        // basically rounding down. Otherwise we might end up with remaining dust.
-        .decimalPlaces(6, BigNumber.ROUND_UP);
+    const shouldApplyFrontendFee =
+      (isSourceShielded && destinationAddress && !isTargetShielded) ||
+      (isTargetShielded && sourceAddress && !isSourceShielded);
+    if (frontendSusFee && shouldApplyFrontendFee) {
+      amountMinusFees = calculateAmountWithoutFrontendFee(
+        amountMinusFees,
+        frontendSusFee
+      );
     }
 
     return [BigNumber.max(amountMinusFees, 0), frontendSusFee] as const;

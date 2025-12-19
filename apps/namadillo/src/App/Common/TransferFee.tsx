@@ -49,8 +49,9 @@ export const TransferFee = ({
 
   const gasToken = gasDisplayAmount?.asset.address;
   const frontendFeeToken = frontendFeeInfo?.token;
-  const tokenAddresses =
-    gasToken && frontendFeeToken ? [gasToken, frontendFeeToken] : [];
+  const tokenAddresses = [gasToken, frontendFeeToken].filter(
+    (address) => typeof address !== "undefined"
+  );
 
   const gasDollarMap =
     useAtomValue(tokenPricesFamily(tokenAddresses)).data ?? {};
@@ -79,7 +80,12 @@ export const TransferFee = ({
   }, [gasDollarMap, frontendFeeInfo]);
 
   const fiatAmount = useMemo(() => {
-    if (!gasDisplayAmount || !gasDollarMap || !gasToken) {
+    if (
+      !gasDisplayAmount ||
+      !gasDollarMap ||
+      !gasToken ||
+      !gasDollarMap[gasToken]
+    ) {
       return;
     }
     const dollarPrice = gasDollarMap[gasToken];

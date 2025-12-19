@@ -40,9 +40,9 @@ export const calculateAmountWithoutFrontendFee = (
   return (
     displayAmount
       .div(frontendFee.percentage.plus(1))
-      // We have to round UP here as sdk discards the remainder when calculating the fee,
-      // basically rounding down. Otherwise we might end up with remaining dust.
-      .decimalPlaces(6, BigNumber.ROUND_UP)
+      // We have to round DOWN here as sdk rounds UP when calculating the fee.
+      // Otherwise we might end up with remaining dust.
+      .decimalPlaces(6, BigNumber.ROUND_DOWN)
   );
 };
 
@@ -52,7 +52,7 @@ export const calculateAmountWithFrontendFee = (
 ): BigNumber => {
   return displayAmount
     .multipliedBy(frontendFee.percentage.plus(1))
-    .decimalPlaces(6, BigNumber.ROUND_DOWN);
+    .decimalPlaces(6, BigNumber.ROUND_UP);
 };
 
 export const calculateFrontendFeeAmount = (
@@ -61,5 +61,5 @@ export const calculateFrontendFeeAmount = (
 ): BigNumber => {
   return displayAmount
     .multipliedBy(frontendFee.percentage)
-    .decimalPlaces(6, BigNumber.ROUND_DOWN);
+    .decimalPlaces(6, BigNumber.ROUND_UP);
 };

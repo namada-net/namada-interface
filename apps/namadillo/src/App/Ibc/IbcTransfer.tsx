@@ -70,6 +70,15 @@ export const IbcTransfer = ({
   const { storeTransaction } = useTransactionActions();
   const shielded = isShieldedAddress(destinationAddress ?? "");
 
+  const availableDisplayAmount = mapUndefined((baseDenom) => {
+    return userAssets ? userAssets[baseDenom]?.amount : undefined;
+  }, selectedAssetWithAmount?.asset?.address);
+
+  const amountForGasCalc =
+    amount && availableDisplayAmount ?
+      BigNumber.minimum(amount, availableDisplayAmount)
+    : undefined;
+
   const { transferToNamada, transactionFeeProps } = useIbcTransaction({
     registry,
     sourceAddress,
@@ -77,12 +86,10 @@ export const IbcTransfer = ({
     destinationChannel,
     shielded,
     selectedAsset: selectedAssetWithAmount?.asset,
+    amount: amountForGasCalc,
   });
 
   // DERIVED VALUES
-  const availableDisplayAmount = mapUndefined((baseDenom) => {
-    return userAssets ? userAssets[baseDenom]?.amount : undefined;
-  }, selectedAssetWithAmount?.asset?.address);
   const namadaAddress = useMemo(() => {
     return (
       defaultAccounts.data?.find(
