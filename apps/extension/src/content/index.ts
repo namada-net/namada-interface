@@ -19,6 +19,8 @@ const localStorage = new LocalStorage(
   new ExtensionKVStore(KVPrefix.LocalStorage, {
     get: area.get.bind(area),
     set: area.set.bind(area),
+    remove: area.remove.bind(area),
+    clear: area.clear.bind(area),
   })
 );
 const messenger = new ExtensionMessenger();
