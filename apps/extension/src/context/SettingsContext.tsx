@@ -5,8 +5,13 @@ import { LocalStorage } from "storage";
 import browser from "webextension-polyfill";
 
 // Extension storages
+const area = browser.storage.local;
+
 const localStorage = new LocalStorage(
-  new ExtensionKVStore(KVPrefix.LocalStorage, browser.storage.local)
+  new ExtensionKVStore(KVPrefix.LocalStorage, {
+    get: area.get.bind(area),
+    set: area.set.bind(area),
+  })
 );
 
 type SettingsStorage = {
