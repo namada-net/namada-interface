@@ -20,8 +20,6 @@ const localStorage = new LocalStorage(
   new ExtensionKVStore<ApprovedOriginsStore>(KVPrefix.LocalStorage, {
     get: area.get.bind(area),
     set: area.set.bind(area),
-    remove: area.remove.bind(area),
-    clear: area.clear.bind(area),
   })
 );
 
