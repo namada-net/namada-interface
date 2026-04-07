@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1](https://github.com/namada-net/namada-interface/compare/extension@v0.10.0...extension@v0.10.1) (2026-04-07)
+
+
+### Bug Fixes
+
+* **browser:** Bind browser storage methods ([#2362](https://github.com/namada-net/namada-interface/issues/2362)) ([0dcdeee](https://github.com/namada-net/namada-interface/commit/0dcdeee4865e6a69332a0c24327996bf89eee28b))
+
 ## [0.10.0](https://github.com/namada-net/namada-interface/compare/extension@v0.9.0...extension@v0.10.0) (2025-12-08)
 
 
