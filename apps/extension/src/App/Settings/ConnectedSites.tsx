@@ -14,10 +14,12 @@ import { GoX } from "react-icons/go";
 import { KVPrefix, Ports } from "router";
 import { LocalStorage } from "storage";
 
+const area = browser.storage.local;
+
 const localStorage = new LocalStorage(
   new ExtensionKVStore<ApprovedOriginsStore>(KVPrefix.LocalStorage, {
-    get: browser.storage.local.get,
-    set: browser.storage.local.set,
+    get: area.get.bind(area),
+    set: area.set.bind(area),
   })
 );
 

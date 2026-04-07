@@ -13,10 +13,12 @@ import { LocalStorage } from "storage";
 import browser from "webextension-polyfill";
 import { initEvents } from "./events";
 
+const area = browser.storage.local;
+
 const localStorage = new LocalStorage(
   new ExtensionKVStore(KVPrefix.LocalStorage, {
-    get: browser.storage.local.get,
-    set: browser.storage.local.set,
+    get: area.get.bind(area),
+    set: area.set.bind(area),
   })
 );
 const messenger = new ExtensionMessenger();

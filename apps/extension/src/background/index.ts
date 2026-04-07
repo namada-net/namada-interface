@@ -28,8 +28,13 @@ import { SdkService } from "./sdk/service";
 import { VaultService, init as initVault } from "./vault";
 
 // Extension storages
+const area = browser.storage.local;
+
 const localStorage = new LocalStorage(
-  new ExtensionKVStore(KVPrefix.LocalStorage, browser.storage.local)
+  new ExtensionKVStore(KVPrefix.LocalStorage, {
+    get: area.get.bind(area),
+    set: area.set.bind(area),
+  })
 );
 
 //IDB storages
