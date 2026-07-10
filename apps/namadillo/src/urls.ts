@@ -1,5 +1,5 @@
 export const DISCORD_URL = "https://discord.com/invite/namada";
-export const TWITTER_URL = "https://twitter.com/namada";
+export const TWITTER_URL = "https://x.com/namada";
 
 export const githubNamadaInterfaceBaseUrl =
   "https://raw.githubusercontent.com/anoma/namada-interface/refs/heads/main";
