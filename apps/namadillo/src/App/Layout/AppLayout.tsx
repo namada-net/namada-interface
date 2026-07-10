@@ -4,9 +4,34 @@ import { useSetAtom } from "jotai";
 import { ReactNode, useEffect, useState } from "react";
 import { IoMdClose } from "react-icons/io";
 import { twMerge } from "tailwind-merge";
+import { TWITTER_URL } from "urls";
 import { AppHeader } from "./AppHeader";
 import { BurgerButton } from "./BurgerButton";
 import { Navigation } from "./Navigation";
+
+const NamadaExploitAlert = (): JSX.Element => (
+  <div className="mb-2 p-10 rounded-sm bg-yellow">
+    <div className="font-semibold text-lg">
+      The Namada protocol has had an exploit and is not currently safe to use.
+    </div>
+    <div>
+      It’s not recommended to interact with the blockchain via Namadillo until
+      the exploit is fixed.
+    </div>
+    <div className="mt-3">
+      Follow{" "}
+      <a
+        href={TWITTER_URL}
+        target="_blank"
+        rel="noreferrer"
+        className="transition-colors duration-300 hover:underline"
+      >
+        @Namada
+      </a>{" "}
+      on X for updates.
+    </div>
+  </div>
+);
 
 export const AppLayout = ({
   children,
@@ -68,7 +93,10 @@ export const AppLayout = ({
             <Navigation />
           </div>
         </aside>
-        <main className="min-h-full pb-2 flex flex-col flex-1">{children}</main>
+        <main className="min-h-full pb-2 flex flex-col flex-1">
+          <NamadaExploitAlert />
+          {children}
+        </main>
       </div>
     </>
   );
