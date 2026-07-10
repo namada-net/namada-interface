@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.34.0](https://github.com/namada-net/namada-interface/compare/namadillo@v1.33.0...namadillo@v1.34.0) (2026-07-10)
+
+
+### Features
+
+* Add namada exploit alert ([#2365](https://github.com/namada-net/namada-interface/issues/2365)) ([ede3b68](https://github.com/namada-net/namada-interface/commit/ede3b684046ecce320d4e940554415ea9bf90d38))
+* Reenable swaps ([#2347](https://github.com/namada-net/namada-interface/issues/2347)) ([82e270a](https://github.com/namada-net/namada-interface/commit/82e270ae36bcfcd0de0a7fbe2366c581e6f35fb1))
+
+
+### Bug Fixes
+
+* Change link title from 'View pending transactions' to 'Unshield' ([#2351](https://github.com/namada-net/namada-interface/issues/2351)) ([b7a9276](https://github.com/namada-net/namada-interface/commit/b7a9276dbac62c1cd6a1eb535973a2cbc374552d))
+* Refund target signing and empty memo ([#2346](https://github.com/namada-net/namada-interface/issues/2346)) ([6ca91cc](https://github.com/namada-net/namada-interface/commit/6ca91ccb9adf412e52ec201140e16b64e8e822aa))
+* Remove alpha banner ([#2345](https://github.com/namada-net/namada-interface/issues/2345)) ([c530763](https://github.com/namada-net/namada-interface/commit/c5307635a1b52e05e9c4c4dc7ceaf2de020d65d3))
+* Review fixes v2 ([#2348](https://github.com/namada-net/namada-interface/issues/2348)) ([bd1f95b](https://github.com/namada-net/namada-interface/commit/bd1f95be3e9bd440adc1b639df51f90aeb16fe56))
+* Small swaps changes ([#2356](https://github.com/namada-net/namada-interface/issues/2356)) ([a1d1469](https://github.com/namada-net/namada-interface/commit/a1d146903ce7d8064041abc9a327e7356982b25d))
+
 ## [1.33.0](https://github.com/namada-net/namada-interface/compare/namadillo@v1.32.1...namadillo@v1.33.0) (2025-11-20)
 
 
