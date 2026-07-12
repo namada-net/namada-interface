@@ -1721,17 +1721,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@chain-registry/types@npm:^0.50.160":
-  version: 0.50.160
-  resolution: "@chain-registry/types@npm:0.50.160"
-  checksum: 10c0/7fe89da5609c7e68eedab836738e1616ceaad211fcf0e9f5ee7fd5892fd6bdd6da317b275204b5a8e95ff8ef73640a03677d549a65d47bfeeb851d13194444c9
-  languageName: node
-  linkType: hard
-
-"@chain-registry/types@npm:^0.50.247":
-  version: 0.50.247
-  resolution: "@chain-registry/types@npm:0.50.247"
-  checksum: 10c0/c957eae0ca4b77be7ab7131f6fb32aa5c0af74701704ebad727e005511e230be3db162e0bea12b5a9b7716256dde885e223741654a35121c3767a920b5325a89
+"@chain-registry/types@npm:^0.50.258":
+  version: 0.50.258
+  resolution: "@chain-registry/types@npm:0.50.258"
+  checksum: 10c0/13d7571aaa4140dc047b76e805aef112fa27535357861d1de09e9253135c3914c4aedee5d9d0ef73e42fe7b94eb675bd5a68d9e9897d14a5de3d0d6b5a479c7e
   languageName: node
   linkType: hard
 
@@ -7582,12 +7575,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"chain-registry@npm:^1.69.390":
-  version: 1.69.390
-  resolution: "chain-registry@npm:1.69.390"
+"chain-registry@npm:^1.69.404":
+  version: 1.69.404
+  resolution: "chain-registry@npm:1.69.404"
   dependencies:
-    "@chain-registry/types": "npm:^0.50.247"
-  checksum: 10c0/5edce38cd0d4bbdc58d621c678e96f0bb9351bb9382499a90f4685893548216b9a428141e019246ebc25dc63c148d4080a06ac885b1d16077c0f351b2d6a4115
+    "@chain-registry/types": "npm:^0.50.258"
+  checksum: 10c0/c34e4a670961dd9964bacf884568c07f5cf5d06a9a9d57945743b1211bdae9b7343b2a3ae63ebd2823dd1316e942e40370202094faf22cb81994f4f0d0bad523
   languageName: node
   linkType: hard
 
@@ -14718,10 +14711,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "namada@workspace:."
   dependencies:
-    "@chain-registry/types": "npm:^0.50.160"
+    "@chain-registry/types": "npm:^0.50.258"
     "@typescript-eslint/eslint-plugin": "npm:^8.4.0"
     "@typescript-eslint/parser": "npm:^8.4.0"
-    chain-registry: "npm:^1.69.390"
+    chain-registry: "npm:^1.69.404"
     eslint: "npm:^8.57.0"
     git-commit-msg-linter: "npm:^5.0.6"
     husky: "npm:^8.0.3"

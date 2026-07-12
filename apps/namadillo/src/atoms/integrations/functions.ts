@@ -146,7 +146,7 @@ export const SUPPORTED_ASSETS_MAP = new Map<string, string[]>(
     nyx: ["NYM"],
     stride: ["stOSMO", "stATOM", "stTIA"],
     neutron: ["NTRN"],
-    noble: ["USDC"],
+    noble: ["USDC", "USDN"],
   })
 );
 
