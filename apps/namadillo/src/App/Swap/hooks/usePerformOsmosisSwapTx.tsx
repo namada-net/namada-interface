@@ -181,6 +181,7 @@ export function usePerformOsmosisSwapTx(): UsePerformOsmosisSwapResult {
           account: transparentAccount,
           params: [params],
           gasConfig: feeProps.gasConfig,
+          frontendFee: feeProps.frontendFee,
         });
 
         setStatus(SwapStatus.awaitingSignature());

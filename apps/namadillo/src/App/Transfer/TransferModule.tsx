@@ -25,8 +25,12 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { AssetWithAmountAndChain } from "types";
+import { AssetWithAmountAndChain, NamadaAsset } from "types";
 import { filterAvailableAssetsWithBalance } from "utils/assets";
+import {
+  calculateAmountWithoutFrontendFee,
+  getFrontendFeeEntry,
+} from "utils/frontendFee";
 import { getDisplayGasFee } from "utils/gas";
 import { isIbcAddress, isShieldedAddress } from "./common";
 import { IbcChannels } from "./IbcChannels";
@@ -50,7 +54,6 @@ export const TransferModule = ({
   errorMessage,
   currentStatus,
   currentStatusExplanation,
-  gasConfig: gasConfigProp,
   onSubmitTransfer,
   completedAt,
   onComplete,
@@ -121,7 +124,8 @@ export const TransferModule = ({
     });
   };
 
-  const gasConfig = gasConfigProp ?? feeProps?.gasConfig;
+  const gasConfig = feeProps?.gasConfig;
+  const frontendFee = feeProps?.frontendFee;
 
   const displayGasFee = useMemo(() => {
     return gasConfig ?
@@ -129,22 +133,39 @@ export const TransferModule = ({
       : undefined;
   }, [gasConfig]);
 
-  const availableAmountMinusFees = useMemo(() => {
-    if (!availableAmount || !availableAssets) return;
-
+  const [availableAmountMinusFees, frontendFeeEntry] = useMemo(() => {
     if (
-      !displayGasFee?.totalDisplayAmount ||
-      // Don't subtract if the gas token is different than the selected asset:
-      gasConfig?.gasToken !== selectedAsset?.asset.address
-    ) {
-      return availableAmount;
+      !availableAmount ||
+      !availableAssets ||
+      !displayGasFee ||
+      !gasConfig ||
+      !frontendFee
+    )
+      return [];
+    let amountMinusFees = availableAmount;
+
+    if (gasConfig?.gasToken === selectedAsset?.asset.address) {
+      amountMinusFees = availableAmount
+        .minus(displayGasFee.totalDisplayAmount)
+        .decimalPlaces(6);
     }
 
-    const amountMinusFees = availableAmount
-      .minus(displayGasFee.totalDisplayAmount)
-      .decimalPlaces(6);
+    const frontendSusFee = getFrontendFeeEntry(
+      frontendFee,
+      (selectedAsset.asset as NamadaAsset).address
+    );
 
-    return BigNumber.max(amountMinusFees, 0);
+    const shouldApplyFrontendFee =
+      (isSourceShielded && destinationAddress && !isTargetShielded) ||
+      (isTargetShielded && sourceAddress && !isSourceShielded);
+    if (frontendSusFee && shouldApplyFrontendFee) {
+      amountMinusFees = calculateAmountWithoutFrontendFee(
+        amountMinusFees,
+        frontendSusFee
+      );
+    }
+
+    return [BigNumber.max(amountMinusFees, 0), frontendSusFee] as const;
   }, [selectedAsset?.asset.address, availableAmount, displayGasFee]);
 
   const validationResult = useMemo((): ValidationResult => {
@@ -238,13 +259,12 @@ export const TransferModule = ({
             memo={destination.memo}
             onChangeMemo={destination.onChangeMemo}
             feeProps={feeProps}
-            gasDisplayAmount={displayGasFee?.totalDisplayAmount}
-            gasAsset={displayGasFee?.asset}
             destinationAsset={selectedAsset?.asset}
             amount={source.amount}
             isSubmitting={isSubmitting}
             isShielding={isShielding}
             isUnshielding={isUnshielding}
+            frontendFee={frontendFeeEntry}
           />
           {ibcTransfer && requiresIbcChannels && ibcChannels && (
             <IbcChannels

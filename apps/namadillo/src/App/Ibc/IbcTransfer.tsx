@@ -68,21 +68,28 @@ export const IbcTransfer = ({
   );
   const { trackEvent } = useFathomTracker();
   const { storeTransaction } = useTransactionActions();
+  const shielded = isShieldedAddress(destinationAddress ?? "");
 
-  const { transferToNamada, gasConfig } = useIbcTransaction({
+  const availableDisplayAmount = mapUndefined((baseDenom) => {
+    return userAssets ? userAssets[baseDenom]?.amount : undefined;
+  }, selectedAssetWithAmount?.asset?.address);
+
+  const amountForGasCalc =
+    amount && availableDisplayAmount ?
+      BigNumber.minimum(amount, availableDisplayAmount)
+    : undefined;
+
+  const { transferToNamada, transactionFeeProps } = useIbcTransaction({
     registry,
     sourceAddress,
     sourceChannel,
     destinationChannel,
-    shielded: isShieldedAddress(destinationAddress ?? ""),
+    shielded,
     selectedAsset: selectedAssetWithAmount?.asset,
+    amount: amountForGasCalc,
   });
 
   // DERIVED VALUES
-  const shielded = isShieldedAddress(destinationAddress ?? "");
-  const availableDisplayAmount = mapUndefined((baseDenom) => {
-    return userAssets ? userAssets[baseDenom]?.amount : undefined;
-  }, selectedAssetWithAmount?.asset?.address);
   const namadaAddress = useMemo(() => {
     return (
       defaultAccounts.data?.find(
@@ -124,11 +131,16 @@ export const IbcTransfer = ({
   }: OnSubmitTransferParams): Promise<void> => {
     try {
       invariant(registry?.chain, "Error: Chain not selected");
+      invariant(selectedAssetWithAmount?.asset, "Error: Asset not selected");
+      invariant(displayAmount, "Error: Amount not specified");
+      invariant(destinationAddress, "Error: Destination address not specified");
+
       setGeneralErrorMessage("");
       setCurrentStatus("Submitting...");
+
       const result = await transferToNamada.mutateAsync({
-        destinationAddress: destinationAddress ?? "",
-        displayAmount: new BigNumber(displayAmount ?? "0"),
+        destinationAddress,
+        displayAmount: BigNumber(displayAmount),
         memo,
         onUpdateStatus: setCurrentStatus,
       });
@@ -161,7 +173,7 @@ export const IbcTransfer = ({
           isShieldedAddress: shielded,
           onChangeAddress: setDestinationAddress,
         }}
-        gasConfig={gasConfig.data}
+        feeProps={transactionFeeProps}
         isSubmitting={
           transferToNamada.isPending ||
           /* isSuccess means that the transaction has been broadcasted, but doesn't take

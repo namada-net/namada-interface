@@ -5,9 +5,17 @@ import {
 import { defaultAccountAtom } from "atoms/accounts";
 import { indexerApiAtom } from "atoms/api";
 import { namadaRegistryChainAssetsMapAtom } from "atoms/integrations";
+import { defaultServerConfigAtom } from "atoms/settings";
 import { queryDependentFn } from "atoms/utils";
 import BigNumber from "bignumber.js";
+import * as E from "fp-ts/Either";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/Option";
+import * as R from "fp-ts/Record";
 import invariant from "invariant";
+import * as t from "io-ts";
+import { PathReporter } from "io-ts/PathReporter";
+import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { atomFamily } from "jotai/utils";
 import { isPublicKeyRevealed } from "lib/query";
@@ -97,4 +105,42 @@ export const isPublicKeyRevealedAtom = atomWithQuery<boolean>((get) => {
       return accountAddress ? await isPublicKeyRevealed(accountAddress) : false;
     }, [defaultAccount]),
   };
+});
+
+const FrontendFeeSchema = t.union([
+  t.undefined,
+  t.record(
+    t.string,
+    t.type({
+      transparent_target: t.string,
+      shielded_target: t.string,
+      percentage: t.number,
+    })
+  ),
+]);
+
+export const frontendFeeAtom = atom((get) => {
+  const maybeFrontendFee = get(defaultServerConfigAtom).data?.frontend_fee;
+  const eitherFrontendFee = FrontendFeeSchema.decode(maybeFrontendFee);
+  if (E.isLeft(eitherFrontendFee)) {
+    console.warn(
+      "Invalid frontend fee schema: ",
+      PathReporter.report(eitherFrontendFee).join("\n")
+    );
+    return {};
+  }
+  // TODO: validate if targets are valid addresses
+
+  return pipe(
+    O.fromNullable(eitherFrontendFee.right),
+    O.fold(
+      () => ({}),
+      (fees) => fees
+    ),
+    R.map((fee) => ({
+      transparentTarget: fee.transparent_target,
+      shieldedTarget: fee.shielded_target,
+      percentage: BigNumber(fee.percentage),
+    }))
+  );
 });

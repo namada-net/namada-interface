@@ -16,6 +16,7 @@ import {
 } from "@namada/indexer-client";
 import { getIndexerApi } from "atoms/api";
 import { chainParametersAtom } from "atoms/chain";
+import { frontendFeeAtom } from "atoms/fees";
 import { rpcUrlAtom } from "atoms/settings";
 import { queryForAck, queryForIbcTimeout } from "atoms/transactions";
 import BigNumber from "bignumber.js";
@@ -35,6 +36,7 @@ import {
   TransferStep,
   TransferTransactionData,
 } from "types";
+import { frontendSusMsgFromConfig } from "utils/frontendFee";
 import { isError404 } from "utils/http";
 import { getKeplrWallet } from "utils/ibc";
 import { getSdkInstance } from "utils/sdk";
@@ -66,6 +68,7 @@ export type IbcTransferParams = TransparentParams | ShieldedParams;
 export const getShieldedArgs = async (
   target: string,
   token: string,
+  namadaToken: string,
   amount: BigNumber,
   destinationChannelId: string
 ): Promise<{ receiver: string; memo: string }> => {
@@ -73,6 +76,7 @@ export const getShieldedArgs = async (
   const store = getDefaultStore();
   const rpcUrl = store.get(rpcUrlAtom);
   const chain = store.get(chainParametersAtom);
+  const frontendFee = store.get(frontendFeeAtom);
 
   if (!chain.isSuccess) throw "Chain not loaded";
 
@@ -83,6 +87,13 @@ export const getShieldedArgs = async (
     payload: { rpcUrl, token: sdk.nativeToken, maspIndexerUrl: "" },
   });
 
+  const frontendSusFee = frontendSusMsgFromConfig(
+    frontendFee,
+    namadaToken,
+    // For IBC shielding, the fee is always deposited into shielded pool
+    "shielded"
+  );
+
   const msg: GenerateIbcShieldingMemo = {
     type: "generate-ibc-shielding-memo",
     payload: {
@@ -91,6 +102,7 @@ export const getShieldedArgs = async (
       amount,
       destinationChannelId,
       chainId: chain.data.chainId,
+      frontendSusFee,
     },
   };
 

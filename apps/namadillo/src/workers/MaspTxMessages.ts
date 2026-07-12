@@ -1,4 +1,5 @@
 import {
+  FrontendSusFeeProps,
   IbcTransferProps,
   SdkWasmOptions,
   ShieldedTransferProps,
@@ -93,6 +94,7 @@ type GenerateIbcShieldingMemoPayload = {
   amount: BigNumber;
   destinationChannelId: string;
   chainId: string;
+  frontendSusFee?: FrontendSusFeeProps;
 };
 export type GenerateIbcShieldingMemo = WebWorkerMessage<
   "generate-ibc-shielding-memo",

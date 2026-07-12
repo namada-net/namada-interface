@@ -4,8 +4,7 @@ import { AccountType } from "@namada/types";
 import { shortenAddress } from "@namada/utils";
 import { ConnectProviderButton } from "App/Common/ConnectProviderButton";
 import { TokenAmountCard } from "App/Common/TokenAmountCard";
-import { TransactionFee } from "App/Common/TransactionFee";
-import { TransactionFeeButton } from "App/Common/TransactionFeeButton";
+import { TransferFee } from "App/Common/TransferFee";
 import { routes } from "App/routes";
 import {
   isIbcAddress,
@@ -24,7 +23,7 @@ import { useAtomValue } from "jotai";
 import { useCallback, useEffect, useState } from "react";
 import { GoChevronDown } from "react-icons/go";
 import { useLocation } from "react-router-dom";
-import { Address } from "types";
+import { Address, FrontendFeeEntry } from "types";
 import namadaShieldedIcon from "./assets/namada-shielded.svg";
 import namadaTransparentIcon from "./assets/namada-transparent.svg";
 import semiTransparentEye from "./assets/semi-transparent-eye.svg";
@@ -40,8 +39,6 @@ type TransferDestinationProps = {
   isShieldedTx?: boolean;
   isSubmitting?: boolean;
   walletAddress?: string;
-  gasDisplayAmount?: BigNumber;
-  gasAsset?: Asset;
   feeProps?: TransactionFeeProps;
   destinationAsset?: Asset;
   amount?: BigNumber;
@@ -53,14 +50,13 @@ type TransferDestinationProps = {
   onChangeMemo?: (address: string) => void;
   isShielding?: boolean;
   isUnshielding?: boolean;
+  frontendFee?: FrontendFeeEntry;
 };
 
 export const TransferDestination = ({
   isShieldedAddress,
   isShieldedTx = false,
   isSubmitting,
-  gasDisplayAmount,
-  gasAsset,
   feeProps,
   destinationAsset,
   amount,
@@ -72,6 +68,7 @@ export const TransferDestination = ({
   onChangeMemo,
   isShielding = false,
   isUnshielding = false,
+  frontendFee,
 }: TransferDestinationProps): JSX.Element => {
   const { data: accounts } = useAtomValue(allDefaultAccountsAtom);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -307,21 +304,21 @@ export const TransferDestination = ({
 
         {!isSubmitting && (
           <footer className="flex mt-10">
-            {changeFeeEnabled ?
-              feeProps && (
-                <TransactionFeeButton
-                  feeProps={feeProps}
-                  isShieldedTransfer={isShieldedTx}
-                />
-              )
-            : gasDisplayAmount &&
-              gasAsset && (
-                <TransactionFee
-                  displayAmount={gasDisplayAmount}
-                  symbol={gasAsset.symbol}
-                />
-              )
-            }
+            {feeProps && (
+              <TransferFee
+                feeProps={feeProps}
+                isShieldedTransfer={isShieldedTx}
+                inOrOutOfMASP={isShielding || isUnshielding}
+                showButton={changeFeeEnabled}
+                frontendFeeInfo={
+                  frontendFee && {
+                    fee: frontendFee,
+                    displayAmount: amount,
+                    token: sourceAsset?.address,
+                  }
+                }
+              />
+            )}
           </footer>
         )}
       </div>

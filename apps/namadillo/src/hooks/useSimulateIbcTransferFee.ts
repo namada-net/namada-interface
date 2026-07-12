@@ -17,6 +17,7 @@ type useSimulateIbcTransferFeeProps = {
   sourceAddress?: string;
   selectedAsset?: Asset;
   channel?: string;
+  amount?: BigNumber;
 };
 
 export const useSimulateIbcTransferFee = ({
@@ -26,6 +27,7 @@ export const useSimulateIbcTransferFee = ({
   isShieldedTransfer,
   sourceAddress,
   channel,
+  amount,
 }: useSimulateIbcTransferFeeProps): UseQueryResult<GasConfig> => {
   return useQuery({
     queryKey: [
@@ -33,6 +35,7 @@ export const useSimulateIbcTransferFee = ({
       registry?.chain?.chain_id,
       selectedAsset?.base,
       isShieldedTransfer,
+      amount?.toString(),
     ],
     retry: false,
     queryFn: async () => {
@@ -59,7 +62,7 @@ export const useSimulateIbcTransferFee = ({
           // a valid address with funds
           sanitizeAddress(sourceAddress!),
           sanitizeAddress(sourceAddress!),
-          new BigNumber(1),
+          amount || BigNumber(1),
           getToken(),
           isShieldedTransfer ? "0".repeat(MASP_MEMO_LENGTH) : ""
         );

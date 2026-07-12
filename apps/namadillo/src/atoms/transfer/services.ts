@@ -17,7 +17,8 @@ import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { NamadaKeychain } from "hooks/useNamadaKeychain";
 import { buildTx, EncodedTxData, isPublicKeyRevealed } from "lib/query";
-import { Address, ChainSettings, GasConfig } from "types";
+import { Address, ChainSettings, FrontendFee, GasConfig } from "types";
+import { frontendSusMsgFromConfig } from "utils/frontendFee";
 import { getSdkInstance } from "utils/sdk";
 import {
   IbcTransfer,
@@ -168,6 +169,7 @@ export const createShieldingTransferTx = async (
   props: ShieldingTransferProps[],
   gasConfig: GasConfig,
   rpcUrl: string,
+  frontendFee: FrontendFee,
   memo?: string
 ): Promise<EncodedTxData<ShieldingTransferProps> | undefined> => {
   const source = props[0]?.data[0]?.source;
@@ -189,10 +191,16 @@ export const createShieldingTransferTx = async (
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
       const publicKeyRevealed = await isPublicKeyRevealed(account.address);
+      const frontendSusFee = frontendSusMsgFromConfig(
+        frontendFee,
+        token,
+        "transparent"
+      );
       const msgValue: ShieldingTransferProps = {
         target: destination,
         data: [{ source, token, amount }],
         bparams,
+        frontendSusFee,
       };
       const msg: Shield = {
         type: "shield",
@@ -220,6 +228,7 @@ export const createUnshieldingTransferTx = async (
   gasConfig: GasConfig,
   rpcUrl: string,
   disposableSigner: GenDisposableSignerResponse,
+  frontendFee: FrontendFee,
   memo?: string
 ): Promise<EncodedTxData<UnshieldingTransferProps> | undefined> => {
   const { publicKey: signerPublicKey } = disposableSigner;
@@ -243,10 +252,16 @@ export const createUnshieldingTransferTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
+      const frontendSusFee = frontendSusMsgFromConfig(
+        frontendFee,
+        token,
+        "transparent"
+      );
       const msgValue: UnshieldingTransferProps = {
         source,
         data: [{ target: destination, token, amount }],
         bparams,
+        frontendSusFee,
       };
 
       const msg: Unshield = {
@@ -274,6 +289,7 @@ export const createIbcTx = async (
   gasConfig: GasConfig,
   rpcUrl: string,
   signerPublicKey: string,
+  frontendFee: FrontendFee,
   memo?: string
 ): Promise<EncodedTxData<IbcTransferProps>> => {
   let bparams: BparamsMsgValue[] | undefined;
@@ -288,10 +304,17 @@ export const createIbcTx = async (
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
     buildTxFn: async (workerLink) => {
+      const firstProps = props[0];
+      const isUnshielding = firstProps.gasSpendingKey === firstProps.source;
+      const frontendSusFee =
+        isUnshielding ?
+          frontendSusMsgFromConfig(frontendFee, firstProps.token, "transparent")
+        : undefined;
       const msgValue: IbcTransferProps = {
-        ...props[0],
-        gasSpendingKey: props[0].gasSpendingKey,
+        ...firstProps,
+        gasSpendingKey: firstProps.gasSpendingKey,
         bparams,
+        frontendSusFee,
       };
 
       // We only check if we need to reveal the public key if the gas spending key is not provided

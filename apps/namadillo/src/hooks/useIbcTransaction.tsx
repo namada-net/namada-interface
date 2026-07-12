@@ -3,10 +3,10 @@ import {
   useMutation,
   UseMutationResult,
   useQuery,
-  UseQueryResult,
 } from "@tanstack/react-query";
 import { TokenCurrency } from "App/Common/TokenCurrency";
 import { chainParametersAtom } from "atoms/chain";
+import { frontendFeeAtom } from "atoms/fees";
 import {
   broadcastIbcTransactionAtom,
   createStargateClient,
@@ -20,6 +20,8 @@ import {
   dispatchToastNotificationAtom,
 } from "atoms/notifications";
 import BigNumber from "bignumber.js";
+import { pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/Option";
 import invariant from "invariant";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
@@ -31,15 +33,20 @@ import {
   Address,
   Asset,
   ChainRegistryEntry,
-  GasConfig,
   IbcTransferStage,
+  NamadaAsset,
   TransferStep,
   TransferTransactionData,
 } from "types";
 import { toBaseAmount } from "utils";
 import { sanitizeAddress } from "utils/address";
+import {
+  calculateAmountWithFrontendFee,
+  getFrontendFeeEntry,
+} from "utils/frontendFee";
 import { getKeplrWallet, sanitizeChannel } from "utils/ibc";
 import { useSimulateIbcTransferFee } from "./useSimulateIbcTransferFee";
+import { TransactionFeeProps } from "./useTransactionFee";
 
 type useIbcTransactionProps = {
   sourceAddress?: string;
@@ -48,10 +55,11 @@ type useIbcTransactionProps = {
   shielded?: boolean;
   destinationChannel?: Address;
   selectedAsset?: Asset;
+  amount?: BigNumber;
 };
 
 type useIbcTransactionOutput = {
-  gasConfig: UseQueryResult<GasConfig>;
+  transactionFeeProps?: TransactionFeeProps;
   transferToNamada: UseMutationResult<
     TransferTransactionData,
     Error,
@@ -73,10 +81,12 @@ export const useIbcTransaction = ({
   sourceChannel,
   shielded,
   destinationChannel,
+  amount,
 }: useIbcTransactionProps): useIbcTransactionOutput => {
   const broadcastIbcTx = useAtomValue(broadcastIbcTransactionAtom);
   const dispatchNotification = useSetAtom(dispatchToastNotificationAtom);
   const chainParameters = useAtomValue(chainParametersAtom);
+  const frontendFee = useAtomValue(frontendFeeAtom);
   const [txHash, setTxHash] = useState<string | undefined>();
   const [rpcUrl, setRpcUrl] = useState<string | undefined>();
   const [stargateClient, setStargateClient] = useState<
@@ -102,6 +112,16 @@ export const useIbcTransaction = ({
     },
   });
 
+  const baseAmount =
+    selectedAsset && amount && toBaseAmount(selectedAsset, amount);
+  const frontendFeeEntry =
+    selectedAsset &&
+    getFrontendFeeEntry(frontendFee, (selectedAsset as NamadaAsset).address);
+  const amountWithFrontendFee =
+    baseAmount &&
+    frontendFeeEntry &&
+    calculateAmountWithFrontendFee(baseAmount, frontendFeeEntry);
+
   const gasConfigQuery = useSimulateIbcTransferFee({
     stargateClient,
     registry,
@@ -109,6 +129,7 @@ export const useIbcTransaction = ({
     isShieldedTransfer: shielded,
     sourceAddress,
     channel: sourceChannel,
+    amount: amountWithFrontendFee || baseAmount,
   });
 
   const dispatchPendingTxNotification = (tx: TransferTransactionData): void => {
@@ -189,6 +210,11 @@ export const useIbcTransaction = ({
           gasConfigQuery.error?.message
       );
 
+      const frontendFeeEntry = getFrontendFeeEntry(
+        frontendFee,
+        (selectedAsset as NamadaAsset).address
+      );
+
       const baseAmount = toBaseAmount(selectedAsset, displayAmount);
 
       const sourceChainAssets =
@@ -208,11 +234,13 @@ export const useIbcTransaction = ({
           const token =
             asset.traces?.find((trace) => trace.type === "ibc")?.chain.path ||
             asset.base;
+          invariant(selectedAsset.address, "Asset address is required");
 
           return shielded ?
               await getShieldedArgs(
                 destinationAddress,
                 token,
+                selectedAsset.address,
                 baseAmount,
                 destinationChannel!
               )
@@ -221,11 +249,25 @@ export const useIbcTransaction = ({
       const chainId = registry.chain.chain_id;
       const denomination = asset.base;
 
+      const amount = pipe(
+        frontendFeeEntry,
+        O.fromNullable,
+        O.filter(() => !!shielded),
+        O.fold(
+          () => baseAmount,
+          (fee) =>
+            toBaseAmount(
+              selectedAsset,
+              calculateAmountWithFrontendFee(BigNumber(displayAmount), fee)
+            )
+        )
+      );
+
       const transferMsg = createIbcTransferMessage(
         sanitizeChannel(sourceChannel!),
         sanitizeAddress(sourceAddress),
         sanitizeAddress(maspCompatibleReceiver),
-        baseAmount,
+        amount,
         denomination,
         maspCompatibleMemo
       );
@@ -250,7 +292,8 @@ export const useIbcTransaction = ({
         chainId,
         destinationChainId || "",
         getIbcTransferStage(!!shielded),
-        !!shielded
+        !!shielded,
+        baseAmount
       );
       dispatchPendingTxNotification(tx);
       setTxHash(tx.hash);
@@ -268,8 +311,19 @@ export const useIbcTransaction = ({
     mutationFn: transferToNamada,
   });
 
+  const transactionFeeProps: TransactionFeeProps | undefined =
+    gasConfigQuery.data && {
+      gasConfig: gasConfigQuery.data,
+      isLoading: gasConfigQuery.isLoading,
+      onChangeGasLimit: () => {},
+      onChangeGasToken: () => {},
+      frontendFee,
+      gasEstimate: undefined,
+      gasPriceTable: undefined,
+    };
+
   return {
     transferToNamada: transferToNamadaQuery,
-    gasConfig: gasConfigQuery,
+    transactionFeeProps,
   };
 };
