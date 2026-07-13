@@ -1,0 +1,32 @@
+{
+  "content_scripts": [
+    {
+      "exclude_glob": [
+        "*://namadill0.app/*",
+        "*://namadi1l0.app/*",
+        "*://namadi1lo.app/*",
+        "*://namadi110.app/*",
+        "*://namadi11o.app/*",
+        "*://namad1llo.app/*",
+        "*://namad1ll0.app/*",
+        "*://namad11lo.app/*",
+        "*://namad111o.app/*",
+        "*://namad1110.app/*",
+        "*://namadilllo.app/*",
+        "*://nammadillo.app/*",
+        "*://nammadilllo.app/*",
+        "*://nammad1llo.app/*",
+        "*://nammadi1lo.app/*",
+        "*://nammadi11o.app/*",
+        "*://nammadil1o.app/*",
+        "*://nammadi110.app/*",
+        "*://nammadill0.app/*",
+        "*://nammadi1l0.app/*",
+        "*://nammadil10.app/*",
+        "*://nammad1110.app/*",
+        "*://nammad1110.app/*",
+        "*://nammad11l0.app/*"
+      ]
+    }
+  ]
+}
