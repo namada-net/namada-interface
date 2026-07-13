@@ -10,6 +10,7 @@ import {
 } from "@namada/sdk-multicore";
 import { Account } from "@namada/types";
 import { queryClient } from "App/Common/QueryProvider";
+import { appendNamadilloBranding } from "atoms/settings";
 import { EncodedTxData, buildTx } from "lib/query";
 import { Address, AddressBalance, ChainSettings, GasConfig } from "types";
 import { getSdkInstance } from "utils/sdk";
@@ -29,13 +30,16 @@ export const createBondTx = async (
   gasConfig: GasConfig
 ): Promise<EncodedTxData<BondProps> | undefined> => {
   const sdk = await getSdkInstance();
+  const memo = appendNamadilloBranding();
+
   return await buildTx(
     sdk,
     account,
     gasConfig,
     chain,
     bondProps,
-    sdk.tx.buildBond
+    sdk.tx.buildBond,
+    memo
   );
 };
 
@@ -46,13 +50,16 @@ export const createUnbondTx = async (
   gasConfig: GasConfig
 ): Promise<EncodedTxData<UnbondProps>> => {
   const sdk = await getSdkInstance();
+  const memo = appendNamadilloBranding();
+
   return await buildTx(
     sdk,
     account,
     gasConfig,
     chain,
     unbondProps,
-    sdk.tx.buildUnbond
+    sdk.tx.buildUnbond,
+    memo
   );
 };
 
@@ -63,13 +70,16 @@ export const createReDelegateTx = async (
   gasConfig: GasConfig
 ): Promise<EncodedTxData<RedelegateProps>> => {
   const sdk = await getSdkInstance();
+  const memo = appendNamadilloBranding();
+
   return await buildTx(
     sdk,
     account,
     gasConfig,
     chain,
     redelegateProps,
-    sdk.tx.buildRedelegate
+    sdk.tx.buildRedelegate,
+    memo
   );
 };
 
@@ -80,13 +90,16 @@ export const createWithdrawTx = async (
   gasConfig: GasConfig
 ): Promise<EncodedTxData<WithdrawProps>> => {
   const sdk = await getSdkInstance();
+  const memo = appendNamadilloBranding();
+
   return await buildTx(
     sdk,
     account,
     gasConfig,
     chain,
     withdrawProps,
-    sdk.tx.buildWithdraw
+    sdk.tx.buildWithdraw,
+    memo
   );
 };
 
@@ -97,13 +110,16 @@ export const createClaimTx = async (
   gasConfig: GasConfig
 ): Promise<EncodedTxData<ClaimRewardsProps>> => {
   const sdk = await getSdkInstance();
+  const memo = appendNamadilloBranding();
+
   return await buildTx(
     sdk,
     account,
     gasConfig,
     chain,
     params,
-    sdk.tx.buildClaimRewards
+    sdk.tx.buildClaimRewards,
+    memo
   );
 };
 
@@ -150,13 +166,16 @@ export const createClaimAndStakeTx = async (
     }
   });
 
+  const memo = appendNamadilloBranding();
+
   return await buildTx(
     sdk,
     account,
     gasConfig,
     chain,
     claimAndStakingParams,
-    buildClaimRewardsAndStake
+    buildClaimRewardsAndStake,
+    memo
   );
 };
 

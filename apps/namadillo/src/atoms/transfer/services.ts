@@ -13,6 +13,7 @@ import {
   AccountType,
   GenDisposableSignerResponse,
 } from "@namada/types";
+import { appendNamadilloBranding } from "atoms/settings";
 import BigNumber from "bignumber.js";
 import * as Comlink from "comlink";
 import { NamadaKeychain } from "hooks/useNamadaKeychain";
@@ -93,6 +94,8 @@ export const createTransparentTransferTx = async (
   memo?: string
 ): Promise<EncodedTxData<TransparentTransferProps> | undefined> => {
   const sdk = await getSdkInstance();
+  const finalMemo = appendNamadilloBranding(memo);
+
   return await buildTx(
     sdk,
     account,
@@ -100,7 +103,7 @@ export const createTransparentTransferTx = async (
     chain,
     props,
     sdk.tx.buildTransparentTransfer,
-    memo
+    finalMemo
   );
 };
 
@@ -132,6 +135,8 @@ export const createShieldedTransferTx = async (
     ledger.closeTransport();
   }
 
+  const finalMemo = appendNamadilloBranding(memo);
+
   return await workerBuildTxPair({
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
@@ -151,7 +156,7 @@ export const createShieldedTransferTx = async (
           gasConfig,
           props: [msgValue],
           chain,
-          memo,
+          memo: finalMemo,
         },
       };
       return (await workerLink.shieldedTransfer(msg)).payload;
@@ -184,6 +189,8 @@ export const createShieldingTransferTx = async (
     ledger.closeTransport();
   }
 
+  const finalMemo = appendNamadilloBranding(memo);
+
   return await workerBuildTxPair({
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
@@ -202,7 +209,7 @@ export const createShieldingTransferTx = async (
           props: [msgValue],
           chain,
           publicKeyRevealed,
-          memo,
+          memo: finalMemo,
         },
       };
       return (await workerLink.shield(msg)).payload;
@@ -239,6 +246,8 @@ export const createUnshieldingTransferTx = async (
     ledger.closeTransport();
   }
 
+  const finalMemo = appendNamadilloBranding(memo);
+
   return await workerBuildTxPair({
     rpcUrl,
     nativeToken: chain.nativeTokenAddress,
@@ -259,7 +268,7 @@ export const createUnshieldingTransferTx = async (
           gasConfig,
           props: [msgValue],
           chain,
-          memo,
+          memo: finalMemo,
         },
       };
       return (await workerLink.unshield(msg)).payload;
@@ -283,6 +292,8 @@ export const createIbcTx = async (
     bparams = await ledger.getBparams();
     ledger.closeTransport();
   }
+
+  const finalMemo = appendNamadilloBranding(memo);
 
   return await workerBuildTxPair({
     rpcUrl,
@@ -309,7 +320,7 @@ export const createIbcTx = async (
           gasConfig,
           props: [msgValue],
           chain,
-          memo,
+          memo: finalMemo,
           publicKeyRevealed,
         },
       };
@@ -338,6 +349,7 @@ export const createOsmosisSwapTx = async (
     ledger.closeTransport();
   }
   const { transfer } = props[0];
+  const finalMemo = appendNamadilloBranding(memo);
 
   return await workerBuildTxPair({
     rpcUrl,
@@ -361,7 +373,7 @@ export const createOsmosisSwapTx = async (
           gasConfig,
           props: [msgValue],
           chain,
-          memo,
+          memo: finalMemo,
         },
       };
 
