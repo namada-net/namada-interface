@@ -21,7 +21,7 @@ yarn
 Then, look at the potential variables you may override in [.env.sample](./.env.sample) in `apps/faucet`. You can copy these variables into a `.env` file,
 and they will be used when the application is built.
 
-As an example, if all you want to override the the API url or endpoint, you can override the following default values in a `.env`:
+As an example, if all you want to override the API url or endpoint, you can override the following default values in a `.env`:
 
 ```bash
 # Faucet API Endpoint override
